@@ -1,2 +1,2 @@
-# das-query-engine
-Query engine and pattern matcher
+# hyperon-das
+Query Engine API for Distributed AtomSpace and Pattern Matcher
