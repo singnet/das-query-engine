@@ -29,18 +29,8 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         )
 
     def clear_database(self) -> None:
-        """
-        Clear all data from the connected MongoDB and Redis databases.
-
-        This method drops all collections in the MongoDB database and flushes all data
-        from the Redis cache, effectively wiping the databases clean.
-        """
-        collections = self.mongo_db.list_collection_names()
-
-        for collection in collections:
-            self.mongo_db[collection].drop()
-
-        self.redis.flushall()
+        """Clear all data"""
+        return self.db.clear_database()
 
     def count_atoms(self) -> Tuple[int, int]:
         """
