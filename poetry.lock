@@ -133,13 +133,13 @@ pyflakes = ">=3.1.0,<3.2.0"
 
 [[package]]
 name = "hyperon-das-atomdb"
-version = "0.1.2"
+version = "0.1.3"
 description = ""
 optional = false
 python-versions = ">=3.8.5,<4.0.0"
 files = [
-    {file = "hyperon_das_atomdb-0.1.2-py3-none-any.whl", hash = "sha256:e70771cc5831b2bd8eee8c8607e6d81cee9d07341befcf8c1a489326afeadc1e"},
-    {file = "hyperon_das_atomdb-0.1.2.tar.gz", hash = "sha256:189759cf45433cf5d167e12778d88438f3f2c716135636354b1f01313fcc8bd4"},
+    {file = "hyperon_das_atomdb-0.1.3-py3-none-any.whl", hash = "sha256:a99fc9705cde7ceef55578440270aa96d0538deec02f1b3e97500e6028f51372"},
+    {file = "hyperon_das_atomdb-0.1.3.tar.gz", hash = "sha256:0f0755ff0d1c9cd537f578f71363a0e19c186d190f716be8262e661515e93638"},
 ]
 
 [package.dependencies]
@@ -436,4 +436,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.5"
-content-hash = "49e3236ae089ff78e07823de6e20e06acb459c5c6ebae0647de9b710846825d4"
+content-hash = "6a0214830c21bce212644826a24a405a5c6489d450c6f41153b4634fb5e0cd55"

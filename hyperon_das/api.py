@@ -270,8 +270,8 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         # TODO: Is there any exception action?
         try:
             link_handle = self.db.get_link_handle(link_type, targets)
-        except ValueError:
-            pass
+        except Exception as e:
+            raise e
 
         if output_format == QueryOutputFormat.HANDLE or link_handle is None:
             return link_handle
