@@ -12,3 +12,7 @@ class BaseException(Exception):
 
 class DatabaseTypeException(BaseException):
     ...  # pragma no cover
+
+
+class MethodNotAllowed(BaseException):
+    ...  # pragma no cover

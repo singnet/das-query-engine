@@ -8,7 +8,8 @@ packages = [{include = "hyperon_das"}]
 
 [tool.poetry.dependencies]
 python = "^3.8.5"
-hyperon-das-atomdb = "^0.1.4"
+hyperon-das-atomdb = "^0.1.5"
+
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

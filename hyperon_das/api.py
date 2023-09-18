@@ -1,10 +1,10 @@
 import json
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD
 
 from hyperon_das.das import DistributedAtomSpace, QueryOutputFormat
-from hyperon_das.exceptions import DatabaseTypeException
+from hyperon_das.exceptions import DatabaseTypeException, MethodNotAllowed
 from hyperon_das.factory import DatabaseFactory, DatabaseType, database_factory
 from hyperon_das.logger import logger
 from hyperon_das.pattern_matcher import (
@@ -15,6 +15,7 @@ from hyperon_das.pattern_matcher import (
 
 class DistributedAtomSpaceAPI(DistributedAtomSpace):
     def __init__(self, database: DatabaseType) -> None:
+        self._db_type = database
         try:
             DatabaseType(database)
         except ValueError as e:
@@ -22,7 +23,7 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
                 message=str(e),
                 details=f'possible values {DatabaseType.values()}',
             )
-        self.db = database_factory(DatabaseFactory(database))
+        self.db = database_factory(DatabaseFactory(self._db_type))
         self.pattern_black_list = []
         logger().info(
             f"New Distributed Atom Space. Database name: {self.db.database_name}"
@@ -575,3 +576,21 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
             raise ValueError(f"Invalid output format: '{output_format}'")
 
         return f"{tag_not}{mapping}"
+
+    def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
+        if self._db_type == DatabaseType.HASHTABLE.value:
+            return self.db.add_node(node_params)
+        else:
+            raise MethodNotAllowed(
+                message='This method is permited only in memory database',
+                details='Instantiate the class sent the database type as `hash_table`',
+            )
+
+    def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
+        if self._db_type == DatabaseType.HASHTABLE.value:
+            return self.db.add_link(link_params)
+        else:
+            raise MethodNotAllowed(
+                message='This method is permited only in memory database',
+                details='Instantiate the class sent the database type as `hash_table`',
+            )
