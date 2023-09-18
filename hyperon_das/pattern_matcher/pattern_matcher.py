@@ -16,7 +16,7 @@ DEBUG_LINK_TEMPLATE = False
 
 CONFIG = {
     # Enforce different values for different variables in ordered assignments
-    'no_overload': False,  # Enforce different values for different variables in ordered assignments
+    'no_overload': False,
 }
 
 
@@ -205,7 +205,8 @@ class UnorderedAssignment(Assignment):
     def assign(self, variable: str, value: str) -> bool:
         if variable is None or value is None or self.frozen:
             raise ValueError(
-                f'Invalid assignment: variable = {variable} value = {value} frozen = {self.frozen}'
+                f'Invalid assignment: variable = {variable} value = {value} '
+                f'frozen = {self.frozen}'
             )
         if variable in self.variables:
             return False
@@ -296,7 +297,11 @@ class CompositeAssignment(Assignment):
         assert self._freeze()
 
     def __repr__(self):
-        return f'Ordered = {self.ordered_mapping} | Unordered = {self.unordered_mappings}'
+        ret = (
+            f'Ordered = {self.ordered_mapping} | '
+            f'Unordered = {self.unordered_mappings}'
+        )
+        return ret
 
     def _freeze(self):
         assert super().freeze()
@@ -617,7 +622,8 @@ class Link(Atom):
         if any(handle == WILDCARD for handle in target_handles):
             if DEBUG_LINK:
                 print(
-                    f'self.atom_type = {self.atom_type} target_handles = {target_handles}'
+                    f'self.atom_type = {self.atom_type} '
+                    f'target_handles = {target_handles}'
                 )
             matched = db.get_matched_links(self.atom_type, target_handles)
             if DEBUG_LINK:

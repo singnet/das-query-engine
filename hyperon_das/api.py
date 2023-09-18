@@ -539,8 +539,6 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
                 {'V1': 'e2d9b15ab3461228d75502e754137caa', 'V2': 'c90242e2dbece101813762cc2a83d726', 'V3': '81ec21b0f1b03e18c55e056a56179fef'},
                 ...
             }
-
-
         """
         query_answer = PatternMatchingAnswer()
 

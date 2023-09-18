@@ -133,13 +133,13 @@ pyflakes = ">=3.1.0,<3.2.0"
 
 [[package]]
 name = "hyperon-das-atomdb"
-version = "0.1.3"
-description = ""
+version = "0.1.4"
+description = "Persistence layer for Distributed AtomSpace"
 optional = false
 python-versions = ">=3.8.5,<4.0.0"
 files = [
-    {file = "hyperon_das_atomdb-0.1.3-py3-none-any.whl", hash = "sha256:a99fc9705cde7ceef55578440270aa96d0538deec02f1b3e97500e6028f51372"},
-    {file = "hyperon_das_atomdb-0.1.3.tar.gz", hash = "sha256:0f0755ff0d1c9cd537f578f71363a0e19c186d190f716be8262e661515e93638"},
+    {file = "hyperon_das_atomdb-0.1.4-py3-none-any.whl", hash = "sha256:0a1ff0f76d627e9cc0ae0b57460d336df5091d27b1f257ced99104405d7ba6ba"},
+    {file = "hyperon_das_atomdb-0.1.4.tar.gz", hash = "sha256:ae023d5d24923604f886bba3dcf92f085f1dcaace0ba3cee74e53f8629089678"},
 ]
 
 [package.dependencies]
@@ -424,16 +424,16 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.7.1"
-description = "Backported and Experimental Type Hints for Python 3.7+"
+version = "4.8.0"
+description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.7.1-py3-none-any.whl", hash = "sha256:440d5dd3af93b060174bf433bccd69b0babc3b15b1a8dca43789fd7f61514b36"},
-    {file = "typing_extensions-4.7.1.tar.gz", hash = "sha256:b75ddc264f0ba5615db7ba217daeb99701ad295353c45f9e95963337ceeeffb2"},
+    {file = "typing_extensions-4.8.0-py3-none-any.whl", hash = "sha256:8f92fc8806f9a6b641eaa5318da32b44d401efaac0f6678c9bc448ba3605faa0"},
+    {file = "typing_extensions-4.8.0.tar.gz", hash = "sha256:df8e4339e9cb77357558cbdbceca33c303714cf861d1eef15e1070055ae8b7ef"},
 ]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.5"
-content-hash = "6a0214830c21bce212644826a24a405a5c6489d450c6f41153b4634fb5e0cd55"
+content-hash = "59fbdb819445a8450eaa88386653170d788941e8e79344676971226b6d51ac05"

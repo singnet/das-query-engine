@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Protocol
 
 from hyperon_das_atomdb import IAtomDB
-from hyperon_das_atomdb.adapters import RedisMongoDB
+from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
 
 class DatabaseType(Enum):
@@ -34,7 +34,7 @@ class DatabaseFactory:
 
     def create_hastable_database(self):
         # TODO: WIP
-        pass
+        return InMemoryDB
 
 
 def database_factory(factory: IDatabaseFactory) -> IAtomDB:
@@ -45,4 +45,4 @@ def database_factory(factory: IDatabaseFactory) -> IAtomDB:
         return redis_mongo_database()
 
     if factory.name == DatabaseType.HASHTABLE.value:
-        return hashtable_database
+        return hashtable_database()
