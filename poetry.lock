@@ -133,13 +133,13 @@ pyflakes = ">=3.1.0,<3.2.0"
 
 [[package]]
 name = "hyperon-das-atomdb"
-version = "0.1.5"
+version = "0.1.6"
 description = "Persistence layer for Distributed AtomSpace"
 optional = false
 python-versions = ">=3.8.5,<4.0.0"
 files = [
-    {file = "hyperon_das_atomdb-0.1.5-py3-none-any.whl", hash = "sha256:f1afcd3418206613663e48d38a58555ce290950107bc1b9379573e38596398af"},
-    {file = "hyperon_das_atomdb-0.1.5.tar.gz", hash = "sha256:ef8e47353b3a1168f6ce04bf2e97aec16fca7a2f73c23da40e80d5485c340c2b"},
+    {file = "hyperon_das_atomdb-0.1.6-py3-none-any.whl", hash = "sha256:11f4b9d7a3e1ee26e8466cc54796bc634e303084a4bbd7d6cf94b91c6d6dcb94"},
+    {file = "hyperon_das_atomdb-0.1.6.tar.gz", hash = "sha256:91c9d06a736de22fe873dc3f5d9b34b3da97e648161ad170559ebfc47b89204c"},
 ]
 
 [package.dependencies]
@@ -436,4 +436,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.5"
-content-hash = "bf30bd87a01f762bad00fd5bad36d02dbf5ca6a6d8abfa2c69a2b8a42c4f7a7d"
+content-hash = "68acb87688ad01ad869a4f17699261884e8a195c8f5d54d26b958420fa929473"
