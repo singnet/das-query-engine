@@ -12,6 +12,7 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
     - [Redis and MongoDB](#redis-and-mongodb)
         - [Create a client API](#create-a-client-api)
     - [In Memory](#in-memory)
+  - [Tests](#tests)
 
 ## Installation
 
@@ -180,3 +181,11 @@ This way you don't need anything just instantiate the class as shown below:
 	**Note1:** in this example I add 2 nodes and 1 a link, but in the end I have 3 nodes and 3 links. Therefore, it is possible to add nested links and as links are composed of nodes, if the link node doesn't exist in the system it's added.
 
 	**Note2:** For these methods to work well, both nodes and links must be a dict with the structure shown above, i.e, for **nodes** you need to send, at least, the parameters `type` and `name` and for **links** `type` and `targets`
+
+## Tests
+
+You can run the command below to run the unit tests
+
+```bash
+make test-coverage
+```
