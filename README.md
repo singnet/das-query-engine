@@ -12,7 +12,6 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
     - [Redis and MongoDB](#redis-and-mongodb)
         - [Create a client API](#create-a-client-api)
     - [In Memory](#in-memory)
-  - [Examples](#examples)
 
 ## Installation
 
@@ -96,15 +95,10 @@ api = DasAPI('redis_mongo')
 
 This way you don't need anything just instantiate the class as shown below:
 
-```python
-from hyperon_das import DasAPI
-
-api = DasAPI('hash_table')
-
-## Examples
 
 1. A simple query which is a `AND` operation on two links whose targets are variables.
-	```python
+	
+    ```python
 	from hyperon_das.pattern_matcher import And, Variable, Link
 
 	V1 =  Variable("V1")
