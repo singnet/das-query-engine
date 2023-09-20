@@ -1,0 +1,4 @@
+#!/bin/bash
+
+poetry build
+poetry publish --username __token__ --password pypi-AgEIcHlwaS5vcmcCJDcxMmQzYWFkLTg5MDAtNDFlZS05M2FhLWQ5YWJhYTg0YTcwYQACKlszLCJjNzAwMDkzMS1iNGE0LTQ1OTQtYjg2MS1jZjFkMjY2ODI0MzYiXQAABiCghQAn3cYI84LYiC5ZY-4Q-XdRTl9SInXscZtjsfQBJw
