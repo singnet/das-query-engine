@@ -19,6 +19,6 @@ jobs:
       version-strategy: bump-version-from-variable-value
       job-image-namespace: trueagi
       job-image-version-semver: semantic-versioning
-      main-branch: master
+      main-branch: feat/publish-pypi
       version-tag-regex-pattern: /^v\d+\.\d+\.\d+$/
       version-require-confirmation: "true"
