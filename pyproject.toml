@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "hwtgwrtw-wertghwrthw"
+name = "hyperon-das"
 version = "0.1.5"
 description = "Query Engine API for Distributed AtomSpace"
 authors = ["marcocapozzoli <marcocapozzoli90@gmail.com>"]
