@@ -557,18 +557,24 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         if output_format == QueryOutputFormat.HANDLE:
             mapping = str(query_answer.assignments)
         elif output_format == QueryOutputFormat.ATOM_INFO:
-            mapping = str(
-                {
-                    var: self.db.get_atom_as_dict(handle)
-                    for var, handle in query_answer.assignments.items()
-                }
-            )
-        elif output_format == QueryOutputFormat.JSON:
-            mapping = json.dumps(
-                {
+            objs = []
+            for assignment in query_answer.assignments:
+                obj = {
                     var: self.db.get_atom_as_deep_representation(handle)
-                    for var, handle in query_answer.assignments.items()
-                },
+                    for var, handle in assignment.mapping.items()
+                }
+                objs.append(obj)
+            mapping = str(objs)
+        elif output_format == QueryOutputFormat.JSON:
+            objs = []
+            for assignment in query_answer.assignments:
+                obj = {
+                    var: self.db.get_atom_as_deep_representation(handle)
+                    for var, handle in assignment.mapping.items()
+                }
+                objs.append(obj)
+            mapping = json.dumps(
+                objs,
                 sort_keys=False,
                 indent=4,
             )
