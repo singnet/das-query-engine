@@ -1,5 +1,10 @@
+
+
 test:
 	@pytest -v
+
+test-coverage:
+	@py.test -sx -vv ./tests --cov=./hyperon_das/ --cov-report=term-missing --cov-fail-under=90
 
 isort:
 	@isort ./hyperon_das --multi-line=3 --trailing-comma --force-grid-wrap=0 --use-parentheses --line-width=79
