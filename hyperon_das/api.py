@@ -490,6 +490,7 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         self,
         query: LogicalExpression,
         output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
+        is_toplevel: bool = False,
     ) -> str:
         """
         Perform a query on the knowledge base using a logical expression.
@@ -551,24 +552,39 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         tag_not = ""
         mapping = ""
 
+        if is_toplevel is True:
+            new_assignments = query_answer.assignments.copy()
+            for assignment in query_answer.assignments:
+                targets = list(assignment.mapping.values())
+                if not self.db.targets_is_toplevel(targets):
+                    new_assignments.discard(assignment)
+        else:
+            new_assignments = query_answer.assignments
+
         if query_answer.negation:
             tag_not = "NOT "
 
         if output_format == QueryOutputFormat.HANDLE:
-            mapping = str(query_answer.assignments)
+            mapping = str(new_assignments)
         elif output_format == QueryOutputFormat.ATOM_INFO:
-            mapping = str(
-                {
-                    var: self.db.get_atom_as_dict(handle)
-                    for var, handle in query_answer.assignments.items()
-                }
-            )
-        elif output_format == QueryOutputFormat.JSON:
-            mapping = json.dumps(
-                {
+            objs = []
+            for assignment in new_assignments:
+                obj = {
                     var: self.db.get_atom_as_deep_representation(handle)
-                    for var, handle in query_answer.assignments.items()
-                },
+                    for var, handle in assignment.mapping.items()
+                }
+                objs.append(obj)
+            mapping = str(objs)
+        elif output_format == QueryOutputFormat.JSON:
+            objs = []
+            for assignment in new_assignments:
+                obj = {
+                    var: self.db.get_atom_as_deep_representation(handle)
+                    for var, handle in assignment.mapping.items()
+                }
+                objs.append(obj)
+            mapping = json.dumps(
+                objs,
                 sort_keys=False,
                 indent=4,
             )
@@ -594,3 +610,55 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
                 message='This method is permited only in memory database',
                 details='Instantiate the class sent the database type as `hash_table`',
             )
+
+
+if __name__ == "__main__":
+    from hyperon_das.pattern_matcher import And, Link, Variable
+
+    das = DistributedAtomSpaceAPI('hash_table')
+
+    """das.add_link({
+        'type': 'Inheritance',
+        'targets': [
+            {'type': 'Concept', 'name': 'monkey'},
+            {'type': 'Concept', 'name': 'mammal'},
+        ]
+    })"""
+
+    das.add_link(
+        {
+            'type': 'Evaluation',
+            'targets': [
+                {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                {
+                    'type': 'Evaluation',
+                    'targets': [
+                        {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                        {
+                            'type': 'Set',
+                            'targets': [
+                                {
+                                    'type': 'Reactome',
+                                    'name': 'Reactome:R-HSA-164843',
+                                },
+                                {
+                                    'type': 'Concept',
+                                    'name': 'Concept:2-LTR circle formation',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+    )
+
+    query = Link(
+        "Evaluation", ordered=True, targets=[Variable("V1"), Variable("V2")]
+    )
+
+    ret_1 = das.query(
+        query, output_format=QueryOutputFormat.JSON, is_toplevel=True
+    )
+
+    print(ret_1)
