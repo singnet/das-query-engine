@@ -584,19 +584,19 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         return f"{tag_not}{mapping}"
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._db_type == DatabaseType.HASHTABLE.value:
+        if self._db_type == DatabaseType.RAM_ONLY.value:
             return self.db.add_node(node_params)
         else:
             raise MethodNotAllowed(
                 message='This method is permited only in memory database',
-                details='Instantiate the class sent the database type as `hash_table`',
+                details='Instantiate the class sent the database type as `ram_only`',
             )
 
     def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._db_type == DatabaseType.HASHTABLE.value:
+        if self._db_type == DatabaseType.RAM_ONLY.value:
             return self.db.add_link(link_params)
         else:
             raise MethodNotAllowed(
                 message='This method is permited only in memory database',
-                details='Instantiate the class sent the database type as `hash_table`',
+                details='Instantiate the class sent the database type as `ram_only`',
             )
