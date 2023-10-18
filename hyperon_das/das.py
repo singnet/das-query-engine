@@ -1,12 +1,5 @@
 import json
-from enum import Enum, auto
 from typing import Dict, List, Union
-
-
-class QueryOutputFormat(int, Enum):
-    HANDLE = auto()
-    ATOM_INFO = auto()
-    JSON = auto()
 
 
 class DistributedAtomSpace:

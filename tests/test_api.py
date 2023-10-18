@@ -1,7 +1,7 @@
 import pytest
 
 from hyperon_das.api import DistributedAtomSpaceAPI
-from hyperon_das.das import QueryOutputFormat
+from hyperon_das.utils import QueryOutputFormat
 from hyperon_das.exceptions import QueryParametersException
 from hyperon_das.pattern_matcher.pattern_matcher import And, Link, Variable
 

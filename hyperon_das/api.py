@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD
 
-from hyperon_das.das import DistributedAtomSpace, QueryOutputFormat
+from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.exceptions import (
     DatabaseTypeException,
     MethodNotAllowed,
@@ -15,7 +15,7 @@ from hyperon_das.pattern_matcher import (
     LogicalExpression,
     PatternMatchingAnswer,
 )
-from hyperon_das.utils import QueryParameters
+from hyperon_das.utils import QueryOutputFormat, QueryParameters
 
 
 class DistributedAtomSpaceAPI(DistributedAtomSpace):
