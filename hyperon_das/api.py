@@ -490,7 +490,7 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         self,
         query: LogicalExpression,
         output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> str:
+    ) -> List[Dict[str, Any]] | str:
         """
         Perform a query on the knowledge base using a logical expression.
 
@@ -504,7 +504,9 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
                 Defaults to QueryOutputFormat.HANDLE.
 
         Returns:
-            str: The result of the query in the specified output format.
+            Union[List[Dict[str, Any]], str]: Depending on the `return_type` parameter sent in extra_parameters, returns:
+                - A list of dictionaries (return_type == QueryOutputFormat.HANDLE or return_type == QueryOutputFormat.ATOM_INFO),
+                - A JSON-formatted string representing the deep representation of the links (return_type == QueryOutputFormat.JSON).
 
         Raises:
             ValueError: If an invalid output format is provided.
@@ -555,7 +557,7 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
             tag_not = "NOT "
 
         if output_format == QueryOutputFormat.HANDLE:
-            mapping = str(query_answer.assignments)
+            mapping = list(query_answer.assignments)
         elif output_format == QueryOutputFormat.ATOM_INFO:
             objs = []
             for assignment in query_answer.assignments:
@@ -564,7 +566,7 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
                     for var, handle in assignment.mapping.items()
                 }
                 objs.append(obj)
-            mapping = str(objs)
+            mapping = objs
         elif output_format == QueryOutputFormat.JSON:
             objs = []
             for assignment in query_answer.assignments:
