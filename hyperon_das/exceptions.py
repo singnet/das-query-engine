@@ -16,3 +16,6 @@ class DatabaseTypeException(BaseException):
 
 class MethodNotAllowed(BaseException):
     ...  # pragma no cover
+
+class QueryParametersException(BaseException):
+    ...  # pragma no cover
