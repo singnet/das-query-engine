@@ -33,7 +33,6 @@ class DatabaseFactory:
         return RedisMongoDB
 
     def create_hastable_database(self):
-        # TODO: WIP
         return InMemoryDB
 
 

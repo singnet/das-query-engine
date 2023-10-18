@@ -2,7 +2,7 @@ import time
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cmp_to_key
-from typing import Dict, FrozenSet, List, Optional, Set, Union
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
 
 from hyperon_das_atomdb import WILDCARD, IAtomDB
 
@@ -447,7 +447,12 @@ class LogicalExpression(ABC):
     """
 
     @abstractmethod
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         pass
 
     def __repr__(self):
@@ -488,7 +493,12 @@ class Node(Atom):
             self.handle = db.get_node_handle(self.atom_type, self.name)
         return self.handle
 
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         return db.node_exists(self.atom_type, self.name)
 
 
@@ -559,7 +569,10 @@ class Link(Atom):
             return answer if answer.freeze() else None
 
     def _typed_variable_matched(
-        self, db: IAtomDB, answer: PatternMatchingAnswer
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
         first_typed_variable = True
         for target in self.targets:
@@ -569,7 +582,10 @@ class Link(Atom):
                 if not first_typed_variable:
                     return False
                 first_typed_variable = False
-        return all(target.matched(db, answer) for target in self.targets)
+        return all(
+            target.matched(db, answer, extra_parameters)
+            for target in self.targets
+        )
 
     def _apply_assignment(
         self, assignment: OrderedAssignment, db: IAtomDB
@@ -598,21 +614,28 @@ class Link(Atom):
                 targets.append(assignment.mapping[t.name])
         return Link(self.atom_type, targets, self.ordered)
 
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         if DEBUG_LINK:
             print('link match', self)
         if any(isinstance(atom, LinkTemplate) for atom in self.targets):
-            return self._typed_variable_matched(db, answer)
+            return self._typed_variable_matched(db, answer, extra_parameters)
         if DEBUG_LINK:
             print('matched()', f'entering self = {self}')
-        if not all(atom.matched(db, answer) for atom in self.targets):
+        if not all(
+            atom.matched(db, answer, extra_parameters) for atom in self.targets
+        ):
             if DEBUG_LINK:
                 for atom in self.targets:
                     print(
                         'atom',
                         atom,
                         'atom.matched(db, answer)',
-                        atom.matched(db, answer),
+                        atom.matched(db, answer, extra_parameters),
                     )
                 print('matched()', f'leaving 0 self = {self}')
             return False
@@ -625,14 +648,13 @@ class Link(Atom):
                     f'self.atom_type = {self.atom_type} '
                     f'target_handles = {target_handles}'
                 )
-            matched = db.get_matched_links(self.atom_type, target_handles)
+            matched = db.get_matched_links(
+                self.atom_type, target_handles, extra_parameters
+            )
             if DEBUG_LINK:
                 print(f'matched = {matched}')
             if DEBUG_LINK:
                 print(f'len(matched) = {len(matched)}')
-            count = 1
-            total = len(matched)
-            start = time.perf_counter()
             answer.assignments = set()
             for match in matched:
                 link, targets = match
@@ -683,7 +705,12 @@ class Variable(Atom):
     def get_handle(self, db: IAtomDB) -> str:
         return WILDCARD
 
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         return True
 
 
@@ -702,7 +729,12 @@ class TypedVariable(Variable):
     def get_handle(self, db: IAtomDB) -> str:
         return WILDCARD
 
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         return True
 
 
@@ -739,11 +771,16 @@ class LinkTemplate(LogicalExpression):
                 return None
         return answer if answer.freeze() else None
 
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         if DEBUG_LINK_TEMPLATE:
             print('link template match', self)
         matched = db.get_matched_type_template(
-            [self.link_type, *[v.type for v in self.targets]]
+            [self.link_type, *[v.type for v in self.targets]], extra_parameters
         )
         if DEBUG_LINK_TEMPLATE:
             print('len(matched)', len(matched))
@@ -769,7 +806,12 @@ class Not(LogicalExpression):
     def __repr__(self):
         return f'NOT({self.term})'
 
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         if DEBUG_NOT:
             print('NOT', self)
         self.term.matched(db, answer)
@@ -788,7 +830,12 @@ class Or(LogicalExpression):
     def __repr__(self):
         return f'OR({self.terms})'
 
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         if DEBUG_OR:
             print('OR', self)
         if not self.terms:
@@ -865,7 +912,12 @@ class And(LogicalExpression):
             return assignment
         return assignment
 
-    def matched(self, db: IAtomDB, answer: PatternMatchingAnswer) -> bool:
+    def matched(
+        self,
+        db: IAtomDB,
+        answer: PatternMatchingAnswer,
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         if DEBUG_AND:
             print('AND', self)
         if not self.terms:
@@ -875,7 +927,7 @@ class And(LogicalExpression):
         forbidden_assignments = set()
         for term in self.terms:
             term_answer = PatternMatchingAnswer()
-            if not term.matched(db, term_answer):
+            if not term.matched(db, term_answer, extra_parameters):
                 if DEBUG_AND:
                     print(f'NOT MATCHED: {term}')
                 return False
