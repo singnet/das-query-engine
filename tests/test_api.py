@@ -1,17 +1,12 @@
-from dataclasses import dataclass
-from typing import Optional
 import pytest
-from unittest import mock
-from hyperon_das_atomdb.adapters.hash_table import InMemoryDB
-from hyperon_das_atomdb.exceptions import AddLinkException, AddNodeException, LinkDoesNotExistException, NodeDoesNotExistException
-from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
 
 from hyperon_das.api import DistributedAtomSpaceAPI
 from hyperon_das.das import QueryOutputFormat
-from hyperon_das.pattern_matcher.pattern_matcher import Link, And, Variable
+from hyperon_das.exceptions import QueryParametersException
+from hyperon_das.pattern_matcher.pattern_matcher import And, Link, Variable
+
 
 class TestDistributedAtomSpaceAPI:
-
     @pytest.fixture()
     def all_nodes(self):
         return [
@@ -228,26 +223,57 @@ class TestDistributedAtomSpaceAPI:
         return api
 
     def test_query_handle(self, hash_table_api: DistributedAtomSpaceAPI):
-
         V1 = Variable("V1")
         V2 = Variable("V2")
         V3 = Variable("V3")
 
-        expression = And([
-            Link("Inheritance", ordered=True, targets=[V1, V2]),
-            Link("Inheritance", ordered=True, targets=[V2, V3]),
-        ])
+        expression = And(
+            [
+                Link("Inheritance", ordered=True, targets=[V1, V2]),
+                Link("Inheritance", ordered=True, targets=[V2, V3]),
+            ]
+        )
 
-        ret = hash_table_api.query(expression, QueryOutputFormat.HANDLE)
+        ret = hash_table_api.query(
+            expression, {'return_type': QueryOutputFormat.HANDLE}
+        )
 
         expected_values = [
-            {'V1': 'd03e59654221c1e8fcda404fd5c8d6cb', 'V2': '08126b066d32ee37743e255a2558cccd', 'V3': 'b99ae727c787f1b13b452fd4c9ce1b9a'},
-            {'V1': 'c1db9b517073e51eb7ef6fed608ec204', 'V2': 'b99ae727c787f1b13b452fd4c9ce1b9a', 'V3': '0a32b476852eeb954979b87f5f6cb7af'},
-            {'V1': '5b34c54bee150c04f9fa584b899dc030', 'V2': 'bdfe4e7a431f73386f37c6448afe5840', 'V3': '0a32b476852eeb954979b87f5f6cb7af'},
-            {'V1': '99d18c702e813b07260baf577c60c455', 'V2': 'bdfe4e7a431f73386f37c6448afe5840', 'V3': '0a32b476852eeb954979b87f5f6cb7af'},
-            {'V1': 'af12f10f9ae2002a1607ba0b47ba8407', 'V2': 'bdfe4e7a431f73386f37c6448afe5840', 'V3': '0a32b476852eeb954979b87f5f6cb7af'},
-            {'V1': '08126b066d32ee37743e255a2558cccd', 'V2': 'b99ae727c787f1b13b452fd4c9ce1b9a', 'V3': '0a32b476852eeb954979b87f5f6cb7af'},
-            {'V1': '1cdffc6b0b89ff41d68bec237481d1e1', 'V2': 'bdfe4e7a431f73386f37c6448afe5840', 'V3': '0a32b476852eeb954979b87f5f6cb7af'}
+            {
+                'V1': 'd03e59654221c1e8fcda404fd5c8d6cb',
+                'V2': '08126b066d32ee37743e255a2558cccd',
+                'V3': 'b99ae727c787f1b13b452fd4c9ce1b9a',
+            },
+            {
+                'V1': 'c1db9b517073e51eb7ef6fed608ec204',
+                'V2': 'b99ae727c787f1b13b452fd4c9ce1b9a',
+                'V3': '0a32b476852eeb954979b87f5f6cb7af',
+            },
+            {
+                'V1': '5b34c54bee150c04f9fa584b899dc030',
+                'V2': 'bdfe4e7a431f73386f37c6448afe5840',
+                'V3': '0a32b476852eeb954979b87f5f6cb7af',
+            },
+            {
+                'V1': '99d18c702e813b07260baf577c60c455',
+                'V2': 'bdfe4e7a431f73386f37c6448afe5840',
+                'V3': '0a32b476852eeb954979b87f5f6cb7af',
+            },
+            {
+                'V1': 'af12f10f9ae2002a1607ba0b47ba8407',
+                'V2': 'bdfe4e7a431f73386f37c6448afe5840',
+                'V3': '0a32b476852eeb954979b87f5f6cb7af',
+            },
+            {
+                'V1': '08126b066d32ee37743e255a2558cccd',
+                'V2': 'b99ae727c787f1b13b452fd4c9ce1b9a',
+                'V3': '0a32b476852eeb954979b87f5f6cb7af',
+            },
+            {
+                'V1': '1cdffc6b0b89ff41d68bec237481d1e1',
+                'V2': 'bdfe4e7a431f73386f37c6448afe5840',
+                'V3': '0a32b476852eeb954979b87f5f6cb7af',
+            },
         ]
 
         ret_list = eval('[' + ret[1:-1] + ']')
@@ -259,50 +285,67 @@ class TestDistributedAtomSpaceAPI:
 
         assert number_matches == 7
 
-        ret_atom_info = hash_table_api.query(expression, QueryOutputFormat.ATOM_INFO)
+        ret_atom_info = hash_table_api.query(
+            expression, {'return_type': QueryOutputFormat.ATOM_INFO}
+        )
 
         assert len(eval(ret_atom_info)) == 7
 
-        ret_json = hash_table_api.query(expression, QueryOutputFormat.JSON)
+        ret_json = hash_table_api.query(
+            expression, {'return_type': QueryOutputFormat.JSON}
+        )
 
         assert len(eval(ret_json)) == 7
-        
-    def test_query_just_toplevel(self, hash_table_api: DistributedAtomSpaceAPI):
-        
-        hash_table_api.add_link({
-            'type': 'Evaluation',
-            'targets': [
-                {'type': 'Predicate', 'name': 'Predicate:has_name'},
-                {
-                    'type': 'Evaluation',
-                    'targets': [
-                        {'type': 'Predicate', 'name': 'Predicate:has_name'},
-                        {
-                            'type': 'Set',
-                            'targets': [
-                                {'type': 'Reactome', 'name': 'Reactome:R-HSA-164843'},
-                                {'type': 'Concept', 'name': 'Concept:2-LTR circle formation'},
-                            ]
-                        },
-                    ],
-                },
-            ],
-        })
-        
-        expression = Link("Evaluation", ordered=True, targets=[Variable('V1'), Variable('V2')])
 
-        def targets_is_toplevel(target_handles) -> bool:
-            for link_handle, targets in hash_table_api.db.db.outgoing_set.items():
-                if set(targets) == set(target_handles):
-                    arity = len(target_handles)
-                    links = hash_table_api.db.db.link.get_arity(arity)
-                    return links[link_handle]['is_toplevel']
-            return False
+    def test_query_toplevel_only_success(
+        self, hash_table_api: DistributedAtomSpaceAPI
+    ):
+        hash_table_api.add_link(
+            {
+                'type': 'Evaluation',
+                'targets': [
+                    {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                    {
+                        'type': 'Evaluation',
+                        'targets': [
+                            {
+                                'type': 'Predicate',
+                                'name': 'Predicate:has_name',
+                            },
+                            {
+                                'type': 'Set',
+                                'targets': [
+                                    {
+                                        'type': 'Reactome',
+                                        'name': 'Reactome:R-HSA-164843',
+                                    },
+                                    {
+                                        'type': 'Concept',
+                                        'name': 'Concept:2-LTR circle formation',
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            }
+        )
 
-        hash_table_api.db.targets_is_toplevel = targets_is_toplevel
-       
-        ret = hash_table_api.query(expression, QueryOutputFormat.ATOM_INFO, is_toplevel=True)
-        expected  = [
+        expression = Link(
+            "Evaluation",
+            ordered=True,
+            targets=[Variable('V1'), Variable('V2')],
+        )
+
+        ret = hash_table_api.query(
+            expression,
+            {
+                'toplevel_only': True,
+                'return_type': QueryOutputFormat.ATOM_INFO,
+            },
+        )
+
+        expected = [
             {
                 "V1": {"type": "Predicate", "name": "Predicate:has_name"},
                 "V2": {
@@ -312,13 +355,41 @@ class TestDistributedAtomSpaceAPI:
                         {
                             "type": "Set",
                             "targets": [
-                                {"type": "Reactome", "name": "Reactome:R-HSA-164843"},
-                                {"type": "Concept", "name": "Concept:2-LTR circle formation"}
-                            ]
-                        }
-                    ]
-                }
+                                {
+                                    "type": "Reactome",
+                                    "name": "Reactome:R-HSA-164843",
+                                },
+                                {
+                                    "type": "Concept",
+                                    "name": "Concept:2-LTR circle formation",
+                                },
+                            ],
+                        },
+                    ],
+                },
             }
         ]
-        
+
         assert ret == str(expected)
+
+    def test_query_toplevel_wrong_parameter(
+        self, hash_table_api: DistributedAtomSpaceAPI
+    ):
+        expression = Link(
+            "Evaluation",
+            ordered=True,
+            targets=[Variable('V1'), Variable('V2')],
+        )
+        with pytest.raises(QueryParametersException) as exc_info:
+            hash_table_api.query(
+                expression,
+                {
+                    'parameter_fake': True,
+                    'return_type': QueryOutputFormat.ATOM_INFO,
+                },
+            )
+        assert exc_info.type is QueryParametersException
+        assert (
+            exc_info.value.args[1]
+            == "possible values ['toplevel_only', 'return_type']"
+        )
