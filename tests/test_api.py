@@ -1,11 +1,7 @@
 import pytest
 
-from hyperon_das_atomdb.adapters.hash_table import InMemoryDB
-from hyperon_das_atomdb.exceptions import AddLinkException, AddNodeException, LinkDoesNotExistException, NodeDoesNotExistException
-from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
-
 from hyperon_das.api import DistributedAtomSpaceAPI
-from hyperon_das.das import QueryOutputFormat
+from hyperon_das.utils import QueryOutputFormat
 from hyperon_das.pattern_matcher.pattern_matcher import Link, And, Variable
 
 class TestDistributedAtomSpaceAPI:
