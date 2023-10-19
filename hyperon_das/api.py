@@ -13,7 +13,7 @@ from hyperon_das.pattern_matcher import (
 from hyperon_das.utils import QueryOutputFormat
 
 
-class DistributedAtomSpaceAPI:
+class DistributedAtomSpace:
     def __init__(self, database: DatabaseType) -> None:
         self._db_type = database
         try:
