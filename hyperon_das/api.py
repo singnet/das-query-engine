@@ -574,7 +574,7 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
             tag_not = "NOT "
 
         if extra_parameters.return_type == QueryOutputFormat.HANDLE:
-            mapping = str(query_answer.assignments)
+            mapping = list(query_answer.assignments)
         elif extra_parameters.return_type == QueryOutputFormat.ATOM_INFO:
             objs = []
             for assignment in query_answer.assignments:
@@ -582,8 +582,12 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
                     var: self.db.get_atom_as_deep_representation(handle)
                     for var, handle in assignment.mapping.items()
                 }
+                if obj.get('targets'):
+                    obj.update({'is_link': True, 'is_node': False})
+                else:
+                    obj.update({'is_link': True, 'is_node': False})
                 objs.append(obj)
-            mapping = str(objs)
+            mapping = objs
         elif extra_parameters.return_type == QueryOutputFormat.JSON:
             objs = []
             for assignment in query_answer.assignments:
@@ -621,3 +625,225 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
                 message='This method is permited only in memory database',
                 details='Instantiate the class sent the database type as `hash_table`',
             )
+
+if __name__ == '__main__':
+    from hyperon_das.pattern_matcher.pattern_matcher import Link, Variable
+    api = DistributedAtomSpaceAPI('hash_table')
+    all_nodes = [
+        {'type': 'Concept', 'name': 'human'},
+        {'type': 'Concept', 'name': 'monkey'},
+        {'type': 'Concept', 'name': 'chimp'},
+        {'type': 'Concept', 'name': 'snake'},
+        {'type': 'Concept', 'name': 'earthworm'},
+        {'type': 'Concept', 'name': 'rhino'},
+        {'type': 'Concept', 'name': 'triceratops'},
+        {'type': 'Concept', 'name': 'vine'},
+        {'type': 'Concept', 'name': 'ent'},
+        {'type': 'Concept', 'name': 'mammal'},
+        {'type': 'Concept', 'name': 'animal'},
+        {'type': 'Concept', 'name': 'reptile'},
+        {'type': 'Concept', 'name': 'dinosaur'},
+        {'type': 'Concept', 'name': 'plant'},
+    ]
+    all_links = [
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'human'},
+                {'type': 'Concept', 'name': 'monkey'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'human'},
+                {'type': 'Concept', 'name': 'chimp'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'chimp'},
+                {'type': 'Concept', 'name': 'monkey'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'snake'},
+                {'type': 'Concept', 'name': 'earthworm'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'rhino'},
+                {'type': 'Concept', 'name': 'triceratops'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'snake'},
+                {'type': 'Concept', 'name': 'vine'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'human'},
+                {'type': 'Concept', 'name': 'ent'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'human'},
+                {'type': 'Concept', 'name': 'mammal'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'monkey'},
+                {'type': 'Concept', 'name': 'mammal'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'chimp'},
+                {'type': 'Concept', 'name': 'mammal'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'mammal'},
+                {'type': 'Concept', 'name': 'animal'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'reptile'},
+                {'type': 'Concept', 'name': 'animal'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'snake'},
+                {'type': 'Concept', 'name': 'reptile'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'dinosaur'},
+                {'type': 'Concept', 'name': 'reptile'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'triceratops'},
+                {'type': 'Concept', 'name': 'dinosaur'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'earthworm'},
+                {'type': 'Concept', 'name': 'animal'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'rhino'},
+                {'type': 'Concept', 'name': 'mammal'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'vine'},
+                {'type': 'Concept', 'name': 'plant'},
+            ],
+        },
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'ent'},
+                {'type': 'Concept', 'name': 'plant'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'monkey'},
+                {'type': 'Concept', 'name': 'human'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'chimp'},
+                {'type': 'Concept', 'name': 'human'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'monkey'},
+                {'type': 'Concept', 'name': 'chimp'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'earthworm'},
+                {'type': 'Concept', 'name': 'snake'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'triceratops'},
+                {'type': 'Concept', 'name': 'rhino'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'vine'},
+                {'type': 'Concept', 'name': 'snake'},
+            ],
+        },
+        {
+            'type': 'Similarity',
+            'targets': [
+                {'type': 'Concept', 'name': 'ent'},
+                {'type': 'Concept', 'name': 'human'},
+            ],
+        },
+    ]
+    for node in all_nodes:
+        api.add_node(node)
+    for link in all_links:
+        api.add_link(link)
+
+    # api.query(
+    #     Link('Inheritance', [Variable('V1'), Variable('V2')], True),
+    #     QueryOutputFormat.HANDLE
+    # )
+    ret = api.query(
+        Link('Inheritance', [Variable('V1'), Variable('V2')], True),
+        {'return_type':QueryOutputFormat.ATOM_INFO}
+    )
+    print(ret)
+    # api.query(
+    #     Link('Inheritance', [Variable('V1'), Variable('V2')], True),
+    #     QueryOutputFormat.JSON
+    # )
