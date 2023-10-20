@@ -1,3 +1,3 @@
-from hyperon_das.api import DistributedAtomSpaceAPI as DasAPI
+from hyperon_das.api import DistributedAtomSpace
 
-__all__ = ['DasAPI']
+__all__ = ['DistributedAtomSpace']

@@ -1,14 +1,10 @@
 import pytest
 
-from hyperon_das_atomdb.adapters.hash_table import InMemoryDB
-from hyperon_das_atomdb.exceptions import AddLinkException, AddNodeException, LinkDoesNotExistException, NodeDoesNotExistException
-from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
-
-from hyperon_das.api import DistributedAtomSpaceAPI
-from hyperon_das.das import QueryOutputFormat
+from hyperon_das.api import DistributedAtomSpace
+from hyperon_das.utils import QueryOutputFormat
 from hyperon_das.pattern_matcher.pattern_matcher import Link, And, Variable
 
-class TestDistributedAtomSpaceAPI:
+class TestDistributedAtomSpace:
     
     @pytest.fixture()
     def all_nodes(self):
@@ -218,14 +214,14 @@ class TestDistributedAtomSpaceAPI:
 
     @pytest.fixture()
     def hash_table_api(self, all_nodes, all_links):
-        api = DistributedAtomSpaceAPI(database='hash_table')
+        api = DistributedAtomSpace(database='hash_table')
         for node in all_nodes:
             api.add_node(node)
         for link in all_links:
             api.add_link(link)
         return api
 
-    def test_query_handle(self, hash_table_api: DistributedAtomSpaceAPI):
+    def test_query_handle(self, hash_table_api: DistributedAtomSpace):
 
         V1 = Variable("V1")
         V2 = Variable("V2")
