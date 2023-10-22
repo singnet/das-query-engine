@@ -1,7 +1,7 @@
 
 
 test:
-	@pytest -v
+	@pytest -v -s
 
 test-coverage:
 	@py.test -sx -vv ./tests --cov=./hyperon_das/ --cov-report=term-missing --cov-fail-under=90

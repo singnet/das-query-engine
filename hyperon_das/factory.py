@@ -38,7 +38,7 @@ class DatabaseFactory:
 
 def database_factory(factory: IDatabaseFactory) -> IAtomDB:
     redis_mongo_database = factory.create_redis_mongo_database()
-    ram_only_database = factory.create_hastable_database()
+    ram_only_database = factory.create_ram_only_database()
 
     if factory.name == DatabaseType.REDIS_MONGO.value:
         return redis_mongo_database()

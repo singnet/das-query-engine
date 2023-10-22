@@ -1,16 +1,20 @@
 import json
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD
 
-from hyperon_das.exceptions import DatabaseTypeException, MethodNotAllowed
+from hyperon_das.exceptions import (
+    DatabaseTypeException,
+    MethodNotAllowed,
+    QueryParametersException,
+)
 from hyperon_das.factory import DatabaseFactory, DatabaseType, database_factory
 from hyperon_das.logger import logger
 from hyperon_das.pattern_matcher import (
     LogicalExpression,
     PatternMatchingAnswer,
 )
-from hyperon_das.utils import QueryOutputFormat
+from hyperon_das.utils import QueryOutputFormat, QueryParameters
 
 
 class DistributedAtomSpace:
@@ -71,6 +75,19 @@ class DistributedAtomSpace:
                     self.db.get_atom_as_deep_representation(handle, arity)
                 )
         return json.dumps(answer, sort_keys=False, indent=4)
+
+    def _turn_into_deep_representation(self, assignments) -> list:
+        objs = []
+        for assignment in assignments:
+            obj = {}
+            for var, handle in assignment.mapping.items():
+                obj[var] = self.db.get_atom_as_deep_representation(handle)
+                if obj[var].get('targets'):
+                    obj[var].update({'is_link': True, 'is_node': False})
+                else:
+                    obj[var].update({'is_link': False, 'is_node': True})
+            objs.append(obj)
+        return objs
 
     def clear_database(self) -> None:
         """Clear all data"""
@@ -532,8 +549,8 @@ class DistributedAtomSpace:
     def query(
         self,
         query: LogicalExpression,
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> List[Dict[str, Any]] | str:
+        extra_parameters: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """
         Perform a query on the knowledge base using a logical expression.
 
@@ -586,9 +603,23 @@ class DistributedAtomSpace:
                 ...
             }
         """
+
+        if extra_parameters is not None:
+            try:
+                extra_parameters = QueryParameters(**extra_parameters)
+            except TypeError as e:
+                raise QueryParametersException(
+                    message=str(e),
+                    details=f'possible values {QueryParameters.values()}',
+                )
+        else:
+            extra_parameters = QueryParameters()
+
         query_answer = PatternMatchingAnswer()
 
-        matched = query.matched(self.db, query_answer)
+        matched = query.matched(
+            self.db, query_answer, extra_parameters.__dict__
+        )
 
         if not matched:
             return ""
@@ -599,32 +630,26 @@ class DistributedAtomSpace:
         if query_answer.negation:
             tag_not = "NOT "
 
-        if output_format == QueryOutputFormat.HANDLE:
+        if extra_parameters.return_type == QueryOutputFormat.HANDLE:
             mapping = list(query_answer.assignments)
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            objs = []
-            for assignment in query_answer.assignments:
-                obj = {
-                    var: self.db.get_atom_as_deep_representation(handle)
-                    for var, handle in assignment.mapping.items()
-                }
-                objs.append(obj)
+        elif extra_parameters.return_type == QueryOutputFormat.ATOM_INFO:
+            objs = self._turn_into_deep_representation(
+                query_answer.assignments
+            )
             mapping = objs
-        elif output_format == QueryOutputFormat.JSON:
-            objs = []
-            for assignment in query_answer.assignments:
-                obj = {
-                    var: self.db.get_atom_as_deep_representation(handle)
-                    for var, handle in assignment.mapping.items()
-                }
-                objs.append(obj)
+        elif extra_parameters.return_type == QueryOutputFormat.JSON:
+            objs = self._turn_into_deep_representation(
+                query_answer.assignments
+            )
             mapping = json.dumps(
                 objs,
                 sort_keys=False,
                 indent=4,
             )
         else:
-            raise ValueError(f"Invalid output format: '{output_format}'")
+            raise ValueError(
+                f"Invalid output format: '{extra_parameters.return_type}'"
+            )
 
         return f"{tag_not}{mapping}"
 
