@@ -8,7 +8,7 @@ from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
 class DatabaseType(Enum):
     REDIS_MONGO = 'redis_mongo'
-    HASHTABLE = 'hash_table'
+    RAM_ONLY = 'ram_only'
 
     @classmethod
     def values(cls):
@@ -21,7 +21,7 @@ class IDatabaseFactory(Protocol):
         ...  # pragma no cover
 
     @abstractmethod
-    def create_hastable_database(self):
+    def create_ram_only_database(self):
         ...  # pragma no cover
 
 
@@ -32,16 +32,16 @@ class DatabaseFactory:
     def create_redis_mongo_database(self):
         return RedisMongoDB
 
-    def create_hastable_database(self):
+    def create_ram_only_database(self):
         return InMemoryDB
 
 
 def database_factory(factory: IDatabaseFactory) -> IAtomDB:
     redis_mongo_database = factory.create_redis_mongo_database()
-    hashtable_database = factory.create_hastable_database()
+    ram_only_database = factory.create_ram_only_database()
 
     if factory.name == DatabaseType.REDIS_MONGO.value:
         return redis_mongo_database()
 
-    if factory.name == DatabaseType.HASHTABLE.value:
-        return hashtable_database()
+    if factory.name == DatabaseType.RAM_ONLY.value:
+        return ram_only_database()

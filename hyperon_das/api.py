@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD
 
-from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.exceptions import (
     DatabaseTypeException,
     MethodNotAllowed,
@@ -18,7 +17,7 @@ from hyperon_das.pattern_matcher import (
 from hyperon_das.utils import QueryOutputFormat, QueryParameters
 
 
-class DistributedAtomSpaceAPI(DistributedAtomSpace):
+class DistributedAtomSpace:
     def __init__(self, database: DatabaseType) -> None:
         self._db_type = database
         try:
@@ -33,6 +32,49 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         logger().info(
             f"New Distributed Atom Space. Database name: {self.db.database_name}"
         )
+
+    def _to_handle_list(
+        self, atom_list: Union[List[str], List[Dict]]
+    ) -> List[str]:
+        if not atom_list:
+            return []
+        if isinstance(atom_list[0], str):
+            return atom_list
+        else:
+            return [handle for handle, _ in atom_list]
+
+    def _to_link_dict_list(
+        self, db_answer: Union[List[str], List[Dict]]
+    ) -> List[Dict]:
+        if not db_answer:
+            return []
+        flat_handle = isinstance(db_answer[0], str)
+        answer = []
+        for atom in db_answer:
+            if flat_handle:
+                handle = atom
+                arity = -1
+            else:
+                handle, targets = atom
+                arity = len(targets)
+            answer.append(self.db.get_atom_as_dict(handle, arity))
+        return answer
+
+    def _to_json(self, db_answer: Union[List[str], List[Dict]]) -> List[Dict]:
+        answer = []
+        if db_answer:
+            flat_handle = isinstance(db_answer[0], str)
+            for atom in db_answer:
+                if flat_handle:
+                    handle = atom
+                    arity = -1
+                else:
+                    handle, targets = atom
+                    arity = len(targets)
+                answer.append(
+                    self.db.get_atom_as_deep_representation(handle, arity)
+                )
+        return json.dumps(answer, sort_keys=False, indent=4)
 
     def _turn_into_deep_representation(self, assignments) -> list:
         objs = []
@@ -522,7 +564,9 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
                 Defaults to QueryOutputFormat.HANDLE.
 
         Returns:
-            str: The result of the query in the specified output format.
+            Union[List[Dict[str, Any]], str]: Depending on the `return_type` parameter sent in extra_parameters, returns:
+                - A list of dictionaries (return_type == QueryOutputFormat.HANDLE or return_type == QueryOutputFormat.ATOM_INFO),
+                - A JSON-formatted string representing the deep representation of the links (return_type == QueryOutputFormat.JSON).
 
         Raises:
             ValueError: If an invalid output format is provided.
@@ -610,19 +654,19 @@ class DistributedAtomSpaceAPI(DistributedAtomSpace):
         return f"{tag_not}{mapping}"
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._db_type == DatabaseType.HASHTABLE.value:
+        if self._db_type == DatabaseType.RAM_ONLY.value:
             return self.db.add_node(node_params)
         else:
             raise MethodNotAllowed(
                 message='This method is permited only in memory database',
-                details='Instantiate the class sent the database type as `hash_table`',
+                details='Instantiate the class sent the database type as `ram_only`',
             )
 
     def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._db_type == DatabaseType.HASHTABLE.value:
+        if self._db_type == DatabaseType.RAM_ONLY.value:
             return self.db.add_link(link_params)
         else:
             raise MethodNotAllowed(
                 message='This method is permited only in memory database',
-                details='Instantiate the class sent the database type as `hash_table`',
+                details='Instantiate the class sent the database type as `ram_only`',
             )

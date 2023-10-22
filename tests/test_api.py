@@ -1,13 +1,14 @@
 import json
+
 import pytest
 
-from hyperon_das.api import DistributedAtomSpaceAPI
-from hyperon_das.utils import QueryOutputFormat
+from hyperon_das.api import DistributedAtomSpace
 from hyperon_das.exceptions import QueryParametersException
 from hyperon_das.pattern_matcher.pattern_matcher import And, Link, Variable
+from hyperon_das.utils import QueryOutputFormat
 
 
-class TestDistributedAtomSpaceAPI:
+class TestDistributedAtomSpace:
     @pytest.fixture()
     def all_nodes(self):
         return [
@@ -216,14 +217,14 @@ class TestDistributedAtomSpaceAPI:
 
     @pytest.fixture()
     def hash_table_api(self, all_nodes, all_links):
-        api = DistributedAtomSpaceAPI(database='hash_table')
+        api = DistributedAtomSpace(database='ram_only')
         for node in all_nodes:
             api.add_node(node)
         for link in all_links:
             api.add_link(link)
         return api
 
-    def test_query_handle(self, hash_table_api: DistributedAtomSpaceAPI):
+    def test_query_handle(self, hash_table_api: DistributedAtomSpace):
         V1 = Variable("V1")
         V2 = Variable("V2")
         V3 = Variable("V3")
@@ -295,11 +296,11 @@ class TestDistributedAtomSpaceAPI:
         ret_json = hash_table_api.query(
             expression, {'return_type': QueryOutputFormat.JSON}
         )
-        
+
         assert len(json.loads(ret_json)) == 7
 
     def test_query_toplevel_only_success(
-        self, hash_table_api: DistributedAtomSpaceAPI
+        self, hash_table_api: DistributedAtomSpace
     ):
         hash_table_api.add_link(
             {
@@ -348,7 +349,12 @@ class TestDistributedAtomSpaceAPI:
 
         expected = [
             {
-                "V1": {"type": "Predicate", "name": "Predicate:has_name", 'is_link': False, 'is_node': True},
+                "V1": {
+                    "type": "Predicate",
+                    "name": "Predicate:has_name",
+                    'is_link': False,
+                    'is_node': True,
+                },
                 "V2": {
                     "type": "Evaluation",
                     "targets": [
@@ -368,7 +374,7 @@ class TestDistributedAtomSpaceAPI:
                         },
                     ],
                     'is_link': True,
-                    'is_node': False
+                    'is_node': False,
                 },
             }
         ]
@@ -376,7 +382,7 @@ class TestDistributedAtomSpaceAPI:
         assert ret == str(expected)
 
     def test_query_toplevel_wrong_parameter(
-        self, hash_table_api: DistributedAtomSpaceAPI
+        self, hash_table_api: DistributedAtomSpace
     ):
         expression = Link(
             "Evaluation",
