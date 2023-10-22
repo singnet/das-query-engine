@@ -1,3 +1,4 @@
+import json
 import pytest
 
 from hyperon_das.api import DistributedAtomSpaceAPI
@@ -294,8 +295,8 @@ class TestDistributedAtomSpaceAPI:
         ret_json = hash_table_api.query(
             expression, {'return_type': QueryOutputFormat.JSON}
         )
-
-        assert len(eval(ret_json)) == 7
+        
+        assert len(json.loads(ret_json)) == 7
 
     def test_query_toplevel_only_success(
         self, hash_table_api: DistributedAtomSpaceAPI
@@ -347,7 +348,7 @@ class TestDistributedAtomSpaceAPI:
 
         expected = [
             {
-                "V1": {"type": "Predicate", "name": "Predicate:has_name"},
+                "V1": {"type": "Predicate", "name": "Predicate:has_name", 'is_link': False, 'is_node': True},
                 "V2": {
                     "type": "Evaluation",
                     "targets": [
@@ -366,6 +367,8 @@ class TestDistributedAtomSpaceAPI:
                             ],
                         },
                     ],
+                    'is_link': True,
+                    'is_node': False
                 },
             }
         ]
