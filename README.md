@@ -102,25 +102,72 @@ This way you don't need anything just instantiate the class as shown below:
     ```python
     from hyperon_das import DistributedAtomSpace
 	from hyperon_das.pattern_matcher import And, Variable, Link
+    from hyperon_das.utils import QueryOutputFormat
 
     api = DistributedAtomSpace('ram_only')
 
-	V1 =  Variable("V1")
-	V2 =  Variable("V2")
-	V3 =  Variable("V3")
+    api.add_link({
+        'type': 'Evaluation',
+        'targets': [
+            {'type': 'Predicate', 'name': 'Predicate:has_name'},
+            {
+                'type': 'Evaluation',
+                'targets': [
+                    {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                    {
+                        'type': 'Set',
+                        'targets': [
+                            {'type': 'Reactome', 'name': 'Reactome:R-HSA-164843'},
+                            {'type': 'Concept', 'name': 'Concept:2-LTR circle formation'},
+                        ]
+                    },
+                ],
+            },
+        ],
+    })
 
-	expression =  And([
-		Link("Inheritance",  ordered=True,  targets=[V1, V2]),
-		Link("Inheritance",  ordered=True,  targets=[V2, V3])
-	])
+    expression =  Link("Evaluation",  ordered=True,  targets=[Variable("V1"), Variable("V2")])
 
-	resp = api.query(expression)
+    resp = api.query(expression, {'return_type': QueryOutputFormat.JSON, 'toplevel_only': True})
 	
 	print(resp)
 	```
 
 	```bash
-	{{'V1': 'a1fb3a4de5c459bfa4bd87dc423019c3', 'V2': '98870929d76a80c618e70a0393055b31', 'V3': '81ec21b0f1b03e18c55e056a56179fef'}, {'V1': 'bd497eb24420dd50fed5f3d2e6cdd7c1', 'V2': '98870929d76a80c618e70a0393055b31', 'V3': '81ec21b0f1b03e18c55e056a56179fef'}, {'V1': 'e2d9b15ab3461228d75502e754137caa', 'V2': 'c90242e2dbece101813762cc2a83d726', 'V3': '81ec21b0f1b03e18c55e056a56179fef'}, {'V1': 'd1ec11ec366a1deb24a079dc39863c68', 'V2': 'c90242e2dbece101813762cc2a83d726', 'V3': '81ec21b0f1b03e18c55e056a56179fef'}, {'V1': 'fa77994f6835fad256902605a506c59c', 'V2': '98870929d76a80c618e70a0393055b31', 'V3': '81ec21b0f1b03e18c55e056a56179fef'}, {'V1': 'c77b519f8ab36dfea8e2a532a7603d9a', 'V2': 'd1ec11ec366a1deb24a079dc39863c68', 'V3': 'c90242e2dbece101813762cc2a83d726'}, {'V1': '305e7d502a0ce80b94374ff0d79a6464', 'V2': '98870929d76a80c618e70a0393055b31', 'V3': '81ec21b0f1b03e18c55e056a56179fef'}}
+    [
+        {
+            "V1": {
+                "type": "Predicate",
+                "name": "Predicate:has_name",
+                "is_link": false,
+                "is_node": true
+            },
+            "V2": {
+                "type": "Evaluation",
+                "targets": [
+                    {
+                        "type": "Predicate",
+                        "name": "Predicate:has_name"
+                    },
+                    {
+                        "type": "Set",
+                        "targets": [
+                            {
+                                "type": "Reactome",
+                                "name": "Reactome:R-HSA-164843"
+                            },
+                            {
+                                "type": "Concept",
+                                "name": "Concept:2-LTR circle formation"
+                            }
+                        ]
+                    }
+                ],
+                "is_link": true,
+                "is_node": false
+            }
+        }
+    ]
 	```
 
 2. Add Node and And Link (It's possible only using [Ram Only](#in-memory))
