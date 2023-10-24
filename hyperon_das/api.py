@@ -77,17 +77,21 @@ class DistributedAtomSpace:
         return json.dumps(answer, sort_keys=False, indent=4)
 
     def _turn_into_deep_representation(self, assignments) -> list:
-        objs = []
+        results = []
         for assignment in assignments:
-            obj = {}
-            for var, handle in assignment.mapping.items():
-                obj[var] = self.db.get_atom_as_deep_representation(handle)
-                if obj[var].get('targets'):
-                    obj[var].update({'is_link': True, 'is_node': False})
-                else:
-                    obj[var].update({'is_link': False, 'is_node': True})
-            objs.append(obj)
-        return objs
+            result = {}
+            for variable, handle in assignment.mapping.items():
+                deep_representation = self.db.get_atom_as_deep_representation(
+                    handle
+                )
+                is_link = 'targets' in deep_representation
+                result[variable] = {
+                    **deep_representation,
+                    'is_link': is_link,
+                    'is_node': not is_link,
+                }
+            results.append(result)
+        return results
 
     def clear_database(self) -> None:
         """Clear all data"""
@@ -593,7 +597,7 @@ class DistributedAtomSpace:
                 Link("Inheritance", ordered=True, targets=[V2, V3])
             ])
 
-            >>> result = obj.query(query=logical_expression)
+            >>> result = obj.query(query=logical_expression, {'return_type': QueryOutputFormat.HANDLE})
 
             >>> print(result)
             {
@@ -670,3 +674,48 @@ class DistributedAtomSpace:
                 message='This method is permited only in memory database',
                 details='Instantiate the class sent the database type as `ram_only`',
             )
+
+
+if __name__ == '__main__':
+    from hyperon_das.pattern_matcher import And, Link, Variable
+    from hyperon_das.utils import QueryOutputFormat
+
+    api = DistributedAtomSpace('ram_only')
+    api.add_link(
+        {
+            'type': 'Evaluation',
+            'targets': [
+                {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                {
+                    'type': 'Evaluation',
+                    'targets': [
+                        {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                        {
+                            'type': 'Set',
+                            'targets': [
+                                {
+                                    'type': 'Reactome',
+                                    'name': 'Reactome:R-HSA-164843',
+                                },
+                                {
+                                    'type': 'Concept',
+                                    'name': 'Concept:2-LTR circle formation',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+    )
+
+    expression = Link(
+        "Evaluation", ordered=True, targets=[Variable("V1"), Variable("V2")]
+    )
+
+    resp = api.query(
+        expression,
+        {'return_type': QueryOutputFormat.JSON, 'toplevel_only': True},
+    )
+
+    print(resp)
