@@ -352,8 +352,7 @@ class TestDistributedAtomSpace:
                 "V1": {
                     "type": "Predicate",
                     "name": "Predicate:has_name",
-                    'is_link': False,
-                    'is_node': True,
+                    'atom_type': 'node',
                 },
                 "V2": {
                     "type": "Evaluation",
@@ -373,8 +372,7 @@ class TestDistributedAtomSpace:
                             ],
                         },
                     ],
-                    'is_link': True,
-                    'is_node': False,
+                    'atom_type': 'link',
                 },
             }
         ]

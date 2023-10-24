@@ -87,8 +87,7 @@ class DistributedAtomSpace:
                 is_link = 'targets' in deep_representation
                 result[variable] = {
                     **deep_representation,
-                    'is_link': is_link,
-                    'is_node': not is_link,
+                    'atom_type': 'link' if is_link else 'node',
                 }
             results.append(result)
         return results
