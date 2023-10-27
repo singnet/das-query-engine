@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import Protocol
+from typing import Optional, Protocol
 
 from hyperon_das_atomdb import IAtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
@@ -44,7 +44,11 @@ class DatabaseFactory:
         return 'ServerDB'
 
 
-def database_factory(factory: IDatabaseFactory) -> IAtomDB:
+def database_factory(
+    factory: IDatabaseFactory,
+    ip_address: Optional[str] = None,
+    port: Optional[str] = None,
+) -> IAtomDB:
     redis_mongo_database = factory.create_redis_mongo_database()
     ram_only_database = factory.create_ram_only_database()
     server_database = factory.create_server_database()
@@ -56,4 +60,4 @@ def database_factory(factory: IDatabaseFactory) -> IAtomDB:
         return ram_only_database()
 
     if factory.name == DatabaseType.SERVER.value:
-        return server_database()
+        return server_database(ip_address=ip_address, port=port)
