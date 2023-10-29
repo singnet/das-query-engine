@@ -20,7 +20,9 @@ def _build_link_handle(link_type: str, target_handles: List[str]) -> str:
 
 
 class DatabaseMock(IAtomDB):
-    def __init__(self):
+    def __init__(self, name: str = 'das'):
+        self.database_name = name
+
         human = _build_node_handle('Concept', 'human')
         monkey = _build_node_handle('Concept', 'monkey')
         chimp = _build_node_handle('Concept', 'chimp')
@@ -94,6 +96,12 @@ class DatabaseMock(IAtomDB):
             ['Set', human, monkey, chimp],
         ]
 
+        nested_link = [
+            'Evaluation',
+            human,
+            ['Evaluation', human, _build_link_handle('Set', [monkey, mammal])],
+        ]
+
         self.template_index = {}
 
         for link in self.all_links:
@@ -105,6 +113,8 @@ class DatabaseMock(IAtomDB):
             v = self.template_index.get(key, [])
             v.append([_build_link_handle(link[0], link[1:]), link[1:]])
             self.template_index[key] = v
+
+        self.all_links.append(nested_link)
 
     def __repr__(self):
         return "<Atom database Mock>"
@@ -187,6 +197,8 @@ class DatabaseMock(IAtomDB):
                         answer.append(
                             [_build_link_handle(link[0], link[1:]), link[1:]]
                         )
+                elif link[0] == 'Evaluation':
+                    answer.append('test')
                 else:
                     raise ValueError(f"Invalid link type: {link[0]}")
         return answer
@@ -218,14 +230,41 @@ class DatabaseMock(IAtomDB):
     def get_matched_type(self, link_named_type: str):
         pass
 
-    def get_atom_as_dict(self, handle: str, arity: int):
-        pass
+    def get_atom_as_dict(self, handle: str, arity: int = 0):
+        if handle in self.all_nodes:
+            return {
+                'handle': handle,
+                'type': handle.split()[0][1:-1],
+                'name': handle.split()[1][:-1],
+            }
+        match = re.search(r"<([^:]+): (.+)>", handle)
+        _type = match.group(1)
+        targets = eval(match.group(2))
+        template = [_type]
+        for target in targets:
+            template.append(_split_node_handle(target)[0])
+        if match:
+            return {
+                'handle': handle,
+                'type': _type,
+                'template': template,
+                'targets': targets,
+            }
 
-    def get_atom_as_deep_representation(self, handle: str, arity: int):
-        pass
+    def get_atom_as_deep_representation(self, handle: str, arity: int = 0):
+        if handle in self.all_nodes:
+            return {
+                'type': handle.split()[0][1:-1],
+                'name': handle.split()[1][:-1],
+            }
+
+    def get_link_type(self, link_handle: str) -> str:
+        document = self.get_atom_as_dict(link_handle)
+        return document["type"]
 
     def get_node_type(self, node_handle: str) -> str:
-        pass
+        document = self.get_atom_as_dict(node_handle)
+        return document["type"]
 
     def count_atoms(self):
         return (len(self.all_nodes), len(self.all_links))
