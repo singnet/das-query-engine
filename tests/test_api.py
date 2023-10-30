@@ -7,6 +7,7 @@ from hyperon_das.api import DistributedAtomSpace
 from hyperon_das.exceptions import QueryParametersException
 from hyperon_das.pattern_matcher.pattern_matcher import And, Link, Variable
 from hyperon_das.utils import QueryOutputFormat
+from tests.mock import DistributedAtomSpaceMock
 
 
 class NodeContainer:
@@ -31,7 +32,7 @@ class NodeContainer:
 class TestDistributedAtomSpace:
     @pytest.fixture()
     def das(self):
-        return DistributedAtomSpace(database='test')
+        return DistributedAtomSpaceMock()
 
     @pytest.fixture()
     def nodes(self, das: DistributedAtomSpace):

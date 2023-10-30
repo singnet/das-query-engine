@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from hyperon_das_atomdb import WILDCARD, IAtomDB
 
+from hyperon_das import DistributedAtomSpace
+
 
 def _build_node_handle(node_type: str, node_name: str) -> str:
     return f'<{node_type}: {node_name}>'
@@ -17,6 +19,11 @@ def _build_link_handle(link_type: str, target_handles: List[str]) -> str:
     if link_type == 'Similarity' or link_type == 'Set':
         target_handles.sort()
     return f'<{link_type}: {target_handles}>'
+
+
+class DistributedAtomSpaceMock(DistributedAtomSpace):
+    def __init__(self) -> None:
+        self.db = DatabaseMock()
 
 
 class DatabaseMock(IAtomDB):
