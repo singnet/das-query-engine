@@ -648,9 +648,9 @@ class DistributedAtomSpace:
             )
 
         if query_answer.negation:
-            return {'tag_not': False, 'mapping': result}
+            return {'negation': True, 'mapping': result}
         else:
-            return result
+            return {'negation': False, 'mapping': result}
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         if self._db_type == DatabaseType.RAM_ONLY.value:
