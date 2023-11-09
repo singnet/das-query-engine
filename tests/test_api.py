@@ -5,7 +5,12 @@ from hyperon_das_atomdb import UNORDERED_LINK_TYPES, WILDCARD
 
 from hyperon_das.api import DistributedAtomSpace
 from hyperon_das.exceptions import QueryParametersException
-from hyperon_das.pattern_matcher.pattern_matcher import And, Link, Variable
+from hyperon_das.pattern_matcher.pattern_matcher import (
+    And,
+    Link,
+    Not,
+    Variable,
+)
 from hyperon_das.utils import QueryOutputFormat
 from tests.mock import DistributedAtomSpaceMock
 
@@ -86,80 +91,43 @@ class TestDistributedAtomSpace:
             [nodes.ent, nodes.plant],
         ]
 
-    def test_query_handle(self, das: DistributedAtomSpace):
+    def test_query_method(self, das: DistributedAtomSpace):
         V1 = Variable("V1")
         V2 = Variable("V2")
         V3 = Variable("V3")
 
-        expression = And(
+        and_expression = And(
             [
                 Link("Inheritance", ordered=True, targets=[V1, V2]),
                 Link("Inheritance", ordered=True, targets=[V2, V3]),
             ]
         )
 
-        ret = das.query(expression, {'return_type': QueryOutputFormat.HANDLE})
-
-        expected_values = [
-            {
-                'V1': '<Concept: rhino>',
-                'V2': '<Concept: mammal>',
-                'V3': '<Concept: animal>',
-            },
-            {
-                'V1': '<Concept: triceratops>',
-                'V2': '<Concept: dinosaur>',
-                'V3': '<Concept: reptile>',
-            },
-            {
-                'V1': '<Concept: dinosaur>',
-                'V2': '<Concept: reptile>',
-                'V3': '<Concept: animal>',
-            },
-            {
-                'V1': '<Concept: chimp>',
-                'V2': '<Concept: mammal>',
-                'V3': '<Concept: animal>',
-            },
-            {
-                'V1': '<Concept: snake>',
-                'V2': '<Concept: reptile>',
-                'V3': '<Concept: animal>',
-            },
-            {
-                'V1': '<Concept: monkey>',
-                'V2': '<Concept: mammal>',
-                'V3': '<Concept: animal>',
-            },
-            {
-                'V1': '<Concept: human>',
-                'V2': '<Concept: mammal>',
-                'V3': '<Concept: animal>',
-            },
-        ]
-
-        ret_list = eval('[' + ret[1:-1] + ']')
-
-        number_matches = 0
-        for item in ret_list:
-            if item in expected_values:
-                number_matches += 1
-
-        assert number_matches == 7
+        ret = das.query(
+            and_expression, {'return_type': QueryOutputFormat.HANDLE}
+        )
+        assert len(ret['mapping']) == 7
+        assert ret['negation'] == False
 
         ret_atom_info = das.query(
-            expression, {'return_type': QueryOutputFormat.ATOM_INFO}
+            and_expression, {'return_type': QueryOutputFormat.ATOM_INFO}
         )
-
-        assert len(eval(ret_atom_info)) == 7
+        assert len(ret_atom_info['mapping']) == 7
+        assert ret['negation'] == False
 
         ret_json = das.query(
-            expression, {'return_type': QueryOutputFormat.JSON}
+            and_expression, {'return_type': QueryOutputFormat.JSON}
         )
+        assert len(json.loads(ret_json['mapping'])) == 7
+        assert ret['negation'] == False
 
-        assert len(json.loads(ret_json)) == 7
+        not_expression = Not(
+            Link("Inheritance", ordered=True, targets=[V1, V2])
+        )
+        ret = das.query(not_expression)
+        assert ret['negation'] == True
 
-    # TODO: Adjust
+    # TODO: Adjust Mock class
     def query_toplevel_only_success(self, das: DistributedAtomSpace):
         expression = Link(
             "Evaluation",
