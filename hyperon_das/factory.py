@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional, Protocol
 
 from hyperon_das_atomdb import IAtomDB
-from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
+from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB, ServerDB
 
 
 class DatabaseType(Enum):
@@ -41,7 +41,7 @@ class DatabaseFactory:
         return InMemoryDB
 
     def create_server_database(self):
-        return 'ServerDB'
+        return ServerDB
 
 
 def database_factory(
