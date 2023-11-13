@@ -1,345 +1,141 @@
 import json
 
 import pytest
+from hyperon_das_atomdb import UNORDERED_LINK_TYPES, WILDCARD
 
 from hyperon_das.api import DistributedAtomSpace
 from hyperon_das.exceptions import QueryParametersException
-from hyperon_das.pattern_matcher.pattern_matcher import And, Link, Variable
+from hyperon_das.pattern_matcher.pattern_matcher import (
+    And,
+    Link,
+    Not,
+    Variable,
+)
 from hyperon_das.utils import QueryOutputFormat
+from tests.mock import DistributedAtomSpaceMock
+
+
+class NodeContainer:
+    def __init__(self, das):
+        concept = "Concept"
+        self.animal = das.get_node(concept, "animal")
+        self.mammal = das.get_node(concept, "mammal")
+        self.reptile = das.get_node(concept, "reptile")
+        self.plant = das.get_node(concept, "plant")
+        self.human = das.get_node(concept, "human")
+        self.monkey = das.get_node(concept, "monkey")
+        self.chimp = das.get_node(concept, "chimp")
+        self.earthworm = das.get_node(concept, "earthworm")
+        self.snake = das.get_node(concept, "snake")
+        self.triceratops = das.get_node(concept, "triceratops")
+        self.rhino = das.get_node(concept, "rhino")
+        self.vine = das.get_node(concept, "vine")
+        self.ent = das.get_node(concept, "ent")
+        self.dinosaur = das.get_node(concept, "dinosaur")
 
 
 class TestDistributedAtomSpace:
     @pytest.fixture()
-    def all_nodes(self):
+    def das(self):
+        return DistributedAtomSpaceMock()
+
+    @pytest.fixture()
+    def nodes(self, das: DistributedAtomSpace):
+        return NodeContainer(das)
+
+    @pytest.fixture()
+    def all_nodes(self, nodes: NodeContainer):
         return [
-            {'type': 'Concept', 'name': 'human'},
-            {'type': 'Concept', 'name': 'monkey'},
-            {'type': 'Concept', 'name': 'chimp'},
-            {'type': 'Concept', 'name': 'snake'},
-            {'type': 'Concept', 'name': 'earthworm'},
-            {'type': 'Concept', 'name': 'rhino'},
-            {'type': 'Concept', 'name': 'triceratops'},
-            {'type': 'Concept', 'name': 'vine'},
-            {'type': 'Concept', 'name': 'ent'},
-            {'type': 'Concept', 'name': 'mammal'},
-            {'type': 'Concept', 'name': 'animal'},
-            {'type': 'Concept', 'name': 'reptile'},
-            {'type': 'Concept', 'name': 'dinosaur'},
-            {'type': 'Concept', 'name': 'plant'},
+            nodes.animal,
+            nodes.mammal,
+            nodes.reptile,
+            nodes.plant,
+            nodes.human,
+            nodes.monkey,
+            nodes.chimp,
+            nodes.earthworm,
+            nodes.snake,
+            nodes.triceratops,
+            nodes.rhino,
+            nodes.vine,
+            nodes.ent,
+            nodes.dinosaur,
         ]
 
     @pytest.fixture()
-    def all_links(self):
+    def all_similarities(self, nodes):
         return [
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'human'},
-                    {'type': 'Concept', 'name': 'monkey'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'human'},
-                    {'type': 'Concept', 'name': 'chimp'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'chimp'},
-                    {'type': 'Concept', 'name': 'monkey'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'snake'},
-                    {'type': 'Concept', 'name': 'earthworm'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'rhino'},
-                    {'type': 'Concept', 'name': 'triceratops'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'snake'},
-                    {'type': 'Concept', 'name': 'vine'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'human'},
-                    {'type': 'Concept', 'name': 'ent'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'human'},
-                    {'type': 'Concept', 'name': 'mammal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'monkey'},
-                    {'type': 'Concept', 'name': 'mammal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'chimp'},
-                    {'type': 'Concept', 'name': 'mammal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'mammal'},
-                    {'type': 'Concept', 'name': 'animal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'reptile'},
-                    {'type': 'Concept', 'name': 'animal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'snake'},
-                    {'type': 'Concept', 'name': 'reptile'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'dinosaur'},
-                    {'type': 'Concept', 'name': 'reptile'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'triceratops'},
-                    {'type': 'Concept', 'name': 'dinosaur'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'earthworm'},
-                    {'type': 'Concept', 'name': 'animal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'rhino'},
-                    {'type': 'Concept', 'name': 'mammal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'vine'},
-                    {'type': 'Concept', 'name': 'plant'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'ent'},
-                    {'type': 'Concept', 'name': 'plant'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'monkey'},
-                    {'type': 'Concept', 'name': 'human'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'chimp'},
-                    {'type': 'Concept', 'name': 'human'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'monkey'},
-                    {'type': 'Concept', 'name': 'chimp'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'earthworm'},
-                    {'type': 'Concept', 'name': 'snake'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'triceratops'},
-                    {'type': 'Concept', 'name': 'rhino'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'vine'},
-                    {'type': 'Concept', 'name': 'snake'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'ent'},
-                    {'type': 'Concept', 'name': 'human'},
-                ],
-            },
+            set([nodes.human, nodes.monkey]),
+            set([nodes.human, nodes.chimp]),
+            set([nodes.chimp, nodes.monkey]),
+            set([nodes.earthworm, nodes.snake]),
+            set([nodes.triceratops, nodes.rhino]),
+            set([nodes.vine, nodes.snake]),
+            set([nodes.ent, nodes.human]),
         ]
 
     @pytest.fixture()
-    def hash_table_api(self, all_nodes, all_links):
-        api = DistributedAtomSpace(database='ram_only')
-        for node in all_nodes:
-            api.add_node(node)
-        for link in all_links:
-            api.add_link(link)
-        return api
+    def all_inheritances(self, nodes):
+        return [
+            [nodes.human, nodes.mammal],
+            [nodes.monkey, nodes.mammal],
+            [nodes.chimp, nodes.mammal],
+            [nodes.mammal, nodes.animal],
+            [nodes.reptile, nodes.animal],
+            [nodes.snake, nodes.reptile],
+            [nodes.dinosaur, nodes.reptile],
+            [nodes.triceratops, nodes.dinosaur],
+            [nodes.earthworm, nodes.animal],
+            [nodes.rhino, nodes.mammal],
+            [nodes.vine, nodes.plant],
+            [nodes.ent, nodes.plant],
+        ]
 
-    def test_query_handle(self, hash_table_api: DistributedAtomSpace):
+    def test_query_method(self, das: DistributedAtomSpace):
         V1 = Variable("V1")
         V2 = Variable("V2")
         V3 = Variable("V3")
 
-        expression = And(
+        and_expression = And(
             [
                 Link("Inheritance", ordered=True, targets=[V1, V2]),
                 Link("Inheritance", ordered=True, targets=[V2, V3]),
             ]
         )
 
-        ret = hash_table_api.query(
-            expression, {'return_type': QueryOutputFormat.HANDLE}
+        ret = das.query(
+            and_expression, {'return_type': QueryOutputFormat.HANDLE}
         )
+        assert len(ret['mapping']) == 7
+        assert ret['negation'] == False
 
-        expected_values = [
-            {
-                'V1': 'd03e59654221c1e8fcda404fd5c8d6cb',
-                'V2': '08126b066d32ee37743e255a2558cccd',
-                'V3': 'b99ae727c787f1b13b452fd4c9ce1b9a',
-            },
-            {
-                'V1': 'c1db9b517073e51eb7ef6fed608ec204',
-                'V2': 'b99ae727c787f1b13b452fd4c9ce1b9a',
-                'V3': '0a32b476852eeb954979b87f5f6cb7af',
-            },
-            {
-                'V1': '5b34c54bee150c04f9fa584b899dc030',
-                'V2': 'bdfe4e7a431f73386f37c6448afe5840',
-                'V3': '0a32b476852eeb954979b87f5f6cb7af',
-            },
-            {
-                'V1': '99d18c702e813b07260baf577c60c455',
-                'V2': 'bdfe4e7a431f73386f37c6448afe5840',
-                'V3': '0a32b476852eeb954979b87f5f6cb7af',
-            },
-            {
-                'V1': 'af12f10f9ae2002a1607ba0b47ba8407',
-                'V2': 'bdfe4e7a431f73386f37c6448afe5840',
-                'V3': '0a32b476852eeb954979b87f5f6cb7af',
-            },
-            {
-                'V1': '08126b066d32ee37743e255a2558cccd',
-                'V2': 'b99ae727c787f1b13b452fd4c9ce1b9a',
-                'V3': '0a32b476852eeb954979b87f5f6cb7af',
-            },
-            {
-                'V1': '1cdffc6b0b89ff41d68bec237481d1e1',
-                'V2': 'bdfe4e7a431f73386f37c6448afe5840',
-                'V3': '0a32b476852eeb954979b87f5f6cb7af',
-            },
-        ]
-
-        ret_list = eval('[' + ret[1:-1] + ']')
-
-        number_matches = 0
-        for item in ret_list:
-            if item in expected_values:
-                number_matches += 1
-
-        assert number_matches == 7
-
-        ret_atom_info = hash_table_api.query(
-            expression, {'return_type': QueryOutputFormat.ATOM_INFO}
+        ret_atom_info = das.query(
+            and_expression, {'return_type': QueryOutputFormat.ATOM_INFO}
         )
+        assert len(ret_atom_info['mapping']) == 7
+        assert ret['negation'] == False
 
-        assert len(eval(ret_atom_info)) == 7
-
-        ret_json = hash_table_api.query(
-            expression, {'return_type': QueryOutputFormat.JSON}
+        ret_json = das.query(
+            and_expression, {'return_type': QueryOutputFormat.JSON}
         )
+        assert len(json.loads(ret_json['mapping'])) == 7
+        assert ret['negation'] == False
 
-        assert len(json.loads(ret_json)) == 7
-
-    def test_query_toplevel_only_success(
-        self, hash_table_api: DistributedAtomSpace
-    ):
-        hash_table_api.add_link(
-            {
-                'type': 'Evaluation',
-                'targets': [
-                    {'type': 'Predicate', 'name': 'Predicate:has_name'},
-                    {
-                        'type': 'Evaluation',
-                        'targets': [
-                            {
-                                'type': 'Predicate',
-                                'name': 'Predicate:has_name',
-                            },
-                            {
-                                'type': 'Set',
-                                'targets': [
-                                    {
-                                        'type': 'Reactome',
-                                        'name': 'Reactome:R-HSA-164843',
-                                    },
-                                    {
-                                        'type': 'Concept',
-                                        'name': 'Concept:2-LTR circle formation',
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            }
+        not_expression = Not(
+            Link("Inheritance", ordered=True, targets=[V1, V2])
         )
+        ret = das.query(not_expression)
+        assert ret['negation'] == True
 
+    # TODO: Adjust Mock class
+    def query_toplevel_only_success(self, das: DistributedAtomSpace):
         expression = Link(
             "Evaluation",
             ordered=True,
             targets=[Variable('V1'), Variable('V2')],
         )
 
-        ret = hash_table_api.query(
+        ret = das.query(
             expression,
             {
                 'toplevel_only': True,
@@ -379,16 +175,14 @@ class TestDistributedAtomSpace:
 
         assert ret == str(expected)
 
-    def test_query_toplevel_wrong_parameter(
-        self, hash_table_api: DistributedAtomSpace
-    ):
+    def test_query_toplevel_wrong_parameter(self, das: DistributedAtomSpace):
         expression = Link(
             "Evaluation",
             ordered=True,
             targets=[Variable('V1'), Variable('V2')],
         )
         with pytest.raises(QueryParametersException) as exc_info:
-            hash_table_api.query(
+            das.query(
                 expression,
                 {
                     'parameter_fake': True,
@@ -400,3 +194,205 @@ class TestDistributedAtomSpace:
             exc_info.value.args[1]
             == "possible values ['toplevel_only', 'return_type']"
         )
+
+    def test_get_node(self, das: DistributedAtomSpace):
+        human = das.get_node('Concept', "human")
+        human_document = das.get_node(
+            'Concept', "human", output_format=QueryOutputFormat.ATOM_INFO
+        )
+        assert human_document["handle"] == human
+        assert human_document["type"] == 'Concept'
+        assert human_document["name"] == "human"
+
+    def test_get_atom(self, das: DistributedAtomSpace, nodes: NodeContainer):
+        human = nodes.human
+        mammal = nodes.mammal
+        assert human == das.get_atom(human)
+        human_document = das.get_atom(
+            human, output_format=QueryOutputFormat.ATOM_INFO
+        )
+        assert human_document["handle"] == human
+        assert human_document["type"] == 'Concept'
+        assert human_document["name"] == "human"
+        link = das.get_link('Inheritance', [human, mammal])
+        atom = das.get_atom(link)
+        assert atom == link
+
+    def test_get_nodes(self, das: DistributedAtomSpace, nodes: NodeContainer):
+        human = nodes.human
+        human_document = das.get_nodes(
+            'Concept', "human", output_format=QueryOutputFormat.ATOM_INFO
+        )[0]
+        assert human_document["handle"] == human
+        assert human_document["type"] == 'Concept'
+        assert human_document["name"] == "human"
+
+    def test_get_link(self, das: DistributedAtomSpace, nodes: NodeContainer):
+        human = nodes.human
+        monkey = nodes.monkey
+        link_handle = das.get_link('Similarity', [human, monkey])
+        link = das.get_link(
+            'Similarity',
+            [human, monkey],
+            output_format=QueryOutputFormat.ATOM_INFO,
+        )
+        assert link["handle"] == link_handle
+        assert link["type"] == 'Similarity'
+        assert link["template"] == ['Similarity', 'Concept', 'Concept']
+
+    def test_get_link_targets(self, das, all_similarities, all_inheritances):
+        test_links = [('Similarity', list(v)) for v in all_similarities] + [
+            ('Inheritance', v) for v in all_inheritances
+        ]
+
+        for link_type, targets in test_links:
+            link_handle = das.get_link(link_type, targets)
+            answer = das.get_link_targets(link_handle)
+            assert len(answer) == len(targets)
+            if link_type == 'Similarity':
+                for node in targets:
+                    assert node in answer
+            else:
+                # TODO: remove "sorted" and make this test pass
+                for n1, n2 in zip(sorted(answer), sorted(targets)):
+                    assert n1 == n2
+
+    def test_get_link_type(self, das, all_inheritances, all_similarities):
+        test_links = [('Similarity', list(v)) for v in all_similarities] + [
+            ('Inheritance', v) for v in all_inheritances
+        ]
+
+        for link_type, targets in test_links:
+            link_handle = das.get_link(link_type, targets)
+            answer = das.get_link_type(link_handle)
+            assert answer == link_type
+
+    def test_get_node_type(self, das: DistributedAtomSpace, all_nodes):
+        for node in all_nodes:
+            node_type = das.get_node_type(node)
+            assert node_type == 'Concept'
+
+    def test_get_node_name(self, das: DistributedAtomSpace, nodes):
+        test_nodes = [
+            (nodes.animal, "animal"),
+            (nodes.mammal, "mammal"),
+            (nodes.reptile, "reptile"),
+            (nodes.plant, "plant"),
+            (nodes.human, "human"),
+            (nodes.monkey, "monkey"),
+            (nodes.chimp, "chimp"),
+            (nodes.earthworm, "earthworm"),
+            (nodes.snake, "snake"),
+            (nodes.triceratops, "triceratops"),
+            (nodes.rhino, "rhino"),
+            (nodes.vine, "vine"),
+            (nodes.ent, "ent"),
+            (nodes.dinosaur, "dinosaur"),
+        ]
+
+        for node_handle, node_name in test_nodes:
+            name = das.get_node_name(node_handle)
+            assert name == node_name
+
+        with pytest.raises(Exception):
+            name = das.get_node_name("blah")
+
+    def test_get_links_with_link_templates(self, das, all_similarities):
+        link_handles = das.get_links(
+            link_type='Similarity', target_types=['Concept', 'Concept']
+        )
+        links = das.get_links(
+            link_type='Similarity',
+            target_types=['Concept', 'Concept'],
+            output_format=QueryOutputFormat.ATOM_INFO,
+        )
+        assert len(link_handles) == len(links)
+        for link in links:
+            assert link["handle"] in link_handles
+            assert link["type"] == 'Similarity'
+            assert link["template"] == ['Similarity', 'Concept', 'Concept']
+            assert set(link["targets"]) in all_similarities
+
+    def test_get_links_with_patterns(self, das, all_inheritances, nodes):
+        def _check_pattern(link_type, targets, expected):
+            link_handles = list(
+                set(das.get_links(link_type=link_type, targets=targets))
+            )
+            links = das.get_links(
+                link_type=link_type,
+                targets=targets,
+                output_format=QueryOutputFormat.ATOM_INFO,
+            )
+            assert len(link_handles) == len(expected)
+            for link in links:
+                assert link["handle"] in link_handles
+                assert link["type"] == link_type or link_type == WILDCARD
+                if link_type == 'Similarity':
+                    assert link["template"] == [
+                        'Similarity',
+                        'Concept',
+                        'Concept',
+                    ]
+                if link_type == 'Inheritance':
+                    assert link["template"] == [
+                        'Inheritance',
+                        'Concept',
+                        'Concept',
+                    ]
+                if link["type"] in UNORDERED_LINK_TYPES:
+                    assert set(link["targets"]) in expected
+                else:
+                    assert link["targets"] in expected
+
+        _check_pattern(
+            'Similarity',
+            [nodes.human, WILDCARD],
+            [
+                set([nodes.human, nodes.monkey]),
+                set([nodes.human, nodes.chimp]),
+                set([nodes.human, nodes.ent]),
+            ],
+        )
+        _check_pattern(
+            'Similarity',
+            [WILDCARD, nodes.human],
+            [
+                set([nodes.human, nodes.monkey]),
+                set([nodes.human, nodes.chimp]),
+                set([nodes.human, nodes.ent]),
+            ],
+        )
+        _check_pattern('Inheritance', [WILDCARD, WILDCARD], all_inheritances)
+        _check_pattern(
+            'Inheritance',
+            [nodes.human, WILDCARD],
+            [
+                [nodes.human, nodes.mammal],
+            ],
+        )
+        _check_pattern(
+            'Inheritance',
+            [WILDCARD, nodes.animal],
+            [
+                [nodes.mammal, nodes.animal],
+                [nodes.reptile, nodes.animal],
+                [nodes.earthworm, nodes.animal],
+            ],
+        )
+        _check_pattern(WILDCARD, [nodes.mammal, nodes.human], [])
+        # TODO: Implemente patterns in DatabaseMock
+        # _check_pattern(WILDCARD, [nodes.chimp, nodes.monkey], [
+        #     set([nodes.chimp, nodes.monkey]),
+        # ])
+        # _check_pattern(WILDCARD, [nodes.monkey, nodes.chimp], [
+        #     set([nodes.chimp, nodes.monkey]),
+        # ])
+        # _check_pattern(WILDCARD, [nodes.human, nodes.mammal], [
+        #     [nodes.human, nodes.mammal],
+        # ])
+        # _check_pattern(WILDCARD, [nodes.human, WILDCARD], [
+        #     set([nodes.human, nodes.monkey]),
+        #     set([nodes.human, nodes.chimp]),
+        #     set([nodes.human, nodes.ent]),
+        #     [nodes.human, nodes.mammal],
+        # ])

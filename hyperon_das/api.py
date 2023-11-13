@@ -569,7 +569,7 @@ class DistributedAtomSpace:
         self,
         query: LogicalExpression,
         extra_parameters: Optional[Dict[str, Any]] = None,
-    ) -> str:
+    ) -> dict | list | None:
         """
         Perform a query on the knowledge base using a logical expression.
 
@@ -583,7 +583,7 @@ class DistributedAtomSpace:
                 Defaults to QueryOutputFormat.HANDLE.
 
         Returns:
-            Union[List[Dict[str, Any]], str]: Depending on the `return_type` parameter sent in extra_parameters, returns:
+            Union[Dict[str, Any]], List]: Depending on the `return_type` parameter sent in extra_parameters, returns:
                 - A list of dictionaries (return_type == QueryOutputFormat.HANDLE or return_type == QueryOutputFormat.ATOM_INFO),
                 - A JSON-formatted string representing the deep representation of the links (return_type == QueryOutputFormat.JSON).
 
@@ -641,26 +641,19 @@ class DistributedAtomSpace:
         )
 
         if not matched:
-            return ""
-
-        tag_not = ""
-        mapping = ""
-
-        if query_answer.negation:
-            tag_not = "NOT "
+            return None
 
         if extra_parameters.return_type == QueryOutputFormat.HANDLE:
-            mapping = list(query_answer.assignments)
+            result = list(query_answer.assignments)
         elif extra_parameters.return_type == QueryOutputFormat.ATOM_INFO:
-            objs = self._turn_into_deep_representation(
+            result = self._turn_into_deep_representation(
                 query_answer.assignments
             )
-            mapping = objs
         elif extra_parameters.return_type == QueryOutputFormat.JSON:
             objs = self._turn_into_deep_representation(
                 query_answer.assignments
             )
-            mapping = json.dumps(
+            result = json.dumps(
                 objs,
                 sort_keys=False,
                 indent=4,
@@ -670,7 +663,10 @@ class DistributedAtomSpace:
                 f"Invalid output format: '{extra_parameters.return_type}'"
             )
 
-        return f"{tag_not}{mapping}"
+        if query_answer.negation:
+            return {'negation': True, 'mapping': result}
+        else:
+            return {'negation': False, 'mapping': result}
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         if self._db_type == DatabaseType.RAM_ONLY.value:
