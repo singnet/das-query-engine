@@ -28,3 +28,7 @@ class UnexpectedQueryFormat(BaseException):
 
 class InvalidAssignment(BaseException):
     ...  # pragma no cover
+
+
+class InitializeServerException(BaseException):
+    ...  # pragma no cover
