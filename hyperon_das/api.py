@@ -36,7 +36,7 @@ class DistributedAtomSpace:
             self._error(DatabaseTypeException(
                 message=str(e),
                 details=f'possible values {DatabaseType.values()}',
-            )
+            ))
 
         if database == DatabaseType.SERVER.value and not host:
             raise InitializeServerException(
