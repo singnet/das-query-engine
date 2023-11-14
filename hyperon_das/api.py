@@ -22,7 +22,7 @@ class DistributedAtomSpace:
     def __init__(
         self,
         database: DatabaseType,
-        ip_address: Optional[str] = None,
+        host: Optional[str] = None,
         port: Optional[str] = None,
     ) -> None:
         self._db_type = database
@@ -35,19 +35,15 @@ class DistributedAtomSpace:
                 details=f'possible values {DatabaseType.values()}',
             )
 
-        if database == DatabaseType.SERVER.value and not ip_address:
+        if database == DatabaseType.SERVER.value and not host:
             raise InitializeServerException(
-                message='You must send the ip_address parameter',
-                details=f'To use server type Das you must send at least the ip_address parameter',
+                message='You must send the host parameter',
+                details=f'To use server type Das you must send at least the host parameter',
             )
 
-        self.db = database_factory(
-            DatabaseFactory(self._db_type), ip_address, port
-        )
-        self.pattern_black_list = []
-        logger().info(
-            f"New Distributed Atom Space. Database name: {self.db.database_name}"
-        )
+        self.db = database_factory(DatabaseFactory(self._db_type), host, port)
+
+        # logger().info(f"New Distributed Atom Space. Database name: {self.db.database_name}")
 
     def _to_handle_list(
         self, atom_list: Union[List[str], List[Dict]]

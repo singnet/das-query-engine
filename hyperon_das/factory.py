@@ -46,7 +46,7 @@ class DatabaseFactory:
 
 def database_factory(
     factory: IDatabaseFactory,
-    ip_address: Optional[str] = None,
+    host: Optional[str] = None,
     port: Optional[str] = None,
 ) -> IAtomDB:
     redis_mongo_database = factory.create_redis_mongo_database()
@@ -60,4 +60,4 @@ def database_factory(
         return ram_only_database()
 
     if factory.name == DatabaseType.SERVER.value:
-        return server_database(ip_address=ip_address, port=port)
+        return server_database(host=host, port=port)
