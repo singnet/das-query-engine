@@ -128,7 +128,7 @@ This way you don't need anything just instantiate the class as shown below:
 
     expression =  Link("Evaluation",  ordered=True,  targets=[Variable("V1"), Variable("V2")])
 
-    resp = api.query(expression, {'return_type': QueryOutputFormat.JSON, 'toplevel_only': True})
+    resp = api.pattern_matcher_query(expression, {'return_type': QueryOutputFormat.JSON, 'toplevel_only': True})
 	
 	print(resp)
 	```
