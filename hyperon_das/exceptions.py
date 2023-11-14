@@ -20,3 +20,7 @@ class MethodNotAllowed(BaseException):
 
 class QueryParametersException(BaseException):
     ...  # pragma no cover
+
+
+class InitializeServerException(BaseException):
+    ...  # pragma no cover

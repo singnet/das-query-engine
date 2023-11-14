@@ -5,6 +5,7 @@ from hyperon_das_atomdb import WILDCARD
 
 from hyperon_das.exceptions import (
     DatabaseTypeException,
+    InitializeServerException,
     MethodNotAllowed,
     QueryParametersException,
 )
@@ -18,8 +19,14 @@ from hyperon_das.utils import QueryOutputFormat, QueryParameters
 
 
 class DistributedAtomSpace:
-    def __init__(self, database: DatabaseType) -> None:
+    def __init__(
+        self,
+        database: DatabaseType,
+        host: Optional[str] = None,
+        port: Optional[str] = None,
+    ) -> None:
         self._db_type = database
+
         try:
             DatabaseType(database)
         except ValueError as e:
@@ -27,11 +34,16 @@ class DistributedAtomSpace:
                 message=str(e),
                 details=f'possible values {DatabaseType.values()}',
             )
-        self.db = database_factory(DatabaseFactory(self._db_type))
-        self.pattern_black_list = []
-        logger().info(
-            f"New Distributed Atom Space. Database name: {self.db.database_name}"
-        )
+
+        if database == DatabaseType.SERVER.value and not host:
+            raise InitializeServerException(
+                message='You must send the host parameter',
+                details=f'To use server type Das you must send at least the host parameter',
+            )
+
+        self.db = database_factory(DatabaseFactory(self._db_type), host, port)
+
+        # logger().info(f"New Distributed Atom Space. Database name: {self.db.database_name}")
 
     def _to_handle_list(
         self, atom_list: Union[List[str], List[Dict]]
