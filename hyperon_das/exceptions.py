@@ -22,5 +22,13 @@ class QueryParametersException(BaseException):
     ...  # pragma no cover
 
 
+class UnexpectedQueryFormat(BaseException):
+    ...  # pragma no cover
+
+
+class InvalidAssignment(BaseException):
+    ...  # pragma no cover
+
+
 class InitializeServerException(BaseException):
     ...  # pragma no cover

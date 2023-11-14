@@ -103,19 +103,19 @@ class TestDistributedAtomSpace:
             ]
         )
 
-        ret = das.query(
+        ret = das.pattern_matcher_query(
             and_expression, {'return_type': QueryOutputFormat.HANDLE}
         )
         assert len(ret['mapping']) == 7
         assert ret['negation'] == False
 
-        ret_atom_info = das.query(
+        ret_atom_info = das.pattern_matcher_query(
             and_expression, {'return_type': QueryOutputFormat.ATOM_INFO}
         )
         assert len(ret_atom_info['mapping']) == 7
         assert ret['negation'] == False
 
-        ret_json = das.query(
+        ret_json = das.pattern_matcher_query(
             and_expression, {'return_type': QueryOutputFormat.JSON}
         )
         assert len(json.loads(ret_json['mapping'])) == 7
@@ -124,7 +124,7 @@ class TestDistributedAtomSpace:
         not_expression = Not(
             Link("Inheritance", ordered=True, targets=[V1, V2])
         )
-        ret = das.query(not_expression)
+        ret = das.pattern_matcher_query(not_expression)
         assert ret['negation'] == True
 
     # TODO: Adjust Mock class
@@ -135,7 +135,7 @@ class TestDistributedAtomSpace:
             targets=[Variable('V1'), Variable('V2')],
         )
 
-        ret = das.query(
+        ret = das.pattern_matcher_query(
             expression,
             {
                 'toplevel_only': True,
@@ -182,7 +182,7 @@ class TestDistributedAtomSpace:
             targets=[Variable('V1'), Variable('V2')],
         )
         with pytest.raises(QueryParametersException) as exc_info:
-            das.query(
+            das.pattern_matcher_query(
                 expression,
                 {
                     'parameter_fake': True,
@@ -396,3 +396,42 @@ class TestDistributedAtomSpace:
         #     set([nodes.human, nodes.ent]),
         #     [nodes.human, nodes.mammal],
         # ])
+
+
+    #def test_nested_pattern(self, das: DistributedAtomSpace):
+    #    das.add_link({
+    #        "type": "Expression",
+    #        "targets": [
+    #            {"type": "Symbol", "name": "Test"},
+    #            {
+    #                "type": "Expression",
+    #                "targets": [
+    #                    {"type": "Symbol", "name": "Test"},
+    #                    {"type": "Symbol", "name": "2"}
+    #                ]
+    #            }
+    #        ]
+    #    })
+    #    query_params = {
+    #        "toplevel_only": False,
+    #        "return_type": QueryOutputFormat.ATOM_INFO,
+    #    }
+    #    q1 = {
+    #        "atom_type": "link",
+    #        "type": "Expression",
+    #        "targets": [
+    #            {"atom_type": "variable", "name": "v1"},
+    #            {
+    #                "atom_type": "link",
+    #                "type": "Expression",
+    #                "targets": [
+    #                    {"atom_type": "variable", "name": "v2"},
+    #                    {"atom_type": "node", "type": "Symbol", "name": "2"},
+    #                ]
+    #            }
+    #                
+    #        ]
+    #    }
+    #    answer = das.query(q1, query_params)
+    #    assert len(answer) == 1
+    #    assert answer[0]["handle"] == "dbcf1c7b610a5adea335bf08f6509978"
