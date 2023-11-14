@@ -275,3 +275,6 @@ class DatabaseMock(IAtomDB):
 
     def count_atoms(self):
         return (len(self.all_nodes), len(self.all_links))
+
+    def clear_database(self):
+        pass
