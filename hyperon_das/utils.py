@@ -18,6 +18,7 @@ class QueryParameters:
     def values(cls) -> list:
         return list(cls.__dataclass_fields__.keys())
 
+
 class Assignment:
 
     def __init__(self):

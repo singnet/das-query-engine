@@ -128,7 +128,8 @@ class TestDistributedAtomSpace:
         assert ret['negation'] == True
 
     # TODO: Adjust Mock class
-    def query_toplevel_only_success(self, das: DistributedAtomSpace):
+    def test_query_toplevel_only_success(self):
+        das = DistributedAtomSpace('ram_only')
         expression = Link(
             "Evaluation",
             ordered=True,
@@ -240,7 +241,7 @@ class TestDistributedAtomSpace:
         assert link["type"] == 'Similarity'
         assert link["template"] == ['Similarity', 'Concept', 'Concept']
 
-    def test_get_link_targets(self, das, all_similarities, all_inheritances):
+    def test_get_link_targets(self, das: DistributedAtomSpace, all_similarities, all_inheritances):
         test_links = [('Similarity', list(v)) for v in all_similarities] + [
             ('Inheritance', v) for v in all_inheritances
         ]
@@ -257,7 +258,7 @@ class TestDistributedAtomSpace:
                 for n1, n2 in zip(sorted(answer), sorted(targets)):
                     assert n1 == n2
 
-    def test_get_link_type(self, das, all_inheritances, all_similarities):
+    def test_get_link_type(self, das: DistributedAtomSpace, all_inheritances, all_similarities):
         test_links = [('Similarity', list(v)) for v in all_similarities] + [
             ('Inheritance', v) for v in all_inheritances
         ]
@@ -297,7 +298,7 @@ class TestDistributedAtomSpace:
         with pytest.raises(Exception):
             name = das.get_node_name("blah")
 
-    def test_get_links_with_link_templates(self, das, all_similarities):
+    def test_get_links_with_link_templates(self, das: DistributedAtomSpace, all_similarities):
         link_handles = das.get_links(
             link_type='Similarity', target_types=['Concept', 'Concept']
         )
@@ -313,7 +314,7 @@ class TestDistributedAtomSpace:
             assert link["template"] == ['Similarity', 'Concept', 'Concept']
             assert set(link["targets"]) in all_similarities
 
-    def test_get_links_with_patterns(self, das, all_inheritances, nodes):
+    def test_get_links_with_patterns(self, das: DistributedAtomSpace, all_inheritances, nodes):
         def _check_pattern(link_type, targets, expected):
             link_handles = list(
                 set(das.get_links(link_type=link_type, targets=targets))
@@ -380,6 +381,7 @@ class TestDistributedAtomSpace:
             ],
         )
         _check_pattern(WILDCARD, [nodes.mammal, nodes.human], [])
+        
         # TODO: Implemente patterns in DatabaseMock
         # _check_pattern(WILDCARD, [nodes.chimp, nodes.monkey], [
         #     set([nodes.chimp, nodes.monkey]),
@@ -397,41 +399,41 @@ class TestDistributedAtomSpace:
         #     [nodes.human, nodes.mammal],
         # ])
 
-
-    #def test_nested_pattern(self, das: DistributedAtomSpace):
-    #    das.add_link({
-    #        "type": "Expression",
-    #        "targets": [
-    #            {"type": "Symbol", "name": "Test"},
-    #            {
-    #                "type": "Expression",
-    #                "targets": [
-    #                    {"type": "Symbol", "name": "Test"},
-    #                    {"type": "Symbol", "name": "2"}
-    #                ]
-    #            }
-    #        ]
-    #    })
-    #    query_params = {
-    #        "toplevel_only": False,
-    #        "return_type": QueryOutputFormat.ATOM_INFO,
-    #    }
-    #    q1 = {
-    #        "atom_type": "link",
-    #        "type": "Expression",
-    #        "targets": [
-    #            {"atom_type": "variable", "name": "v1"},
-    #            {
-    #                "atom_type": "link",
-    #                "type": "Expression",
-    #                "targets": [
-    #                    {"atom_type": "variable", "name": "v2"},
-    #                    {"atom_type": "node", "type": "Symbol", "name": "2"},
-    #                ]
-    #            }
-    #                
-    #        ]
-    #    }
-    #    answer = das.query(q1, query_params)
-    #    assert len(answer) == 1
-    #    assert answer[0]["handle"] == "dbcf1c7b610a5adea335bf08f6509978"
+    def test_nested_pattern(self):
+        das = DistributedAtomSpace('ram_only')
+        das.add_link({
+            "type": "Expression",
+            "targets": [
+                {"type": "Symbol", "name": "Test"},
+                {
+                    "type": "Expression",
+                    "targets": [
+                        {"type": "Symbol", "name": "Test"},
+                        {"type": "Symbol", "name": "2"}
+                    ]
+                }
+            ]
+        })
+        query_params = {
+            "toplevel_only": False,
+            "return_type": QueryOutputFormat.ATOM_INFO,
+        }
+        q1 = {
+            "atom_type": "link",
+            "type": "Expression",
+            "targets": [
+                {"atom_type": "variable", "name": "v1"},
+                {
+                    "atom_type": "link",
+                    "type": "Expression",
+                    "targets": [
+                        {"atom_type": "variable", "name": "v2"},
+                        {"atom_type": "node", "type": "Symbol", "name": "2"},
+                    ]
+                }
+                    
+            ]
+        }
+        answer = das.query(q1, query_params)
+        assert len(answer) == 1
+        assert answer[0]["handle"] == "dbcf1c7b610a5adea335bf08f6509978"

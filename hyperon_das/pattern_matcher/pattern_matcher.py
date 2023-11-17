@@ -6,6 +6,8 @@ from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
 
 from hyperon_das_atomdb import WILDCARD, IAtomDB
 
+from hyperon_das.decorators import record_execution_time
+
 from .constants import CompatibilityStatus
 
 DEBUG_AND = False
@@ -614,6 +616,7 @@ class Link(Atom):
                 targets.append(assignment.mapping[t.name])
         return Link(self.atom_type, targets, self.ordered)
 
+    @record_execution_time()
     def matched(
         self,
         db: IAtomDB,
@@ -911,7 +914,8 @@ class And(LogicalExpression):
         if not isinstance(assignment, CompositeAssignment):
             return assignment
         return assignment
-
+    
+    @record_execution_time()
     def matched(
         self,
         db: IAtomDB,

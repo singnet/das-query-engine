@@ -1,9 +1,8 @@
 import logging
 
 LOG_FILE_NAME = '/tmp/das.log'
-LOGGING_LEVEL = logging.INFO
+LOGGING_LEVEL = logging.DEBUG
 
-logging.getLogger("requests").setLevel(logging.WARNING)
 
 class Logger:
     __instance = None
@@ -18,7 +17,10 @@ class Logger:
         if Logger.__instance is not None:
             raise Exception("Invalid re-instantiation of Logger")
         else:
-            print(f"Log initialized. Log file: {LOG_FILE_NAME}")
+            print(
+                "Log initialized <Hyperon DAS AtomDB>. "
+                f"Log file: {LOG_FILE_NAME}"
+            )
             logging.basicConfig(
                 filename=LOG_FILE_NAME,
                 level=LOGGING_LEVEL,
@@ -45,5 +47,3 @@ class Logger:
 
 def logger():
     return Logger.get_instance()
-
-

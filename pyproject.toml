@@ -8,8 +8,11 @@ packages = [{include = "hyperon_das"}]
 
 [tool.poetry.dependencies]
 python = "^3.8.5"
-hyperon_das_atomdb = "^0.2.4"
-
+redis = "^5.0.0"
+pymongo = "^4.5.0"
+requests = "^2.31.0"
+requests-mock = "^1.11.0"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"

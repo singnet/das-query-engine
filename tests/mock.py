@@ -103,10 +103,16 @@ class DatabaseMock(IAtomDB):
             ['Set', human, monkey, chimp],
         ]
 
-        nested_link = [
+        evaluation_link = [
             'Evaluation',
             human,
             ['Evaluation', human, _build_link_handle('Set', [monkey, mammal])],
+        ]
+        
+        expression_link = [
+            'Expression',
+            human,
+            _build_link_handle('Expression', [human, monkey]),
         ]
 
         self.template_index = {}
@@ -121,7 +127,8 @@ class DatabaseMock(IAtomDB):
             v.append([_build_link_handle(link[0], link[1:]), link[1:]])
             self.template_index[key] = v
 
-        self.all_links.append(nested_link)
+        self.all_links.append(evaluation_link)
+        self.all_links.append(expression_link)
 
     def __repr__(self):
         return "<Atom database Mock>"
@@ -204,8 +211,13 @@ class DatabaseMock(IAtomDB):
                         answer.append(
                             [_build_link_handle(link[0], link[1:]), link[1:]]
                         )
+                
                 elif link[0] == 'Evaluation':
-                    answer.append('test')
+                    answer.append('nested links')
+                    
+                elif link[0] == 'Expression':
+                    answer.append('new query method')
+                
                 else:
                     raise ValueError(f"Invalid link type: {link[0]}")
         return answer

@@ -305,24 +305,6 @@ pycodestyle = ">=2.11.0,<2.12.0"
 pyflakes = ">=3.1.0,<3.2.0"
 
 [[package]]
-name = "hyperon-das-atomdb"
-version = "0.2.4"
-description = "Persistence layer for Distributed AtomSpace"
-optional = false
-python-versions = ">=3.8.5,<4.0.0"
-files = [
-    {file = "hyperon_das_atomdb-0.2.4-py3-none-any.whl", hash = "sha256:e2d6e0247fc47520b8a863ab9ceff79a514bdc8cc4e33ce243e641aa82c7b66e"},
-    {file = "hyperon_das_atomdb-0.2.4.tar.gz", hash = "sha256:203ba810f02e9dacab3161bfdd48863e0a6c4cf6e404a4ee3cf978b7e6aa2b90"},
-]
-
-[package.dependencies]
-pymongo = ">=4.5.0,<5.0.0"
-python-dotenv = ">=1.0.0,<2.0.0"
-redis = ">=5.0.0,<6.0.0"
-requests = ">=2.31.0,<3.0.0"
-requests-mock = ">=1.11.0,<2.0.0"
-
-[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -723,4 +705,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.5"
-content-hash = "e217bc1ddf9611e3811050cc6d2502eca7b4bce33a3d972d475a76893962f24d"
+content-hash = "c34bb26fdb128edc4065c34b3c5c0ec2f4fbcdc9a422bf91102721afab46716a"
