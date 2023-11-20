@@ -80,9 +80,10 @@ class Assignment:
 
     def merge(self, other: "Assignment") -> bool:
         assert not self.frozen()
-        for label, value in other.mapping.items():
-            if not self.assign(label, value):
-                return False
+        if other:
+            for label, value in other.mapping.items():
+                if not self.assign(label, value):
+                    return False
         return True
 
 @dataclass
