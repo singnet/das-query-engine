@@ -1,6 +1,7 @@
 import pytest
-from hyperon_das.utils import Assignment
+
 from hyperon_das.exceptions import InvalidAssignment
+from hyperon_das.utils import Assignment
 
 
 def _build_assignment(mappings):
@@ -8,7 +9,8 @@ def _build_assignment(mappings):
     for label, value in mappings:
         answer.assign(label, value)
     return answer
-        
+
+
 def _check_merge(l1, l2, expected_list, flag):
     a1 = _build_assignment(l1)
     a2 = _build_assignment(l2)
@@ -19,10 +21,9 @@ def _check_merge(l1, l2, expected_list, flag):
         expected.freeze()
         assert a1.__eq__(expected)
 
+
 class TestAssignment:
-
     def test_basics(self):
-
         va1 = Assignment()
         assert va1.assign("v1", "1")
         assert va1.assign("v2", "2")
@@ -52,7 +53,6 @@ class TestAssignment:
         assert not a3.__eq__(a1)
 
     def test_assignment_sets(self):
-
         va1 = Assignment()
         va2 = Assignment()
         va3 = Assignment()
@@ -77,50 +77,44 @@ class TestAssignment:
         assert len(s2) == 2
         assert va1 in s1 and va2 in s1 and va3 not in s1
         assert va1 in s2 and va2 in s2 and va3 in s2
-        
-    def test_merge(self):
 
+    def test_merge(self):
         _check_merge(
             [("v1", "1"), ("v2", "2")],
             [("v3", "3"), ("v4", "4")],
             [("v1", "1"), ("v2", "2"), ("v3", "3"), ("v4", "4")],
-            True)
+            True,
+        )
 
         _check_merge(
             [("v1", "1"), ("v2", "2")],
             [("v1", "1"), ("v5", "5")],
             [("v1", "1"), ("v2", "2"), ("v5", "5")],
-            True)
+            True,
+        )
+
+        _check_merge(
+            [("v1", "1"), ("v2", "2")], [("v1", "2"), ("v5", "5")], [], False
+        )
 
         _check_merge(
             [("v1", "1"), ("v2", "2")],
-            [("v1", "2"), ("v5", "5")],
-            [],
-            False)
+            [("v1", "1"), ("v2", "2")],
+            [("v1", "1"), ("v2", "2")],
+            True,
+        )
 
         _check_merge(
-            [("v1", "1"), ("v2", "2")],
-            [("v1", "1"), ("v2", "2")],
-            [("v1", "1"), ("v2", "2")],
-            True)
+            [("v1", "1"), ("v2", "2")], [("v1", "2"), ("v2", "1")], [], False
+        )
 
         _check_merge(
-            [("v1", "1"), ("v2", "2")],
-            [("v1", "2"), ("v2", "1")],
-            [],
-            False)
-        
-        _check_merge(
-            [("v1", "1"), ("v2", "2")],
-            [],
-            [("v1", "1"), ("v2", "2")],
-            True)
+            [("v1", "1"), ("v2", "2")], [], [("v1", "1"), ("v2", "2")], True
+        )
 
         _check_merge(
-            [],
-            [("v1", "1"), ("v2", "2")],
-            [("v1", "1"), ("v2", "2")],
-            True)
+            [], [("v1", "1"), ("v2", "2")], [("v1", "1"), ("v2", "2")], True
+        )
 
         a1 = _build_assignment([("v1", "1")])
         a2 = _build_assignment([("v1", "1")])

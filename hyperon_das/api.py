@@ -1,24 +1,32 @@
 import json
-from itertools import product
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD
 
+from hyperon_das.cache import (
+    LazyQueryEvaluator,
+    ListIterator,
+    QueryAnswerIterator,
+)
 from hyperon_das.exceptions import (
     DatabaseTypeException,
     InitializeServerException,
     MethodNotAllowed,
-    UnexpectedQueryFormat,
     QueryParametersException,
+    UnexpectedQueryFormat,
 )
 from hyperon_das.factory import DatabaseFactory, DatabaseType, database_factory
 from hyperon_das.logger import logger
-from hyperon_das.cache import LazyQueryEvaluator, ListIterator, QueryAnswerIterator
 from hyperon_das.pattern_matcher import (
     LogicalExpression,
     PatternMatchingAnswer,
 )
-from hyperon_das.utils import Assignment, QueryAnswer, QueryOutputFormat, QueryParameters
+from hyperon_das.utils import (
+    Assignment,
+    QueryAnswer,
+    QueryOutputFormat,
+    QueryParameters,
+)
 
 
 class DistributedAtomSpace:
@@ -33,10 +41,19 @@ class DistributedAtomSpace:
         try:
             DatabaseType(database)
         except ValueError as e:
-            self._error(DatabaseTypeException(
-                message=str(e),
-                details=f'possible values {DatabaseType.values()}',
-            ))
+            self._error(
+                DatabaseTypeException(
+                    message=str(e),
+                    details=f'possible values {DatabaseType.values()}',
+                )
+            )
+
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][__init__]',
+                'data': {'database_type': database},
+            }
+        )
 
         if database == DatabaseType.SERVER.value and not host:
             raise InitializeServerException(
@@ -46,7 +63,7 @@ class DistributedAtomSpace:
 
         self.db = database_factory(DatabaseFactory(self._db_type), host, port)
 
-        # logger().info(f"New Distributed Atom Space. Database name: {self.db.database_name}")
+        logger().info(f"New Distributed Atom Space. Database name: {self.db.database_name}")
 
     def _to_handle_list(
         self, atom_list: Union[List[str], List[Dict]]
@@ -119,31 +136,52 @@ class DistributedAtomSpace:
     ) -> QueryAnswerIterator:
         if query["atom_type"] == "node":
             atom_handle = self.db.get_node_handle(query["type"], query["name"])
-            return ListIterator([QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)])
+            return ListIterator(
+                [QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)]
+            )
         elif query["atom_type"] == "link":
             matched_targets = []
             for target in query["targets"]:
-                if target["atom_type"] == "node" or target["atom_type"] == "link":
-                    matched = self._recursive_query(target, mappings, extra_parameters)
+                if (
+                    target["atom_type"] == "node"
+                    or target["atom_type"] == "link"
+                ):
+                    matched = self._recursive_query(
+                        target, mappings, extra_parameters
+                    )
                     if matched:
                         matched_targets.append(matched)
                 elif target["atom_type"] == "variable":
-                    matched_targets.append(ListIterator([QueryAnswer(target, None)]))
+                    matched_targets.append(
+                        ListIterator([QueryAnswer(target, None)])
+                    )
                 else:
-                    self._error(UnexpectedQueryFormat(
-                        message="Query processing reached an unexpected state",
-                        details=f'link: {str(query)} link target: {str(query)}',
-                    ))
-            return LazyQueryEvaluator(query["type"], matched_targets, self, extra_parameters)
+                    self._error(
+                        UnexpectedQueryFormat(
+                            message="Query processing reached an unexpected state",
+                            details=f'link: {str(query)} link target: {str(query)}',
+                        )
+                    )
+            return LazyQueryEvaluator(
+                query["type"], matched_targets, self, extra_parameters
+            )
         else:
-            self._error(UnexpectedQueryFormat(
-                message="Query processing reached an unexpected state",
-                details=f'query: {str(query)}',
-            ))
+            self._error(
+                UnexpectedQueryFormat(
+                    message="Query processing reached an unexpected state",
+                    details=f'query: {str(query)}',
+                )
+            )
 
     def clear_database(self) -> None:
         """Clear all data"""
-        return self.db.clear_database()
+        ret = self.db.clear_database()
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][clear_database] - The database has been cleaned.',
+            }
+        )
+        return ret
 
     def count_atoms(self) -> Tuple[int, int]:
         """
@@ -203,7 +241,9 @@ class DistributedAtomSpace:
             answer = self.db.get_atom_as_deep_representation(handle)
             return json.dumps(answer, sort_keys=False, indent=4)
         else:
-            self._error(ValueError(f"Invalid output format: '{output_format}'"))
+            self._error(
+                ValueError(f"Invalid output format: '{output_format}'")
+            )
 
     def get_node(
         self,
@@ -268,7 +308,9 @@ class DistributedAtomSpace:
             answer = self.db.get_atom_as_deep_representation(node_handle)
             return json.dumps(answer, sort_keys=False, indent=4)
         else:
-            self._error(ValueError(f"Invalid output format: '{output_format}'"))
+            self._error(
+                ValueError(f"Invalid output format: '{output_format}'")
+            )
 
     def get_nodes(
         self,
@@ -335,7 +377,9 @@ class DistributedAtomSpace:
             ]
             return json.dumps(answer, sort_keys=False, indent=4)
         else:
-            self._error(ValueError(f"Invalid output format: '{output_format}'"))
+            self._error(
+                ValueError(f"Invalid output format: '{output_format}'")
+            )
 
     def get_link(
         self,
@@ -396,7 +440,9 @@ class DistributedAtomSpace:
             )
             return json.dumps(answer, sort_keys=False, indent=4)
         else:
-            self._error(ValueError(f"Invalid output format: '{output_format}'"))
+            self._error(
+                ValueError(f"Invalid output format: '{output_format}'")
+            )
 
     def get_links(
         self,
@@ -652,6 +698,14 @@ class DistributedAtomSpace:
             >>> print(result)
             [{'handle': 'dbcf1c7b610a5adea335bf08f6509978', 'type': 'Expression', 'template': ['Expression', 'Symbol', ['Expression', 'Symbol', 'Symbol']], 'targets': [{'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'}, {'handle': '233d9a6da7d49d4164d863569e9ab7b6', 'type': 'Expression', 'template': ['Expression', 'Symbol', 'Symbol'], 'targets': [{'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'}, {'handle': '9f27a331633c8bc3c49435ffabb9110e', 'type': 'Symbol', 'name': '2'}]}]}]
         """
+
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][query] - Start',
+                'data': {'query': query, 'extra_parameters': extra_parameters},
+            }
+        )
+
         query_results = self._recursive_query(query, extra_parameters)
         logger().debug(f"query: {query} result: {str(query_results)}")
         answer = []
@@ -717,6 +771,13 @@ class DistributedAtomSpace:
             }
         """
 
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][pattern_matcher_query] - Start',
+                'data': {'query': query, 'extra_parameters': extra_parameters},
+            }
+        )
+
         if extra_parameters is not None:
             try:
                 extra_parameters = QueryParameters(**extra_parameters)
@@ -766,16 +827,20 @@ class DistributedAtomSpace:
         if self._db_type == DatabaseType.RAM_ONLY.value:
             return self.db.add_node(node_params)
         else:
-            self._error(MethodNotAllowed(
-                message='This method is permited only in memory database',
-                details='Instantiate the class sent the database type as `ram_only`',
-            ))
+            self._error(
+                MethodNotAllowed(
+                    message='This method is permited only in memory database',
+                    details='Instantiate the class sent the database type as `ram_only`',
+                )
+            )
 
     def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
         if self._db_type == DatabaseType.RAM_ONLY.value:
             return self.db.add_link(link_params)
         else:
-            self._error(MethodNotAllowed(
-                message='This method is permited only in memory database',
-                details='Instantiate the class sent the database type as `ram_only`',
-            ))
+            self._error(
+                MethodNotAllowed(
+                    message='This method is permited only in memory database',
+                    details='Instantiate the class sent the database type as `ram_only`',
+                )
+            )
