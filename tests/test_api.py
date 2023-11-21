@@ -397,8 +397,7 @@ class TestDistributedAtomSpace:
         #     [nodes.human, nodes.mammal],
         # ])
 
-
-    #def test_nested_pattern(self, das: DistributedAtomSpace):
+    # def test_nested_pattern(self, das: DistributedAtomSpace):
     #    das.add_link({
     #        "type": "Expression",
     #        "targets": [
@@ -429,7 +428,7 @@ class TestDistributedAtomSpace:
     #                    {"atom_type": "node", "type": "Symbol", "name": "2"},
     #                ]
     #            }
-    #                
+    #
     #        ]
     #    }
     #    answer = das.query(q1, query_params)
