@@ -1,12 +1,11 @@
 import pytest
+
 from hyperon_das.cache import ListIterator, ProductIterator
 from hyperon_das.utils import Assignment
 
 
 class TestCache:
-
     def test_list_iterator(self):
-
         iterator = ListIterator(None)
         for element in iterator:
             assert False
@@ -15,9 +14,11 @@ class TestCache:
         for element in iterator:
             assert False
 
-        iterator = ListIterator([
-            ([{"id": 1}], Assignment()),
-        ])
+        iterator = ListIterator(
+            [
+                ([{"id": 1}], Assignment()),
+            ]
+        )
         expected = [1]
         count = 0
         for element in iterator:
@@ -25,10 +26,12 @@ class TestCache:
             count += 1
         assert count == len(expected)
 
-        iterator = ListIterator([
-            ([{"id": 1}], Assignment()),
-            ([{"id": 2}], Assignment()),
-        ])
+        iterator = ListIterator(
+            [
+                ([{"id": 1}], Assignment()),
+                ([{"id": 2}], Assignment()),
+            ]
+        )
         expected = [1, 2]
         count = 0
         for element in iterator:
@@ -36,11 +39,13 @@ class TestCache:
             count += 1
         assert count == len(expected)
 
-        iterator = ListIterator([
-            ([{"id": 1}], Assignment()),
-            ([{"id": 2}], Assignment()),
-            ([{"id": 2}], Assignment()),
-        ])
+        iterator = ListIterator(
+            [
+                ([{"id": 1}], Assignment()),
+                ([{"id": 2}], Assignment()),
+                ([{"id": 2}], Assignment()),
+            ]
+        )
         expected = [1, 2, 2]
         count = 0
         for element in iterator:
@@ -48,7 +53,11 @@ class TestCache:
             count += 1
         assert count == len(expected)
 
-        iterator = ListIterator([([{"id": 1}], Assignment()),])
+        iterator = ListIterator(
+            [
+                ([{"id": 1}], Assignment()),
+            ]
+        )
         assert not iterator.is_empty()
         iterator = ListIterator([None])
         assert not iterator.is_empty()
@@ -58,7 +67,6 @@ class TestCache:
         assert iterator.is_empty()
 
     def test_product_iterator(self):
-
         ln = None
         l0 = []
         l1 = [1, 2, 3]
@@ -95,7 +103,14 @@ class TestCache:
         li2 = ListIterator(l2)
         li3 = ListIterator(l3)
         iterator = ProductIterator([li1, li2, li3])
-        expected = [(1, 4, 5), (1, 4, 6), (2, 4, 5), (2, 4, 6), (3, 4, 5), (3, 4, 6)]
+        expected = [
+            (1, 4, 5),
+            (1, 4, 6),
+            (2, 4, 5),
+            (2, 4, 6),
+            (3, 4, 5),
+            (3, 4, 6),
+        ]
         count = 0
         for element in iterator:
             assert element == expected[count]

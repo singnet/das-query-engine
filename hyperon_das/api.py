@@ -2,51 +2,101 @@ import json
 from itertools import product
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import requests
 from hyperon_das_atomdb import WILDCARD
+from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
-from hyperon_das.exceptions import (
-    DatabaseTypeException,
-    InitializeServerException,
-    MethodNotAllowed,
-    UnexpectedQueryFormat,
-    QueryParametersException,
+from hyperon_das.cache import (
+    LazyQueryEvaluator,
+    ListIterator,
+    QueryAnswerIterator,
 )
-from hyperon_das.factory import DatabaseFactory, DatabaseType, database_factory
+from hyperon_das.client import FunctionsClient
+from hyperon_das.constants import DasType, DatabaseType
+from hyperon_das.decorators import retry
+from hyperon_das.exceptions import (
+    DasTypeException,
+    InitializeDasServerException,
+    MethodNotAllowed,
+    QueryParametersException,
+    UnexpectedQueryFormat,
+)
+from hyperon_das.factory import DatabaseFactory, database_factory
 from hyperon_das.logger import logger
-from hyperon_das.cache import LazyQueryEvaluator, ListIterator, QueryAnswerIterator
 from hyperon_das.pattern_matcher import (
     LogicalExpression,
     PatternMatchingAnswer,
 )
-from hyperon_das.utils import Assignment, QueryAnswer, QueryOutputFormat, QueryParameters
+from hyperon_das.utils import (
+    Assignment,
+    QueryAnswer,
+    QueryOutputFormat,
+    QueryParameters,
+    config,
+)
 
 
 class DistributedAtomSpace:
     def __init__(
-        self,
-        database: DatabaseType,
-        host: Optional[str] = None,
-        port: Optional[str] = None,
+        self, das_type: DasType = DasType.CLIENT.value, **kwargs
     ) -> None:
-        self._db_type = database
+        self._type = das_type
+        self.__remote_das = []
 
         try:
-            DatabaseType(database)
+            DasType(self._type)
         except ValueError as e:
-            self._error(DatabaseTypeException(
-                message=str(e),
-                details=f'possible values {DatabaseType.values()}',
-            ))
-
-        if database == DatabaseType.SERVER.value and not host:
-            raise InitializeServerException(
-                message='You must send the host parameter',
-                details=f'To use server type Das you must send at least the host parameter',
+            self._error(
+                DasTypeException(
+                    message=str(e),
+                    details=f'possible values {DasType.types()}',
+                )
             )
 
-        self.db = database_factory(DatabaseFactory(self._db_type), host, port)
+        if self._type == DasType.CLIENT.value:
+            self.db = InMemoryDB()
+        elif self._type == DasType.SERVER.value:
+            # TODO: Implement some like that in the future
+            # if 'db_type' in kwargs and kwargs.get('db_type') in DatabaseType.types():
+            #    self._db_type = DatabaseType(kwargs['db_type']).value
+            #    self.db = database_factory(DatabaseFactory(self._db_type))
+            try:
+                self.db = RedisMongoDB()
+            except Exception as e:
+                raise InitializeDasServerException(
+                    message='An error occurred during class initialization',
+                    details=str(e),
+                )
 
-        # logger().info(f"New Distributed Atom Space. Database name: {self.db.database_name}")
+    @property
+    def remote_das(self):
+        return self.__remote_das
+
+    @retry(attempts=5, timeout_seconds=120)
+    def _connect_server(self, host: str, port: Optional[str] = None):
+        port = port or config.get("DEFAULT_PORT_OPENFAAS", '8080')
+        openfaas_uri = f'http://{host}:{port}/function/atomdb'
+        aws_lambda_uri = f'http://{host}/prod/atomdb'
+        url = None
+        if self._is_server_connect(openfaas_uri):
+            url = openfaas_uri
+        elif self._is_server_connect(aws_lambda_uri):
+            url = aws_lambda_uri
+        return url
+
+    def _is_server_connect(self, url: str) -> bool:
+        try:
+            response = requests.request(
+                'POST',
+                url=url,
+                data=json.dumps({"action": "ping", "input": {}}),
+                timeout=10,
+            )
+        except Exception as e:
+            return True
+        if response.status_code == 200:
+            return True
+        return True
 
     def _to_handle_list(
         self, atom_list: Union[List[str], List[Dict]]
@@ -119,33 +169,50 @@ class DistributedAtomSpace:
     ) -> QueryAnswerIterator:
         if query["atom_type"] == "node":
             atom_handle = self.db.get_node_handle(query["type"], query["name"])
-            return ListIterator([QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)])
+            return ListIterator(
+                [QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)]
+            )
         elif query["atom_type"] == "link":
             matched_targets = []
             for target in query["targets"]:
-                if target["atom_type"] == "node" or target["atom_type"] == "link":
-                    matched = self._recursive_query(target, mappings, extra_parameters)
+                if (
+                    target["atom_type"] == "node"
+                    or target["atom_type"] == "link"
+                ):
+                    matched = self._recursive_query(
+                        target, mappings, extra_parameters
+                    )
                     if matched:
                         matched_targets.append(matched)
                 elif target["atom_type"] == "variable":
-                    matched_targets.append(ListIterator([QueryAnswer(target, None)]))
+                    matched_targets.append(
+                        ListIterator([QueryAnswer(target, None)])
+                    )
                 else:
-                    self._error(UnexpectedQueryFormat(
-                        message="Query processing reached an unexpected state",
-                        details=f'link: {str(query)} link target: {str(query)}',
-                    ))
-            return LazyQueryEvaluator(query["type"], matched_targets, self, extra_parameters)
+                    self._error(
+                        UnexpectedQueryFormat(
+                            message="Query processing reached an unexpected state",
+                            details=f'link: {str(query)} link target: {str(query)}',
+                        )
+                    )
+            return LazyQueryEvaluator(
+                query["type"], matched_targets, self, extra_parameters
+            )
         else:
-            self._error(UnexpectedQueryFormat(
-                message="Query processing reached an unexpected state",
-                details=f'query: {str(query)}',
-            ))
+            self._error(
+                UnexpectedQueryFormat(
+                    message="Query processing reached an unexpected state",
+                    details=f'query: {str(query)}',
+                )
+            )
 
     def clear_database(self) -> None:
         """Clear all data"""
         return self.db.clear_database()
 
-    def count_atoms(self) -> Tuple[int, int]:
+    def count_atoms(
+        self, extra_parameters: Optional[Dict[str, Any]] = None
+    ) -> Tuple[int, int]:
         """
         This method is useful for returning the count of atoms in the database.
         It's also useful for ensuring that the knowledge base load went off without problems.
@@ -153,7 +220,21 @@ class DistributedAtomSpace:
         Returns:
             Tuple[int, int]: (node_count, link_count)
         """
-        return self.db.count_atoms()
+        if not extra_parameters:
+            return self.db.count_atoms()
+
+        if 'when' in extra_parameters:
+            when = extra_parameters['when']
+            if when == 'local':
+                return self.db.count_atoms()
+            elif when == 'remote':
+                return self.__remote_das[0].count_atoms()
+            elif when == 'all':
+                local = self.db.count_atoms()
+                remote = self.__remote_das[0].count_atoms()
+                return local + remote
+        else:
+            return self.db.count_atoms()
 
     def get_atom(
         self,
@@ -203,7 +284,9 @@ class DistributedAtomSpace:
             answer = self.db.get_atom_as_deep_representation(handle)
             return json.dumps(answer, sort_keys=False, indent=4)
         else:
-            self._error(ValueError(f"Invalid output format: '{output_format}'"))
+            self._error(
+                ValueError(f"Invalid output format: '{output_format}'")
+            )
 
     def get_node(
         self,
@@ -268,7 +351,9 @@ class DistributedAtomSpace:
             answer = self.db.get_atom_as_deep_representation(node_handle)
             return json.dumps(answer, sort_keys=False, indent=4)
         else:
-            self._error(ValueError(f"Invalid output format: '{output_format}'"))
+            self._error(
+                ValueError(f"Invalid output format: '{output_format}'")
+            )
 
     def get_nodes(
         self,
@@ -335,7 +420,9 @@ class DistributedAtomSpace:
             ]
             return json.dumps(answer, sort_keys=False, indent=4)
         else:
-            self._error(ValueError(f"Invalid output format: '{output_format}'"))
+            self._error(
+                ValueError(f"Invalid output format: '{output_format}'")
+            )
 
     def get_link(
         self,
@@ -396,7 +483,9 @@ class DistributedAtomSpace:
             )
             return json.dumps(answer, sort_keys=False, indent=4)
         else:
-            self._error(ValueError(f"Invalid output format: '{output_format}'"))
+            self._error(
+                ValueError(f"Invalid output format: '{output_format}'")
+            )
 
     def get_links(
         self,
@@ -763,19 +852,52 @@ class DistributedAtomSpace:
             return {'negation': False, 'mapping': result}
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._db_type == DatabaseType.RAM_ONLY.value:
+        if self._type == DasType.CLIENT.value:
             return self.db.add_node(node_params)
         else:
-            self._error(MethodNotAllowed(
-                message='This method is permited only in memory database',
-                details='Instantiate the class sent the database type as `ram_only`',
-            ))
+            self._error(
+                MethodNotAllowed(
+                    message='This method is permited only in memory database',
+                    details='Instantiate the class sent the database type as `ram_only`',
+                )
+            )
 
     def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._db_type == DatabaseType.RAM_ONLY.value:
+        if self._type == DasType.CLIENT.value:
             return self.db.add_link(link_params)
         else:
-            self._error(MethodNotAllowed(
-                message='This method is permited only in memory database',
-                details='Instantiate the class sent the database type as `ram_only`',
-            ))
+            self._error(
+                MethodNotAllowed(
+                    message='This method is permited only in memory database',
+                    details='Instantiate the class sent the database type as `ram_only`',
+                )
+            )
+
+    def attach_remote(
+        self, host: str, port: Optional[str] = None, name: Optional[str] = None
+    ) -> bool:
+        """
+        Establish a connection to a remote server and attach a server instance.
+
+        Args:
+            host (str): The hostname or IP address of the remote server.
+            port (Optional[str]): The port number to connect to on the remote server. Defaults to None.
+            name (Optional[str]): A user-defined name for the FunctionsClient instance. Defaults to None.
+
+        Returns:
+            bool: Returns True if the attachment process is successful, otherwise False.
+
+        Example:
+            Use this method to attach to a remote server:
+
+            >>> instance = DistributedAtomSpace()
+            >>> result = instance.attach_remote(host="1.2.3.4", port="1234", name="RemoteServer1")
+        """
+        try:
+            url = self._connect_server(host, port)
+            existing_servers = len(self.remote_das)
+            das = FunctionsClient(url, existing_servers, name)
+            self.__remote_das.append(das)
+            return True
+        except Exception:
+            return False

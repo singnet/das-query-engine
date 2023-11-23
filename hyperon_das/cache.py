@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from itertools import product
-from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
-from hyperon_das.utils import Assignment, QueryAnswer, QueryOutputFormat
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
 from hyperon_das_atomdb import WILDCARD
 
-class QueryAnswerIterator(ABC):
+from hyperon_das.utils import Assignment, QueryAnswer, QueryOutputFormat
 
+
+class QueryAnswerIterator(ABC):
     def __init__(self, source: Any):
         self.source = source
         self.current_value = None
@@ -28,7 +30,7 @@ class QueryAnswerIterator(ABC):
         if not self.source or self.current_value is None:
             raise StopIteration
         return self.current_value
-    
+
     def __str__(self):
         return str(self.source)
 
@@ -36,8 +38,8 @@ class QueryAnswerIterator(ABC):
     def is_empty(self) -> bool:
         pass
 
-class ListIterator(QueryAnswerIterator):
 
+class ListIterator(QueryAnswerIterator):
     def __init__(self, source: List[Any]):
         super().__init__(source)
         if source:
@@ -47,8 +49,8 @@ class ListIterator(QueryAnswerIterator):
     def is_empty(self) -> bool:
         return not self.source
 
-class ProductIterator(QueryAnswerIterator):
 
+class ProductIterator(QueryAnswerIterator):
     def __init__(self, source: List[QueryAnswerIterator]):
         super().__init__(source)
         if not self.is_empty():
@@ -58,15 +60,15 @@ class ProductIterator(QueryAnswerIterator):
     def is_empty(self) -> bool:
         return any(iterator.is_empty() for iterator in self.source)
 
-class LazyQueryEvaluator(ProductIterator):
 
+class LazyQueryEvaluator(ProductIterator):
     def __init__(
         self,
         link_type: str,
         source: List[QueryAnswerIterator],
         das: "DistributedAtomSpace",
-        query_parameters: Optional[Dict[str, Any]]):
-
+        query_parameters: Optional[Dict[str, Any]],
+    ):
         super().__init__(source)
         self.link_type = link_type
         self.query_parameters = query_parameters
@@ -103,27 +105,34 @@ class LazyQueryEvaluator(ProductIterator):
             self.link_type,
             None,
             target_handle,
-            output_format = QueryOutputFormat.ATOM_INFO)
+            output_format=QueryOutputFormat.ATOM_INFO,
+        )
         lazy_query_answer = []
         for answer in das_query_answer:
             assignment = None
             if wildcard_flag:
                 assignment = Assignment()
                 assignment_failed = False
-                for query_answer_target, handle in zip(target_info, answer["targets"]):
+                for query_answer_target, handle in zip(
+                    target_info, answer["targets"]
+                ):
                     target = query_answer_target.grounded_atom
                     if target.get("atom_type", None) == "variable":
                         if not assignment.assign(target["name"], handle):
                             assignment_failed = True
                     else:
-                        if not assignment.merge(query_answer_target.assignment):
+                        if not assignment.merge(
+                            query_answer_target.assignment
+                        ):
                             assignment_failed = True
                     if not assignment_failed:
                         break
                 if assignment_failed:
                     continue
                 assignment.freeze()
-            
-            lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
+
+            lazy_query_answer.append(
+                QueryAnswer(self._replace_target_handles(answer), assignment)
+            )
         self.buffered_answer = ListIterator(lazy_query_answer)
         return self.buffered_answer.__next__()
