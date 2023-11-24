@@ -17,7 +17,6 @@ class Logger:
         if Logger.__instance is not None:
             raise Exception("Invalid re-instantiation of Logger")
         else:
-            print(f"Log initialized. Log file: {LOG_FILE_NAME}")
             logging.basicConfig(
                 filename=LOG_FILE_NAME,
                 level=LOGGING_LEVEL,
