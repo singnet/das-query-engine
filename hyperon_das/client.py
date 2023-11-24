@@ -21,18 +21,11 @@ class FunctionsClient:
                 'POST', url=self.url, data=json.dumps(payload)
             )
             if response.status_code == 200:
-                text = response.text
-
-                # TODO: OpenFaas return - Remove this in function
-                if 'Log' in text:
-                    start = text.find('\n') + 1
-                    text = text[start:-1]
-
+                text = response.text.rstrip('\n')
                 try:
                     ret = eval(text)
                 except Exception:
                     ret = text
-
                 return ret
             else:
                 return response.text
@@ -50,7 +43,7 @@ class FunctionsClient:
             'input': {
                 'node_type': node_type,
                 'node_name': node_name,
-                'output_format': output_format,
+                'output_format': output_format.name,
             },
         }
         return self._send_request(payload)
@@ -66,7 +59,7 @@ class FunctionsClient:
             'input': {
                 'node_type': node_type,
                 'node_name': node_name,
-                'output_format': output_format,
+                'output_format': output_format.name,
             },
         }
         return self._send_request(payload)
@@ -88,7 +81,7 @@ class FunctionsClient:
     def get_link(
         self,
         link_type: str,
-        targets: List[str] = None,
+        targets: List[str],
         output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
     ) -> Union[str, Dict]:
         payload = {
@@ -96,7 +89,7 @@ class FunctionsClient:
             'input': {
                 'link_type': link_type,
                 'targets': targets,
-                'output_format': output_format,
+                'output_format': output_format.name,
             },
         }
         return self._send_request(payload)
@@ -112,11 +105,13 @@ class FunctionsClient:
             'action': 'get_links',
             'input': {
                 'link_type': link_type,
-                'target_types': target_types,
-                'targets': targets,
-                'output_format': output_format,
+                'output_format': output_format.name,
             },
         }
+        if target_types is not None:
+            payload['input']['target_types'] = target_types
+        if targets is not None:
+            payload['input']['targets'] = targets
         return self._send_request(payload)
 
     def get_link_type(self, link_handle: str) -> str:
@@ -140,7 +135,7 @@ class FunctionsClient:
     ) -> Union[str, Dict]:
         payload = {
             'action': 'get_atom',
-            'input': {'handle': handle, 'output_format': output_format},
+            'input': {'handle': handle, 'output_format': output_format.name},
         }
         return self._send_request(payload)
 

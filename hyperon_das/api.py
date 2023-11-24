@@ -62,10 +62,6 @@ class DistributedAtomSpace:
         if self._type == DasType.CLIENT.value:
             self.db = InMemoryDB()
         elif self._type == DasType.SERVER.value:
-            # TODO: Implement some like that in the future
-            # if 'db_type' in kwargs and kwargs.get('db_type') in DatabaseType.types():
-            #    self._db_type = DatabaseType(kwargs['db_type']).value
-            #    self.db = database_factory(DatabaseFactory(self._db_type))
             try:
                 self.db = RedisMongoDB()
             except Exception as e:

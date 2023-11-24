@@ -15,11 +15,15 @@ class TestAWSClientIntegration:
     def test_get_node(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
         ret = server.get_node(
-            node_type="Concept", node_name="human", output_format='handle'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.HANDLE,
         )
         assert ret == human_handle
         ret = server.get_node(
-            node_type="Concept", node_name="human", output_format='atom_info'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.ATOM_INFO,
         )
         assert ret == {
             'handle': human_handle,
@@ -27,24 +31,32 @@ class TestAWSClientIntegration:
             'name': 'human',
         }
         ret = server.get_node(
-            node_type="Concept", node_name="human", output_format='json'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.JSON,
         )
         assert json.loads(ret) == {"type": "Concept", "name": "human"}
 
     def test_get_nodes(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
         ret = server.get_nodes(
-            node_type="Concept", node_name="human", output_format='handle'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.HANDLE,
         )
         assert ret == [human_handle]
         ret = server.get_nodes(
-            node_type="Concept", node_name="human", output_format='atom_info'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.ATOM_INFO,
         )
         assert ret == [
             {'handle': human_handle, 'type': 'Concept', 'name': 'human'}
         ]
         ret = server.get_nodes(
-            node_type="Concept", node_name="human", output_format='json'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.JSON,
         )
         assert json.loads(ret) == [{'type': 'Concept', 'name': 'human'}]
 
@@ -68,13 +80,13 @@ class TestAWSClientIntegration:
         ret = server.get_link(
             link_type='Similarity',
             targets=[human_handle, monkey_handle],
-            output_format='handle',
+            output_format=QueryOutputFormat.HANDLE,
         )
         assert ret == link_handle
         ret = server.get_link(
             link_type='Similarity',
             targets=[human_handle, monkey_handle],
-            output_format='atom_info',
+            output_format=QueryOutputFormat.ATOM_INFO,
         )
         assert ret == {
             'handle': link_handle,
@@ -85,7 +97,7 @@ class TestAWSClientIntegration:
         ret = server.get_link(
             link_type='Similarity',
             targets=[human_handle, monkey_handle],
-            output_format='json',
+            output_format=QueryOutputFormat.JSON,
         )
         assert json.loads(ret) == {
             'type': 'Similarity',
@@ -95,7 +107,6 @@ class TestAWSClientIntegration:
             ],
         }
 
-    # TODO: Levi need fix functions
     def test_get_links(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
         monkey_handle = ExpressionHasher.terminal_hash('Concept', 'monkey')
@@ -106,9 +117,9 @@ class TestAWSClientIntegration:
         ret = server.get_links(
             link_type='Similarity',
             target_types=['Concept', 'Concept'],
-            output_format='handle',
+            output_format=QueryOutputFormat.HANDLE,
         )
-        assert len(ret) == 7
+        assert len(ret) == 14
 
     def test_get_link_type(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
@@ -137,26 +148,38 @@ class TestAWSClientIntegration:
             ExpressionHasher.named_type_hash('Similarity'),
             [human_handle, monkey_handle],
         )
-        ret = server.get_atom(handle=monkey_handle, output_format='handle')
+        ret = server.get_atom(
+            handle=monkey_handle, output_format=QueryOutputFormat.HANDLE
+        )
         assert ret == monkey_handle
-        ret = server.get_atom(handle=monkey_handle, output_format='atom_info')
+        ret = server.get_atom(
+            handle=monkey_handle, output_format=QueryOutputFormat.ATOM_INFO
+        )
         assert ret == {
             'handle': monkey_handle,
             'type': 'Concept',
             'name': 'monkey',
         }
-        ret = server.get_atom(handle=monkey_handle, output_format='json')
+        ret = server.get_atom(
+            handle=monkey_handle, output_format=QueryOutputFormat.JSON
+        )
         assert json.loads(ret) == {'type': 'Concept', 'name': 'monkey'}
-        ret = server.get_atom(handle=link_handle, output_format='handle')
+        ret = server.get_atom(
+            handle=link_handle, output_format=QueryOutputFormat.HANDLE
+        )
         assert ret == link_handle
-        ret = server.get_atom(handle=link_handle, output_format='atom_info')
+        ret = server.get_atom(
+            handle=link_handle, output_format=QueryOutputFormat.ATOM_INFO
+        )
         assert ret == {
             'handle': link_handle,
             'type': 'Similarity',
             'template': ['Similarity', 'Concept', 'Concept'],
             'targets': [human_handle, monkey_handle],
         }
-        ret = server.get_atom(handle=link_handle, output_format='json')
+        ret = server.get_atom(
+            handle=link_handle, output_format=QueryOutputFormat.JSON
+        )
         assert json.loads(ret) == {
             'type': 'Similarity',
             'targets': [
@@ -222,11 +245,15 @@ class TestVultrClientIntegration:
     def test_get_node(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
         ret = server.get_node(
-            node_type="Concept", node_name="human", output_format='handle'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.HANDLE,
         )
         assert ret == human_handle
         ret = server.get_node(
-            node_type="Concept", node_name="human", output_format='atom_info'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.ATOM_INFO,
         )
         assert ret == {
             'handle': human_handle,
@@ -234,24 +261,32 @@ class TestVultrClientIntegration:
             'name': 'human',
         }
         ret = server.get_node(
-            node_type="Concept", node_name="human", output_format='json'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.JSON,
         )
         assert ret == {'type': 'Concept', 'name': 'human'}
 
     def test_get_nodes(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
         ret = server.get_nodes(
-            node_type="Concept", node_name="human", output_format='handle'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.HANDLE,
         )
         assert ret == [human_handle]
         ret = server.get_nodes(
-            node_type="Concept", node_name="human", output_format='atom_info'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.ATOM_INFO,
         )
         assert ret == [
             {'handle': human_handle, 'type': 'Concept', 'name': 'human'}
         ]
         ret = server.get_nodes(
-            node_type="Concept", node_name="human", output_format='json'
+            node_type="Concept",
+            node_name="human",
+            output_format=QueryOutputFormat.JSON,
         )
         assert ret == [{'type': 'Concept', 'name': 'human'}]
 
@@ -275,13 +310,13 @@ class TestVultrClientIntegration:
         ret = server.get_link(
             link_type='Similarity',
             targets=[human_handle, monkey_handle],
-            output_format='handle',
+            output_format=QueryOutputFormat.HANDLE,
         )
         assert ret == link_handle
         ret = server.get_link(
             link_type='Similarity',
             targets=[human_handle, monkey_handle],
-            output_format='atom_info',
+            output_format=QueryOutputFormat.ATOM_INFO,
         )
         assert ret == {
             'handle': link_handle,
@@ -292,7 +327,7 @@ class TestVultrClientIntegration:
         ret = server.get_link(
             link_type='Similarity',
             targets=[human_handle, monkey_handle],
-            output_format='json',
+            output_format=QueryOutputFormat.JSON,
         )
         assert ret == {
             'type': 'Similarity',
@@ -302,7 +337,6 @@ class TestVultrClientIntegration:
             ],
         }
 
-    # TODO: Levi need fix functions
     def test_get_links(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
         monkey_handle = ExpressionHasher.terminal_hash('Concept', 'monkey')
@@ -313,9 +347,9 @@ class TestVultrClientIntegration:
         ret = server.get_links(
             link_type='Similarity',
             target_types=['Concept', 'Concept'],
-            output_format='handle',
+            output_format=QueryOutputFormat.HANDLE,
         )
-        assert len(ret) == 7
+        assert len(ret) == 14
 
     def test_get_link_type(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
@@ -344,26 +378,38 @@ class TestVultrClientIntegration:
             ExpressionHasher.named_type_hash('Similarity'),
             [human_handle, monkey_handle],
         )
-        ret = server.get_atom(handle=monkey_handle, output_format='handle')
+        ret = server.get_atom(
+            handle=monkey_handle, output_format=QueryOutputFormat.HANDLE
+        )
         assert ret == monkey_handle
-        ret = server.get_atom(handle=monkey_handle, output_format='atom_info')
+        ret = server.get_atom(
+            handle=monkey_handle, output_format=QueryOutputFormat.ATOM_INFO
+        )
         assert ret == {
             'handle': monkey_handle,
             'type': 'Concept',
             'name': 'monkey',
         }
-        ret = server.get_atom(handle=monkey_handle, output_format='json')
+        ret = server.get_atom(
+            handle=monkey_handle, output_format=QueryOutputFormat.JSON
+        )
         assert ret == {'type': 'Concept', 'name': 'monkey'}
-        ret = server.get_atom(handle=link_handle, output_format='handle')
+        ret = server.get_atom(
+            handle=link_handle, output_format=QueryOutputFormat.HANDLE
+        )
         assert ret == link_handle
-        ret = server.get_atom(handle=link_handle, output_format='atom_info')
+        ret = server.get_atom(
+            handle=link_handle, output_format=QueryOutputFormat.ATOM_INFO
+        )
         assert ret == {
             'handle': link_handle,
             'type': 'Similarity',
             'template': ['Similarity', 'Concept', 'Concept'],
             'targets': [human_handle, monkey_handle],
         }
-        ret = server.get_atom(handle=link_handle, output_format='json')
+        ret = server.get_atom(
+            handle=link_handle, output_format=QueryOutputFormat.JSON
+        )
         assert ret == {
             'type': 'Similarity',
             'targets': [

@@ -4,6 +4,7 @@ from functools import wraps
 from typing import Callable
 
 from hyperon_das.exceptions import ConnectionServerException, RetryException
+from hyperon_das.logger import logger
 
 
 def retry(attempts: int, timeout_seconds: int):
@@ -20,6 +21,7 @@ def retry(attempts: int, timeout_seconds: int):
                     response = function(*args, **kwargs)
                     end_time = datetime.now()
                     if response is not None:
+                        logger().info(f'Connection attempts: {attempts}')
                         return response
                 except Exception as e:
                     raise ConnectionServerException(
