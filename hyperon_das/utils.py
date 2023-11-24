@@ -1,14 +1,12 @@
 from dataclasses import dataclass
-from enum import Enum, auto
 from typing import Any, Dict, FrozenSet, Optional, Set, Union
 
+from dotenv import dotenv_values
+
+from hyperon_das.constants import QueryOutputFormat
 from hyperon_das.exceptions import InvalidAssignment
 
-
-class QueryOutputFormat(int, Enum):
-    HANDLE = auto()
-    ATOM_INFO = auto()
-    JSON = auto()
+config = dotenv_values('.env')
 
 
 @dataclass

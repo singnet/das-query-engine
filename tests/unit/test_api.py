@@ -1,9 +1,11 @@
 import json
+from unittest import mock
 
 import pytest
 from hyperon_das_atomdb import UNORDERED_LINK_TYPES, WILDCARD
 
 from hyperon_das.api import DistributedAtomSpace
+from hyperon_das.client import FunctionsClient
 from hyperon_das.exceptions import QueryParametersException
 from hyperon_das.pattern_matcher.pattern_matcher import (
     And,
@@ -12,7 +14,7 @@ from hyperon_das.pattern_matcher.pattern_matcher import (
     Variable,
 )
 from hyperon_das.utils import QueryOutputFormat
-from tests.mock import DistributedAtomSpaceMock
+from tests.unit.mock import DistributedAtomSpaceMock
 
 
 class NodeContainer:
@@ -396,6 +398,19 @@ class TestDistributedAtomSpace:
         #     set([nodes.human, nodes.ent]),
         #     [nodes.human, nodes.mammal],
         # ])
+
+    def test_attach_remote(self):
+        das = DistributedAtomSpace()
+        assert das.remote_das == []
+        with mock.patch(
+            'hyperon_das.api.DistributedAtomSpace._is_server_connect',
+            return_value=True,
+        ):
+            das.attach_remote(host='0.0.0.0', port='8000')
+        assert len(das.remote_das) == 1
+        assert isinstance(das.remote_das[0], FunctionsClient)
+        assert das.remote_das[0].url == 'http://0.0.0.0:8000/function/atomdb'
+        assert das.remote_das[0].name == 'server-0'
 
     # def test_nested_pattern(self, das: DistributedAtomSpace):
     #    das.add_link({

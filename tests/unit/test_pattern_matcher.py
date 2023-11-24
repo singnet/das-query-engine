@@ -21,7 +21,7 @@ from hyperon_das.pattern_matcher import (
 )
 from hyperon_das.pattern_matcher.constants import CompatibilityStatus
 from hyperon_das.utils import QueryOutputFormat
-from tests.mock import DatabaseMock
+from tests.unit.mock import DatabaseMock
 
 
 def build_ordered_assignment(d):

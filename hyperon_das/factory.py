@@ -5,15 +5,7 @@ from typing import Optional, Protocol
 from hyperon_das_atomdb import IAtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB, ServerDB
 
-
-class DatabaseType(Enum):
-    REDIS_MONGO = 'redis_mongo'
-    RAM_ONLY = 'ram_only'
-    SERVER = 'server'
-
-    @classmethod
-    def values(cls):
-        return [choices.value for choices in cls]
+from hyperon_das.constants import DatabaseType
 
 
 class IDatabaseFactory(Protocol):

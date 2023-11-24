@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from itertools import product
-from typing import Any, Dict, List, Optional, TypeVar
+from typing import Any, Dict, List, Optional
 
 from hyperon_das_atomdb import WILDCARD
 

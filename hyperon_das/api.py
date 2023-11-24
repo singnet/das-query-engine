@@ -1,21 +1,26 @@
 import json
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import requests
 from hyperon_das_atomdb import WILDCARD
+from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
 from hyperon_das.cache import (
     LazyQueryEvaluator,
     ListIterator,
     QueryAnswerIterator,
 )
+from hyperon_das.client import FunctionsClient
+from hyperon_das.constants import DasType, DatabaseType
+from hyperon_das.decorators import retry
 from hyperon_das.exceptions import (
-    DatabaseTypeException,
-    InitializeServerException,
+    DasTypeException,
+    InitializeDasServerException,
     MethodNotAllowed,
     QueryParametersException,
     UnexpectedQueryFormat,
 )
-from hyperon_das.factory import DatabaseFactory, DatabaseType, database_factory
+from hyperon_das.factory import DatabaseFactory, database_factory
 from hyperon_das.logger import logger
 from hyperon_das.pattern_matcher import (
     LogicalExpression,
@@ -26,44 +31,74 @@ from hyperon_das.utils import (
     QueryAnswer,
     QueryOutputFormat,
     QueryParameters,
+    config,
 )
 
 
 class DistributedAtomSpace:
     def __init__(
-        self,
-        database: DatabaseType,
-        host: Optional[str] = None,
-        port: Optional[str] = None,
+        self, das_type: DasType = DasType.CLIENT.value, **kwargs
     ) -> None:
-        self._db_type = database
+        self._type = das_type
+        self.__remote_das = []
 
         try:
-            DatabaseType(database)
+            DasType(self._type)
         except ValueError as e:
             self._error(
-                DatabaseTypeException(
+                DasTypeException(
                     message=str(e),
-                    details=f'possible values {DatabaseType.values()}',
+                    details=f'possible values {DasType.types()}',
                 )
             )
 
         logger().debug(
             {
                 'message': '[DistributedAtomSpace][__init__]',
-                'data': {'database_type': database},
+                'data': {'das_type': das_type},
             }
         )
 
-        if database == DatabaseType.SERVER.value and not host:
-            raise InitializeServerException(
-                message='You must send the host parameter',
-                details=f'To use server type Das you must send at least the host parameter',
+        if self._type == DasType.CLIENT.value:
+            self.db = InMemoryDB()
+        elif self._type == DasType.SERVER.value:
+            try:
+                self.db = RedisMongoDB()
+            except Exception as e:
+                raise InitializeDasServerException(
+                    message='An error occurred during class initialization',
+                    details=str(e),
+                )
+
+    @property
+    def remote_das(self):
+        return self.__remote_das
+
+    @retry(attempts=5, timeout_seconds=120)
+    def _connect_server(self, host: str, port: Optional[str] = None):
+        port = port or config.get("DEFAULT_PORT_OPENFAAS", '8081')
+        openfaas_uri = f'http://{host}:{port}/function/query-engine'
+        aws_lambda_uri = f'http://{host}/prod/query-engine'
+        url = None
+        if self._is_server_connect(openfaas_uri):
+            url = openfaas_uri
+        elif self._is_server_connect(aws_lambda_uri):
+            url = aws_lambda_uri
+        return url
+
+    def _is_server_connect(self, url: str) -> bool:
+        try:
+            response = requests.request(
+                'POST',
+                url=url,
+                data=json.dumps({"action": "ping", "input": {}}),
+                timeout=10,
             )
-
-        self.db = database_factory(DatabaseFactory(self._db_type), host, port)
-
-        logger().info(f"New Distributed Atom Space. Database name: {self.db.database_name}")
+        except Exception as e:
+            return False
+        if response.status_code == 200:
+            return True
+        return False
 
     def _to_handle_list(
         self, atom_list: Union[List[str], List[Dict]]
@@ -384,7 +419,7 @@ class DistributedAtomSpace:
     def get_link(
         self,
         link_type: str,
-        targets: List[str] = None,
+        targets: List[str],
         output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
     ) -> Union[str, Dict]:
         """
@@ -824,7 +859,7 @@ class DistributedAtomSpace:
             return {'negation': False, 'mapping': result}
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._db_type == DatabaseType.RAM_ONLY.value:
+        if self._type == DasType.CLIENT.value:
             return self.db.add_node(node_params)
         else:
             self._error(
@@ -835,7 +870,7 @@ class DistributedAtomSpace:
             )
 
     def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._db_type == DatabaseType.RAM_ONLY.value:
+        if self._type == DasType.CLIENT.value:
             return self.db.add_link(link_params)
         else:
             self._error(
@@ -844,3 +879,40 @@ class DistributedAtomSpace:
                     details='Instantiate the class sent the database type as `ram_only`',
                 )
             )
+
+    def attach_remote(
+        self, host: str, port: Optional[str] = None, name: Optional[str] = None
+    ) -> bool:
+        """
+        Establish a connection to a remote server and attach a server instance.
+
+        Args:
+            host (str): The hostname or IP address of the remote server.
+            port (Optional[str]): The port number to connect to on the remote server. Defaults to None.
+            name (Optional[str]): A user-defined name for the FunctionsClient instance. Defaults to None.
+
+        Returns:
+            bool: Returns True if the attachment process is successful, otherwise False.
+
+        Example:
+            Use this method to attach to a remote server:
+
+            >>> instance = DistributedAtomSpace()
+            >>> result = instance.attach_remote(host="1.2.3.4", port="1234", name="RemoteServer1")
+        """
+        try:
+            url = self._connect_server(host, port)
+            existing_servers = len(self.remote_das)
+            das = FunctionsClient(url, existing_servers, name)
+            self.__remote_das.append(das)
+            return True
+        except Exception:
+            return False
+
+
+if __name__ == '__main__':
+    das = DistributedAtomSpace()
+    das.attach_remote(host='104.238.183.115', port='8081')
+    server = das.remote_das[0]
+    server.count_atoms()
+    print('END')

@@ -10,7 +10,7 @@ class BaseException(Exception):
         super().__init__(self.message, self.details)
 
 
-class DatabaseTypeException(BaseException):
+class DasTypeException(BaseException):
     ...  # pragma no cover
 
 
@@ -30,5 +30,13 @@ class InvalidAssignment(BaseException):
     ...  # pragma no cover
 
 
-class InitializeServerException(BaseException):
+class InitializeDasServerException(BaseException):
+    ...  # pragma no cover
+
+
+class ConnectionServerException(BaseException):
+    ...  # pragma no cover
+
+
+class RetryException(BaseException):
     ...  # pragma no cover
