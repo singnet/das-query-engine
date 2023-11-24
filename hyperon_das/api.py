@@ -210,9 +210,7 @@ class DistributedAtomSpace:
         """Clear all data"""
         return self.db.clear_database()
 
-    def count_atoms(
-        self, extra_parameters: Optional[Dict[str, Any]] = None
-    ) -> Tuple[int, int]:
+    def count_atoms(self) -> Tuple[int, int]:
         """
         This method is useful for returning the count of atoms in the database.
         It's also useful for ensuring that the knowledge base load went off without problems.
@@ -220,21 +218,7 @@ class DistributedAtomSpace:
         Returns:
             Tuple[int, int]: (node_count, link_count)
         """
-        if not extra_parameters:
-            return self.db.count_atoms()
-
-        if 'when' in extra_parameters:
-            when = extra_parameters['when']
-            if when == 'local':
-                return self.db.count_atoms()
-            elif when == 'remote':
-                return self.__remote_das[0].count_atoms()
-            elif when == 'all':
-                local = self.db.count_atoms()
-                remote = self.__remote_das[0].count_atoms()
-                return local + remote
-        else:
-            return self.db.count_atoms()
+        return self.db.count_atoms()
 
     def get_atom(
         self,
