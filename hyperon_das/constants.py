@@ -6,12 +6,8 @@ class DatabaseType(Enum):
     RAM_ONLY = 'ram_only'
 
     @classmethod
-    def _types(cls) -> list:
+    def types(cls) -> list:
         return [choices.value for choices in cls]
-
-    @property
-    def types(self):
-        return self._types()
 
 
 class QueryOutputFormat(int, Enum):
@@ -25,9 +21,5 @@ class DasType(Enum):
     SERVER = 'server'
 
     @classmethod
-    def _types(cls) -> list:
+    def types(cls) -> list:
         return [choices.value for choices in cls]
-
-    @property
-    def types(self):
-        return self._types()
