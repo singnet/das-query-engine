@@ -411,7 +411,7 @@ class DistributedAtomSpace:
     def get_link(
         self,
         link_type: str,
-        targets: List[str] = None,
+        targets: List[str],
         output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
     ) -> Union[str, Dict]:
         """
