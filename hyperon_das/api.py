@@ -76,7 +76,7 @@ class DistributedAtomSpace:
 
     @retry(attempts=5, timeout_seconds=120)
     def _connect_server(self, host: str, port: Optional[str] = None):
-        port = port or config.get("DEFAULT_PORT_OPENFAAS", '8080')
+        port = port or config.get("DEFAULT_PORT_OPENFAAS", '8081')
         openfaas_uri = f'http://{host}:{port}/function/query-engine'
         aws_lambda_uri = f'http://{host}/prod/query-engine'
         url = None
@@ -95,10 +95,10 @@ class DistributedAtomSpace:
                 timeout=10,
             )
         except Exception as e:
-            return True
+            return False
         if response.status_code == 200:
             return True
-        return True
+        return False
 
     def _to_handle_list(
         self, atom_list: Union[List[str], List[Dict]]
