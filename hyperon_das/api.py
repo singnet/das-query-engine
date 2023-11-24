@@ -1,5 +1,4 @@
 import json
-from itertools import product
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
@@ -52,6 +51,13 @@ class DistributedAtomSpace:
                     details=f'possible values {DasType.types()}',
                 )
             )
+
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][__init__]',
+                'data': {'das_type': das_type},
+            }
+        )
 
         if self._type == DasType.CLIENT.value:
             self.db = InMemoryDB()
@@ -208,7 +214,13 @@ class DistributedAtomSpace:
 
     def clear_database(self) -> None:
         """Clear all data"""
-        return self.db.clear_database()
+        ret = self.db.clear_database()
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][clear_database] - The database has been cleaned.',
+            }
+        )
+        return ret
 
     def count_atoms(self) -> Tuple[int, int]:
         """
@@ -725,6 +737,14 @@ class DistributedAtomSpace:
             >>> print(result)
             [{'handle': 'dbcf1c7b610a5adea335bf08f6509978', 'type': 'Expression', 'template': ['Expression', 'Symbol', ['Expression', 'Symbol', 'Symbol']], 'targets': [{'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'}, {'handle': '233d9a6da7d49d4164d863569e9ab7b6', 'type': 'Expression', 'template': ['Expression', 'Symbol', 'Symbol'], 'targets': [{'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'}, {'handle': '9f27a331633c8bc3c49435ffabb9110e', 'type': 'Symbol', 'name': '2'}]}]}]
         """
+
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][query] - Start',
+                'data': {'query': query, 'extra_parameters': extra_parameters},
+            }
+        )
+
         query_results = self._recursive_query(query, extra_parameters)
         logger().debug(f"query: {query} result: {str(query_results)}")
         answer = []
@@ -789,6 +809,13 @@ class DistributedAtomSpace:
                 ...
             }
         """
+
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][pattern_matcher_query] - Start',
+                'data': {'query': query, 'extra_parameters': extra_parameters},
+            }
+        )
 
         if extra_parameters is not None:
             try:

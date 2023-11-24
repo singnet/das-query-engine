@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, FrozenSet, Optional, Set, Union
 
 from dotenv import dotenv_values
 
