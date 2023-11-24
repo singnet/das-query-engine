@@ -77,8 +77,8 @@ class DistributedAtomSpace:
     @retry(attempts=5, timeout_seconds=120)
     def _connect_server(self, host: str, port: Optional[str] = None):
         port = port or config.get("DEFAULT_PORT_OPENFAAS", '8080')
-        openfaas_uri = f'http://{host}:{port}/function/atomdb'
-        aws_lambda_uri = f'http://{host}/prod/atomdb'
+        openfaas_uri = f'http://{host}:{port}/function/query-engine'
+        aws_lambda_uri = f'http://{host}/prod/query-engine'
         url = None
         if self._is_server_connect(openfaas_uri):
             url = openfaas_uri
@@ -908,3 +908,11 @@ class DistributedAtomSpace:
             return True
         except Exception:
             return False
+
+
+if __name__ == '__main__':
+    das = DistributedAtomSpace()
+    das.attach_remote(host='104.238.183.115', port='8081')
+    server = das.remote_das[0]
+    server.count_atoms()
+    print('END')
