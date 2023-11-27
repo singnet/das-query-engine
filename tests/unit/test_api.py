@@ -409,7 +409,10 @@ class TestDistributedAtomSpace:
             das.attach_remote(host='0.0.0.0', port='8000')
         assert len(das.remote_das) == 1
         assert isinstance(das.remote_das[0], FunctionsClient)
-        assert das.remote_das[0].url == 'http://0.0.0.0:8000/function/atomdb'
+        assert (
+            das.remote_das[0].url
+            == 'http://0.0.0.0:8000/function/query-engine'
+        )
         assert das.remote_das[0].name == 'server-0'
 
     # def test_nested_pattern(self, das: DistributedAtomSpace):

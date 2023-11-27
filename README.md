@@ -9,9 +9,6 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
     - [Using-pip](#using-pip)
     - [Using-Poetry](#using-poetry)
   - [Usage](#usage)
-    - [Redis and MongoDB](#redis-and-mongodb)
-        - [Create a client API](#create-a-client-api)
-    - [In Memory](#in-memory)
   - [Tests](#tests)
 
 ## Installation
@@ -62,73 +59,59 @@ Now you can run the project within the Poetry virtual environment.
 
 ## Usage
 
-So far we have two ways of making queries using the API. One that uses database persistence and another that doesn't. The way to create and execute the query is exactly the same, the only difference is when you need to instantiate the API class. Below you can see more details.
-
-### Redis and MongoDB
-
-If you want to use data persistence, you must have Redis and MongoDB running in your environment and you must have the following variables configured with their respective values:
-
-*Example*:
-```scheme
-DAS_MONGODB_HOSTNAME=172.17.0.2
-DAS_MONGODB_PORT=27017
-DAS_MONGODB_USERNAME=mongo
-DAS_MONGODB_PASSWORD=mongo
-DAS_REDIS_HOSTNAME=127.0.0.1
-DAS_REDIS_PORT=6379
-```
-
-**TIP**: You can change the values in the *environment* file, which is in the root directory and run the command below:
-
-```bash
-source environment
-```
-
-##### Create a client API
+It's very simple to use it. You just need to instantiate the class as shown below
 
 ```python
 from hyperon_das import DistributedAtomSpace
 
-api = DistributedAtomSpace('redis_mongo')
+das = DistributedAtomSpace()
 ```
 
-### In Memory
+Now you can enter Atoms and then make queries. See example below:
 
-This way you don't need anything just instantiate the class as shown below:
-
-
-1. A simple query which is a `AND` operation on two links whose targets are variables.
+1. A simple query.
 	
     ```python
     from hyperon_das import DistributedAtomSpace
-	from hyperon_das.pattern_matcher import And, Variable, Link
-    from hyperon_das.utils import QueryOutputFormat
+    from hyperon_das.constants import QueryOutputFormat
 
-    api = DistributedAtomSpace('ram_only')
+    das = DistributedAtomSpace()
 
-    api.add_link({
-        'type': 'Evaluation',
+    das.count_atoms() # (0, 0)
+
+    das.add_link({
+        'type': 'Inheritance',
         'targets': [
-            {'type': 'Predicate', 'name': 'Predicate:has_name'},
-            {
-                'type': 'Evaluation',
-                'targets': [
-                    {'type': 'Predicate', 'name': 'Predicate:has_name'},
-                    {
-                        'type': 'Set',
-                        'targets': [
-                            {'type': 'Reactome', 'name': 'Reactome:R-HSA-164843'},
-                            {'type': 'Concept', 'name': 'Concept:2-LTR circle formation'},
-                        ]
-                    },
-                ],
-            },
+            {'type': 'Concept', 'name': 'human'},
+            {'type': 'Concept', 'name': 'mammal'}
         ],
     })
 
-    expression =  Link("Evaluation",  ordered=True,  targets=[Variable("V1"), Variable("V2")])
+    das.add_link({
+        'type': 'Inheritance',
+        'targets': [
+            {'type': 'Concept', 'name': 'monkey'},
+            {'type': 'Concept', 'name': 'mammal'}
+        ]
+    })
 
-    resp = api.pattern_matcher_query(expression, {'return_type': QueryOutputFormat.JSON, 'toplevel_only': True})
+    das.count_atoms() # (3, 2)
+
+    query = {
+        'atom_type': 'link',
+        'type': 'Inheritance',
+        'targets': [
+            {'atom_type': 'variable', 'name': 'v1'},
+            {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
+        ]
+    }
+
+    query_params = {
+        "toplevel_only": False,
+        "return_type": QueryOutputFormat.ATOM_INFO,
+    }
+
+    resp = das.query(query, query_params)
 	
 	print(resp)
 	```
@@ -136,85 +119,91 @@ This way you don't need anything just instantiate the class as shown below:
 	```bash
     [
         {
-            "V1": {
-                "type": "Predicate",
-                "name": "Predicate:has_name",
-                "is_link": false,
-                "is_node": true
-            },
-            "V2": {
-                "type": "Evaluation",
-                "targets": [
-                    {
-                        "type": "Predicate",
-                        "name": "Predicate:has_name"
-                    },
-                    {
-                        "type": "Set",
-                        "targets": [
-                            {
-                                "type": "Reactome",
-                                "name": "Reactome:R-HSA-164843"
-                            },
-                            {
-                                "type": "Concept",
-                                "name": "Concept:2-LTR circle formation"
-                            }
-                        ]
-                    }
-                ],
-                "is_link": true,
-                "is_node": false
-            }
+            'handle': 'c93e1e758c53912638438e2a7d7f7b7f',
+            'targets': [
+                {
+                    'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
+                    'name': 'human',
+                    'type': 'Concept'
+                },
+                {
+                    'handle': 'bdfe4e7a431f73386f37c6448afe5840',
+                    'name': 'mammal',
+                    'type': 'Concept'
+                }
+            ],
+            'template': ['Inheritance', 'Concept', 'Concept'],
+            'type': 'Inheritance'
+        },
+        {
+            'handle': 'f31dfe97db782e8cec26de18dddf8965',
+            'targets': [
+                {
+                    'handle': '1cdffc6b0b89ff41d68bec237481d1e1',
+                    'name': 'monkey',
+                    'type': 'Concept'
+                },
+                {
+                    'handle': 'bdfe4e7a431f73386f37c6448afe5840',
+                    'name': 'mammal',
+                    'type': 'Concept'
+                }
+            ],
+            'template': ['Inheritance', 'Concept', 'Concept'],
+            'type': 'Inheritance'
         }
     ]
 	```
 
-2. Add Node and And Link (It's possible only using [Ram Only](#in-memory))
+
+2. Add Node and And Link
 	
 	```python
-	api.count_atoms() # (0, 0)
+    from hyperon_das import DistributedAtomSpace
+    das = DistributedAtomSpace()
+	
+    das.count_atoms() # (0, 0)
 	
 	nodes = [
 	    {
 	        'type': 'Reactome',
-	        'name': 'Reactome:R-HSA-164843',
+	        'name': 'react',
 	    },
 	    {
 	        'type': 'Concept',
-	        'name': 'Concept:2-LTR circle formation',
+	        'name': 'circle',
 	    }
     ]
     
     for node in nodes:
-	    api.add_node(node)
+	    das.add_node(node)
 	
-	api.count_atoms() # (2, 0)
-	
+	das.count_atoms() # (2, 0)
+    
 	link = {
         'type': 'Evaluation',
         'targets': [
             {
 	            'type': 'Predicate',
-	            'name': 'Predicate:has_name'
+	            'name': 'pred'
 	        },
             {
                 'type': 'Evaluation',
                 'targets': [
                     {
 	                    'type': 'Predicate',
-	                    'name': 'Predicate:has_name'
+	                    'name': 'pred'
 	                },
                     {
                         'type': 'Set',
                         'targets': [
                             {
                                 'type': 'Reactome',
-                                'name': 'Reactome:R-HSA-164843',
+                                'name': 'react',
                             },
                             {
                                 'type': 'Concept',
-                                'name': 'Concept:2-LTR circle formation',
+                                'name': 'circle',
                             },
                         ]
                     },
@@ -222,20 +211,38 @@ This way you don't need anything just instantiate the class as shown below:
             },
         ],
     }
+
+    das.add_link(link)
     
-    api.add_link(link)
-    
-    api.count_atoms() # (3, 3)
+    das.count_atoms() # (3, 3)
 	```
 
 	**Note1:** in this example I add 2 nodes and 1 a link, but in the end I have 3 nodes and 3 links. Therefore, it is possible to add nested links and as links are composed of nodes, if the link node doesn't exist in the system it's added.
 
 	**Note2:** For these methods to work well, both nodes and links must be a dict with the structure shown above, i.e, for **nodes** you need to send, at least, the parameters `type` and `name` and for **links** `type` and `targets`
 
+3. You can add remote connections to make your queries
+
+    ```python
+    from hyperon_das import DistributedAtomSpace
+
+    das = DistributedAtomSpace()
+
+    host = '192.0.2.146'
+    port = '8081'
+
+    das.attach_remote(host=host, port=port)
+    
+    server = das.remote_das[0]
+
+    server.count_atoms()
+    server.query(query=...)
+    ```
+
 ## Tests
 
 You can run the command below to run the unit tests
-
+test
 ```bash
-make test-coverage
+make unit-tests
 ```

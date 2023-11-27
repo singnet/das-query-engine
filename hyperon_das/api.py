@@ -908,11 +908,3 @@ class DistributedAtomSpace:
             return True
         except Exception:
             return False
-
-
-if __name__ == '__main__':
-    das = DistributedAtomSpace()
-    das.attach_remote(host='104.238.183.115', port='8081')
-    server = das.remote_das[0]
-    server.count_atoms()
-    print('END')
