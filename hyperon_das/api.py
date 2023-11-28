@@ -14,6 +14,7 @@ from hyperon_das.client import FunctionsClient
 from hyperon_das.constants import DasType, DatabaseType
 from hyperon_das.decorators import retry
 from hyperon_das.exceptions import (
+    ConnectionServerException,
     DasTypeException,
     InitializeDasServerException,
     MethodNotAllowed,
@@ -61,6 +62,21 @@ class DistributedAtomSpace:
 
         if self._type == DasType.CLIENT.value:
             self.db = InMemoryDB()
+            params = {}
+            if 'host' in kwargs:
+                params = {'host': kwargs['host']}
+            if 'port' in kwargs:
+                params.update({'port': kwargs['port']})
+            if params:
+                try:
+                    url = self._connect_server(**params)
+                    # TODO: Change this name. Using for tests
+                    self.das_origin = FunctionsClient(url)
+                except Exception as e:
+                    raise ConnectionServerException(
+                        message="An error occurs while connecting to the server",
+                        details=str(e),
+                    )
         elif self._type == DasType.SERVER.value:
             try:
                 self.db = RedisMongoDB()
@@ -172,7 +188,7 @@ class DistributedAtomSpace:
         if query["atom_type"] == "node":
             atom_handle = self.db.get_node_handle(query["type"], query["name"])
             return ListIterator(
-                [QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)]
+                [QueryAnswer((self.db.get_atom_as_dict(atom_handle),''), None)]
             )
         elif query["atom_type"] == "link":
             matched_targets = []
@@ -188,7 +204,7 @@ class DistributedAtomSpace:
                         matched_targets.append(matched)
                 elif target["atom_type"] == "variable":
                     matched_targets.append(
-                        ListIterator([QueryAnswer(target, None)])
+                        ListIterator([QueryAnswer((target,''), None)])
                     )
                 else:
                     self._error(
@@ -742,11 +758,17 @@ class DistributedAtomSpace:
         )
 
         query_results = self._recursive_query(query, extra_parameters)
-        logger().debug(f"query: {query} result: {str(query_results)}")
-        answer = []
+        logger().debug(f"query: {query} result: {str(query_results)}") 
+        local_answer = []
+        local_handles = []
         for result in query_results:
-            answer.append(result.grounded_atom)
-        return answer
+            local_handles.append(result.atom_handle)
+            local_answer.append(result.grounded_atom)
+
+        # Remote query
+        remote_answer = self.das_origin.query(query, extra_parameters)
+
+        return local_answer
 
     def pattern_matcher_query(
         self,
@@ -911,8 +933,296 @@ class DistributedAtomSpace:
 
 
 if __name__ == '__main__':
+    #Use case 1
+    das = DistributedAtomSpace(host='44.198.65.35')
+    
+    all_nodes = [
+            {'type': 'Concept', 'name': 'human'},
+            {'type': 'Concept', 'name': 'monkey'},
+            {'type': 'Concept', 'name': 'chimp'},
+            {'type': 'Concept', 'name': 'snake'},
+            {'type': 'Concept', 'name': 'earthworm'},
+            {'type': 'Concept', 'name': 'rhino'},
+            {'type': 'Concept', 'name': 'triceratops'},
+            {'type': 'Concept', 'name': 'vine'},
+            {'type': 'Concept', 'name': 'ent'},
+            {'type': 'Concept', 'name': 'mammal'},
+            {'type': 'Concept', 'name': 'animal'},
+            {'type': 'Concept', 'name': 'reptile'},
+            {'type': 'Concept', 'name': 'dinosaur'},
+            {'type': 'Concept', 'name': 'plant'},
+        ]
+
+    all_links = [
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'human'},
+                    {'type': 'Concept', 'name': 'monkey'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'human'},
+                    {'type': 'Concept', 'name': 'chimp'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'chimp'},
+                    {'type': 'Concept', 'name': 'monkey'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'snake'},
+                    {'type': 'Concept', 'name': 'earthworm'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'rhino'},
+                    {'type': 'Concept', 'name': 'triceratops'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'snake'},
+                    {'type': 'Concept', 'name': 'vine'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'human'},
+                    {'type': 'Concept', 'name': 'ent'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'human'},
+                    {'type': 'Concept', 'name': 'mammal'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'monkey'},
+                    {'type': 'Concept', 'name': 'mammal'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'chimp'},
+                    {'type': 'Concept', 'name': 'mammal'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'mammal'},
+                    {'type': 'Concept', 'name': 'animal'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'reptile'},
+                    {'type': 'Concept', 'name': 'animal'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'snake'},
+                    {'type': 'Concept', 'name': 'reptile'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'dinosaur'},
+                    {'type': 'Concept', 'name': 'reptile'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'triceratops'},
+                    {'type': 'Concept', 'name': 'dinosaur'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'earthworm'},
+                    {'type': 'Concept', 'name': 'animal'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'rhino'},
+                    {'type': 'Concept', 'name': 'mammal'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'vine'},
+                    {'type': 'Concept', 'name': 'plant'},
+                ],
+            },
+            {
+                'type': 'Inheritance',
+                'targets': [
+                    {'type': 'Concept', 'name': 'ent'},
+                    {'type': 'Concept', 'name': 'plant'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'monkey'},
+                    {'type': 'Concept', 'name': 'human'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'chimp'},
+                    {'type': 'Concept', 'name': 'human'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'monkey'},
+                    {'type': 'Concept', 'name': 'chimp'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'earthworm'},
+                    {'type': 'Concept', 'name': 'snake'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'triceratops'},
+                    {'type': 'Concept', 'name': 'rhino'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'vine'},
+                    {'type': 'Concept', 'name': 'snake'},
+                ],
+            },
+            {
+                'type': 'Similarity',
+                'targets': [
+                    {'type': 'Concept', 'name': 'ent'},
+                    {'type': 'Concept', 'name': 'human'},
+                ],
+            },
+        ]
+    
+    all_links = [
+        #{'type': 'Inheritance', 'targets': [{'type': 'Concept', 'name': 'human'}, {'type': 'Concept', 'name': 'mammal'}]},
+        #{'type': 'Inheritance', 'targets': [{'type': 'Concept', 'name': 'monkey'}, {'type': 'Concept', 'name': 'mammal'}]},
+        #{'type': 'Inheritance', 'targets': [{'type': 'Concept', 'name': 'chimp'}, {'type': 'Concept', 'name': 'mammal'}]},
+        {'type': 'Inheritance', 'targets': [{'type': 'Concept', 'name': 'capozzoli'}, {'type': 'Concept', 'name': 'mammal'}]},
+        {
+            'type': 'Evaluation',
+            'targets': [
+                {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                {
+                    'type': 'Evaluation',
+                    'targets': [
+                        {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                        {
+                            'type': 'Set',
+                            'targets': [
+                                {
+                                    'type': 'Reactome',
+                                    'name': 'Reactome:R-HSA-164843',
+                                },
+                                {
+                                    'type': 'Concept',
+                                    'name': 'Concept:2-LTR circle formation',
+                                },
+                            ]
+                        },
+                    ],
+                },
+            ],
+        }
+    ]
+
+    #for node in all_nodes:
+        #das.add_node(node)
+    for link in all_links:
+        das.add_link(link)
+
+    print(f'Atoms: {das.count_atoms()}')
+    query = {
+        "atom_type": "link",
+        "type": "Evaluation",
+        "targets": [
+            {"atom_type": "node", "type": "Predicate", "name": "Predicate:has_name"},
+            {"atom_type": "variable", "name": "v1"},
+        ]
+    }
+    query_params = {
+        "toplevel_only": False,
+        "return_type": QueryOutputFormat.ATOM_INFO,
+    }
+    result = das.query(query, query_params)
+    print(result)
+"""   
+if __name__ == '__main__':
+    from hyperon_das import DistributedAtomSpace
+    from hyperon_das.utils import QueryOutputFormat
+
+    def print_query_answer(query_answer):
+        for link in query_answer:
+            print(f"{link['type']}: {link['targets'][0]['name']} -> {link['targets'][1]['name']}")
+        
+    host = '104.238.183.115'
+    port = '8081'
+
     das = DistributedAtomSpace()
-    das.attach_remote(host='104.238.183.115', port='8081')
+    das.attach_remote(host=host, port=port)
+    print(f"Connected to DAS at {host}:{port}")
+
     server = das.remote_das[0]
-    server.count_atoms()
-    print('END')
+
+    print("(nodes, links) =", server.count_atoms())
+
+    query1 = {
+        "atom_type": "link",
+        "type": "Inheritance",
+        "targets": [
+            {"atom_type": "variable", "name": "v1"},
+            {"atom_type": "node", "type": "Concept", "name": "mammal"},
+        ]
+    }
+    query_params = {
+        "toplevel_only": False,
+        "return_type": QueryOutputFormat.ATOM_INFO,
+    }
+    answer = server.query(query1, query_params)
+    print(answer)
+    print_query_answer(answer)
+"""

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, FrozenSet, Optional, Set, Union
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, Union
 
 from dotenv import dotenv_values
 
@@ -98,5 +98,13 @@ class Assignment:
 
 @dataclass
 class QueryAnswer:
-    grounded_atom: Optional[Dict] = None
+    atom: Optional[Tuple[Dict, str | List[List]]] = None
     assignment: Optional[Assignment] = None
+    
+    @property
+    def grounded_atom(self):
+        return self.atom[0] if self.atom else None
+    
+    @property
+    def atom_handle(self):
+        return self.atom[1] if self.atom else None

@@ -76,14 +76,16 @@ class LazyQueryEvaluator(ProductIterator):
         self.buffered_answer = None
 
     def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
+        handles = []
         targets = []
         for target_handle in link["targets"]:
             atom = self.das.db.get_atom_as_dict(target_handle)
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
+        handles.append([link['handle'], tuple(link.get('targets',[]))])
         link["targets"] = targets
-        return link
+        return link, handles
 
     def __next__(self):
         if self.buffered_answer:
@@ -110,20 +112,17 @@ class LazyQueryEvaluator(ProductIterator):
         lazy_query_answer = []
         for answer in das_query_answer:
             assignment = None
+            
             if wildcard_flag:
                 assignment = Assignment()
                 assignment_failed = False
-                for query_answer_target, handle in zip(
-                    target_info, answer["targets"]
-                ):
+                for query_answer_target, handle in zip(target_info, answer["targets"]):
                     target = query_answer_target.grounded_atom
                     if target.get("atom_type", None) == "variable":
                         if not assignment.assign(target["name"], handle):
                             assignment_failed = True
                     else:
-                        if not assignment.merge(
-                            query_answer_target.assignment
-                        ):
+                        if not assignment.merge(query_answer_target.assignment):
                             assignment_failed = True
                     if not assignment_failed:
                         break
