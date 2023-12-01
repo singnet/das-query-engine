@@ -409,43 +409,5 @@ class TestDistributedAtomSpace:
             das.attach_remote(host='0.0.0.0', port='8000')
         assert len(das.remote_das) == 1
         assert isinstance(das.remote_das[0], FunctionsClient)
-        assert das.remote_das[0].url == 'http://0.0.0.0:8000/function/atomdb'
+        assert das.remote_das[0].url == 'http://0.0.0.0:8000/function/query-engine'
         assert das.remote_das[0].name == 'server-0'
-
-    # def test_nested_pattern(self, das: DistributedAtomSpace):
-    #    das.add_link({
-    #        "type": "Expression",
-    #        "targets": [
-    #            {"type": "Symbol", "name": "Test"},
-    #            {
-    #                "type": "Expression",
-    #                "targets": [
-    #                    {"type": "Symbol", "name": "Test"},
-    #                    {"type": "Symbol", "name": "2"}
-    #                ]
-    #            }
-    #        ]
-    #    })
-    #    query_params = {
-    #        "toplevel_only": False,
-    #        "return_type": QueryOutputFormat.ATOM_INFO,
-    #    }
-    #    q1 = {
-    #        "atom_type": "link",
-    #        "type": "Expression",
-    #        "targets": [
-    #            {"atom_type": "variable", "name": "v1"},
-    #            {
-    #                "atom_type": "link",
-    #                "type": "Expression",
-    #                "targets": [
-    #                    {"atom_type": "variable", "name": "v2"},
-    #                    {"atom_type": "node", "type": "Symbol", "name": "2"},
-    #                ]
-    #            }
-    #
-    #        ]
-    #    }
-    #    answer = das.query(q1, query_params)
-    #    assert len(answer) == 1
-    #    assert answer[0]["handle"] == "dbcf1c7b610a5adea335bf08f6509978"
