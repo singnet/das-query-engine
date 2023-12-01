@@ -6,6 +6,7 @@ from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
 from hyperon_das.cache import (
+    AndEvaluator,
     LazyQueryEvaluator,
     ListIterator,
     QueryAnswerIterator,
@@ -165,11 +166,17 @@ class DistributedAtomSpace:
 
     def _recursive_query(
         self,
-        query: Dict[str, Any],
+        query: Union[Dict[str, Any], List[Dict[str, Any]]],
         mappings: Set[Assignment] = None,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> QueryAnswerIterator:
-        if query["atom_type"] == "node":
+        if isinstance(query, list):
+            sub_expression_results = [
+                self._recursive_query(expression, mappings, extra_parameters)
+                for expression in query
+            ]
+            return AndEvaluator(sub_expression_results)
+        elif query["atom_type"] == "node":
             atom_handle = self.db.get_node_handle(query["type"], query["name"])
             return ListIterator(
                 [QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)]
@@ -745,7 +752,7 @@ class DistributedAtomSpace:
         logger().debug(f"query: {query} result: {str(query_results)}")
         answer = []
         for result in query_results:
-            answer.append(result.grounded_atom)
+            answer.append(result.subgraph)
         return answer
 
     def pattern_matcher_query(
@@ -908,11 +915,3 @@ class DistributedAtomSpace:
             return True
         except Exception:
             return False
-
-
-if __name__ == '__main__':
-    das = DistributedAtomSpace()
-    das.attach_remote(host='104.238.183.115', port='8081')
-    server = das.remote_das[0]
-    server.count_atoms()
-    print('END')

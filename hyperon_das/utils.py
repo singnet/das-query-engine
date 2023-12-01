@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, FrozenSet, Optional, Set, Union
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
 
 from dotenv import dotenv_values
 
@@ -20,11 +20,24 @@ class QueryParameters:
 
 
 class Assignment:
-    def __init__(self):
+
+    @staticmethod
+    def compose(components: List["Assignment"]) -> Optional["Assignment"]:
+        answer = Assignment()
+        for component in components:
+            if not answer.merge(component):
+                return None
+        answer.freeze()
+        return answer
+
+    def __init__(self, other: Optional["Assignment"] = None):
         self.labels: Union[Set[str], FrozenSet] = set()
         self.values: Union[Set[str], FrozenSet] = set()
-        self.mapping: Dict[str, str] = {}
         self.hashcode: int = 0
+        if other:
+            self.mapping: Dict[str, str] = dict(other.mapping)
+        else:
+            self.mapping: Dict[str, str] = {}
 
     def __hash__(self) -> int:
         assert self.hashcode
@@ -87,16 +100,24 @@ class Assignment:
             self.mapping[label] = value
             return True
 
-    def merge(self, other: "Assignment") -> bool:
-        assert not self.frozen()
-        if other:
-            for label, value in other.mapping.items():
-                if not self.assign(label, value):
-                    return False
-        return True
+    def merge(self, other: "Assignment", in_place: bool = True) -> Optional[bool]:
+        if in_place:
+            assert not self.frozen()
+            if other:
+                for label, value in other.mapping.items():
+                    if not self.assign(label, value):
+                        return False
+            return True
+        else:
+            new_assignment = Assignment(self)
+            if new_assignment.merge(other):
+                new_assignment.freeze()
+                return new_assignment
+            else:
+                return None
 
 
 @dataclass
 class QueryAnswer:
-    grounded_atom: Optional[Dict] = None
+    subgraph: Optional[Dict] = None
     assignment: Optional[Assignment] = None
