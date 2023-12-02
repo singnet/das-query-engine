@@ -93,9 +93,7 @@ class TestAssignment:
             True,
         )
 
-        _check_merge(
-            [("v1", "1"), ("v2", "2")], [("v1", "2"), ("v5", "5")], [], False
-        )
+        _check_merge([("v1", "1"), ("v2", "2")], [("v1", "2"), ("v5", "5")], [], False)
 
         _check_merge(
             [("v1", "1"), ("v2", "2")],
@@ -104,17 +102,11 @@ class TestAssignment:
             True,
         )
 
-        _check_merge(
-            [("v1", "1"), ("v2", "2")], [("v1", "2"), ("v2", "1")], [], False
-        )
+        _check_merge([("v1", "1"), ("v2", "2")], [("v1", "2"), ("v2", "1")], [], False)
 
-        _check_merge(
-            [("v1", "1"), ("v2", "2")], [], [("v1", "1"), ("v2", "2")], True
-        )
+        _check_merge([("v1", "1"), ("v2", "2")], [], [("v1", "1"), ("v2", "2")], True)
 
-        _check_merge(
-            [], [("v1", "1"), ("v2", "2")], [("v1", "1"), ("v2", "2")], True
-        )
+        _check_merge([], [("v1", "1"), ("v2", "2")], [("v1", "1"), ("v2", "2")], True)
 
         a1 = _build_assignment([("v1", "1")])
         a2 = _build_assignment([("v1", "1")])

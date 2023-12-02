@@ -147,9 +147,7 @@ class DatabaseMock(IAtomDB):
                 return link[0] != 'Similarity' and link[0] != 'Set'
         return True
 
-    def get_link_handle(
-        self, link_type: str, target_handles: List[str]
-    ) -> str:
+    def get_link_handle(self, link_type: str, target_handles: List[str]) -> str:
         for link in self.all_links:
             if link[0] == link_type and len(target_handles) == (len(link) - 1):
                 if link_type == 'Similarity':
@@ -181,10 +179,7 @@ class DatabaseMock(IAtomDB):
         for link in self.all_links:
             if len(target_handles) == (len(link) - 1) and link[0] == link_type:
                 if link[0] == 'Similarity' or link[0] == 'Set':
-                    if all(
-                        target == WILDCARD or target in link[1:]
-                        for target in target_handles
-                    ):
+                    if all(target == WILDCARD or target in link[1:] for target in target_handles):
                         link_target_handles = link[1:]
                         link_target_handles.sort
                         answer.append(
@@ -195,15 +190,10 @@ class DatabaseMock(IAtomDB):
                         )
                 elif link[0] == 'Inheritance' or link[0] == 'List':
                     for i in range(0, len(target_handles)):
-                        if (
-                            target_handles[i] != WILDCARD
-                            and target_handles[i] != link[i + 1]
-                        ):
+                        if target_handles[i] != WILDCARD and target_handles[i] != link[i + 1]:
                             break
                     else:
-                        answer.append(
-                            [_build_link_handle(link[0], link[1:]), link[1:]]
-                        )
+                        answer.append([_build_link_handle(link[0], link[1:]), link[1:]])
                 elif link[0] == 'Evaluation':
                     answer.append('test')
                 else:

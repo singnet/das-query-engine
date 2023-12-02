@@ -117,10 +117,7 @@ class OrderedAssignment(Assignment):
         status = self.evaluate_compatibility(other)
         if status == CompatibilityStatus.INCOMPATIBLE:
             return None
-        if (
-            status == CompatibilityStatus.EQUAL
-            or status == CompatibilityStatus.FIRST_COVERS_SECOND
-        ):
+        if status == CompatibilityStatus.EQUAL or status == CompatibilityStatus.FIRST_COVERS_SECOND:
             return self
         elif status == CompatibilityStatus.SECOND_COVERS_FIRST:
             return other
@@ -152,10 +149,7 @@ class OrderedAssignment(Assignment):
             return CompatibilityStatus.NO_COVERING
 
     def compatible(self, other) -> bool:
-        return (
-            self.evaluate_compatibility(other)
-            != CompatibilityStatus.INCOMPATIBLE
-        )
+        return self.evaluate_compatibility(other) != CompatibilityStatus.INCOMPATIBLE
 
 
 class UnorderedAssignment(Assignment):
@@ -296,10 +290,7 @@ class CompositeAssignment(Assignment):
         assert self._freeze()
 
     def __repr__(self):
-        ret = (
-            f'Ordered = {self.ordered_mapping} | '
-            f'Unordered = {self.unordered_mappings}'
-        )
+        ret = f'Ordered = {self.ordered_mapping} | ' f'Unordered = {self.unordered_mappings}'
         return ret
 
     def _freeze(self):
@@ -327,9 +318,7 @@ class CompositeAssignment(Assignment):
         for unordered_assignment in self.unordered_mappings:
             if not unordered_assignment.contains_ordered(
                 self.ordered_mapping
-            ) and not unordered_assignment.is_covered_by_ordered(
-                self.ordered_mapping
-            ):
+            ) and not unordered_assignment.is_covered_by_ordered(self.ordered_mapping):
                 return False
         return True
 
@@ -356,9 +345,7 @@ class CompositeAssignment(Assignment):
             return False
 
     def _add_unordered_mapping(self, unordered_assignment) -> bool:
-        if self.ordered_mapping and not unordered_assignment.contains_ordered(
-            self.ordered_mapping
-        ):
+        if self.ordered_mapping and not unordered_assignment.contains_ordered(self.ordered_mapping):
             return False
         if any(
             not assignment.compatible(unordered_assignment)
@@ -370,9 +357,7 @@ class CompositeAssignment(Assignment):
         return True
 
     def _add_unordered_mappings(self, others) -> bool:
-        return all(
-            self._add_unordered_mapping(assignment) for assignment in others
-        )
+        return all(self._add_unordered_mapping(assignment) for assignment in others)
 
     def join(self, other: Assignment) -> Assignment:
         assert self.frozen and other.frozen
@@ -384,17 +369,12 @@ class CompositeAssignment(Assignment):
         else:
             if not answer._add_ordered_mapping(other.ordered_mapping):
                 return None
-            return (
-                answer
-                if answer._add_unordered_mappings(other.unordered_mappings)
-                else None
-            )
+            return answer if answer._add_unordered_mappings(other.unordered_mappings) else None
 
     def check_negation(self, negation: Assignment) -> bool:
         if isinstance(negation, OrderedAssignment):
             return all(
-                not assignment.contains_ordered(negation)
-                for assignment in self.unordered_mappings
+                not assignment.contains_ordered(negation) for assignment in self.unordered_mappings
             )
         elif isinstance(negation, UnorderedAssignment):
             return all(
@@ -530,8 +510,7 @@ class Link(Atom):
     def get_handle(self, db: IAtomDB) -> str:
         if not self.handle:
             target_handles = [
-                target if type(target) is str else target.get_handle(db)
-                for target in self.targets
+                target if type(target) is str else target.get_handle(db) for target in self.targets
             ]
             if any(handle is None for handle in target_handles):
                 return None
@@ -581,14 +560,9 @@ class Link(Atom):
                 if not first_typed_variable:
                     return False
                 first_typed_variable = False
-        return all(
-            target.matched(db, answer, extra_parameters)
-            for target in self.targets
-        )
+        return all(target.matched(db, answer, extra_parameters) for target in self.targets)
 
-    def _apply_assignment(
-        self, assignment: OrderedAssignment, db: IAtomDB
-    ) -> str:
+    def _apply_assignment(self, assignment: OrderedAssignment, db: IAtomDB) -> str:
         targets = []
         for t in self.targets:
             if type(t) is Node:
@@ -600,9 +574,7 @@ class Link(Atom):
         link = Link(self.atom_type, targets, self.ordered)
         return link.get_handle(db)
 
-    def apply_assignment(
-        self, assignment: OrderedAssignment, db: IAtomDB
-    ) -> str:
+    def apply_assignment(self, assignment: OrderedAssignment, db: IAtomDB) -> str:
         targets = []
         for t in self.targets:
             if type(t) is Node:
@@ -625,9 +597,7 @@ class Link(Atom):
             return self._typed_variable_matched(db, answer, extra_parameters)
         if DEBUG_LINK:
             print('matched()', f'entering self = {self}')
-        if not all(
-            atom.matched(db, answer, extra_parameters) for atom in self.targets
-        ):
+        if not all(atom.matched(db, answer, extra_parameters) for atom in self.targets):
             if DEBUG_LINK:
                 for atom in self.targets:
                     print(
@@ -643,13 +613,8 @@ class Link(Atom):
             print(f'target_handles = {target_handles}')
         if any(handle == WILDCARD for handle in target_handles):
             if DEBUG_LINK:
-                print(
-                    f'self.atom_type = {self.atom_type} '
-                    f'target_handles = {target_handles}'
-                )
-            matched = db.get_matched_links(
-                self.atom_type, target_handles, extra_parameters
-            )
+                print(f'self.atom_type = {self.atom_type} ' f'target_handles = {target_handles}')
+            matched = db.get_matched_links(self.atom_type, target_handles, extra_parameters)
             if DEBUG_LINK:
                 print(f'matched = {matched}')
             if DEBUG_LINK:
@@ -742,9 +707,7 @@ class LinkTemplate(LogicalExpression):
     TODO: documentation
     """
 
-    def __init__(
-        self, link_type: str, targets: List[TypedVariable], ordered: bool
-    ):
+    def __init__(self, link_type: str, targets: List[TypedVariable], ordered: bool):
         assert all(isinstance(target, TypedVariable) for target in targets)
         self.link_type = link_type
         self.targets = targets
@@ -882,9 +845,7 @@ class Or(LogicalExpression):
                 print(f'term_answer.assignments = {term_answer.assignments}')
             if DEBUG_NOT:
                 print(f'or_answer.assignments = {or_answer.assignments}')
-            answer.assignments = (
-                term_answer.assignments - or_answer.assignments
-            )
+            answer.assignments = term_answer.assignments - or_answer.assignments
             if DEBUG_NOT:
                 print(f'answer.assignments = {answer.assignments}')
             answer.negation = True
@@ -965,10 +926,7 @@ class And(LogicalExpression):
         for assignment in and_answer.assignments:
             if DEBUG_NOT:
                 print(f'CHECK: {assignment}')
-            if all(
-                assignment.check_negation(tabu)
-                for tabu in forbidden_assignments
-            ):
+            if all(assignment.check_negation(tabu) for tabu in forbidden_assignments):
                 answer.assignments.add(self.post_process(assignment))
             else:
                 if DEBUG_AND:

@@ -83,7 +83,7 @@ class LazyQueryEvaluator(ProductIterator):
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
-        handles.append([link['handle'], tuple(link.get('targets',[]))])
+        handles.append([link['handle'], tuple(link.get('targets', []))])
         link["targets"] = targets
         return link, handles
 
@@ -112,7 +112,7 @@ class LazyQueryEvaluator(ProductIterator):
         lazy_query_answer = []
         for answer in das_query_answer:
             assignment = None
-            
+
             if wildcard_flag:
                 assignment = Assignment()
                 assignment_failed = False
@@ -130,8 +130,6 @@ class LazyQueryEvaluator(ProductIterator):
                     continue
                 assignment.freeze()
 
-            lazy_query_answer.append(
-                QueryAnswer(self._replace_target_handles(answer), assignment)
-            )
+            lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
         self.buffered_answer = ListIterator(lazy_query_answer)
         return self.buffered_answer.__next__()

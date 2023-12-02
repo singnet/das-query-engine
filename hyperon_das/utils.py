@@ -40,12 +40,7 @@ class Assignment:
 
     def __repr__(self) -> str:
         labels = sorted(self.labels)
-        return str(
-            [
-                tuple([label, self.mapping[label]])
-                for label in sorted(self.labels)
-            ]
-        )
+        return str([tuple([label, self.mapping[label]]) for label in sorted(self.labels)])
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -76,11 +71,7 @@ class Assignment:
         if label in self.labels:
             return self.mapping[label] == value
         else:
-            if (
-                parameters
-                and parameters['no_overload']
-                and value in self.values
-            ):
+            if parameters and parameters['no_overload'] and value in self.values:
                 return False
             self.labels.add(label)
             self.values.add(value)
@@ -100,11 +91,11 @@ class Assignment:
 class QueryAnswer:
     atom: Optional[Tuple[Dict, str | List[List]]] = None
     assignment: Optional[Assignment] = None
-    
+
     @property
     def grounded_atom(self):
         return self.atom[0] if self.atom else None
-    
+
     @property
     def atom_handle(self):
         return self.atom[1] if self.atom else None

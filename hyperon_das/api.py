@@ -1,48 +1,31 @@
-import json
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-import requests
-from hyperon_das_atomdb import WILDCARD
-from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
-
-from hyperon_das.cache import (
-    LazyQueryEvaluator,
-    ListIterator,
-    QueryAnswerIterator,
-)
-from hyperon_das.client import FunctionsClient
-from hyperon_das.constants import DasType, DatabaseType
-from hyperon_das.decorators import retry
-from hyperon_das.exceptions import (
-    ConnectionServerException,
-    DasTypeException,
-    InitializeDasServerException,
-    MethodNotAllowed,
-    QueryParametersException,
-    UnexpectedQueryFormat,
-)
-from hyperon_das.factory import DatabaseFactory, database_factory
+from hyperon_das.constants import DasType
+from hyperon_das.exceptions import DasTypeException, InitializeDasServerException
+from hyperon_das.factory import DasFactory, das_factory
 from hyperon_das.logger import logger
-from hyperon_das.pattern_matcher import (
-    LogicalExpression,
-    PatternMatchingAnswer,
-)
-from hyperon_das.utils import (
-    Assignment,
-    QueryAnswer,
-    QueryOutputFormat,
-    QueryParameters,
-    config,
-)
+from hyperon_das.pattern_matcher import LogicalExpression
+from hyperon_das.utils import QueryOutputFormat
 
 
 class DistributedAtomSpace:
-    def __init__(
-        self, das_type: DasType = DasType.CLIENT.value, **kwargs
-    ) -> None:
+    def __init__(self, das_type: DasType = DasType.CLIENT.value, **kwargs) -> None:
         self._type = das_type
-        self.__remote_das = []
+        self._validate_type()
+        self.das = self._initialize_das(kwargs)
 
+        logger().debug(
+            {
+                'message': '[DistributedAtomSpace][__init__]',
+                'data': {'das_type': das_type},
+            }
+        )
+
+    @property
+    def remote_das(self):
+        return self.das.remote_das if self._type == DasType.CLIENT.value else None
+
+    def _validate_type(self) -> None:
         try:
             DasType(self._type)
         except ValueError as e:
@@ -53,186 +36,20 @@ class DistributedAtomSpace:
                 )
             )
 
-        logger().debug(
-            {
-                'message': '[DistributedAtomSpace][__init__]',
-                'data': {'das_type': das_type},
-            }
-        )
-
-        if self._type == DasType.CLIENT.value:
-            self.db = InMemoryDB()
-            params = {}
-            if 'host' in kwargs:
-                params = {'host': kwargs['host']}
-            if 'port' in kwargs:
-                params.update({'port': kwargs['port']})
-            if params:
-                try:
-                    url = self._connect_server(**params)
-                    # TODO: Change this name. Using for tests
-                    self.das_origin = FunctionsClient(url)
-                except Exception as e:
-                    raise ConnectionServerException(
-                        message="An error occurs while connecting to the server",
-                        details=str(e),
-                    )
-        elif self._type == DasType.SERVER.value:
-            try:
-                self.db = RedisMongoDB()
-            except Exception as e:
-                raise InitializeDasServerException(
+    def _initialize_das(self, kwargs):
+        try:
+            return das_factory(DasFactory(self._type), kwargs)
+        except Exception as e:
+            self._error(
+                InitializeDasServerException(
                     message='An error occurred during class initialization',
                     details=str(e),
-                )
-
-    @property
-    def remote_das(self):
-        return self.__remote_das
-
-    @retry(attempts=5, timeout_seconds=120)
-    def _connect_server(self, host: str, port: Optional[str] = None):
-        port = port or config.get("DEFAULT_PORT_OPENFAAS", '8081')
-        openfaas_uri = f'http://{host}:{port}/function/query-engine'
-        aws_lambda_uri = f'http://{host}/prod/query-engine'
-        url = None
-        if self._is_server_connect(openfaas_uri):
-            url = openfaas_uri
-        elif self._is_server_connect(aws_lambda_uri):
-            url = aws_lambda_uri
-        return url
-
-    def _is_server_connect(self, url: str) -> bool:
-        try:
-            response = requests.request(
-                'POST',
-                url=url,
-                data=json.dumps({"action": "ping", "input": {}}),
-                timeout=10,
-            )
-        except Exception as e:
-            return False
-        if response.status_code == 200:
-            return True
-        return False
-
-    def _to_handle_list(
-        self, atom_list: Union[List[str], List[Dict]]
-    ) -> List[str]:
-        if not atom_list:
-            return []
-        if isinstance(atom_list[0], str):
-            return atom_list
-        else:
-            return [handle for handle, _ in atom_list]
-
-    def _to_link_dict_list(
-        self, db_answer: Union[List[str], List[Dict]]
-    ) -> List[Dict]:
-        if not db_answer:
-            return []
-        flat_handle = isinstance(db_answer[0], str)
-        answer = []
-        for atom in db_answer:
-            if flat_handle:
-                handle = atom
-                arity = -1
-            else:
-                handle, targets = atom
-                arity = len(targets)
-            answer.append(self.db.get_atom_as_dict(handle, arity))
-        return answer
-
-    def _to_json(self, db_answer: Union[List[str], List[Dict]]) -> List[Dict]:
-        answer = []
-        if db_answer:
-            flat_handle = isinstance(db_answer[0], str)
-            for atom in db_answer:
-                if flat_handle:
-                    handle = atom
-                    arity = -1
-                else:
-                    handle, targets = atom
-                    arity = len(targets)
-                answer.append(
-                    self.db.get_atom_as_deep_representation(handle, arity)
-                )
-        return json.dumps(answer, sort_keys=False, indent=4)
-
-    def _turn_into_deep_representation(self, assignments) -> list:
-        results = []
-        for assignment in assignments:
-            result = {}
-            for variable, handle in assignment.mapping.items():
-                deep_representation = self.db.get_atom_as_deep_representation(
-                    handle
-                )
-                is_link = 'targets' in deep_representation
-                result[variable] = {
-                    **deep_representation,
-                    'atom_type': 'link' if is_link else 'node',
-                }
-            results.append(result)
-        return results
-
-    def _error(self, exception: Exception):
-        logger().error(str(exception))
-        raise exception
-
-    def _recursive_query(
-        self,
-        query: Dict[str, Any],
-        mappings: Set[Assignment] = None,
-        extra_parameters: Optional[Dict[str, Any]] = None,
-    ) -> QueryAnswerIterator:
-        if query["atom_type"] == "node":
-            atom_handle = self.db.get_node_handle(query["type"], query["name"])
-            return ListIterator(
-                [QueryAnswer((self.db.get_atom_as_dict(atom_handle),''), None)]
-            )
-        elif query["atom_type"] == "link":
-            matched_targets = []
-            for target in query["targets"]:
-                if (
-                    target["atom_type"] == "node"
-                    or target["atom_type"] == "link"
-                ):
-                    matched = self._recursive_query(
-                        target, mappings, extra_parameters
-                    )
-                    if matched:
-                        matched_targets.append(matched)
-                elif target["atom_type"] == "variable":
-                    matched_targets.append(
-                        ListIterator([QueryAnswer((target,''), None)])
-                    )
-                else:
-                    self._error(
-                        UnexpectedQueryFormat(
-                            message="Query processing reached an unexpected state",
-                            details=f'link: {str(query)} link target: {str(query)}',
-                        )
-                    )
-            return LazyQueryEvaluator(
-                query["type"], matched_targets, self, extra_parameters
-            )
-        else:
-            self._error(
-                UnexpectedQueryFormat(
-                    message="Query processing reached an unexpected state",
-                    details=f'query: {str(query)}',
                 )
             )
 
     def clear_database(self) -> None:
         """Clear all data"""
-        ret = self.db.clear_database()
-        logger().debug(
-            {
-                'message': '[DistributedAtomSpace][clear_database] - The database has been cleaned.',
-            }
-        )
-        return ret
+        return self.das.clear_database()
 
     def count_atoms(self) -> Tuple[int, int]:
         """
@@ -242,7 +59,7 @@ class DistributedAtomSpace:
         Returns:
             Tuple[int, int]: (node_count, link_count)
         """
-        return self.db.count_atoms()
+        return self.das.count_atoms()
 
     def get_atom(
         self,
@@ -282,19 +99,7 @@ class DistributedAtomSpace:
                 "name": "human"
             }
         """
-
-        if output_format == QueryOutputFormat.HANDLE or not handle:
-            atom = self.db.get_atom_as_dict(handle)
-            return atom["handle"] if atom else ""
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return self.db.get_atom_as_dict(handle)
-        elif output_format == QueryOutputFormat.JSON:
-            answer = self.db.get_atom_as_deep_representation(handle)
-            return json.dumps(answer, sort_keys=False, indent=4)
-        else:
-            self._error(
-                ValueError(f"Invalid output format: '{output_format}'")
-            )
+        return self.das.get_atom(handle, output_format)
 
     def get_node(
         self,
@@ -340,28 +145,7 @@ class DistributedAtomSpace:
                 "name": "human"
             }
         """
-
-        node_handle = None
-
-        try:
-            node_handle = self.db.get_node_handle(node_type, node_name)
-        except ValueError:
-            logger().warning(
-                f"Attempt to access an invalid Node '{node_type}:{node_name}'"
-            )
-            return None
-
-        if output_format == QueryOutputFormat.HANDLE or not node_handle:
-            return node_handle
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return self.db.get_atom_as_dict(node_handle)
-        elif output_format == QueryOutputFormat.JSON:
-            answer = self.db.get_atom_as_deep_representation(node_handle)
-            return json.dumps(answer, sort_keys=False, indent=4)
-        else:
-            self._error(
-                ValueError(f"Invalid output format: '{output_format}'")
-            )
+        return self.das.get_node(node_type, node_name, output_format)
 
     def get_nodes(
         self,
@@ -409,28 +193,7 @@ class DistributedAtomSpace:
                 ...
             ]
         """
-
-        if node_name is not None:
-            answer = self.db.get_node_handle(node_type, node_name)
-            if answer is not None:
-                answer = [answer]
-        else:
-            answer = self.db.get_all_nodes(node_type)
-
-        if output_format == QueryOutputFormat.HANDLE or not answer:
-            return answer
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return [self.db.get_atom_as_dict(handle) for handle in answer]
-        elif output_format == QueryOutputFormat.JSON:
-            answer = [
-                self.db.get_atom_as_deep_representation(handle)
-                for handle in answer
-            ]
-            return json.dumps(answer, sort_keys=False, indent=4)
-        else:
-            self._error(
-                ValueError(f"Invalid output format: '{output_format}'")
-            )
+        return self.das.get_nodes(node_type, node_name, output_format)
 
     def get_link(
         self,
@@ -473,27 +236,7 @@ class DistributedAtomSpace:
             >>> print(result)
             '2931276cb5bb4fc0c2c48a6720fc9a84'
         """
-        link_handle = None
-
-        # TODO: Is there any exception action?
-        try:
-            link_handle = self.db.get_link_handle(link_type, targets)
-        except Exception as e:
-            self._error(e)
-
-        if output_format == QueryOutputFormat.HANDLE or link_handle is None:
-            return link_handle
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return self.db.get_atom_as_dict(link_handle, len(targets))
-        elif output_format == QueryOutputFormat.JSON:
-            answer = self.db.get_atom_as_deep_representation(
-                link_handle, len(targets)
-            )
-            return json.dumps(answer, sort_keys=False, indent=4)
-        else:
-            self._error(
-                ValueError(f"Invalid output format: '{output_format}'")
-            )
+        return self.das.get_link(link_type, targets, output_format)
 
     def get_links(
         self,
@@ -551,31 +294,6 @@ class DistributedAtomSpace:
             ]
         """
 
-        # TODO: Delete this If. This conditional will never happen
-        if link_type is None:
-            link_type = WILDCARD
-
-        if target_types is not None and link_type != WILDCARD:
-            db_answer = self.db.get_matched_type_template(
-                [link_type, *target_types]
-            )
-        elif targets is not None:
-            db_answer = self.db.get_matched_links(link_type, targets)
-        elif link_type != WILDCARD:
-            db_answer = self.db.get_matched_type(link_type)
-        else:
-            # TODO: Improve this message error. What is invalid?
-            self._error(ValueError("Invalid parameters"))
-
-        if output_format == QueryOutputFormat.HANDLE:
-            return self._to_handle_list(db_answer)
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return self._to_link_dict_list(db_answer)
-        elif output_format == QueryOutputFormat.JSON:
-            return self._to_json(db_answer)
-        else:
-            self.error(ValueError(f"Invalid output format: '{output_format}'"))
-
     def get_link_type(self, link_handle: str) -> str:
         """
         Get the type of a link.
@@ -596,12 +314,7 @@ class DistributedAtomSpace:
             >>> print(result)
             'Similarity'
         """
-        try:
-            resp = self.db.get_link_type(link_handle)
-            return resp
-        # TODO: Find out what specific exceptions might happen
-        except Exception as e:
-            self._error(e)
+        return self.das.get_link_type(link_handle)
 
     def get_link_targets(self, link_handle: str) -> List[str]:
         """
@@ -626,12 +339,7 @@ class DistributedAtomSpace:
                 '4e8e26e3276af8a5c2ac2cc2dc95c6d2'
             ]
         """
-        try:
-            resp = self.db.get_link_targets(link_handle)
-            return resp
-        # TODO: Find out what specific exceptions might happen
-        except Exception as e:
-            self._error(e)
+        return self.das.get_link_targets(link_handle)
 
     def get_node_type(self, node_handle: str) -> str:
         """
@@ -651,12 +359,7 @@ class DistributedAtomSpace:
             >>> print(result)
             'Concept'
         """
-        try:
-            resp = self.db.get_node_type(node_handle)
-            return resp
-        # TODO: Find out what specific exceptions might happen
-        except Exception as e:
-            self._error(e)
+        return self.das.get_node_type(node_handle)
 
     def get_node_name(self, node_handle: str) -> str:
         """
@@ -676,12 +379,7 @@ class DistributedAtomSpace:
             >>> print(result)
             'animal'
         """
-        try:
-            resp = self.db.get_node_name(node_handle)
-            return resp
-        # TODO: Find out what specific exceptions might happen
-        except Exception as e:
-            self._error(e)
+        return self.das.get_node_name(node_handle)
 
     def query(
         self,
@@ -749,26 +447,16 @@ class DistributedAtomSpace:
             >>> print(result)
             [{'handle': 'dbcf1c7b610a5adea335bf08f6509978', 'type': 'Expression', 'template': ['Expression', 'Symbol', ['Expression', 'Symbol', 'Symbol']], 'targets': [{'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'}, {'handle': '233d9a6da7d49d4164d863569e9ab7b6', 'type': 'Expression', 'template': ['Expression', 'Symbol', 'Symbol'], 'targets': [{'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'}, {'handle': '9f27a331633c8bc3c49435ffabb9110e', 'type': 'Symbol', 'name': '2'}]}]}]
         """
-
         logger().debug(
             {
                 'message': '[DistributedAtomSpace][query] - Start',
                 'data': {'query': query, 'extra_parameters': extra_parameters},
             }
         )
-
-        query_results = self._recursive_query(query, extra_parameters)
-        logger().debug(f"query: {query} result: {str(query_results)}") 
-        local_answer = []
-        local_handles = []
-        for result in query_results:
-            local_handles.append(result.atom_handle)
-            local_answer.append(result.grounded_atom)
-
-        # Remote query
-        remote_answer = self.das_origin.query(query, extra_parameters)
-
-        return local_answer
+        try:
+            return self.das.query(query, extra_parameters)
+        except Exception as e:
+            self._error(e)
 
     def pattern_matcher_query(
         self,
@@ -834,73 +522,13 @@ class DistributedAtomSpace:
                 'data': {'query': query, 'extra_parameters': extra_parameters},
             }
         )
-
-        if extra_parameters is not None:
-            try:
-                extra_parameters = QueryParameters(**extra_parameters)
-            except TypeError as e:
-                raise QueryParametersException(
-                    message=str(e),
-                    details=f'possible values {QueryParameters.values()}',
-                )
-        else:
-            extra_parameters = QueryParameters()
-
-        query_answer = PatternMatchingAnswer()
-
-        matched = query.matched(
-            self.db, query_answer, extra_parameters.__dict__
-        )
-
-        if not matched:
-            return None
-
-        if extra_parameters.return_type == QueryOutputFormat.HANDLE:
-            result = list(query_answer.assignments)
-        elif extra_parameters.return_type == QueryOutputFormat.ATOM_INFO:
-            result = self._turn_into_deep_representation(
-                query_answer.assignments
-            )
-        elif extra_parameters.return_type == QueryOutputFormat.JSON:
-            objs = self._turn_into_deep_representation(
-                query_answer.assignments
-            )
-            result = json.dumps(
-                objs,
-                sort_keys=False,
-                indent=4,
-            )
-        else:
-            raise ValueError(
-                f"Invalid output format: '{extra_parameters.return_type}'"
-            )
-
-        if query_answer.negation:
-            return {'negation': True, 'mapping': result}
-        else:
-            return {'negation': False, 'mapping': result}
+        return self.das.pattern_matcher_query(query, extra_parameters)
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._type == DasType.CLIENT.value:
-            return self.db.add_node(node_params)
-        else:
-            self._error(
-                MethodNotAllowed(
-                    message='This method is permited only in memory database',
-                    details='Instantiate the class sent the database type as `ram_only`',
-                )
-            )
+        return self.das.add_node(node_params)
 
     def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._type == DasType.CLIENT.value:
-            return self.db.add_link(link_params)
-        else:
-            self._error(
-                MethodNotAllowed(
-                    message='This method is permited only in memory database',
-                    details='Instantiate the class sent the database type as `ram_only`',
-                )
-            )
+        return self.das.add_link(link_params)
 
     def attach_remote(
         self, host: str, port: Optional[str] = None, name: Optional[str] = None
@@ -922,307 +550,35 @@ class DistributedAtomSpace:
             >>> instance = DistributedAtomSpace()
             >>> result = instance.attach_remote(host="1.2.3.4", port="1234", name="RemoteServer1")
         """
-        try:
-            url = self._connect_server(host, port)
-            existing_servers = len(self.remote_das)
-            das = FunctionsClient(url, existing_servers, name)
-            self.__remote_das.append(das)
-            return True
-        except Exception:
-            return False
+        return self.das.attach_remote(host, port, name)
 
 
 if __name__ == '__main__':
-    #Use case 1
-    das = DistributedAtomSpace(host='44.198.65.35')
-    
-    all_nodes = [
-            {'type': 'Concept', 'name': 'human'},
-            {'type': 'Concept', 'name': 'monkey'},
-            {'type': 'Concept', 'name': 'chimp'},
-            {'type': 'Concept', 'name': 'snake'},
-            {'type': 'Concept', 'name': 'earthworm'},
-            {'type': 'Concept', 'name': 'rhino'},
-            {'type': 'Concept', 'name': 'triceratops'},
-            {'type': 'Concept', 'name': 'vine'},
-            {'type': 'Concept', 'name': 'ent'},
+    das = DistributedAtomSpace()
+
+    link = {
+        'type': 'Inheritance',
+        'targets': [
+            {'type': 'Concept', 'name': 'marco', 'weight': 0.5},
             {'type': 'Concept', 'name': 'mammal'},
-            {'type': 'Concept', 'name': 'animal'},
-            {'type': 'Concept', 'name': 'reptile'},
-            {'type': 'Concept', 'name': 'dinosaur'},
-            {'type': 'Concept', 'name': 'plant'},
-        ]
+        ],
+        'color': 'blue',
+    }
 
-    all_links = [
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'human'},
-                    {'type': 'Concept', 'name': 'monkey'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'human'},
-                    {'type': 'Concept', 'name': 'chimp'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'chimp'},
-                    {'type': 'Concept', 'name': 'monkey'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'snake'},
-                    {'type': 'Concept', 'name': 'earthworm'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'rhino'},
-                    {'type': 'Concept', 'name': 'triceratops'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'snake'},
-                    {'type': 'Concept', 'name': 'vine'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'human'},
-                    {'type': 'Concept', 'name': 'ent'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'human'},
-                    {'type': 'Concept', 'name': 'mammal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'monkey'},
-                    {'type': 'Concept', 'name': 'mammal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'chimp'},
-                    {'type': 'Concept', 'name': 'mammal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'mammal'},
-                    {'type': 'Concept', 'name': 'animal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'reptile'},
-                    {'type': 'Concept', 'name': 'animal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'snake'},
-                    {'type': 'Concept', 'name': 'reptile'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'dinosaur'},
-                    {'type': 'Concept', 'name': 'reptile'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'triceratops'},
-                    {'type': 'Concept', 'name': 'dinosaur'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'earthworm'},
-                    {'type': 'Concept', 'name': 'animal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'rhino'},
-                    {'type': 'Concept', 'name': 'mammal'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'vine'},
-                    {'type': 'Concept', 'name': 'plant'},
-                ],
-            },
-            {
-                'type': 'Inheritance',
-                'targets': [
-                    {'type': 'Concept', 'name': 'ent'},
-                    {'type': 'Concept', 'name': 'plant'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'monkey'},
-                    {'type': 'Concept', 'name': 'human'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'chimp'},
-                    {'type': 'Concept', 'name': 'human'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'monkey'},
-                    {'type': 'Concept', 'name': 'chimp'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'earthworm'},
-                    {'type': 'Concept', 'name': 'snake'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'triceratops'},
-                    {'type': 'Concept', 'name': 'rhino'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'vine'},
-                    {'type': 'Concept', 'name': 'snake'},
-                ],
-            },
-            {
-                'type': 'Similarity',
-                'targets': [
-                    {'type': 'Concept', 'name': 'ent'},
-                    {'type': 'Concept', 'name': 'human'},
-                ],
-            },
-        ]
-    
-    all_links = [
-        #{'type': 'Inheritance', 'targets': [{'type': 'Concept', 'name': 'human'}, {'type': 'Concept', 'name': 'mammal'}]},
-        #{'type': 'Inheritance', 'targets': [{'type': 'Concept', 'name': 'monkey'}, {'type': 'Concept', 'name': 'mammal'}]},
-        #{'type': 'Inheritance', 'targets': [{'type': 'Concept', 'name': 'chimp'}, {'type': 'Concept', 'name': 'mammal'}]},
-        {'type': 'Inheritance', 'targets': [{'type': 'Concept', 'name': 'capozzoli'}, {'type': 'Concept', 'name': 'mammal'}]},
-        {
-            'type': 'Evaluation',
-            'targets': [
-                {'type': 'Predicate', 'name': 'Predicate:has_name'},
-                {
-                    'type': 'Evaluation',
-                    'targets': [
-                        {'type': 'Predicate', 'name': 'Predicate:has_name'},
-                        {
-                            'type': 'Set',
-                            'targets': [
-                                {
-                                    'type': 'Reactome',
-                                    'name': 'Reactome:R-HSA-164843',
-                                },
-                                {
-                                    'type': 'Concept',
-                                    'name': 'Concept:2-LTR circle formation',
-                                },
-                            ]
-                        },
-                    ],
-                },
-            ],
-        }
-    ]
+    das.add_link(link)
 
-    #for node in all_nodes:
-        #das.add_node(node)
-    for link in all_links:
-        das.add_link(link)
-
-    print(f'Atoms: {das.count_atoms()}')
     query = {
         "atom_type": "link",
-        "type": "Evaluation",
+        "type": "Inheritance",
         "targets": [
-            {"atom_type": "node", "type": "Predicate", "name": "Predicate:has_name"},
             {"atom_type": "variable", "name": "v1"},
-        ]
+            {"atom_type": "node", "type": "Concept", "name": "mammal"},
+        ],
     }
     query_params = {
         "toplevel_only": False,
         "return_type": QueryOutputFormat.ATOM_INFO,
     }
     result = das.query(query, query_params)
+
     print(result)
-"""   
-if __name__ == '__main__':
-    from hyperon_das import DistributedAtomSpace
-    from hyperon_das.utils import QueryOutputFormat
-
-    def print_query_answer(query_answer):
-        for link in query_answer:
-            print(f"{link['type']}: {link['targets'][0]['name']} -> {link['targets'][1]['name']}")
-        
-    host = '104.238.183.115'
-    port = '8081'
-
-    das = DistributedAtomSpace()
-    das.attach_remote(host=host, port=port)
-    print(f"Connected to DAS at {host}:{port}")
-
-    server = das.remote_das[0]
-
-    print("(nodes, links) =", server.count_atoms())
-
-    query1 = {
-        "atom_type": "link",
-        "type": "Inheritance",
-        "targets": [
-            {"atom_type": "variable", "name": "v1"},
-            {"atom_type": "node", "type": "Concept", "name": "mammal"},
-        ]
-    }
-    query_params = {
-        "toplevel_only": False,
-        "return_type": QueryOutputFormat.ATOM_INFO,
-    }
-    answer = server.query(query1, query_params)
-    print(answer)
-    print_query_answer(answer)
-"""
