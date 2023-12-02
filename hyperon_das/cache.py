@@ -61,6 +61,20 @@ class ProductIterator(QueryAnswerIterator):
         return any(iterator.is_empty() for iterator in self.source)
 
 
+class AndEvaluator(ProductIterator):
+    def __init__(self, source: List[QueryAnswerIterator]):
+        super().__init__(source)
+
+    def __next__(self):
+        while True:
+            candidate = super().__next__()
+            assignments = [query_answer.assignment for query_answer in candidate]
+            composite_assignment = Assignment.compose(assignments)
+            if composite_assignment:
+                composite_subgraph = [query_answer.subgraph for query_answer in candidate]
+                return QueryAnswer(composite_subgraph, composite_assignment)
+
+
 class LazyQueryEvaluator(ProductIterator):
     def __init__(
         self,
@@ -97,7 +111,7 @@ class LazyQueryEvaluator(ProductIterator):
         target_handle = []
         wildcard_flag = False
         for query_answer_target in target_info:
-            target = query_answer_target.grounded_atom
+            target = query_answer_target.subgraph
             if target.get("atom_type", None) == "variable":
                 target_handle.append(WILDCARD)
                 wildcard_flag = True
@@ -117,14 +131,14 @@ class LazyQueryEvaluator(ProductIterator):
                 assignment = Assignment()
                 assignment_failed = False
                 for query_answer_target, handle in zip(target_info, answer["targets"]):
-                    target = query_answer_target.grounded_atom
+                    target = query_answer_target.subgraph
                     if target.get("atom_type", None) == "variable":
                         if not assignment.assign(target["name"], handle):
                             assignment_failed = True
                     else:
                         if not assignment.merge(query_answer_target.assignment):
                             assignment_failed = True
-                    if not assignment_failed:
+                    if assignment_failed:
                         break
                 if assignment_failed:
                     continue

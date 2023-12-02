@@ -113,3 +113,30 @@ class TestAssignment:
         assert a1.freeze()
         with pytest.raises(AssertionError):
             a1.merge(a2)
+
+    def test_compose(self):
+        a1 = _build_assignment([("v1", "1")])
+        a1.freeze()
+        a2 = _build_assignment([("v2", "2")])
+        a2.freeze()
+        a3 = Assignment.compose([a1, a2])
+        a4 = _build_assignment([("v1", "1"), ("v2", "2")])
+        a4.freeze()
+        assert a3 == a4
+
+    def test_outplace_merge(self):
+        a1 = _build_assignment([("v1", "1")])
+        a2 = _build_assignment([("v2", "2")])
+        a1.freeze()
+        a2.freeze()
+        a3 = a1.merge(a2, in_place=False)
+        a4 = _build_assignment([("v1", "1"), ("v2", "2")])
+        a4.freeze()
+        assert a1 != a3
+        assert a2 != a3
+        assert a1 != a2
+        assert a3 == a4
+        assert not a1.__eq__(a2)
+        assert not a1.__eq__(a3)
+        assert not a2.__eq__(a3)
+        assert a3.__eq__(a4)
