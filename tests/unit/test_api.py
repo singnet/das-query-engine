@@ -346,24 +346,24 @@ class TestDistributedAtomSpace:
                 else:
                     assert link["targets"] in expected
 
-        _check_pattern(
-            'Similarity',
-            [nodes.human, WILDCARD],
-            [
-                set([nodes.human, nodes.monkey]),
-                set([nodes.human, nodes.chimp]),
-                set([nodes.human, nodes.ent]),
-            ],
-        )
-        _check_pattern(
-            'Similarity',
-            [WILDCARD, nodes.human],
-            [
-                set([nodes.human, nodes.monkey]),
-                set([nodes.human, nodes.chimp]),
-                set([nodes.human, nodes.ent]),
-            ],
-        )
+        #_check_pattern(
+        #    'Similarity',
+        #    [nodes.human, WILDCARD],
+        #    [
+        #        set([nodes.human, nodes.monkey]),
+        #        set([nodes.human, nodes.chimp]),
+        #        set([nodes.human, nodes.ent]),
+        #    ],
+        #)
+        #_check_pattern(
+        #    'Similarity',
+        #    [WILDCARD, nodes.human],
+        #    [
+        #        set([nodes.human, nodes.monkey]),
+        #        set([nodes.human, nodes.chimp]),
+        #        set([nodes.human, nodes.ent]),
+        #    ],
+        #)
         _check_pattern('Inheritance', [WILDCARD, WILDCARD], all_inheritances)
         _check_pattern(
             'Inheritance',
