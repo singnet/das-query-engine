@@ -3,7 +3,7 @@ from copy import deepcopy
 from functools import cmp_to_key
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
 
-from hyperon_das_atomdb import WILDCARD, IAtomDB
+from hyperon_das_atomdb import WILDCARD, AtomDB
 
 from .constants import CompatibilityStatus
 
@@ -428,7 +428,7 @@ class LogicalExpression(ABC):
     @abstractmethod
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -451,7 +451,7 @@ class Atom(LogicalExpression, ABC):
         return f'{self.atom_type}'
 
     @abstractmethod
-    def get_handle(self, db: IAtomDB) -> str:
+    def get_handle(self, db: AtomDB) -> str:
         pass
 
 
@@ -467,14 +467,14 @@ class Node(Atom):
     def __repr__(self):
         return f'<{super().__repr__()}: {self.name}>'
 
-    def get_handle(self, db: IAtomDB) -> str:
+    def get_handle(self, db: AtomDB) -> str:
         if not self.handle:
             self.handle = db.get_node_handle(self.atom_type, self.name)
         return self.handle
 
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -507,7 +507,7 @@ class Link(Atom):
     def __repr__(self):
         return f'<{super().__repr__()}: {self.targets}>'
 
-    def get_handle(self, db: IAtomDB) -> str:
+    def get_handle(self, db: AtomDB) -> str:
         if not self.handle:
             target_handles = [
                 target if type(target) is str else target.get_handle(db) for target in self.targets
@@ -518,7 +518,7 @@ class Link(Atom):
         return self.handle
 
     def _assign_variables(
-        self, db: IAtomDB, link: str, link_targets: List[str]
+        self, db: AtomDB, link: str, link_targets: List[str]
     ) -> Optional[Assignment]:
         # link_targets = db.get_link_targets(link)
         assert len(link_targets) == len(
@@ -548,7 +548,7 @@ class Link(Atom):
 
     def _typed_variable_matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -562,7 +562,7 @@ class Link(Atom):
                 first_typed_variable = False
         return all(target.matched(db, answer, extra_parameters) for target in self.targets)
 
-    def _apply_assignment(self, assignment: OrderedAssignment, db: IAtomDB) -> str:
+    def _apply_assignment(self, assignment: OrderedAssignment, db: AtomDB) -> str:
         targets = []
         for t in self.targets:
             if type(t) is Node:
@@ -574,7 +574,7 @@ class Link(Atom):
         link = Link(self.atom_type, targets, self.ordered)
         return link.get_handle(db)
 
-    def apply_assignment(self, assignment: OrderedAssignment, db: IAtomDB) -> str:
+    def apply_assignment(self, assignment: OrderedAssignment, db: AtomDB) -> str:
         targets = []
         for t in self.targets:
             if type(t) is Node:
@@ -587,7 +587,7 @@ class Link(Atom):
 
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -666,12 +666,12 @@ class Variable(Atom):
     def __repr__(self):
         return f'{self.name}'
 
-    def get_handle(self, db: IAtomDB) -> str:
+    def get_handle(self, db: AtomDB) -> str:
         return WILDCARD
 
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -690,12 +690,12 @@ class TypedVariable(Variable):
     def __repr__(self):
         return f'{self.name}: {self.type}'
 
-    def get_handle(self, db: IAtomDB) -> str:
+    def get_handle(self, db: AtomDB) -> str:
         return WILDCARD
 
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -718,7 +718,7 @@ class LinkTemplate(LogicalExpression):
         return f'<{self.link_type}: {self.targets}>'
 
     def _assign_variables(
-        self, db: IAtomDB, link: str, link_targets: List[str]
+        self, db: AtomDB, link: str, link_targets: List[str]
     ) -> Optional[Assignment]:
         assert len(link_targets) == len(
             self.targets
@@ -735,7 +735,7 @@ class LinkTemplate(LogicalExpression):
 
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -770,7 +770,7 @@ class Not(LogicalExpression):
 
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -794,7 +794,7 @@ class Or(LogicalExpression):
 
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
@@ -874,7 +874,7 @@ class And(LogicalExpression):
 
     def matched(
         self,
-        db: IAtomDB,
+        db: AtomDB,
         answer: PatternMatchingAnswer,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:

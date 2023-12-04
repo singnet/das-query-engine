@@ -72,7 +72,7 @@ class AndEvaluator(ProductIterator):
             composite_assignment = Assignment.compose(assignments)
             if composite_assignment:
                 composite_subgraph = [query_answer.subgraph for query_answer in candidate]
-                return QueryAnswer(composite_subgraph, composite_assignment)
+                return QueryAnswer(subgraph=composite_subgraph, assignment=composite_assignment)
 
 
 class LazyQueryEvaluator(ProductIterator):
@@ -89,17 +89,21 @@ class LazyQueryEvaluator(ProductIterator):
         self.das = das
         self.buffered_answer = None
 
+    # MARCO: refactor this method
     def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
-        handles = []
+        handles_link = []
         targets = []
+        
         for target_handle in link["targets"]:
             atom = self.das.db.get_atom_as_dict(target_handle)
             if atom.get("targets", None) is not None:
-                atom = self._replace_target_handles(atom)
+                atom, handle_link = self._replace_target_handles(atom)
+                handles_link.append(handle_link)
             targets.append(atom)
-        handles.append([link['handle'], tuple(link.get('targets', []))])
+        
+        handles_link.insert(0, link['handle'])
         link["targets"] = targets
-        return link, handles
+        return link, handles_link        
 
     def __next__(self):
         if self.buffered_answer:
@@ -144,6 +148,15 @@ class LazyQueryEvaluator(ProductIterator):
                     continue
                 assignment.freeze()
 
-            lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
+            # MARCO: change this method name
+            resp = self._replace_target_handles(answer)
+
+            lazy_query_answer.append(
+                QueryAnswer(
+                    subgraph=resp[0],
+                    assignment=assignment,
+                    handles=resp[1]
+                )
+            )
         self.buffered_answer = ListIterator(lazy_query_answer)
         return self.buffered_answer.__next__()

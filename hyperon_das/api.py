@@ -12,6 +12,7 @@ class DistributedAtomSpace:
     def __init__(self, das_type: DasType = DasType.CLIENT.value, **kwargs) -> None:
         self._type = das_type
         self._validate_type()
+        # MARCO: change this name
         self.das = self._initialize_das(kwargs)
 
         logger().debug(
@@ -551,34 +552,3 @@ class DistributedAtomSpace:
             >>> result = instance.attach_remote(host="1.2.3.4", port="1234", name="RemoteServer1")
         """
         return self.das.attach_remote(host, port, name)
-
-
-if __name__ == '__main__':
-    das = DistributedAtomSpace()
-
-    link = {
-        'type': 'Inheritance',
-        'targets': [
-            {'type': 'Concept', 'name': 'marco', 'weight': 0.5},
-            {'type': 'Concept', 'name': 'mammal'},
-        ],
-        'color': 'blue',
-    }
-
-    das.add_link(link)
-
-    query = {
-        "atom_type": "link",
-        "type": "Inheritance",
-        "targets": [
-            {"atom_type": "variable", "name": "v1"},
-            {"atom_type": "node", "type": "Concept", "name": "mammal"},
-        ],
-    }
-    query_params = {
-        "toplevel_only": False,
-        "return_type": QueryOutputFormat.ATOM_INFO,
-    }
-    result = das.query(query, query_params)
-
-    print(result)

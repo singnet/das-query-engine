@@ -6,7 +6,7 @@ import requests
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
-from hyperon_das.cache import LazyQueryEvaluator, ListIterator, QueryAnswerIterator
+from hyperon_das.cache import AndEvaluator, LazyQueryEvaluator, ListIterator, QueryAnswerIterator
 from hyperon_das.client import FunctionsClient
 from hyperon_das.constants import QueryOutputFormat
 from hyperon_das.decorators import retry
@@ -22,7 +22,9 @@ from hyperon_das.utils import Assignment, QueryAnswer, QueryParameters, config
 
 
 class BaseDas(ABC):
-    def _to_handle_list(self, atom_list: Union[List[str], List[Dict]]) -> List[str]:
+    def _to_handle_list(
+        self, atom_list: Union[List[str], List[Dict]]
+    ) -> List[str]:
         if not atom_list:
             return []
         if isinstance(atom_list[0], str):
@@ -30,7 +32,9 @@ class BaseDas(ABC):
         else:
             return [handle for handle, _ in atom_list]
 
-    def _to_link_dict_list(self, db_answer: Union[List[str], List[Dict]]) -> List[Dict]:
+    def _to_link_dict_list(
+        self, db_answer: Union[List[str], List[Dict]]
+    ) -> List[Dict]:
         if not db_answer:
             return []
         flat_handle = isinstance(db_answer[0], str)
@@ -56,7 +60,9 @@ class BaseDas(ABC):
                 else:
                     handle, targets = atom
                     arity = len(targets)
-                answer.append(self.db.get_atom_as_deep_representation(handle, arity))
+                answer.append(
+                    self.db.get_atom_as_deep_representation(handle, arity)
+                )
         return json.dumps(answer, sort_keys=False, indent=4)
 
     def _turn_into_deep_representation(self, assignments) -> list:
@@ -79,13 +85,19 @@ class BaseDas(ABC):
 
     def _recursive_query(
         self,
-        query: Dict[str, Any],
+        query: Union[Dict[str, Any], List[Dict[str, Any]]],
         mappings: Set[Assignment] = None,
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> QueryAnswerIterator:
-        if query["atom_type"] == "node":
+        if isinstance(query, list):
+            sub_expression_results = [
+                self._recursive_query(expression, mappings, extra_parameters)
+                for expression in query
+            ]
+            return AndEvaluator(sub_expression_results)
+        elif query["atom_type"] == "node":
             atom_handle = self.db.get_node_handle(query["type"], query["name"])
-            return ListIterator([QueryAnswer((self.db.get_atom_as_dict(atom_handle), ''), None)])
+            return ListIterator([QueryAnswer(subgraph=self.db.get_atom_as_dict(atom_handle))])
         elif query["atom_type"] == "link":
             matched_targets = []
             for target in query["targets"]:
@@ -94,7 +106,7 @@ class BaseDas(ABC):
                     if matched:
                         matched_targets.append(matched)
                 elif target["atom_type"] == "variable":
-                    matched_targets.append(ListIterator([QueryAnswer((target, ''), None)]))
+                    matched_targets.append(ListIterator([QueryAnswer(subgraph=target)]))
                 else:
                     self._error(
                         UnexpectedQueryFormat(
@@ -349,7 +361,7 @@ class DistributedAtomSpaceClient(BaseDas):
         if params:
             try:
                 url = self._connect_server(**params)
-                # TODO: Change this name. Using for tests
+                # MARCO: Change this name. Using for tests
                 self.das_origin = FunctionsClient(url)
             except Exception as e:
                 raise ConnectionServerException(
@@ -413,31 +425,19 @@ class DistributedAtomSpaceClient(BaseDas):
         query_results = self._recursive_query(query, extra_parameters)
         logger().debug(f"query-client: {query} result: {str(query_results)}")
 
-        answer_local = []
-        handles_local = []
+        answer = []
+        
         for result in query_results:
-            answer_local.append(result.grounded_atom)
-            handles_local.append(result.atom_handle)
+            print('\n***********Handles************\n')
+            print(result.handles)
+            print('\n***********Graph************\n')
+            print(result.subgraph)
+            answer.append(result.subgraph)
 
         if self.das_origin:
             remote_answer = self.das_origin.query(query, extra_parameters)
-            # answer = remote_answer + answer
-        """
-        elif len(self.get_remote()) == 1:
-            remote_answer = self.elif len(self.get_remote()) == 1:
-            remote_answer = self.get_remote()[0].query(query, extra_parameters)
-            answer = remote_answer + answer
-        elif len(self.get_remote()) > 1 and extra_parameters.get('server'):
-            remote_answer = self.get_remote()[extra_parameters['server']].query(
-                query, extra_parametersget_remote()[0].query(query, extra_parameters)
-            answer = remote_answer + answer
-        elif len(self.get_remote()) > 1 and extra_parameters.get('server'):
-            remote_answer = self.get_remote()[extra_parameters['server']].query(
-                query, extra_parameters
-            )
-            answer = remote_answer + answer
-        """
-        return answer_local
+        
+        return answer
 
 
 class DistributedAtomSpaceServer(BaseDas):
@@ -468,5 +468,5 @@ class DistributedAtomSpaceServer(BaseDas):
     ) -> List[Dict[str, Any]]:
         query_results = das._recursive_query(query, extra_parameters)
         logger().debug(f"query-server: {query} result: {str(query_results)}")
-        answer = [result.grounded_atom for result in query_results]
+        answer = [result.subgraph for result in query_results]
         return answer
