@@ -1,7 +1,7 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from hyperon_das_atomdb import WILDCARD, IAtomDB
+from hyperon_das_atomdb import WILDCARD, AtomDB
 
 from hyperon_das import DistributedAtomSpace
 
@@ -26,7 +26,7 @@ class DistributedAtomSpaceMock(DistributedAtomSpace):
         self.db = DatabaseMock()
 
 
-class DatabaseMock(IAtomDB):
+class DatabaseMock(AtomDB):
     def __init__(self, name: str = 'das'):
         self.database_name = name
 
@@ -278,3 +278,9 @@ class DatabaseMock(IAtomDB):
 
     def clear_database(self):
         pass
+
+    def add_link(self, link_params: Dict[str, Any], toplevel: bool = True) -> Dict[str, Any]:
+        assert False
+
+    def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
+        assert False

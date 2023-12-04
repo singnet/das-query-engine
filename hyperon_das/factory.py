@@ -2,7 +2,7 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Optional, Protocol
 
-from hyperon_das_atomdb import IAtomDB
+from hyperon_das_atomdb import AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB, ServerDB
 
 from hyperon_das.constants import DatabaseType
@@ -40,7 +40,7 @@ def database_factory(
     factory: IDatabaseFactory,
     host: Optional[str] = None,
     port: Optional[str] = None,
-) -> IAtomDB:
+) -> AtomDB:
     redis_mongo_database = factory.create_redis_mongo_database()
     ram_only_database = factory.create_ram_only_database()
     server_database = factory.create_server_database()
