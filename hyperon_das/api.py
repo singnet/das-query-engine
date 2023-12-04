@@ -2,7 +2,7 @@ import json
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
-from hyperon_das_atomdb import WILDCARD
+from hyperon_das_atomdb import WILDCARD, NodeDoesNotExistException
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
 from hyperon_das.cache import (
@@ -177,10 +177,13 @@ class DistributedAtomSpace:
             ]
             return AndEvaluator(sub_expression_results)
         elif query["atom_type"] == "node":
-            atom_handle = self.db.get_node_handle(query["type"], query["name"])
-            return ListIterator(
-                [QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)]
-            )
+            try:
+                atom_handle = self.db.get_node_handle(query["type"], query["name"])
+                return ListIterator(
+                    [QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)]
+                )
+            except NodeDoesNotExistException:
+                return ListIterator([])
         elif query["atom_type"] == "link":
             matched_targets = []
             for target in query["targets"]:
