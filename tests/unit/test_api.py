@@ -4,8 +4,8 @@ from unittest import mock
 import pytest
 from hyperon_das_atomdb import UNORDERED_LINK_TYPES, WILDCARD
 
-from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.client import FunctionsClient
+from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.exceptions import QueryParametersException
 from hyperon_das.pattern_matcher.pattern_matcher import And, Link, Not, Variable
 from hyperon_das.utils import QueryOutputFormat
