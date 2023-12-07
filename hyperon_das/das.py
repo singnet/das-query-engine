@@ -5,10 +5,10 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import (
-    AtomDoesNotExist,
-    InvalidAtomDB,
-    LinkDoesNotExist,
-    NodeDoesNotExist,
+    # InvalidAtomDB,
+    AtomDoesNotExistException,
+    LinkDoesNotExistException,
+    NodeDoesNotExistException,
 )
 
 from hyperon_das.cache import AndEvaluator, LazyQueryEvaluator, ListIterator, QueryAnswerIterator
@@ -21,11 +21,11 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer, QueryOutputFormat
+from hyperon_das.utils import Assignment, QueryAnswer
 
 
 class DistributedAtomSpace:
-    def __init__(self, kwargs: Dict[str, Any]) -> None:
+    def __init__(self, **kwargs: Optional[Dict[str, Any]]) -> None:
         atomdb_parameter = kwargs.get('atomdb', 'ram')
         query_engine_parameter = kwargs.get('query_engine', 'local')
 
@@ -76,7 +76,8 @@ class DistributedAtomSpace:
                 )
         else:
             # Implemente this exception in ATOMDB
-            raise InvalidAtomDB
+            # raise InvalidAtomDB
+            pass
 
         if query_engine_parameter == 'local':
             self.query_engine = LocalQueryEngine(self.backend, kwargs)
@@ -92,33 +93,24 @@ class DistributedAtomSpace:
         logger().error(str(exception))
         raise exception
 
-    def get_atom(self, handle: str) -> Dict[str, Any]:
+    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
         """
         Retrieve information about an Atom using its handle.
 
         This method retrieves information about an Atom from the database
-        based on the provided handle. The retrieved atom information can be
-        presented in different output formats as specified by the output_format parameter.
+        based on the provided handle.
 
         Args:
             handle (str): The unique handle of the atom.
-            output_format (QueryOutputFormat, optional): The desired output format.
-                Defaults to QueryOutputFormat.HANDLE.
 
         Returns:
-            Union[str, Dict]: Depending on the output_format, returns either:
-                - A string representing the handle of the Atom (output_format == QueryOutputFormat.HANDLE),
-                - A dictionary containing detailed Atom information (output_format == QueryOutputFormat.ATOM_INFO),
-                - A JSON-formatted string representing the deep representation of the Atom (output_format == QueryOutputFormat.JSON).
+            Union[Dict, None]: A dictionary containing detailed Atom information
 
         Raises:
             ValueError: If an invalid output format is provided.
 
         Example:
-            >>> result = obj.get_atom(
-                    handle="af12f10f9ae2002a1607ba0b47ba8407",
-                    output_format=QueryOutputFormat.ATOM_INFO
-                )
+            >>> result = das.get_atom(handle="af12f10f9ae2002a1607ba0b47ba8407")
             >>> print(result)
             {
                 "handle": "af12f10f9ae2002a1607ba0b47ba8407",
@@ -128,25 +120,17 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_atom(handle)
 
-    def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
+    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
         """
-        Retrieve information about a Node of a specific type and name.
-
         This method retrieves information about a Node from the database
-        based on its type and name. The retrieved node information can be
-        presented in different output formats as specified by the output_format parameter.
+        based on its type and name.
 
         Args:
             node_type (str): The type of the node being queried.
             node_name (str): The name of the specific node being queried.
-            output_format (QueryOutputFormat, optional): The desired output format.
-                Defaults to QueryOutputFormat.HANDLE.
 
         Returns:
-            Union[str, Dict]: Depending on the output_format, returns either:
-                - A string representing the handle of the node (output_format == QueryOutputFormat.HANDLE),
-                - A dictionary containing atom information of the node (output_format == QueryOutputFormat.ATOM_INFO),
-                - A JSON-formatted string representing the deep representation of the node (output_format == QueryOutputFormat.JSON).
+            Union[Dict, None]: A dictionary containing atom information of the node
 
         Raises:
             ValueError: If an invalid output format is provided.
@@ -155,10 +139,9 @@ class DistributedAtomSpace:
             If the specified node does not exist, a warning is logged and None is returned.
 
         Example:
-            >>> result = obj.get_node(
+            >>> result = das.get_node(
                     node_type='Concept',
-                    node_name='human',
-                    output_format=QueryOutputFormat.ATOM_INFO
+                    node_name='human'
                 )
             >>> print(result)
             {
@@ -169,26 +152,18 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_node(node_type, node_name)
 
-    def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
+    def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
         """
-        Retrieve information about a link of a specific type and its targets.
-
         This method retrieves information about a link from the database based on
-        type with given targets. The retrieved link information can be presented in different
-        output formats as specified by the output_format parameter.
+        type with given targets.
 
         Args:
             link_type (str): The type of the link being queried.
             targets (List[str], optional): A list of target identifiers that the link is associated with.
                 Defaults to None.
-            output_format (QueryOutputFormat, optional): The desired output format.
-                Defaults to QueryOutputFormat.HANDLE.
 
         Returns:
-            Union[str, Dict]: Depending on the output_format, returns either:
-                - A string representing the handle of the link (output_format == QueryOutputFormat.HANDLE),
-                - A dictionary containing atom information of the link (output_format == QueryOutputFormat.ATOM_INFO),
-                - A JSON-formatted string representing the deep representation of the link (output_format == QueryOutputFormat.JSON).
+            Union[Dict, None]: A dictionary containing atom information of the link
 
         Raises:
             ValueError: If an invalid output format is provided.
@@ -197,13 +172,12 @@ class DistributedAtomSpace:
             If the specified link or targets do not exist, the method returns None.
 
         Example:
-            >>> result = obj.get_link(
+            >>> result = das.get_link(
                     link_type='Similarity',
                     targets=['human', 'monkey'],
-                    output_format=QueryOutputFormat.HANDLE
                 )
             >>> print(result)
-            '2931276cb5bb4fc0c2c48a6720fc9a84'
+
         """
         return self.query_engine.get_link(link_type, link_targets)
 
@@ -220,7 +194,7 @@ class DistributedAtomSpace:
     def query(
         self,
         query: Dict[str, Any],
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[Dict[str, Any]] = {},
     ) -> List[Dict[str, Any]]:
         """
         Perform a query on the knowledge base using a dict as input. Returns a
@@ -309,36 +283,22 @@ class DistributedAtomSpace:
 
 class QueryEngine(ABC):
     @abstractmethod
-    def get_atom(
-        self,
-        handle: str,
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> Union[str, Dict]:
+    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
         ...
 
     @abstractmethod
-    def get_node(
-        self,
-        node_type: str,
-        node_name: str,
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> Union[str, Dict]:
+    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
         ...
 
     @abstractmethod
-    def get_link(
-        self,
-        link_type: str,
-        targets: List[str],
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> Union[str, Dict]:
+    def get_link(self, link_type: str, targets: List[str]) -> Union[Dict[str, Any], None]:
         ...
 
     @abstractmethod
     def query(
         self,
         query: Dict[str, Any],
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[Dict[str, Any]] = {},
     ) -> List[Dict[str, Any]]:
         ...
 
@@ -364,8 +324,10 @@ class LocalQueryEngine(QueryEngine):
             return AndEvaluator(sub_expression_results)
         elif query["atom_type"] == "node":
             try:
-                atom_handle = self.db.get_node_handle(query["type"], query["name"])
-                return ListIterator([QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)])
+                atom_handle = self.local_backend.get_node_handle(query["type"], query["name"])
+                return ListIterator(
+                    [QueryAnswer(self.local_backend.get_atom_as_dict(atom_handle), None)]
+                )
             except NodeDoesNotExistException:
                 return ListIterator([])
         elif query["atom_type"] == "link":
@@ -414,7 +376,7 @@ class LocalQueryEngine(QueryEngine):
     def query(
         self,
         query: Dict[str, Any],
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[Dict[str, Any]] = {},
     ) -> List[Dict[str, Any]]:
         logger().debug(
             {
@@ -441,6 +403,8 @@ class RemoteQueryEngine(QueryEngine):
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
         host = kwargs.get('host')
         port = kwargs.get('port')
+        if not host:
+            raise InvalidDASParameters(message='Send `host` parameter to connect in a remote DAS')
         url = self._connect_server(host, port)
         self.remote_das = FunctionsClient(url)
 
@@ -488,7 +452,7 @@ class RemoteQueryEngine(QueryEngine):
     def query(
         self,
         query: Dict[str, Any],
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[Dict[str, Any]] = {},
     ) -> List[Dict[str, Any]]:
         query_scope = parameters.get('query_scope', 'remote_only')
         if query_scope == 'remote_only':
@@ -510,3 +474,28 @@ class RemoteQueryEngine(QueryEngine):
 
     def commit(self):
         return self.remote_das.commit_changes()
+
+
+if __name__ == '__main__':
+    das = DistributedAtomSpace(query_engine='remote', host='44.198.65.35')
+    das.add_link(
+        {
+            'type': 'Inheritance',
+            'targets': [
+                {'type': 'Concept', 'name': 'capozzoli'},
+                {'type': 'Concept', 'name': 'mammal'},
+            ],
+        }
+    )
+    das.count_atoms()
+    das.query(
+        {
+            "atom_type": "link",
+            "type": "Similarity",
+            "targets": [
+                {"atom_type": "node", "type": "Concept", "name": "human"},
+                {"atom_type": "node", "type": "Concept", "name": "monkey"},
+            ],
+        }
+    )
+    print('END')
