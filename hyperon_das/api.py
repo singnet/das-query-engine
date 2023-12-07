@@ -1,248 +1,95 @@
 import json
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
-from hyperon_das_atomdb import WILDCARD, NodeDoesNotExistException
+from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
-
-from hyperon_das.cache import (
-    AndEvaluator,
-    LazyQueryEvaluator,
-    ListIterator,
-    QueryAnswerIterator,
+from hyperon_das_atomdb.exceptions import (
+    AtomDoesNotExist,
+    InvalidAtomDB,
+    LinkDoesNotExist,
+    NodeDoesNotExist,
 )
+
+from hyperon_das.cache import AndEvaluator, LazyQueryEvaluator, ListIterator, QueryAnswerIterator
 from hyperon_das.client import FunctionsClient
-from hyperon_das.constants import DasType, DatabaseType
 from hyperon_das.decorators import retry
 from hyperon_das.exceptions import (
-    DasTypeException,
-    InitializeDasServerException,
-    MethodNotAllowed,
+    InvalidDASParameters,
+    InvalidQueryEngine,
     QueryParametersException,
     UnexpectedQueryFormat,
 )
-from hyperon_das.factory import DatabaseFactory, database_factory
 from hyperon_das.logger import logger
-from hyperon_das.pattern_matcher import (
-    LogicalExpression,
-    PatternMatchingAnswer,
-)
-from hyperon_das.utils import (
-    Assignment,
-    QueryAnswer,
-    QueryOutputFormat,
-    QueryParameters,
-    config,
-)
+from hyperon_das.utils import Assignment, QueryAnswer, QueryOutputFormat
 
 
 class DistributedAtomSpace:
-    def __init__(
-        self, das_type: DasType = DasType.CLIENT.value, **kwargs
-    ) -> None:
-        self._type = das_type
-        self.__remote_das = []
+    def __init__(self, kwargs: Dict[str, Any]) -> None:
+        atomdb_parameter = kwargs.get('atomdb', 'ram')
+        query_engine_parameter = kwargs.get('query_engine', 'local')
 
-        try:
-            DasType(self._type)
-        except ValueError as e:
-            self._error(
-                DasTypeException(
-                    message=str(e),
-                    details=f'possible values {DasType.types()}',
-                )
+        if atomdb_parameter == "ram":
+            self.backend = InMemoryDB()
+        elif atomdb_parameter == "redis_mongo":
+            mongo_db_hostname = kwargs.get('mongo_db_hostname')
+            mongo_db_port = kwargs.get('mongo_db_port')
+            mongo_db_username = kwargs.get('mongo_db_username')
+            mongo_db_password = kwargs.get('mongo_db_password')
+            mongo_tls_ca_file = kwargs.get('mongo_tls_ca_file')
+            redis_hostname = kwargs.get('redis_hostname')
+            redis_port = kwargs.get('redis_port')
+            redis_username = kwargs.get('redis_username')
+            redis_password = kwargs.get('redis_password')
+            redis_cluster = kwargs.get('redis_cluster')
+            redis_ssl = kwargs.get('redis_ssl')
+            required_parameters = [
+                mongo_db_hostname,
+                mongo_db_port,
+                mongo_db_username,
+                mongo_db_password,
+                redis_hostname,
+                redis_port,
+            ]
+            if not all([False if p is None else True for p in required_parameters]):
+                raise InvalidDASParameters
+            self.backend = RedisMongoDB(
+                mongo_db_hostname=mongo_db_hostname,
+                mongo_db_port=mongo_db_port,
+                mongo_db_username=mongo_db_username,
+                mongo_db_password=mongo_db_password,
+                mongo_tls_ca_file=mongo_tls_ca_file,
+                redis_hostname=redis_hostname,
+                redis_port=redis_port,
+                redis_username=redis_username,
+                redis_password=redis_password,
+                redis_cluster=redis_cluster,
+                redis_ssl=redis_ssl,
             )
+            if query_engine_parameter != "local":
+                raise InvalidDASParameters
+        else:
+            raise InvalidAtomDB
 
-        logger().debug(
-            {
-                'message': '[DistributedAtomSpace][__init__]',
-                'data': {'das_type': das_type},
-            }
-        )
-
-        if self._type == DasType.CLIENT.value:
-            self.db = InMemoryDB()
-        elif self._type == DasType.SERVER.value:
-            try:
-                self.db = RedisMongoDB()
-            except Exception as e:
-                raise InitializeDasServerException(
-                    message='An error occurred during class initialization',
-                    details=str(e),
-                )
+        if query_engine_parameter == 'local':
+            self.query_engine = LocalQueryEngine(self.backend, kwargs)
+        elif query_engine_parameter == "remote":
+            self.query_engine = RemoteQueryEngine(self.backend, kwargs)
+        else:
+            raise InvalidQueryEngine
 
     @property
     def remote_das(self):
         return self.__remote_das
 
-    @retry(attempts=5, timeout_seconds=120)
-    def _connect_server(self, host: str, port: Optional[str] = None):
-        port = port or config.get("DEFAULT_PORT_OPENFAAS", '8081')
-        openfaas_uri = f'http://{host}:{port}/function/query-engine'
-        aws_lambda_uri = f'http://{host}/prod/query-engine'
-        url = None
-        if self._is_server_connect(openfaas_uri):
-            url = openfaas_uri
-        elif self._is_server_connect(aws_lambda_uri):
-            url = aws_lambda_uri
-        return url
-
-    def _is_server_connect(self, url: str) -> bool:
-        try:
-            response = requests.request(
-                'POST',
-                url=url,
-                data=json.dumps({"action": "ping", "input": {}}),
-                timeout=10,
-            )
-        except Exception as e:
-            return False
-        if response.status_code == 200:
-            return True
-        return False
-
-    def _to_handle_list(
-        self, atom_list: Union[List[str], List[Dict]]
-    ) -> List[str]:
-        if not atom_list:
-            return []
-        if isinstance(atom_list[0], str):
-            return atom_list
-        else:
-            return [handle for handle, _ in atom_list]
-
-    def _to_link_dict_list(
-        self, db_answer: Union[List[str], List[Dict]]
-    ) -> List[Dict]:
-        if not db_answer:
-            return []
-        flat_handle = isinstance(db_answer[0], str)
-        answer = []
-        for atom in db_answer:
-            if flat_handle:
-                handle = atom
-                arity = -1
-            else:
-                handle, targets = atom
-                arity = len(targets)
-            answer.append(self.db.get_atom_as_dict(handle, arity))
-        return answer
-
-    def _to_json(self, db_answer: Union[List[str], List[Dict]]) -> List[Dict]:
-        answer = []
-        if db_answer:
-            flat_handle = isinstance(db_answer[0], str)
-            for atom in db_answer:
-                if flat_handle:
-                    handle = atom
-                    arity = -1
-                else:
-                    handle, targets = atom
-                    arity = len(targets)
-                answer.append(
-                    self.db.get_atom_as_deep_representation(handle, arity)
-                )
-        return json.dumps(answer, sort_keys=False, indent=4)
-
-    def _turn_into_deep_representation(self, assignments) -> list:
-        results = []
-        for assignment in assignments:
-            result = {}
-            for variable, handle in assignment.mapping.items():
-                deep_representation = self.db.get_atom_as_deep_representation(
-                    handle
-                )
-                is_link = 'targets' in deep_representation
-                result[variable] = {
-                    **deep_representation,
-                    'atom_type': 'link' if is_link else 'node',
-                }
-            results.append(result)
-        return results
-
     def _error(self, exception: Exception):
         logger().error(str(exception))
         raise exception
 
-    def _recursive_query(
-        self,
-        query: Union[Dict[str, Any], List[Dict[str, Any]]],
-        mappings: Set[Assignment] = None,
-        extra_parameters: Optional[Dict[str, Any]] = None,
-    ) -> QueryAnswerIterator:
-        if isinstance(query, list):
-            sub_expression_results = [
-                self._recursive_query(expression, mappings, extra_parameters)
-                for expression in query
-            ]
-            return AndEvaluator(sub_expression_results)
-        elif query["atom_type"] == "node":
-            try:
-                atom_handle = self.db.get_node_handle(query["type"], query["name"])
-                return ListIterator(
-                    [QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)]
-                )
-            except NodeDoesNotExistException:
-                return ListIterator([])
-        elif query["atom_type"] == "link":
-            matched_targets = []
-            for target in query["targets"]:
-                if (
-                    target["atom_type"] == "node"
-                    or target["atom_type"] == "link"
-                ):
-                    matched = self._recursive_query(
-                        target, mappings, extra_parameters
-                    )
-                    if matched:
-                        matched_targets.append(matched)
-                elif target["atom_type"] == "variable":
-                    matched_targets.append(
-                        ListIterator([QueryAnswer(target, None)])
-                    )
-                else:
-                    self._error(
-                        UnexpectedQueryFormat(
-                            message="Query processing reached an unexpected state",
-                            details=f'link: {str(query)} link target: {str(query)}',
-                        )
-                    )
-            return LazyQueryEvaluator(
-                query["type"], matched_targets, self, extra_parameters
-            )
-        else:
-            self._error(
-                UnexpectedQueryFormat(
-                    message="Query processing reached an unexpected state",
-                    details=f'query: {str(query)}',
-                )
-            )
+    # query_engine methods
 
-    def clear_database(self) -> None:
-        """Clear all data"""
-        ret = self.db.clear_database()
-        logger().debug(
-            {
-                'message': '[DistributedAtomSpace][clear_database] - The database has been cleaned.',
-            }
-        )
-        return ret
-
-    def count_atoms(self) -> Tuple[int, int]:
-        """
-        This method is useful for returning the count of atoms in the database.
-        It's also useful for ensuring that the knowledge base load went off without problems.
-
-        Returns:
-            Tuple[int, int]: (node_count, link_count)
-        """
-        return self.db.count_atoms()
-
-    def get_atom(
-        self,
-        handle: str,
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> Union[str, Dict]:
+    def get_atom(self, handle: str) -> Dict[str, Any]:
         """
         Retrieve information about an Atom using its handle.
 
@@ -276,26 +123,9 @@ class DistributedAtomSpace:
                 "name": "human"
             }
         """
+        return self.query_engine.get_atom(handle)
 
-        if output_format == QueryOutputFormat.HANDLE or not handle:
-            atom = self.db.get_atom_as_dict(handle)
-            return atom["handle"] if atom else ""
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return self.db.get_atom_as_dict(handle)
-        elif output_format == QueryOutputFormat.JSON:
-            answer = self.db.get_atom_as_deep_representation(handle)
-            return json.dumps(answer, sort_keys=False, indent=4)
-        else:
-            self._error(
-                ValueError(f"Invalid output format: '{output_format}'")
-            )
-
-    def get_node(
-        self,
-        node_type: str,
-        node_name: str,
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> Union[str, Dict]:
+    def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
         """
         Retrieve information about a Node of a specific type and name.
 
@@ -334,104 +164,9 @@ class DistributedAtomSpace:
                 "name": "human"
             }
         """
+        return self.query_engine.get_node(node_type, node_name)
 
-        node_handle = None
-
-        try:
-            node_handle = self.db.get_node_handle(node_type, node_name)
-        except ValueError:
-            logger().warning(
-                f"Attempt to access an invalid Node '{node_type}:{node_name}'"
-            )
-            return None
-
-        if output_format == QueryOutputFormat.HANDLE or not node_handle:
-            return node_handle
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return self.db.get_atom_as_dict(node_handle)
-        elif output_format == QueryOutputFormat.JSON:
-            answer = self.db.get_atom_as_deep_representation(node_handle)
-            return json.dumps(answer, sort_keys=False, indent=4)
-        else:
-            self._error(
-                ValueError(f"Invalid output format: '{output_format}'")
-            )
-
-    def get_nodes(
-        self,
-        node_type: str,
-        node_name: str = None,
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> Union[List[str], List[Dict]]:
-        """
-        Retrieve information about Nodes based on their type and optional name.
-
-        This method retrieves information about nodes from the database based
-        on its type and name (if provided). The retrieved nodes information can be
-        presented in different output formats as specified by the output_format parameter.
-
-
-        Args:
-            node_type (str): The type of nodes being queried.
-            node_name (str, optional): The name of the specific node being queried. Defaults to None.
-            output_format (QueryOutputFormat, optional): The desired output format.
-                Defaults to QueryOutputFormat.HANDLE.
-
-        Returns:
-            Union[List[str], List[Dict]]: Depending on the output_format, returns either:
-                - A list of strings representing handles of the nodes (output_format == QueryOutputFormat.HANDLE),
-                - A list of dictionaries containing atom information of the nodes (output_format == QueryOutputFormat.ATOM_INFO),
-                - A JSON-formatted string representing the deep representation of the nodes (output_format == QueryOutputFormat.JSON).
-
-        Raises:
-            ValueError: If an invalid output format is provided.
-
-        Note:
-            If node_name is provided and the specified node does not exist, an empty list is returned.
-
-        Example:
-            >>> result = obj.get_nodes(
-                    node_type='Concept',
-                    output_format=QueryOutputFormat.HANDLE
-                )
-            >>> print(result)
-            [
-                'af12f10f9ae2002a1607ba0b47ba8407',
-                '1cdffc6b0b89ff41d68bec237481d1e1',
-                '5b34c54bee150c04f9fa584b899dc030',
-                'c1db9b517073e51eb7ef6fed608ec204',
-                ...
-            ]
-        """
-
-        if node_name is not None:
-            answer = self.db.get_node_handle(node_type, node_name)
-            if answer is not None:
-                answer = [answer]
-        else:
-            answer = self.db.get_all_nodes(node_type)
-
-        if output_format == QueryOutputFormat.HANDLE or not answer:
-            return answer
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return [self.db.get_atom_as_dict(handle) for handle in answer]
-        elif output_format == QueryOutputFormat.JSON:
-            answer = [
-                self.db.get_atom_as_deep_representation(handle)
-                for handle in answer
-            ]
-            return json.dumps(answer, sort_keys=False, indent=4)
-        else:
-            self._error(
-                ValueError(f"Invalid output format: '{output_format}'")
-            )
-
-    def get_link(
-        self,
-        link_type: str,
-        targets: List[str],
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> Union[str, Dict]:
+    def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         """
         Retrieve information about a link of a specific type and its targets.
 
@@ -467,220 +202,22 @@ class DistributedAtomSpace:
             >>> print(result)
             '2931276cb5bb4fc0c2c48a6720fc9a84'
         """
-        link_handle = None
+        return self.query_engine.get_link(link_type, link_targets)
 
-        # TODO: Is there any exception action?
-        try:
-            link_handle = self.db.get_link_handle(link_type, targets)
-        except Exception as e:
-            self._error(e)
-
-        if output_format == QueryOutputFormat.HANDLE or link_handle is None:
-            return link_handle
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return self.db.get_atom_as_dict(link_handle, len(targets))
-        elif output_format == QueryOutputFormat.JSON:
-            answer = self.db.get_atom_as_deep_representation(
-                link_handle, len(targets)
-            )
-            return json.dumps(answer, sort_keys=False, indent=4)
-        else:
-            self._error(
-                ValueError(f"Invalid output format: '{output_format}'")
-            )
-
-    def get_links(
-        self,
-        link_type: str,
-        target_types: str = None,
-        targets: List[str] = None,
-        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
-    ) -> Union[List[str], List[Dict]]:
+    def count_atoms(self) -> Tuple[int, int]:
         """
-        Retrieve information about Links based on specified criteria.
-
-        This method retrieves information about links from the database based on the provided criteria.
-        The criteria includes the link type, and can include target types and specific target identifiers.
-        The retrieved links information can be presented in different output formats as specified
-        by the output_format parameter.
-
-        Args:
-            link_type (str): The type of links being queried.
-            target_types (str, optional): The type(s) of targets being queried. Defaults to None.
-            targets (List[str], optional): A list of target identifiers that the links are associated with.
-                Defaults to None.
-            output_format (QueryOutputFormat, optional): The desired output format.
-                Defaults to QueryOutputFormat.HANDLE.
+        This method is useful for returning the count of atoms in the database.
+        It's also useful for ensuring that the knowledge base load went off without problems.
 
         Returns:
-            Union[List[str], List[Dict]]: Depending on the output_format, returns either:
-                - A list of strings representing handles of the links (output_format == QueryOutputFormat.HANDLE),
-                - A list of dictionaries containing detailed information of the links (output_format == QueryOutputFormat.ATOM_INFO),
-                - A JSON-formatted string representing the deep representation of the links (output_format == QueryOutputFormat.JSON).
-
-        Raises:
-            ValueError: If an invalid output format is provided or if the provided parameters are invalid.
-
-        Example:
-            >>> result = obj.get_links(
-                    link_type='Similarity',
-                    target_types=['Concept', 'Concept'],
-                    output_format=QueryOutputFormat.ATOM_INFO
-                )
-            >>> print(result)
-            [
-                {
-                    'handle': 'a45af31b43ee5ea271214338a5a5bd61',
-                    'type': 'Similarity',
-                    'template': ['Similarity', 'Concept', 'Concept'],
-                    'targets': [...]
-                },
-                {
-                    'handle': '2d7abd27644a9c08a7ca2c8d68338579',
-                    'type': 'Similarity',
-                    'template': ['Similarity', 'Concept', 'Concept'],
-                    'targets': [...]
-                },
-                ...
-            ]
+            Tuple[int, int]: (node_count, link_count)
         """
-
-        # TODO: Delete this If. This conditional will never happen
-        if link_type is None:
-            link_type = WILDCARD
-
-        if target_types is not None and link_type != WILDCARD:
-            db_answer = self.db.get_matched_type_template(
-                [link_type, *target_types]
-            )
-        elif targets is not None:
-            db_answer = self.db.get_matched_links(link_type, targets)
-        elif link_type != WILDCARD:
-            db_answer = self.db.get_matched_type(link_type)
-        else:
-            # TODO: Improve this message error. What is invalid?
-            self._error(ValueError("Invalid parameters"))
-
-        if output_format == QueryOutputFormat.HANDLE:
-            return self._to_handle_list(db_answer)
-        elif output_format == QueryOutputFormat.ATOM_INFO:
-            return self._to_link_dict_list(db_answer)
-        elif output_format == QueryOutputFormat.JSON:
-            return self._to_json(db_answer)
-        else:
-            self.error(ValueError(f"Invalid output format: '{output_format}'"))
-
-    def get_link_type(self, link_handle: str) -> str:
-        """
-        Get the type of a link.
-
-        This method retrieves the type of a link based on its handle.
-
-        Args:
-            link_handle (str): The handle of the link.
-
-        Returns:
-            str: The type of the link.
-
-        Example:
-            >>> human = obj.get_node('Concept', 'human')
-            >>> monkey = obj.get_node('Concept', 'monkey')
-            >>> link_handle = obj.get_link('Similarity', [human, monkey])
-            >>> result = obj.get_link_type(link_handle=link_handle)
-            >>> print(result)
-            'Similarity'
-        """
-        try:
-            resp = self.db.get_link_type(link_handle)
-            return resp
-        # TODO: Find out what specific exceptions might happen
-        except Exception as e:
-            self._error(e)
-
-    def get_link_targets(self, link_handle: str) -> List[str]:
-        """
-        Get the targets of a link.
-
-        This method retrieves the targets of a link based on its handle.
-
-        Args:
-            link_handle (str): The handle of the link.
-
-        Returns:
-            List[str]: A list of target handles.
-
-        Example:
-            >>> human = obj.get_node('Concept', 'human')
-            >>> monkey = obj.get_node('Concept', 'monkey')
-            >>> link_handle = obj.get_link('Similarity', [human, monkey])
-            >>> result = obj.get_link_targets(link_handle=link_handle)
-            >>> print(result)
-            [
-                '80aff30094874e75028033a38ce677bb',
-                '4e8e26e3276af8a5c2ac2cc2dc95c6d2'
-            ]
-        """
-        try:
-            resp = self.db.get_link_targets(link_handle)
-            return resp
-        # TODO: Find out what specific exceptions might happen
-        except Exception as e:
-            self._error(e)
-
-    def get_node_type(self, node_handle: str) -> str:
-        """
-        Get the type of a node.
-
-        This method retrieves the type of a node based on its handle.
-
-        Args:
-            node_handle (str): The handle of the node.
-
-        Returns:
-            str: The type of the node.
-
-        Example:
-            >>> human = obj.get_node('Concept', 'human')
-            >>> result = obj.get_node_type(node_handle=human)
-            >>> print(result)
-            'Concept'
-        """
-        try:
-            resp = self.db.get_node_type(node_handle)
-            return resp
-        # TODO: Find out what specific exceptions might happen
-        except Exception as e:
-            self._error(e)
-
-    def get_node_name(self, node_handle: str) -> str:
-        """
-        Get the name of a node.
-
-        This method retrieves the name of a node based on its handle.
-
-        Args:
-            node_handle (str): The handle of the node.
-
-        Returns:
-            str: The name of the node.
-
-        Example:
-            >>> animal = obj.get_node('Concept', 'animal')
-            >>> result = obj.get_node_name(node_handle=animal)
-            >>> print(result)
-            'animal'
-        """
-        try:
-            resp = self.db.get_node_name(node_handle)
-            return resp
-        # TODO: Find out what specific exceptions might happen
-        except Exception as e:
-            self._error(e)
+        return self.query_engine.count_atoms()
 
     def query(
         self,
         query: Dict[str, Any],
-        extra_parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         """
         Perform a query on the knowledge base using a dict as input. Returns a
@@ -707,7 +244,7 @@ class DistributedAtomSpace:
 
         Example:
 
-            >>> hash_table_api.add_link({
+            >>> das.add_link({
                 "type": "Expression",
                 "targets": [
                     {"type": "Symbol", "name": "Test"},
@@ -739,182 +276,236 @@ class DistributedAtomSpace:
                     }
                 ]
             }
-            >>> result = hash_table_api.query(q1, query_params)
+            >>> result = das.query(q1, query_params)
             >>> print(result)
             [{'handle': 'dbcf1c7b610a5adea335bf08f6509978', 'type': 'Expression', 'template': ['Expression', 'Symbol', ['Expression', 'Symbol', 'Symbol']], 'targets': [{'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'}, {'handle': '233d9a6da7d49d4164d863569e9ab7b6', 'type': 'Expression', 'template': ['Expression', 'Symbol', 'Symbol'], 'targets': [{'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'}, {'handle': '9f27a331633c8bc3c49435ffabb9110e', 'type': 'Symbol', 'name': '2'}]}]}]
         """
+        return self.query_engine.query(query, parameters)
 
+    def commit_changes(self):
+        self.query_engine.commit()
+
+    # backend methods
+
+    def get_node_handle(self, node_type: str, node_name: str) -> str:
+        return self.backend.node_handle(node_type, node_name)
+
+    def get_link_handle(self, link_type: str, link_targets: List[str]) -> str:
+        return self.backend.link_handle(link_type, link_targets)
+
+    def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
+        return self.backend.add_node(node_params)
+
+    def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
+        return self.backend.add_link(link_params)
+
+    def clear(self) -> None:
+        """Clear all data"""
+        ret = self.backend.clear_database()
+        logger().debug('The database has been cleaned.')
+        return ret
+
+
+class QueryEngine(ABC):
+    @abstractmethod
+    def get_atom(
+        self,
+        handle: str,
+        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
+    ) -> Union[str, Dict]:
+        ...
+
+    @abstractmethod
+    def get_node(
+        self,
+        node_type: str,
+        node_name: str,
+        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
+    ) -> Union[str, Dict]:
+        ...
+
+    @abstractmethod
+    def get_link(
+        self,
+        link_type: str,
+        targets: List[str],
+        output_format: QueryOutputFormat = QueryOutputFormat.HANDLE,
+    ) -> Union[str, Dict]:
+        ...
+
+    @abstractmethod
+    def query(
+        self,
+        query: Dict[str, Any],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        ...
+
+    @abstractmethod
+    def count_atoms(self) -> Tuple[int, int]:
+        ...
+
+
+class LocalQueryEngine(QueryEngine):
+    def __init__(self, backend, kwargs: Optional[dict] = None) -> None:
+        self.local_backend = backend
+
+    def _recursive_query(
+        self,
+        query: Union[Dict[str, Any], List[Dict[str, Any]]],
+        mappings: Set[Assignment] = None,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> QueryAnswerIterator:
+        if isinstance(query, list):
+            sub_expression_results = [
+                self._recursive_query(expression, mappings, parameters) for expression in query
+            ]
+            return AndEvaluator(sub_expression_results)
+        elif query["atom_type"] == "node":
+            try:
+                atom_handle = self.db.get_node_handle(query["type"], query["name"])
+                return ListIterator([QueryAnswer(self.db.get_atom_as_dict(atom_handle), None)])
+            except NodeDoesNotExistException:
+                return ListIterator([])
+        elif query["atom_type"] == "link":
+            matched_targets = []
+            for target in query["targets"]:
+                if target["atom_type"] == "node" or target["atom_type"] == "link":
+                    matched = self._recursive_query(target, mappings, parameters)
+                    if matched:
+                        matched_targets.append(matched)
+                elif target["atom_type"] == "variable":
+                    matched_targets.append(ListIterator([QueryAnswer(target, None)]))
+                else:
+                    self._error(
+                        UnexpectedQueryFormat(
+                            message="Query processing reached an unexpected state",
+                            details=f'link: {str(query)} link target: {str(query)}',
+                        )
+                    )
+            return LazyQueryEvaluator(query["type"], matched_targets, self, parameters)
+        else:
+            self._error(
+                UnexpectedQueryFormat(
+                    message="Query processing reached an unexpected state",
+                    details=f'query: {str(query)}',
+                )
+            )
+
+    def query(
+        self,
+        query: Dict[str, Any],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
         logger().debug(
             {
                 'message': '[DistributedAtomSpace][query] - Start',
-                'data': {'query': query, 'extra_parameters': extra_parameters},
+                'data': {'query': query, 'parameters': parameters},
             }
         )
-
-        query_results = self._recursive_query(query, extra_parameters)
+        query_results = self._recursive_query(query, parameters)
         logger().debug(f"query: {query} result: {str(query_results)}")
         answer = []
         for result in query_results:
             answer.append(result.subgraph)
         return answer
 
-    def pattern_matcher_query(
-        self,
-        query: LogicalExpression,
-        extra_parameters: Optional[Dict[str, Any]] = None,
-    ) -> dict | list | None:
-        """
-        Perform a query on the knowledge base using a logical expression.
+    def count_atoms(self) -> Tuple[int, int]:
+        return self.local_backend.count_atoms()
 
-        This method allows you to query the knowledge base using a logical expression
-        to find patterns or relationships among atoms. The query result is returned
-        in the specified output format.
-
-        Args:
-            query (LogicalExpression): As instance of a LogicalExpression. representing the query.
-            output_format (QueryOutputFormat, optional): The desired output format for the query result
-                Defaults to QueryOutputFormat.HANDLE.
-
-        Returns:
-            Union[Dict[str, Any]], List]: Depending on the `return_type` parameter sent in extra_parameters, returns:
-                - A list of dictionaries (return_type == QueryOutputFormat.HANDLE or return_type == QueryOutputFormat.ATOM_INFO),
-                - A JSON-formatted string representing the deep representation of the links (return_type == QueryOutputFormat.JSON).
-
-        Raises:
-            ValueError: If an invalid output format is provided.
-
-        Notes:
-            - Each query is a LogicalExpression object that may or may not be a combination of
-            logical operators like `And`, `Or`, and `Not`, as well as atomic expressions like
-            `Node`, `Link`, and `Variable`.
-
-            - If no match is found for the query, an empty string is returned.
-
-        Example:
-            You can use this method to perform complex or simple queries, like the following:
-
-            In this example we want to search the knowledge base for two inheritance links
-            that connect 3 nodes such that V1 -> V2 -> V3.
-
-            >>> V1 = Variable("V1")
-            >>> V2 = Variable("V2")
-            >>> V3 = Variable("V3")
-
-            >>> logical_expression = And([
-                Link("Inheritance", ordered=True, targets=[V1, V2]),
-                Link("Inheritance", ordered=True, targets=[V2, V3])
-            ])
-
-            >>> result = obj.query(query=logical_expression, {'return_type': QueryOutputFormat.HANDLE})
-
-            >>> print(result)
-            {
-                {'V1': '305e7d502a0ce80b94374ff0d79a6464', 'V2': '98870929d76a80c618e70a0393055b31', 'V3': '81ec21b0f1b03e18c55e056a56179fef'},
-                {'V1': 'bd497eb24420dd50fed5f3d2e6cdd7c1', 'V2': '98870929d76a80c618e70a0393055b31', 'V3': '81ec21b0f1b03e18c55e056a56179fef'},
-                {'V1': 'e2d9b15ab3461228d75502e754137caa', 'V2': 'c90242e2dbece101813762cc2a83d726', 'V3': '81ec21b0f1b03e18c55e056a56179fef'},
-                ...
-            }
-        """
-
-        logger().debug(
-            {
-                'message': '[DistributedAtomSpace][pattern_matcher_query] - Start',
-                'data': {'query': query, 'extra_parameters': extra_parameters},
-            }
-        )
-
-        if extra_parameters is not None:
-            try:
-                extra_parameters = QueryParameters(**extra_parameters)
-            except TypeError as e:
-                raise QueryParametersException(
-                    message=str(e),
-                    details=f'possible values {QueryParameters.values()}',
-                )
-        else:
-            extra_parameters = QueryParameters()
-
-        query_answer = PatternMatchingAnswer()
-
-        matched = query.matched(
-            self.db, query_answer, extra_parameters.__dict__
-        )
-
-        if not matched:
+    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
+        try:
+            return self.local_backend.get_atom(handle)
+        except AtomDoesNotExist:
             return None
 
-        if extra_parameters.return_type == QueryOutputFormat.HANDLE:
-            result = list(query_answer.assignments)
-        elif extra_parameters.return_type == QueryOutputFormat.ATOM_INFO:
-            result = self._turn_into_deep_representation(
-                query_answer.assignments
-            )
-        elif extra_parameters.return_type == QueryOutputFormat.JSON:
-            objs = self._turn_into_deep_representation(
-                query_answer.assignments
-            )
-            result = json.dumps(
-                objs,
-                sort_keys=False,
-                indent=4,
-            )
-        else:
-            raise ValueError(
-                f"Invalid output format: '{extra_parameters.return_type}'"
-            )
-
-        if query_answer.negation:
-            return {'negation': True, 'mapping': result}
-        else:
-            return {'negation': False, 'mapping': result}
-
-    def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._type == DasType.CLIENT.value:
-            return self.db.add_node(node_params)
-        else:
-            self._error(
-                MethodNotAllowed(
-                    message='This method is permited only in memory database',
-                    details='Instantiate the class sent the database type as `ram_only`',
-                )
-            )
-
-    def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
-        if self._type == DasType.CLIENT.value:
-            return self.db.add_link(link_params)
-        else:
-            self._error(
-                MethodNotAllowed(
-                    message='This method is permited only in memory database',
-                    details='Instantiate the class sent the database type as `ram_only`',
-                )
-            )
-
-    def attach_remote(
-        self, host: str, port: Optional[str] = None, name: Optional[str] = None
-    ) -> bool:
-        """
-        Establish a connection to a remote server and attach a server instance.
-
-        Args:
-            host (str): The hostname or IP address of the remote server.
-            port (Optional[str]): The port number to connect to on the remote server. Defaults to None.
-            name (Optional[str]): A user-defined name for the FunctionsClient instance. Defaults to None.
-
-        Returns:
-            bool: Returns True if the attachment process is successful, otherwise False.
-
-        Example:
-            Use this method to attach to a remote server:
-
-            >>> instance = DistributedAtomSpace()
-            >>> result = instance.attach_remote(host="1.2.3.4", port="1234", name="RemoteServer1")
-        """
+    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
         try:
-            url = self._connect_server(host, port)
-            existing_servers = len(self.remote_das)
-            das = FunctionsClient(url, existing_servers, name)
-            self.__remote_das.append(das)
-            return True
-        except Exception:
+            return self.local_backend.get_node(node_type, node_name)
+        except NodeDoesNotExist:
+            return None
+
+    def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
+        try:
+            return self.local_backend.get_link(link_type, link_targets)
+        except LinkDoesNotExist:
+            return None
+
+    def commit(self):
+        self.local_backend.commit()
+
+
+class RemoteQueryEngine(QueryEngine):
+    def __init__(self, backend, kwargs):
+        self.local_query_engine = LocalQueryEngine(backend, kwargs)
+        host = kwargs.get('host')
+        port = kwargs.get('port')
+        url = self._connect_server(host, port)
+        self.remote_das = FunctionsClient(url)
+
+    @retry(attempts=5, timeout_seconds=120)
+    def _connect_server(self, host: str, port: Optional[str] = None):
+        port = port or '8081'
+        openfaas_uri = f'http://{host}:{port}/function/query-engine'
+        aws_lambda_uri = f'http://{host}/prod/query-engine'
+        url = None
+        if self._is_server_connect(openfaas_uri):
+            url = openfaas_uri
+        elif self._is_server_connect(aws_lambda_uri):
+            url = aws_lambda_uri
+        return url
+
+    def _is_server_connect(self, url: str) -> bool:
+        try:
+            response = requests.request(
+                'POST',
+                url=url,
+                data=json.dumps({"action": "ping", "input": {}}),
+                timeout=10,
+            )
+        except Exception as e:
             return False
+        if response.status_code == 200:
+            return True
+        return False
+
+    def get_atom(self, handle: str) -> Dict[str, Any]:
+        local = self.local_query_engine.get_atom(handle)
+        if not local:
+            return self.remote_das.get_atom(handle)
+
+    def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
+        local = self.local_query_engine.get_node(node_type, node_name)
+        if not local:
+            return self.remote_das.get_node(node_type, node_name)
+
+    def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
+        local = self.local_query_engine.get_link(link_type, link_targets)
+        if not local:
+            return self.remote_das.get_link(link_type, link_targets)
+
+    def query(
+        self,
+        query: Dict[str, Any],
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        query_scope = parameters.get('query_scope', 'remote_only')
+        if query_scope == 'remote_only':
+            answer = self.remote_das.query(query, parameters)
+        elif query_scope == 'local_only':
+            answer = self.local_query_engine.query(query, parameters)
+        elif query_scope == 'local_and_remote':
+            # This type is not available yet
+            raise QueryParametersException
+        elif query_scope == 'synchronous_update':
+            self.commit()
+            answer = self.remote_das.query(query, parameters)
+        return answer
+
+    def count_atoms(self) -> Tuple[int, int]:
+        local_answer = self.local_query_engine.count_atoms()
+        remote_answer = self.remote_das.count_atoms()
+        return tuple([x + y for x, y in zip(local_answer, remote_answer)])
+
+    def commit(self):
+        return self.remote_das.commit_changes()

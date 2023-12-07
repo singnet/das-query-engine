@@ -79,17 +79,9 @@ class TestPatternMatchingAnswer:
             if expected_match:
                 assert len(answer.assignments) == len(assignments)
                 ret1 = sorted(
-                    [
-                        sorted([f'{x}={y}' for x, y in get_items(a, key)])
-                        for a in answer.assignments
-                    ]
+                    [sorted([f'{x}={y}' for x, y in get_items(a, key)]) for a in answer.assignments]
                 )
-                ret2 = sorted(
-                    [
-                        sorted([f'{x}={y}' for x, y in d.items()])
-                        for d in assignments
-                    ]
-                )
+                ret2 = sorted([sorted([f'{x}={y}' for x, y in d.items()]) for d in assignments])
                 assert ret1 == ret2
 
         check_pattern(
@@ -119,12 +111,8 @@ class TestPatternMatchingAnswer:
             db,
             And(
                 [
-                    Link(
-                        'Inheritance', [Variable('V1'), Variable('V2')], True
-                    ),
-                    Link(
-                        'Similarity', [Variable('V1'), Variable('V2')], False
-                    ),
+                    Link('Inheritance', [Variable('V1'), Variable('V2')], True),
+                    Link('Similarity', [Variable('V1'), Variable('V2')], False),
                 ]
             ),
             False,
@@ -135,15 +123,9 @@ class TestPatternMatchingAnswer:
             db,
             And(
                 [
-                    Link(
-                        'Inheritance', [Variable('V1'), Variable('V3')], True
-                    ),
-                    Link(
-                        'Inheritance', [Variable('V2'), Variable('V3')], True
-                    ),
-                    Link(
-                        'Similarity', [Variable('V1'), Variable('V2')], False
-                    ),
+                    Link('Inheritance', [Variable('V1'), Variable('V3')], True),
+                    Link('Inheritance', [Variable('V2'), Variable('V3')], True),
+                    Link('Similarity', [Variable('V1'), Variable('V2')], False),
                 ]
             ),
             True,
@@ -185,12 +167,8 @@ class TestPatternMatchingAnswer:
             db,
             And(
                 [
-                    Link(
-                        'Inheritance', [Variable('V1'), Variable('V3')], True
-                    ),
-                    Link(
-                        'Inheritance', [Variable('V2'), Variable('V3')], True
-                    ),
+                    Link('Inheritance', [Variable('V1'), Variable('V3')], True),
+                    Link('Inheritance', [Variable('V2'), Variable('V3')], True),
                     Not(
                         Link(
                             'Similarity',
@@ -359,9 +337,7 @@ class TestPatternMatchingAnswer:
                         ],
                         False,
                     ),
-                    Link(
-                        'Similarity', [Variable('V1'), Variable('V2')], False
-                    ),
+                    Link('Similarity', [Variable('V1'), Variable('V2')], False),
                 ]
             ),
             True,
@@ -422,9 +398,7 @@ class TestPatternMatchingAnswer:
             db,
             And(
                 [
-                    Link(
-                        'Similarity', [Variable('V1'), Variable('V2')], False
-                    ),
+                    Link('Similarity', [Variable('V1'), Variable('V2')], False),
                     Link(
                         'Set',
                         [
@@ -575,9 +549,7 @@ class TestPatternMatchingAnswer:
                         ],
                         False,
                     ),
-                    Link(
-                        'Inheritance', [Variable('V1'), Variable('V2')], True
-                    ),
+                    Link('Inheritance', [Variable('V1'), Variable('V2')], True),
                 ]
             ),
             True,
@@ -608,9 +580,7 @@ class TestPatternMatchingAnswer:
             db,
             And(
                 [
-                    Link(
-                        'Inheritance', [Variable('V1'), Variable('V2')], True
-                    ),
+                    Link('Inheritance', [Variable('V1'), Variable('V2')], True),
                     Link(
                         'Set',
                         [
@@ -762,9 +732,7 @@ class TestPatternMatchingAnswer:
                             True,
                         )
                     ),
-                    Link(
-                        'Similarity', [Variable('V1'), Variable('V2')], False
-                    ),
+                    Link('Similarity', [Variable('V1'), Variable('V2')], False),
                 ]
             ),
             True,
@@ -814,9 +782,7 @@ class TestPatternMatchingAnswer:
                             True,
                         )
                     ),
-                    Link(
-                        'Similarity', [Variable('V1'), Variable('V2')], False
-                    ),
+                    Link('Similarity', [Variable('V1'), Variable('V2')], False),
                     Link(
                         'Set',
                         [
@@ -977,12 +943,8 @@ class TestPatternMatchingAnswer:
             [Node("Concept", "vine"), Node("Concept", "snake")],
             False,
         ).matched(db, answer)
-        assert not Link(
-            "Similarity", [Node("Concept", "vine")], False
-        ).matched(db, answer)
-        assert not Link(
-            "Similarity", [Node("Concept", "snake")], False
-        ).matched(db, answer)
+        assert not Link("Similarity", [Node("Concept", "vine")], False).matched(db, answer)
+        assert not Link("Similarity", [Node("Concept", "snake")], False).matched(db, answer)
         assert not Link(
             "Similarity",
             [
@@ -1029,54 +991,28 @@ class TestPatternMatchingAnswer:
         assert Link('Inheritance', [chimp, mammal], True).matched(db, answer)
         assert Link('Similarity', [human, monkey], False).matched(db, answer)
         assert Link('Similarity', [chimp, monkey], False).matched(db, answer)
-        assert Link('Inheritance', [Variable('V1'), mammal], True).matched(
+        assert Link('Inheritance', [Variable('V1'), mammal], True).matched(db, answer)
+        assert Link('Inheritance', [Variable('V1'), Variable('V2')], True).matched(db, answer)
+        assert not Link('Inheritance', [Variable('V1'), Variable('V1')], True).matched(db, answer)
+        assert Link('Inheritance', [Variable('V2'), Variable('V1')], True).matched(db, answer)
+        assert Link('Inheritance', [mammal, Variable('V1')], True).matched(db, answer)
+        assert not Link('Inheritance', [animal, Variable('V1')], True).matched(db, answer)
+        assert Link('Similarity', [Variable('V1'), Variable('V2')], False).matched(db, answer)
+        assert Link('Similarity', [human, Variable('V1')], False).matched(db, answer)
+        assert Link('Similarity', [Variable('V1'), human], False).matched(db, answer)
+        assert Link('List', [human, ent, Variable('V1'), Variable('V2')], True).matched(db, answer)
+        assert not Link('List', [human, Variable('V1'), Variable('V2'), ent], True).matched(
             db, answer
         )
-        assert Link(
-            'Inheritance', [Variable('V1'), Variable('V2')], True
-        ).matched(db, answer)
-        assert not Link(
-            'Inheritance', [Variable('V1'), Variable('V1')], True
-        ).matched(db, answer)
-        assert Link(
-            'Inheritance', [Variable('V2'), Variable('V1')], True
-        ).matched(db, answer)
-        assert Link('Inheritance', [mammal, Variable('V1')], True).matched(
+        assert not Link('List', [ent, Variable('V1'), Variable('V2'), human], True).matched(
             db, answer
         )
-        assert not Link('Inheritance', [animal, Variable('V1')], True).matched(
+        assert Link('Set', [human, ent, Variable('V1'), Variable('V2')], False).matched(db, answer)
+        assert Link('Set', [human, Variable('V1'), Variable('V2'), ent], False).matched(db, answer)
+        assert Link('Set', [ent, Variable('V1'), Variable('V2'), human], False).matched(db, answer)
+        assert Link('Set', [monkey, Variable('V1'), Variable('V2'), chimp], False).matched(
             db, answer
         )
-        assert Link(
-            'Similarity', [Variable('V1'), Variable('V2')], False
-        ).matched(db, answer)
-        assert Link('Similarity', [human, Variable('V1')], False).matched(
-            db, answer
-        )
-        assert Link('Similarity', [Variable('V1'), human], False).matched(
-            db, answer
-        )
-        assert Link(
-            'List', [human, ent, Variable('V1'), Variable('V2')], True
-        ).matched(db, answer)
-        assert not Link(
-            'List', [human, Variable('V1'), Variable('V2'), ent], True
-        ).matched(db, answer)
-        assert not Link(
-            'List', [ent, Variable('V1'), Variable('V2'), human], True
-        ).matched(db, answer)
-        assert Link(
-            'Set', [human, ent, Variable('V1'), Variable('V2')], False
-        ).matched(db, answer)
-        assert Link(
-            'Set', [human, Variable('V1'), Variable('V2'), ent], False
-        ).matched(db, answer)
-        assert Link(
-            'Set', [ent, Variable('V1'), Variable('V2'), human], False
-        ).matched(db, answer)
-        assert Link(
-            'Set', [monkey, Variable('V1'), Variable('V2'), chimp], False
-        ).matched(db, answer)
 
     def test_ordered_assignment_sets(self):
         va1 = OrderedAssignment()
@@ -1160,33 +1096,17 @@ class TestPatternMatchingAnswer:
         a8 = build_ordered_assignment({'v4': '1', 'v5': '2', 'v1': '3'})
 
         assert a1.evaluate_compatibility(a2) == CompatibilityStatus.EQUAL
-        assert (
-            a1.evaluate_compatibility(a3)
-            == CompatibilityStatus.SECOND_COVERS_FIRST
-        )
-        assert (
-            a3.evaluate_compatibility(a1)
-            == CompatibilityStatus.FIRST_COVERS_SECOND
-        )
-        assert (
-            a4.evaluate_compatibility(a2)
-            == CompatibilityStatus.SECOND_COVERS_FIRST
-        )
-        assert (
-            a2.evaluate_compatibility(a4)
-            == CompatibilityStatus.FIRST_COVERS_SECOND
-        )
+        assert a1.evaluate_compatibility(a3) == CompatibilityStatus.SECOND_COVERS_FIRST
+        assert a3.evaluate_compatibility(a1) == CompatibilityStatus.FIRST_COVERS_SECOND
+        assert a4.evaluate_compatibility(a2) == CompatibilityStatus.SECOND_COVERS_FIRST
+        assert a2.evaluate_compatibility(a4) == CompatibilityStatus.FIRST_COVERS_SECOND
         assert a2.evaluate_compatibility(a5) == CompatibilityStatus.NO_COVERING
         assert a5.evaluate_compatibility(a2) == CompatibilityStatus.NO_COVERING
         assert a2.evaluate_compatibility(a6) == CompatibilityStatus.NO_COVERING
         assert a6.evaluate_compatibility(a2) == CompatibilityStatus.NO_COVERING
         assert a3.evaluate_compatibility(a7) == CompatibilityStatus.NO_COVERING
-        assert (
-            a3.evaluate_compatibility(a8) == CompatibilityStatus.INCOMPATIBLE
-        )
-        assert (
-            a8.evaluate_compatibility(a4) == CompatibilityStatus.INCOMPATIBLE
-        )
+        assert a3.evaluate_compatibility(a8) == CompatibilityStatus.INCOMPATIBLE
+        assert a8.evaluate_compatibility(a4) == CompatibilityStatus.INCOMPATIBLE
 
     def test_join(self):
         a1 = build_ordered_assignment({'v1': '1', 'v2': '2'})
@@ -1198,46 +1118,20 @@ class TestPatternMatchingAnswer:
         a7 = build_ordered_assignment({'v1': '2', 'v2': '1'})
 
         r = build_ordered_assignment({'v1': '1', 'v2': '2'})
-        assert (
-            a1.evaluate_compatibility(a1.join(a2)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a1.join(a2)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a1.join(a3)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a2.join(a1)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a3.join(a1)) == CompatibilityStatus.EQUAL
-        )
+        assert a1.evaluate_compatibility(a1.join(a2)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a1.join(a2)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a1.join(a3)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a2.join(a1)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a3.join(a1)) == CompatibilityStatus.EQUAL
         r = build_ordered_assignment({'v1': '1', 'v2': '2', 'v3': '3'})
-        assert (
-            a4.evaluate_compatibility(a1.join(a4)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a1.join(a4)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a1.join(a5)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a4.join(a1)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a5.join(a1)) == CompatibilityStatus.EQUAL
-        )
-        r = build_ordered_assignment(
-            {'v1': '1', 'v2': '2', 'v3': '3', 'v4': '4'}
-        )
-        assert (
-            r.evaluate_compatibility(a1.join(a6)) == CompatibilityStatus.EQUAL
-        )
-        assert (
-            r.evaluate_compatibility(a6.join(a1)) == CompatibilityStatus.EQUAL
-        )
+        assert a4.evaluate_compatibility(a1.join(a4)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a1.join(a4)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a1.join(a5)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a4.join(a1)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a5.join(a1)) == CompatibilityStatus.EQUAL
+        r = build_ordered_assignment({'v1': '1', 'v2': '2', 'v3': '3', 'v4': '4'})
+        assert r.evaluate_compatibility(a1.join(a6)) == CompatibilityStatus.EQUAL
+        assert r.evaluate_compatibility(a6.join(a1)) == CompatibilityStatus.EQUAL
         assert a1.join(a7) is None
         assert a7.join(a1) is None
 

@@ -8,18 +8,14 @@ from hyperon_das.pattern_matcher.pattern_matcher import LogicalExpression
 
 
 class FunctionsClient:
-    def __init__(
-        self, url: str, numbers_servers: int = 0, name: Optional[str] = None
-    ):
+    def __init__(self, url: str, numbers_servers: int = 0, name: Optional[str] = None):
         if not name:
             self.name = f'server-{numbers_servers}'
         self.url = url
 
     def _send_request(self, payload) -> str | dict | int:
         try:
-            response = requests.request(
-                'POST', url=self.url, data=json.dumps(payload)
-            )
+            response = requests.request('POST', url=self.url, data=json.dumps(payload))
             if response.status_code == 200:
                 text = response.text.rstrip('\n')
                 try:

@@ -7,12 +7,7 @@ from hyperon_das_atomdb import UNORDERED_LINK_TYPES, WILDCARD
 from hyperon_das.api import DistributedAtomSpace
 from hyperon_das.client import FunctionsClient
 from hyperon_das.exceptions import QueryParametersException
-from hyperon_das.pattern_matcher.pattern_matcher import (
-    And,
-    Link,
-    Not,
-    Variable,
-)
+from hyperon_das.pattern_matcher.pattern_matcher import And, Link, Not, Variable
 from hyperon_das.utils import QueryOutputFormat
 from tests.unit.mock import DistributedAtomSpaceMock
 
@@ -105,9 +100,7 @@ class TestDistributedAtomSpace:
             ]
         )
 
-        ret = das.pattern_matcher_query(
-            and_expression, {'return_type': QueryOutputFormat.HANDLE}
-        )
+        ret = das.pattern_matcher_query(and_expression, {'return_type': QueryOutputFormat.HANDLE})
         assert len(ret['mapping']) == 7
         assert ret['negation'] == False
 
@@ -123,9 +116,7 @@ class TestDistributedAtomSpace:
         assert len(json.loads(ret_json['mapping'])) == 7
         assert ret['negation'] == False
 
-        not_expression = Not(
-            Link("Inheritance", ordered=True, targets=[V1, V2])
-        )
+        not_expression = Not(Link("Inheritance", ordered=True, targets=[V1, V2]))
         ret = das.pattern_matcher_query(not_expression)
         assert ret['negation'] == True
 
@@ -192,16 +183,11 @@ class TestDistributedAtomSpace:
                 },
             )
         assert exc_info.type is QueryParametersException
-        assert (
-            exc_info.value.args[1]
-            == "possible values ['toplevel_only', 'return_type']"
-        )
+        assert exc_info.value.args[1] == "possible values ['toplevel_only', 'return_type']"
 
     def test_get_node(self, das: DistributedAtomSpace):
         human = das.get_node('Concept', "human")
-        human_document = das.get_node(
-            'Concept', "human", output_format=QueryOutputFormat.ATOM_INFO
-        )
+        human_document = das.get_node('Concept', "human", output_format=QueryOutputFormat.ATOM_INFO)
         assert human_document["handle"] == human
         assert human_document["type"] == 'Concept'
         assert human_document["name"] == "human"
@@ -210,9 +196,7 @@ class TestDistributedAtomSpace:
         human = nodes.human
         mammal = nodes.mammal
         assert human == das.get_atom(human)
-        human_document = das.get_atom(
-            human, output_format=QueryOutputFormat.ATOM_INFO
-        )
+        human_document = das.get_atom(human, output_format=QueryOutputFormat.ATOM_INFO)
         assert human_document["handle"] == human
         assert human_document["type"] == 'Concept'
         assert human_document["name"] == "human"
@@ -300,9 +284,7 @@ class TestDistributedAtomSpace:
             name = das.get_node_name("blah")
 
     def test_get_links_with_link_templates(self, das, all_similarities):
-        link_handles = das.get_links(
-            link_type='Similarity', target_types=['Concept', 'Concept']
-        )
+        link_handles = das.get_links(link_type='Similarity', target_types=['Concept', 'Concept'])
         links = das.get_links(
             link_type='Similarity',
             target_types=['Concept', 'Concept'],
@@ -317,9 +299,7 @@ class TestDistributedAtomSpace:
 
     def test_get_links_with_patterns(self, das, all_inheritances, nodes):
         def _check_pattern(link_type, targets, expected):
-            link_handles = list(
-                set(das.get_links(link_type=link_type, targets=targets))
-            )
+            link_handles = list(set(das.get_links(link_type=link_type, targets=targets)))
             links = das.get_links(
                 link_type=link_type,
                 targets=targets,
@@ -346,7 +326,7 @@ class TestDistributedAtomSpace:
                 else:
                     assert link["targets"] in expected
 
-        #_check_pattern(
+        # _check_pattern(
         #    'Similarity',
         #    [nodes.human, WILDCARD],
         #    [
@@ -354,8 +334,8 @@ class TestDistributedAtomSpace:
         #        set([nodes.human, nodes.chimp]),
         #        set([nodes.human, nodes.ent]),
         #    ],
-        #)
-        #_check_pattern(
+        # )
+        # _check_pattern(
         #    'Similarity',
         #    [WILDCARD, nodes.human],
         #    [
@@ -363,7 +343,7 @@ class TestDistributedAtomSpace:
         #        set([nodes.human, nodes.chimp]),
         #        set([nodes.human, nodes.ent]),
         #    ],
-        #)
+        # )
         _check_pattern('Inheritance', [WILDCARD, WILDCARD], all_inheritances)
         _check_pattern(
             'Inheritance',
