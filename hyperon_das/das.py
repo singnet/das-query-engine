@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
+from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
-from hyperon_das_atomdb.exceptions import (
-    # InvalidAtomDB,
+from hyperon_das_atomdb.exceptions import (  # InvalidAtomDB,
     AtomDoesNotExistException,
     LinkDoesNotExistException,
     NodeDoesNotExistException,
@@ -32,10 +32,10 @@ class DistributedAtomSpace:
         if atomdb_parameter == "ram":
             self.backend = InMemoryDB()
         elif atomdb_parameter == "redis_mongo":
-            mongo_db_hostname = kwargs.get('mongo_db_hostname')
-            mongo_db_port = kwargs.get('mongo_db_port')
-            mongo_db_username = kwargs.get('mongo_db_username')
-            mongo_db_password = kwargs.get('mongo_db_password')
+            mongo_hostname = kwargs.get('mongo_hostname')
+            mongo_port = kwargs.get('mongo_port')
+            mongo_username = kwargs.get('mongo_username')
+            mongo_password = kwargs.get('mongo_password')
             mongo_tls_ca_file = kwargs.get('mongo_tls_ca_file')
             redis_hostname = kwargs.get('redis_hostname')
             redis_port = kwargs.get('redis_port')
@@ -44,24 +44,23 @@ class DistributedAtomSpace:
             redis_cluster = kwargs.get('redis_cluster')
             redis_ssl = kwargs.get('redis_ssl')
             required_parameters = [
-                mongo_db_hostname,
-                mongo_db_port,
-                mongo_db_username,
-                mongo_db_password,
+                mongo_hostname,
+                mongo_port,
+                mongo_username,
+                mongo_password,
                 redis_hostname,
                 redis_port,
             ]
-            if not all([False if p is None else True for p in required_parameters]):
+            if not all(required_parameters):
                 raise InvalidDASParameters(
                     message='Send required parameters to instantiate a RedisMongo',
-                    details="'mongo_db_hostname', 'mongo_db_port', 'mongo_db_username', 'mongo_db_password', 'redis_hostname', 'redis_port'",
+                    details="'mongo_hostname', 'mongo_port', 'mongo_username', 'mongo_password', 'redis_hostname', 'redis_port'",
                 )
-            # Implemnt this parameters in ATOMDB
             self.backend = RedisMongoDB(
-                mongo_db_hostname=mongo_db_hostname,
-                mongo_db_port=mongo_db_port,
-                mongo_db_username=mongo_db_username,
-                mongo_db_password=mongo_db_password,
+                mongo_hostname=mongo_hostname,
+                mongo_port=mongo_port,
+                mongo_username=mongo_username,
+                mongo_password=mongo_password,
                 mongo_tls_ca_file=mongo_tls_ca_file,
                 redis_hostname=redis_hostname,
                 redis_port=redis_port,
@@ -75,9 +74,11 @@ class DistributedAtomSpace:
                     message='Can`t instantiate a RedisMongo with query_engine=`local`'
                 )
         else:
-            # Implemente this exception in ATOMDB
-            # raise InvalidAtomDB
             pass
+            """raise InvalidAtomDB(
+                message='This type is an invalid AtomDB',
+                details='Send `ram` or `redis_mongo`'
+            )"""
 
         if query_engine_parameter == 'local':
             self.query_engine = LocalQueryEngine(self.backend, kwargs)
@@ -181,6 +182,54 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_link(link_type, link_targets)
 
+    def get_links(
+        self, link_type: str, target_types: str = None, targets: List[str] = None
+    ) -> Union[List[str], List[Dict]]:
+        """
+        Retrieve information about Links based on specified criteria.
+
+        This method retrieves information about links from the database based on the provided criteria.
+        The criteria includes the link type, and can include target types and specific target identifiers.
+        The retrieved links information can be presented in different output formats as specified
+        by the output_format parameter.
+
+        Args:
+            link_type (str): The type of links being queried.
+            target_types (str, optional): The type(s) of targets being queried. Defaults to None.
+            targets (List[str], optional): A list of target identifiers that the links are associated with.
+                Defaults to None.
+
+        Returns:
+            Union[List[str], List[Dict]]: A list of dictionaries containing detailed information of the links
+
+        Raises:
+            ValueError: If an invalid output format is provided or if the provided parameters are invalid.
+
+        Example:
+            >>> result = obj.get_links(
+                    link_type='Similarity',
+                    target_types=['Concept', 'Concept'],
+                    output_format=QueryOutputFormat.ATOM_INFO
+                )
+            >>> print(result)
+            [
+                {
+                    'handle': 'a45af31b43ee5ea271214338a5a5bd61',
+                    'type': 'Similarity',
+                    'template': ['Similarity', 'Concept', 'Concept'],
+                    'targets': [...]
+                },
+                {
+                    'handle': '2d7abd27644a9c08a7ca2c8d68338579',
+                    'type': 'Similarity',
+                    'template': ['Similarity', 'Concept', 'Concept'],
+                    'targets': [...]
+                },
+                ...
+            ]
+        """
+        return self.query_engine.get_links(link_type, target_types, targets)
+
     def count_atoms(self) -> Tuple[int, int]:
         """
         This method is useful for returning the count of atoms in the database.
@@ -207,7 +256,7 @@ class DistributedAtomSpace:
         Args:
             query (Dict[str, Any]): A pattern described as a link (possibly with nested links) with
             nodes and variables used to query the knoeledge base.
-            extra_paramaters (Dict[str, Any], optional): query optional parameters
+            paramaters (Dict[str, Any], optional): query optional parameters
 
         Returns:
             List[Dict[str, Any]]: a list of dicts with the matching subgraphs
@@ -295,6 +344,12 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
+    def get_links(
+        self, link_type: str, target_types: str = None, targets: List[str] = None
+    ) -> Union[List[str], List[Dict]]:
+        ...
+
+    @abstractmethod
     def query(
         self,
         query: Dict[str, Any],
@@ -355,23 +410,54 @@ class LocalQueryEngine(QueryEngine):
                 )
             )
 
+    def _to_link_dict_list(self, db_answer: Union[List[str], List[Dict]]) -> List[Dict]:
+        if not db_answer:
+            return []
+        flat_handle = isinstance(db_answer[0], str)
+        answer = []
+        for atom in db_answer:
+            if flat_handle:
+                handle = atom
+                arity = -1
+            else:
+                handle, targets = atom
+                arity = len(targets)
+            answer.append(self.local_backend.get_atom_as_dict(handle, arity))
+        return answer
+
     def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
         try:
             return self.local_backend.get_atom(handle)
-        except AtomDoesNotExist:
+        except AtomDoesNotExistException:
             return None
 
     def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
         try:
-            return self.local_backend.get_node(node_type, node_name)
-        except NodeDoesNotExist:
+            node_handle = self.local_backend.node_handle(node_type, node_name)
+            return self.local_backend.get_atom(node_handle)
+        except AtomDoesNotExistException:
             return None
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
         try:
-            return self.local_backend.get_link(link_type, link_targets)
-        except LinkDoesNotExist:
+            link_handle = self.local_backend.link_handle(link_type, link_targets)
+            return self.local_backend.get_atom(link_handle)
+        except AtomDoesNotExistException:
             return None
+
+    def get_links(
+        self, link_type: str, target_types: str = None, link_targets: List[str] = None
+    ) -> Union[List[str], List[Dict]]:
+        if target_types is not None and link_type != WILDCARD:
+            db_answer = self.local_backend.get_matched_type_template([link_type, *target_types])
+        elif link_targets is not None:
+            db_answer = self.local_backend.get_matched_links(link_type, link_targets)
+        elif link_type != WILDCARD:
+            db_answer = self.local_backend.get_matched_type(link_type)
+        else:
+            self._error(ValueError("Invalid parameters"))
+
+        return self._to_link_dict_list(db_answer)
 
     def query(
         self,
@@ -449,6 +535,13 @@ class RemoteQueryEngine(QueryEngine):
         if not local:
             return self.remote_das.get_link(link_type, link_targets)
 
+    def get_links(
+        self, link_type: str, target_types: str = None, link_targets: List[str] = None
+    ) -> Union[List[str], List[Dict]]:
+        local = self.local_query_engine.get_links(link_type, target_types, link_targets)
+        if not local:
+            return self.remote_das.get_links(link_type, target_types, link_targets)
+
     def query(
         self,
         query: Dict[str, Any],
@@ -477,17 +570,24 @@ class RemoteQueryEngine(QueryEngine):
 
 
 if __name__ == '__main__':
-    das = DistributedAtomSpace(query_engine='remote', host='44.198.65.35')
+    das = DistributedAtomSpace()
     das.add_link(
         {
-            'type': 'Inheritance',
+            'type': 'Similarity',
             'targets': [
-                {'type': 'Concept', 'name': 'capozzoli'},
-                {'type': 'Concept', 'name': 'mammal'},
+                {'type': 'Concept', 'name': 'human'},
+                {'type': 'Concept', 'name': 'monkey'},
             ],
         }
     )
-    das.count_atoms()
+    human = das.backend.get_node_handle('Concept', 'human')
+    monkey = das.backend.get_node_handle('Concept', 'monkey')
+    link = das.backend.get_link_handle('Similarity', [human, monkey])
+    a = das.backend.get_atom_as_dict(human)
+    b = das.backend.get_atom_as_dict(link)
+    c = das.backend.get_atom_as_deep_representation(human)
+    d = das.backend.get_atom_as_deep_representation(link)
+    """
     das.query(
         {
             "atom_type": "link",
@@ -496,6 +596,7 @@ if __name__ == '__main__':
                 {"atom_type": "node", "type": "Concept", "name": "human"},
                 {"atom_type": "node", "type": "Concept", "name": "monkey"},
             ],
-        }
-    )
+        },
+        {'query_scope': 'local_only'}
+    )"""
     print('END')

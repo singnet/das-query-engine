@@ -377,7 +377,7 @@ class TestQueries:
                 {"atom_type": "variable", "name": "v2"},
             ],
         }
-        for query_answer in das._recursive_query(exp):
+        for query_answer in das.query_engine._recursive_query(exp):
             link = query_answer.subgraph
             assignment = query_answer.assignment
             assert assignment.mapping["v1"] == link["targets"][0]["handle"]

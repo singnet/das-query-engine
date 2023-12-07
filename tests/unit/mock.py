@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from hyperon_das_atomdb import WILDCARD, AtomDB
 
 from hyperon_das import DistributedAtomSpace
+from hyperon_das.das import LocalQueryEngine
 
 
 def _build_node_handle(node_type: str, node_name: str) -> str:
@@ -23,7 +24,8 @@ def _build_link_handle(link_type: str, target_handles: List[str]) -> str:
 
 class DistributedAtomSpaceMock(DistributedAtomSpace):
     def __init__(self) -> None:
-        self.db = DatabaseMock()
+        self.backend = DatabaseMock()
+        self.query_engine = LocalQueryEngine(self.backend)
 
 
 class DatabaseMock(AtomDB):
@@ -140,6 +142,19 @@ class DatabaseMock(AtomDB):
             if node == node_handle:
                 return node
         return None
+
+    def node_handle(self, node_type: str, node_name: str) -> str:
+        return _build_node_handle(node_type, node_name)
+
+    def link_handle(self, link_type: str, target_handles: List[str]) -> str:
+        return _build_link_handle(link_type, target_handles)
+
+    def get_atom(self, handle: str):
+        for node in self.all_nodes:
+            if node == handle:
+                return node
+        for link in self.all_links:
+            return link
 
     def is_ordered(self, handle: str) -> bool:
         for link in self.all_links:

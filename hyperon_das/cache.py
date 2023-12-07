@@ -92,7 +92,7 @@ class LazyQueryEvaluator(ProductIterator):
     def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
         targets = []
         for target_handle in link["targets"]:
-            atom = self.das.db.get_atom_as_dict(target_handle)
+            atom = self.das.local_backend.get_atom_as_dict(target_handle)
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
@@ -115,12 +115,7 @@ class LazyQueryEvaluator(ProductIterator):
                 wildcard_flag = True
             else:
                 target_handle.append(target["handle"])
-        das_query_answer = self.das.get_links(
-            self.link_type,
-            None,
-            target_handle,
-            output_format=QueryOutputFormat.ATOM_INFO,
-        )
+        das_query_answer = self.das.get_links(self.link_type, None, target_handle)
         lazy_query_answer = []
         for answer in das_query_answer:
             assignment = None
