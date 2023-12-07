@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
-from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import (
     AtomDoesNotExist,
@@ -53,7 +52,11 @@ class DistributedAtomSpace:
                 redis_port,
             ]
             if not all([False if p is None else True for p in required_parameters]):
-                raise InvalidDASParameters
+                raise InvalidDASParameters(
+                    message='Send required parameters to instantiate a RedisMongo',
+                    details="'mongo_db_hostname', 'mongo_db_port', 'mongo_db_username', 'mongo_db_password', 'redis_hostname', 'redis_port'",
+                )
+            # Implemnt this parameters in ATOMDB
             self.backend = RedisMongoDB(
                 mongo_db_hostname=mongo_db_hostname,
                 mongo_db_port=mongo_db_port,
@@ -68,8 +71,11 @@ class DistributedAtomSpace:
                 redis_ssl=redis_ssl,
             )
             if query_engine_parameter != "local":
-                raise InvalidDASParameters
+                raise InvalidDASParameters(
+                    message='Can`t instantiate a RedisMongo with query_engine=`local`'
+                )
         else:
+            # Implemente this exception in ATOMDB
             raise InvalidAtomDB
 
         if query_engine_parameter == 'local':
@@ -77,17 +83,14 @@ class DistributedAtomSpace:
         elif query_engine_parameter == "remote":
             self.query_engine = RemoteQueryEngine(self.backend, kwargs)
         else:
-            raise InvalidQueryEngine
-
-    @property
-    def remote_das(self):
-        return self.__remote_das
+            raise InvalidQueryEngine(
+                message='The possible values are: `local` or `remote`',
+                details=f'query_engine={query_engine_parameter}',
+            )
 
     def _error(self, exception: Exception):
         logger().error(str(exception))
         raise exception
-
-    # query_engine methods
 
     def get_atom(self, handle: str) -> Dict[str, Any]:
         """
@@ -285,8 +288,6 @@ class DistributedAtomSpace:
     def commit_changes(self):
         self.query_engine.commit()
 
-    # backend methods
-
     def get_node_handle(self, node_type: str, node_name: str) -> str:
         return self.backend.node_handle(node_type, node_name)
 
@@ -392,6 +393,24 @@ class LocalQueryEngine(QueryEngine):
                 )
             )
 
+    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
+        try:
+            return self.local_backend.get_atom(handle)
+        except AtomDoesNotExist:
+            return None
+
+    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
+        try:
+            return self.local_backend.get_node(node_type, node_name)
+        except NodeDoesNotExist:
+            return None
+
+    def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
+        try:
+            return self.local_backend.get_link(link_type, link_targets)
+        except LinkDoesNotExist:
+            return None
+
     def query(
         self,
         query: Dict[str, Any],
@@ -412,24 +431,6 @@ class LocalQueryEngine(QueryEngine):
 
     def count_atoms(self) -> Tuple[int, int]:
         return self.local_backend.count_atoms()
-
-    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
-        try:
-            return self.local_backend.get_atom(handle)
-        except AtomDoesNotExist:
-            return None
-
-    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
-        try:
-            return self.local_backend.get_node(node_type, node_name)
-        except NodeDoesNotExist:
-            return None
-
-    def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
-        try:
-            return self.local_backend.get_link(link_type, link_targets)
-        except LinkDoesNotExist:
-            return None
 
     def commit(self):
         self.local_backend.commit()

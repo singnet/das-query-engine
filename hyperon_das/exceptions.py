@@ -40,3 +40,11 @@ class ConnectionServerException(BaseException):
 
 class RetryException(BaseException):
     ...  # pragma no cover
+
+
+class InvalidDASParameters(BaseException):
+    ...  # pragma no cover
+
+
+class InvalidQueryEngine(BaseException):
+    ...  # pragma no cover
