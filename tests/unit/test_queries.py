@@ -1,4 +1,4 @@
-from hyperon_das.api import DistributedAtomSpace
+from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.utils import QueryOutputFormat
 
 

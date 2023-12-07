@@ -5,7 +5,7 @@ from typing import List
 import pytest
 from hyperon_das_atomdb.adapters import InMemoryDB
 
-from hyperon_das.api import DistributedAtomSpace
+from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.exceptions import QueryParametersException
 from hyperon_das.pattern_matcher import (
     And,
