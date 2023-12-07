@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
-from hyperon_das_atomdb.exceptions import (  # InvalidAtomDB,
+from hyperon_das_atomdb.exceptions import (
     AtomDoesNotExistException,
     LinkDoesNotExistException,
     NodeDoesNotExistException,
@@ -74,11 +74,11 @@ class DistributedAtomSpace:
                     message='Can`t instantiate a RedisMongo with query_engine=`local`'
                 )
         else:
-            pass
-            """raise InvalidAtomDB(
-                message='This type is an invalid AtomDB',
-                details='Send `ram` or `redis_mongo`'
-            )"""
+            raise ValueError
+            # implement this exception in AtomDB
+            # raise InvalidAtomDB(
+            #    message='This type is an invalid AtomDB', details='Send `ram` or `redis_mongo`'
+            # )
 
         if query_engine_parameter == 'local':
             self.query_engine = LocalQueryEngine(self.backend, kwargs)
@@ -567,36 +567,3 @@ class RemoteQueryEngine(QueryEngine):
 
     def commit(self):
         return self.remote_das.commit_changes()
-
-
-if __name__ == '__main__':
-    das = DistributedAtomSpace()
-    das.add_link(
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'human'},
-                {'type': 'Concept', 'name': 'monkey'},
-            ],
-        }
-    )
-    human = das.backend.get_node_handle('Concept', 'human')
-    monkey = das.backend.get_node_handle('Concept', 'monkey')
-    link = das.backend.get_link_handle('Similarity', [human, monkey])
-    a = das.backend.get_atom_as_dict(human)
-    b = das.backend.get_atom_as_dict(link)
-    c = das.backend.get_atom_as_deep_representation(human)
-    d = das.backend.get_atom_as_deep_representation(link)
-    """
-    das.query(
-        {
-            "atom_type": "link",
-            "type": "Similarity",
-            "targets": [
-                {"atom_type": "node", "type": "Concept", "name": "human"},
-                {"atom_type": "node", "type": "Concept", "name": "monkey"},
-            ],
-        },
-        {'query_scope': 'local_only'}
-    )"""
-    print('END')

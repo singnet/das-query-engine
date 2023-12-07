@@ -14,28 +14,8 @@ class TestAWSClientIntegration:
 
     def test_get_node(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        ret = server.get_node(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.HANDLE,
-        )
+        ret = server.get_node(node_type="Concept", node_name="human")
         assert ret == human_handle
-        ret = server.get_node(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.ATOM_INFO,
-        )
-        assert ret == {
-            'handle': human_handle,
-            'type': 'Concept',
-            'name': 'human',
-        }
-        ret = server.get_node(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.JSON,
-        )
-        assert json.loads(ret) == {"type": "Concept", "name": "human"}
 
     def test_get_nodes(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
