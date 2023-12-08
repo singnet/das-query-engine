@@ -8,9 +8,9 @@ from hyperon_das.pattern_matcher.pattern_matcher import LogicalExpression
 
 
 class FunctionsClient:
-    def __init__(self, url: str, numbers_servers: int = 0, name: Optional[str] = None):
+    def __init__(self, url: str, server_count: int = 0, name: Optional[str] = None):
         if not name:
-            self.name = f'server-{numbers_servers}'
+            self.name = f'server-{server_count}'
         self.url = url
 
     def _send_request(self, payload) -> str | dict | int:
@@ -27,20 +27,6 @@ class FunctionsClient:
                 return response.text
         except requests.exceptions.RequestException as e:
             raise e
-
-    def get_node_handle(self, node_type: str, node_name: str) -> str:
-        payload = {
-            'action': 'get_node_handle',
-            'input': {'node_type': node_type, 'node_name': node_name},
-        }
-        return self._send_request(payload)
-
-    def get_link_handle(self, link_type: str, link_targets: List[str]) -> str:
-        payload = {
-            'action': 'get_link_handle',
-            'input': {'link_type': link_type, 'link_targets': link_targets},
-        }
-        return self._send_request(payload)
 
     def get_atom(self, handle: str) -> Union[str, Dict]:
         payload = {
@@ -63,6 +49,19 @@ class FunctionsClient:
         }
         return self._send_request(payload)
 
+    def get_links(
+        self, link_type: str, target_types: str = None, link_targets: List[str] = None
+    ) -> Union[List[str], List[Dict]]:
+        payload = {
+            'action': 'get_links',
+            'input': {
+                'link_type': link_type,
+                'target_types': target_types,
+                'link_targets': link_targets,
+            },
+        }
+        return self._send_request(payload)
+
     def query(
         self,
         query: Dict[str, Any],
@@ -82,9 +81,9 @@ class FunctionsClient:
         }
         return self._send_request(payload)
 
-    def clear_database(self) -> None:
+    def commit_changes(self) -> Tuple[int, int]:
         payload = {
-            'action': 'clear_database',
+            'action': 'commit_changes',
             'input': {},
         }
         return self._send_request(payload)

@@ -3,11 +3,10 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
-from hyperon_das_atomdb import WILDCARD
+from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import (
     AtomDoesNotExistException,
-    LinkDoesNotExistException,
     NodeDoesNotExistException,
 )
 
@@ -32,52 +31,14 @@ class DistributedAtomSpace:
         if atomdb_parameter == "ram":
             self.backend = InMemoryDB()
         elif atomdb_parameter == "redis_mongo":
-            mongo_hostname = kwargs.get('mongo_hostname')
-            mongo_port = kwargs.get('mongo_port')
-            mongo_username = kwargs.get('mongo_username')
-            mongo_password = kwargs.get('mongo_password')
-            mongo_tls_ca_file = kwargs.get('mongo_tls_ca_file')
-            redis_hostname = kwargs.get('redis_hostname')
-            redis_port = kwargs.get('redis_port')
-            redis_username = kwargs.get('redis_username')
-            redis_password = kwargs.get('redis_password')
-            redis_cluster = kwargs.get('redis_cluster')
-            redis_ssl = kwargs.get('redis_ssl')
-            required_parameters = [
-                mongo_hostname,
-                mongo_port,
-                mongo_username,
-                mongo_password,
-                redis_hostname,
-                redis_port,
-            ]
-            if not all(required_parameters):
-                raise InvalidDASParameters(
-                    message='Send required parameters to instantiate a RedisMongo',
-                    details="'mongo_hostname', 'mongo_port', 'mongo_username', 'mongo_password', 'redis_hostname', 'redis_port'",
-                )
-            self.backend = RedisMongoDB(
-                mongo_hostname=mongo_hostname,
-                mongo_port=mongo_port,
-                mongo_username=mongo_username,
-                mongo_password=mongo_password,
-                mongo_tls_ca_file=mongo_tls_ca_file,
-                redis_hostname=redis_hostname,
-                redis_port=redis_port,
-                redis_username=redis_username,
-                redis_password=redis_password,
-                redis_cluster=redis_cluster,
-                redis_ssl=redis_ssl,
-            )
+            self.backend = RedisMongoDB(kwargs)
             if query_engine_parameter != "local":
-                raise InvalidDASParameters(
-                    message='Can`t instantiate a RedisMongo with query_engine=`local`'
-                )
+                raise InvalidDASParameters(message="query_engine parameter must be 'local'")
         else:
             raise ValueError
             # implement this exception in AtomDB
             # raise InvalidAtomDB(
-            #    message='This type is an invalid AtomDB', details='Send `ram` or `redis_mongo`'
+            #    message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'"
             # )
 
         if query_engine_parameter == 'local':
@@ -183,7 +144,7 @@ class DistributedAtomSpace:
         return self.query_engine.get_link(link_type, link_targets)
 
     def get_links(
-        self, link_type: str, target_types: str = None, targets: List[str] = None
+        self, link_type: str, target_types: str = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
         """
         Retrieve information about Links based on specified criteria.
@@ -228,7 +189,7 @@ class DistributedAtomSpace:
                 ...
             ]
         """
-        return self.query_engine.get_links(link_type, target_types, targets)
+        return self.query_engine.get_links(link_type, target_types, link_targets)
 
     def count_atoms(self) -> Tuple[int, int]:
         """
@@ -311,11 +272,13 @@ class DistributedAtomSpace:
     def commit_changes(self):
         self.query_engine.commit()
 
-    def get_node_handle(self, node_type: str, node_name: str) -> str:
-        return self.backend.node_handle(node_type, node_name)
+    @staticmethod
+    def get_node_handle(node_type: str, node_name: str) -> str:
+        return AtomDB.node_handle(node_type, node_name)
 
-    def get_link_handle(self, link_type: str, link_targets: List[str]) -> str:
-        return self.backend.link_handle(link_type, link_targets)
+    @staticmethod
+    def get_link_handle(link_type: str, link_targets: List[str]) -> str:
+        return AtomDB.link_handle(link_type, link_targets)
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         return self.backend.add_node(node_params)
@@ -325,9 +288,8 @@ class DistributedAtomSpace:
 
     def clear(self) -> None:
         """Clear all data"""
-        ret = self.backend.clear_database()
+        self.backend.clear_database()
         logger().debug('The database has been cleaned.')
-        return ret
 
 
 class QueryEngine(ABC):
@@ -345,7 +307,7 @@ class QueryEngine(ABC):
 
     @abstractmethod
     def get_links(
-        self, link_type: str, target_types: str = None, targets: List[str] = None
+        self, link_type: str, target_types: str = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
         ...
 
