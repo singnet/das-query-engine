@@ -5,10 +5,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
-from hyperon_das_atomdb.exceptions import (
-    AtomDoesNotExistException,
-    NodeDoesNotExistException,
-)
+from hyperon_das_atomdb.exceptions import AtomDoesNotExistException, NodeDoesNotExistException
 
 from hyperon_das.cache import AndEvaluator, LazyQueryEvaluator, ListIterator, QueryAnswerIterator
 from hyperon_das.client import FunctionsClient
@@ -270,20 +267,112 @@ class DistributedAtomSpace:
         return self.query_engine.query(query, parameters)
 
     def commit_changes(self):
+        """This method applies changes made locally to the remote server"""
         self.query_engine.commit()
 
     @staticmethod
     def get_node_handle(node_type: str, node_name: str) -> str:
+        """
+        This method retrieves a handle from the node parameters
+
+        Args:
+            node_type (str): The type of the node being queried.
+            node_name (str): The name of the specific node being queried.
+
+        Returns:
+            str: A handle
+
+        Example:
+            >>> result = das.get_node_handle(node_type='Concept', node_name='human')
+            >>> print(result)
+            "af12f10f9ae2002a1607ba0b47ba8407"
+        """
         return AtomDB.node_handle(node_type, node_name)
 
     @staticmethod
     def get_link_handle(link_type: str, link_targets: List[str]) -> str:
+        """
+        This method retrieves a handle from the link parameters.
+
+        Args:
+            link_type (str): The type of the link being queried.
+            link_targets (List[str]): A list of target identifiers that the link is associated with.
+
+        Returns:
+           str: A handle
+
+        Example:
+            >>> result = das.get_link(link_type='Similarity', targets=['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'])
+            >>> print(result)
+            "bad7472f41a0e7d601ca294eb4607c3a"
+
+        """
         return AtomDB.link_handle(link_type, link_targets)
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Adds a node to the database.
+
+        This method allows you to add a node to the database
+        with the specified node parameters. A node must have 'type' and
+        'name' fields in the node_params dictionary.
+
+        Args:
+            node_params (Dict[str, Any]): A dictionary containing node parameters. It should have the following keys:
+                - 'type': The type of the node.
+                - 'name': The name of the node.
+
+        Returns:
+            Dict[str, Any]: The information about the added node, including its unique key and other details.
+
+        Raises:
+            AddNodeException: If the 'type' or 'name' fields are missing in node_params.
+
+        Example:
+            >>> node_params = {
+                    'type': 'Reactome',
+                    'name': 'Reactome:R-HSA-164843',
+                }
+            >>> db.add_node(node_params)
+        """
         return self.backend.add_node(node_params)
 
     def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Adds a link to the database.
+
+        This method allows to add a link to the database with the specified link parameters.
+        A link must have a 'type' and 'targets' field in the link_params dictionary.
+
+        Args:
+            link_params (Dict[str, Any]): A dictionary containing link parameters. It should have the following keys:
+                - 'type': The type of the link.
+                - 'targets': A list of target elements.
+            toplevel: boolean flag to indicate toplevel links
+                i.e. links which are not nested inside other links.
+
+        Returns:
+            Dict[str, Any]: The information about the added link, including its unique key and other details.
+
+        Raises:
+            AddLinkException: If the 'type' or 'targets' fields are missing in link_params.
+
+        Example:
+            >>> link_params = {
+                    'type': 'Evaluation',
+                    'targets': [
+                        {'type': 'Predicate', 'name': 'Predicate:has_name'},
+                        {
+                            'type': 'Set',
+                            'targets': [
+                                {'type': 'Reactome', 'name': 'Reactome:R-HSA-164843'},
+                                {'type': 'Concept', 'name': 'Concept:2-LTR circle formation'},
+                            ],
+                        },
+                    ],
+                }
+            >>> db.add_link(link_params)
+        """
         return self.backend.add_link(link_params)
 
     def clear(self) -> None:

@@ -1,10 +1,10 @@
-ci-tests:
+test-ci:
 	@py.test -sx -vv ./tests/unit --cov=./hyperon_das/ --cov-report=term-missing --cov-fail-under=70
 
-integration-tests:
+test-integration:
 	@py.test -sx -vv ./tests/integration
 
-unit-tests:
+test-unit:
 	@py.test -sx -vv ./tests/unit
 
 isort:
