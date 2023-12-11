@@ -28,7 +28,7 @@ class DistributedAtomSpace:
         if atomdb_parameter == "ram":
             self.backend = InMemoryDB()
         elif atomdb_parameter == "redis_mongo":
-            self.backend = RedisMongoDB(kwargs)
+            self.backend = RedisMongoDB(**kwargs)
             if query_engine_parameter != "local":
                 raise InvalidDASParameters(message="query_engine parameter must be 'local'")
         else:
