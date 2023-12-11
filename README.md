@@ -75,7 +75,7 @@ das = DistributedAtomSpace()
 
 ### Remote
 
-If you create a remote DAS, you need to pass the machine parameters, 'host' and 'port'
+To create a remote DAS, you need to specify the 'query_engine' parameter as 'remote' and pass the machine, 'host' and 'port' parameters. See below how to do this:
 
 ```python
 from hyperon_das import DistributedAtomSpace
@@ -84,7 +84,8 @@ das = DistributedAtomSpace(query_engine='remote', host='0.0.0.0', port=1234)
 ```
 
 ### Server
-If you create a DAS server, you will need to pass the database parameters. The databases supported in this release are Redis and MongoDB. Therefore, the minimum expected parameters are:
+To create a DAS server, you will need to specify the 'atomdb' parameter as 'redis_mongo' and pass the database parameters. The databases supported in this release are Redis and MongoDB. Therefore, the minimum expected parameters are:
+
 - mongo_hostname
 - mongo_port
 - mongo_username
@@ -104,7 +105,7 @@ but it is possible to pass other configuration parameters:
 from hyperon_das import DistributedAtomSpace
 
 das = DistributedAtomSpace(
-    atom_db='redis_mongo',
+    atomdb='redis_mongo',
     mongo_hostname='127.0.0.2',
     mongo_port=27017,
     mongo_username='mongo',
