@@ -30,7 +30,9 @@ class DistributedAtomSpace:
         elif atomdb_parameter == "redis_mongo":
             self.backend = RedisMongoDB(**kwargs)
             if query_engine_parameter != "local":
-                raise InvalidDASParameters(message="query_engine parameter must be 'local'")
+                raise InvalidDASParameters(
+                    message="'redis_mongo' backend requires local query engine ('query_engine=local')"
+                )
         else:
             raise ValueError
             # implement this exception in AtomDB

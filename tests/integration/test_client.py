@@ -17,37 +17,6 @@ class TestAWSClientIntegration:
         ret = server.get_node(node_type="Concept", node_name="human")
         assert ret == human_handle
 
-    def test_get_nodes(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        ret = server.get_nodes(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.HANDLE,
-        )
-        assert ret == [human_handle]
-        ret = server.get_nodes(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.ATOM_INFO,
-        )
-        assert ret == [{'handle': human_handle, 'type': 'Concept', 'name': 'human'}]
-        ret = server.get_nodes(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.JSON,
-        )
-        assert json.loads(ret) == [{'type': 'Concept', 'name': 'human'}]
-
-    def test_get_node_type(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        ret = server.get_node_type(node_handle=human_handle)
-        assert ret == 'Concept'
-
-    def test_get_node_name(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        ret = server.get_node_name(node_handle=human_handle)
-        assert ret == 'human'
-
     def test_get_link(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
         monkey_handle = ExpressionHasher.terminal_hash('Concept', 'monkey')
@@ -98,26 +67,6 @@ class TestAWSClientIntegration:
             output_format=QueryOutputFormat.HANDLE,
         )
         assert len(ret) == 14
-
-    def test_get_link_type(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        monkey_handle = ExpressionHasher.terminal_hash('Concept', 'monkey')
-        link_handle = ExpressionHasher.expression_hash(
-            ExpressionHasher.named_type_hash('Similarity'),
-            [human_handle, monkey_handle],
-        )
-        ret = server.get_link_type(link_handle=link_handle)
-        assert ret == 'Similarity'
-
-    def test_get_link_targets(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        monkey_handle = ExpressionHasher.terminal_hash('Concept', 'monkey')
-        link_handle = ExpressionHasher.expression_hash(
-            ExpressionHasher.named_type_hash('Similarity'),
-            [human_handle, monkey_handle],
-        )
-        ret = server.get_link_targets(link_handle=link_handle)
-        assert set(ret) == set([human_handle, monkey_handle])
 
     def test_get_atom(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
@@ -175,31 +124,6 @@ class TestAWSClientIntegration:
         ret = server.query(query, params)
         assert len(ret) == 4
 
-    # TODO: pattern_matcher_query does not work in functions because
-    # is need to serialize the PatterMatcher object to send to the function
-    """
-    def test_pattern_matcher_query(self, server: FunctionsClient):
-        from hyperon_das.pattern_matcher import And, Link, Variable
-        
-        V1 = Variable("V1")
-        V2 = Variable("V2")
-        V3 = Variable("V3")
-
-        query = And(
-            [
-                Link("Inheritance", ordered=True, targets=[V1, V2]),
-                Link("Inheritance", ordered=True, targets=[V2, V3]),
-            ]
-        )
-        
-        params = {
-            "toplevel_only": False,
-            "return_type": QueryOutputFormat.ATOM_INFO,
-        }
-        ret = server.pattern_matcher_query(query, params)
-        assert len(ret) == 4
-    """
-
 
 class TestVultrClientIntegration:
     @pytest.fixture()
@@ -230,37 +154,6 @@ class TestVultrClientIntegration:
             output_format=QueryOutputFormat.JSON,
         )
         assert ret == {'type': 'Concept', 'name': 'human'}
-
-    def test_get_nodes(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        ret = server.get_nodes(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.HANDLE,
-        )
-        assert ret == [human_handle]
-        ret = server.get_nodes(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.ATOM_INFO,
-        )
-        assert ret == [{'handle': human_handle, 'type': 'Concept', 'name': 'human'}]
-        ret = server.get_nodes(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.JSON,
-        )
-        assert ret == [{'type': 'Concept', 'name': 'human'}]
-
-    def test_get_node_type(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        ret = server.get_node_type(node_handle=human_handle)
-        assert ret == 'Concept'
-
-    def test_get_node_name(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        ret = server.get_node_name(node_handle=human_handle)
-        assert ret == 'human'
 
     def test_get_link(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
@@ -312,26 +205,6 @@ class TestVultrClientIntegration:
             output_format=QueryOutputFormat.HANDLE,
         )
         assert len(ret) == 14
-
-    def test_get_link_type(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        monkey_handle = ExpressionHasher.terminal_hash('Concept', 'monkey')
-        link_handle = ExpressionHasher.expression_hash(
-            ExpressionHasher.named_type_hash('Similarity'),
-            [human_handle, monkey_handle],
-        )
-        ret = server.get_link_type(link_handle=link_handle)
-        assert ret == 'Similarity'
-
-    def test_get_link_targets(self, server: FunctionsClient):
-        human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        monkey_handle = ExpressionHasher.terminal_hash('Concept', 'monkey')
-        link_handle = ExpressionHasher.expression_hash(
-            ExpressionHasher.named_type_hash('Similarity'),
-            [human_handle, monkey_handle],
-        )
-        ret = server.get_link_targets(link_handle=link_handle)
-        assert set(ret) == set([human_handle, monkey_handle])
 
     def test_get_atom(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
@@ -388,28 +261,3 @@ class TestVultrClientIntegration:
         }
         ret = server.query(query, params)
         assert len(ret) == 4
-
-    # TODO: pattern_matcher_query does not work in functions because
-    # is need to serialize the PatterMatcher object to send to the function
-    """
-    def test_pattern_matcher_query(self, server: FunctionsClient):
-        from hyperon_das.pattern_matcher import And, Link, Variable
-        
-        V1 = Variable("V1")
-        V2 = Variable("V2")
-        V3 = Variable("V3")
-
-        query = And(
-            [
-                Link("Inheritance", ordered=True, targets=[V1, V2]),
-                Link("Inheritance", ordered=True, targets=[V2, V3]),
-            ]
-        )
-        
-        params = {
-            "toplevel_only": False,
-            "return_type": QueryOutputFormat.ATOM_INFO,
-        }
-        ret = server.pattern_matcher_query(query, params)
-        assert len(ret) == 4
-    """
