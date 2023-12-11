@@ -58,10 +58,13 @@ class FunctionsClient:
             'action': 'get_nodes',
             'input': {
                 'node_type': node_type,
-                'node_name': node_name,
                 'output_format': output_format.name,
             },
         }
+        
+        if node_name is not None:
+            payload['input']['node_name'] = node_name
+
         return self._send_request(payload)
 
     def get_node_type(self, node_handle: str) -> str:
