@@ -3,9 +3,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 
-from hyperon_das.constants import QueryOutputFormat
-from hyperon_das.pattern_matcher.pattern_matcher import LogicalExpression
-
 
 class FunctionsClient:
     def __init__(self, url: str, server_count: int = 0, name: Optional[str] = None):
