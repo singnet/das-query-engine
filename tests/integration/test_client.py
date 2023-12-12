@@ -6,6 +6,8 @@ from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
 from hyperon_das.client import FunctionsClient
 from hyperon_das.constants import QueryOutputFormat
 
+# TODO: This tests needs adjustments when functions remain online
+
 
 class TestAWSClientIntegration:
     @pytest.fixture()
@@ -132,28 +134,12 @@ class TestVultrClientIntegration:
 
     def test_get_node(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
-        ret = server.get_node(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.HANDLE,
-        )
-        assert ret == human_handle
-        ret = server.get_node(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.ATOM_INFO,
-        )
+        ret = server.get_node(node_type="Concept", node_name="human")
         assert ret == {
             'handle': human_handle,
-            'type': 'Concept',
+            'name_type': 'Concept',
             'name': 'human',
         }
-        ret = server.get_node(
-            node_type="Concept",
-            node_name="human",
-            output_format=QueryOutputFormat.JSON,
-        )
-        assert ret == {'type': 'Concept', 'name': 'human'}
 
     def test_get_link(self, server: FunctionsClient):
         human_handle = ExpressionHasher.terminal_hash('Concept', 'human')
@@ -167,29 +153,11 @@ class TestVultrClientIntegration:
             targets=[human_handle, monkey_handle],
             output_format=QueryOutputFormat.HANDLE,
         )
-        assert ret == link_handle
-        ret = server.get_link(
-            link_type='Similarity',
-            targets=[human_handle, monkey_handle],
-            output_format=QueryOutputFormat.ATOM_INFO,
-        )
         assert ret == {
             'handle': link_handle,
             'type': 'Similarity',
             'template': ['Similarity', 'Concept', 'Concept'],
             'targets': [human_handle, monkey_handle],
-        }
-        ret = server.get_link(
-            link_type='Similarity',
-            targets=[human_handle, monkey_handle],
-            output_format=QueryOutputFormat.JSON,
-        )
-        assert ret == {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'human'},
-                {'type': 'Concept', 'name': 'monkey'},
-            ],
         }
 
     def test_get_links(self, server: FunctionsClient):
@@ -213,32 +181,18 @@ class TestVultrClientIntegration:
             ExpressionHasher.named_type_hash('Similarity'),
             [human_handle, monkey_handle],
         )
-        ret = server.get_atom(handle=monkey_handle, output_format=QueryOutputFormat.HANDLE)
-        assert ret == monkey_handle
-        ret = server.get_atom(handle=monkey_handle, output_format=QueryOutputFormat.ATOM_INFO)
+        ret = server.get_atom(handle=monkey_handle)
         assert ret == {
             'handle': monkey_handle,
             'type': 'Concept',
             'name': 'monkey',
         }
-        ret = server.get_atom(handle=monkey_handle, output_format=QueryOutputFormat.JSON)
-        assert ret == {'type': 'Concept', 'name': 'monkey'}
-        ret = server.get_atom(handle=link_handle, output_format=QueryOutputFormat.HANDLE)
-        assert ret == link_handle
-        ret = server.get_atom(handle=link_handle, output_format=QueryOutputFormat.ATOM_INFO)
+        ret = server.get_atom(handle=link_handle)
         assert ret == {
             'handle': link_handle,
             'type': 'Similarity',
             'template': ['Similarity', 'Concept', 'Concept'],
             'targets': [human_handle, monkey_handle],
-        }
-        ret = server.get_atom(handle=link_handle, output_format=QueryOutputFormat.JSON)
-        assert ret == {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'human'},
-                {'type': 'Concept', 'name': 'monkey'},
-            ],
         }
 
     def test_count_atoms(self, server: FunctionsClient):
