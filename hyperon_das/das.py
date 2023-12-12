@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import requests
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
-from hyperon_das_atomdb.exceptions import AtomDoesNotExistException, NodeDoesNotExistException
+from hyperon_das_atomdb.exceptions import AtomDoesNotExist, NodeDoesNotExist
 
 from hyperon_das.cache import AndEvaluator, LazyQueryEvaluator, ListIterator, QueryAnswerIterator
 from hyperon_das.client import FunctionsClient
@@ -436,7 +436,7 @@ class LocalQueryEngine(QueryEngine):
                 return ListIterator(
                     [QueryAnswer(self.local_backend.get_atom_as_dict(atom_handle), None)]
                 )
-            except NodeDoesNotExistException:
+            except NodeDoesNotExist:
                 return ListIterator([])
         elif query["atom_type"] == "link":
             matched_targets = []
@@ -481,21 +481,21 @@ class LocalQueryEngine(QueryEngine):
     def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
         try:
             return self.local_backend.get_atom(handle)
-        except AtomDoesNotExistException:
+        except AtomDoesNotExist:
             return None
 
     def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
         try:
             node_handle = self.local_backend.node_handle(node_type, node_name)
             return self.local_backend.get_atom(node_handle)
-        except AtomDoesNotExistException:
+        except AtomDoesNotExist:
             return None
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
         try:
             link_handle = self.local_backend.link_handle(link_type, link_targets)
             return self.local_backend.get_atom(link_handle)
-        except AtomDoesNotExistException:
+        except AtomDoesNotExist:
             return None
 
     def get_links(
