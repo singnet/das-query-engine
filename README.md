@@ -9,6 +9,9 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
     - [Using-pip](#using-pip)
     - [Using-Poetry](#using-poetry)
   - [Usage](#usage)
+    - [Local](#local)
+    - [Remote](#remote)
+    - [Server](#server)
   - [Tests](#tests)
 
 ## Installation
@@ -59,7 +62,10 @@ Now you can run the project within the Poetry virtual environment.
 
 ## Usage
 
-It's very simple to use it. You just need to instantiate the class as shown below
+You can instantiate DAS in three different ways. see below:
+
+### Local
+This is a local instance of DAS with default settings.
 
 ```python
 from hyperon_das import DistributedAtomSpace
@@ -67,182 +73,50 @@ from hyperon_das import DistributedAtomSpace
 das = DistributedAtomSpace()
 ```
 
-Now you can enter Atoms and then make queries. See example below:
+### Remote
 
-1. A simple query.
-	
-    ```python
-    from hyperon_das import DistributedAtomSpace
-    from hyperon_das.constants import QueryOutputFormat
+To create a remote DAS, you need to specify the 'query_engine' parameter as 'remote' and pass the machine, 'host' and 'port' parameters. See below how to do this:
 
-    das = DistributedAtomSpace()
+```python
+from hyperon_das import DistributedAtomSpace
 
-    das.count_atoms() # (0, 0)
+das = DistributedAtomSpace(query_engine='remote', host='0.0.0.0', port=1234)
+```
 
-    das.add_link({
-        'type': 'Inheritance',
-        'targets': [
-            {'type': 'Concept', 'name': 'human'},
-            {'type': 'Concept', 'name': 'mammal'}
-        ],
-    })
+### Server
+To create a DAS server, you will need to specify the 'atomdb' parameter as 'redis_mongo' and pass the database parameters. The databases supported in this release are Redis and MongoDB. Therefore, the minimum expected parameters are:
 
-    das.add_link({
-        'type': 'Inheritance',
-        'targets': [
-            {'type': 'Concept', 'name': 'monkey'},
-            {'type': 'Concept', 'name': 'mammal'}
-        ]
-    })
+- mongo_hostname
+- mongo_port
+- mongo_username
+- mongo_password
+- redis_hostname
+- redis_port
 
-    das.count_atoms() # (3, 2)
+but it is possible to pass other configuration parameters:
 
-    query = {
-        'atom_type': 'link',
-        'type': 'Inheritance',
-        'targets': [
-            {'atom_type': 'variable', 'name': 'v1'},
-            {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
-        ]
-    }
+- mongo_tls_ca_file
+- redis_username
+- redis_password
+- redis_cluster
+- redis_ssl
 
-    query_params = {
-        "toplevel_only": False,
-        "return_type": QueryOutputFormat.ATOM_INFO,
-    }
+```python
+from hyperon_das import DistributedAtomSpace
 
-    resp = das.query(query, query_params)
-	
-	print(resp)
-	```
-
-	```bash
-    [
-        {
-            'handle': 'c93e1e758c53912638438e2a7d7f7b7f',
-            'targets': [
-                {
-                    'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
-                    'name': 'human',
-                    'type': 'Concept'
-                },
-                {
-                    'handle': 'bdfe4e7a431f73386f37c6448afe5840',
-                    'name': 'mammal',
-                    'type': 'Concept'
-                }
-            ],
-            'template': ['Inheritance', 'Concept', 'Concept'],
-            'type': 'Inheritance'
-        },
-        {
-            'handle': 'f31dfe97db782e8cec26de18dddf8965',
-            'targets': [
-                {
-                    'handle': '1cdffc6b0b89ff41d68bec237481d1e1',
-                    'name': 'monkey',
-                    'type': 'Concept'
-                },
-                {
-                    'handle': 'bdfe4e7a431f73386f37c6448afe5840',
-                    'name': 'mammal',
-                    'type': 'Concept'
-                }
-            ],
-            'template': ['Inheritance', 'Concept', 'Concept'],
-            'type': 'Inheritance'
-        }
-    ]
-	```
-
-
-2. Add Node and And Link
-	
-	```python
-    from hyperon_das import DistributedAtomSpace
-    das = DistributedAtomSpace()
-	
-    das.count_atoms() # (0, 0)
-	
-	nodes = [
-	    {
-	        'type': 'Reactome',
-	        'name': 'react',
-	    },
-	    {
-	        'type': 'Concept',
-	        'name': 'circle',
-	    }
-    ]
-    
-    for node in nodes:
-	    das.add_node(node)
-	
-	das.count_atoms() # (2, 0)
-    
-	link = {
-        'type': 'Evaluation',
-        'targets': [
-            {
-	            'type': 'Predicate',
-	            'name': 'pred'
-	        },
-            {
-                'type': 'Evaluation',
-                'targets': [
-                    {
-	                    'type': 'Predicate',
-	                    'name': 'pred'
-	                },
-                    {
-                        'type': 'Set',
-                        'targets': [
-                            {
-                                'type': 'Reactome',
-                                'name': 'react',
-                            },
-                            {
-                                'type': 'Concept',
-                                'name': 'circle',
-                            },
-                        ]
-                    },
-                ],
-            },
-        ],
-    }
-
-    das.add_link(link)
-    
-    das.count_atoms() # (3, 3)
-	```
-
-	**Note1:** in this example I add 2 nodes and 1 a link, but in the end I have 3 nodes and 3 links. Therefore, it is possible to add nested links and as links are composed of nodes, if the link node doesn't exist in the system it's added.
-
-	**Note2:** For these methods to work well, both nodes and links must be a dict with the structure shown above, i.e, for **nodes** you need to send, at least, the parameters `type` and `name` and for **links** `type` and `targets`
-
-3. You can add remote connections to make your queries
-
-    ```python
-    from hyperon_das import DistributedAtomSpace
-
-    das = DistributedAtomSpace()
-
-    host = '192.0.2.146'
-    port = '8081'
-
-    das.attach_remote(host=host, port=port)
-    
-    server = das.remote_das[0]
-
-    server.count_atoms()
-    server.query(query=...)
-    ```
-
+das = DistributedAtomSpace(
+    atomdb='redis_mongo',
+    mongo_hostname='127.0.0.2',
+    mongo_port=27017,
+    mongo_username='mongo',
+    mongo_password='mongo',
+    redis_hostname='127.0.0.1',
+    redis_port=6379
+)
+```
 ## Tests
 
 You can run the command below to run the unit tests
 test
 ```bash
-make unit-tests
-```
+make test-unit

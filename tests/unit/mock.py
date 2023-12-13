@@ -1,9 +1,10 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from hyperon_das_atomdb import WILDCARD, IAtomDB
+from hyperon_das_atomdb import WILDCARD, AtomDB
 
 from hyperon_das import DistributedAtomSpace
+from hyperon_das.das import LocalQueryEngine
 
 
 def _build_node_handle(node_type: str, node_name: str) -> str:
@@ -23,10 +24,11 @@ def _build_link_handle(link_type: str, target_handles: List[str]) -> str:
 
 class DistributedAtomSpaceMock(DistributedAtomSpace):
     def __init__(self) -> None:
-        self.db = DatabaseMock()
+        self.backend = DatabaseMock()
+        self.query_engine = LocalQueryEngine(self.backend)
 
 
-class DatabaseMock(IAtomDB):
+class DatabaseMock(AtomDB):
     def __init__(self, name: str = 'das'):
         self.database_name = name
 
@@ -141,15 +143,26 @@ class DatabaseMock(IAtomDB):
                 return node
         return None
 
+    def node_handle(self, node_type: str, node_name: str) -> str:
+        return _build_node_handle(node_type, node_name)
+
+    def link_handle(self, link_type: str, target_handles: List[str]) -> str:
+        return _build_link_handle(link_type, target_handles)
+
+    def get_atom(self, handle: str):
+        for node in self.all_nodes:
+            if node == handle:
+                return node
+        for link in self.all_links:
+            return link
+
     def is_ordered(self, handle: str) -> bool:
         for link in self.all_links:
             if _build_link_handle(link[0], link[1:]) == handle:
                 return link[0] != 'Similarity' and link[0] != 'Set'
         return True
 
-    def get_link_handle(
-        self, link_type: str, target_handles: List[str]
-    ) -> str:
+    def get_link_handle(self, link_type: str, target_handles: List[str]) -> str:
         for link in self.all_links:
             if link[0] == link_type and len(target_handles) == (len(link) - 1):
                 if link_type == 'Similarity':
@@ -181,10 +194,7 @@ class DatabaseMock(IAtomDB):
         for link in self.all_links:
             if len(target_handles) == (len(link) - 1) and link[0] == link_type:
                 if link[0] == 'Similarity' or link[0] == 'Set':
-                    if all(
-                        target == WILDCARD or target in link[1:]
-                        for target in target_handles
-                    ):
+                    if all(target == WILDCARD or target in link[1:] for target in target_handles):
                         link_target_handles = link[1:]
                         link_target_handles.sort
                         answer.append(
@@ -195,15 +205,10 @@ class DatabaseMock(IAtomDB):
                         )
                 elif link[0] == 'Inheritance' or link[0] == 'List':
                     for i in range(0, len(target_handles)):
-                        if (
-                            target_handles[i] != WILDCARD
-                            and target_handles[i] != link[i + 1]
-                        ):
+                        if target_handles[i] != WILDCARD and target_handles[i] != link[i + 1]:
                             break
                     else:
-                        answer.append(
-                            [_build_link_handle(link[0], link[1:]), link[1:]]
-                        )
+                        answer.append([_build_link_handle(link[0], link[1:]), link[1:]])
                 elif link[0] == 'Evaluation':
                     answer.append('test')
                 else:
@@ -278,3 +283,9 @@ class DatabaseMock(IAtomDB):
 
     def clear_database(self):
         pass
+
+    def add_link(self, link_params: Dict[str, Any], toplevel: bool = True) -> Dict[str, Any]:
+        assert False
+
+    def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
+        assert False

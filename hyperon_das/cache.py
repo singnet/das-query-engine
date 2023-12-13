@@ -61,6 +61,20 @@ class ProductIterator(QueryAnswerIterator):
         return any(iterator.is_empty() for iterator in self.source)
 
 
+class AndEvaluator(ProductIterator):
+    def __init__(self, source: List[QueryAnswerIterator]):
+        super().__init__(source)
+
+    def __next__(self):
+        while True:
+            candidate = super().__next__()
+            assignments = [query_answer.assignment for query_answer in candidate]
+            composite_assignment = Assignment.compose(assignments)
+            if composite_assignment:
+                composite_subgraph = [query_answer.subgraph for query_answer in candidate]
+                return QueryAnswer(composite_subgraph, composite_assignment)
+
+
 class LazyQueryEvaluator(ProductIterator):
     def __init__(
         self,
@@ -78,7 +92,7 @@ class LazyQueryEvaluator(ProductIterator):
     def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
         targets = []
         for target_handle in link["targets"]:
-            atom = self.das.db.get_atom_as_dict(target_handle)
+            atom = self.das.local_backend.get_atom_as_dict(target_handle)
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
@@ -95,44 +109,33 @@ class LazyQueryEvaluator(ProductIterator):
         target_handle = []
         wildcard_flag = False
         for query_answer_target in target_info:
-            target = query_answer_target.grounded_atom
+            target = query_answer_target.subgraph
             if target.get("atom_type", None) == "variable":
                 target_handle.append(WILDCARD)
                 wildcard_flag = True
             else:
                 target_handle.append(target["handle"])
-        das_query_answer = self.das.get_links(
-            self.link_type,
-            None,
-            target_handle,
-            output_format=QueryOutputFormat.ATOM_INFO,
-        )
+        das_query_answer = self.das.get_links(self.link_type, None, target_handle)
         lazy_query_answer = []
         for answer in das_query_answer:
             assignment = None
             if wildcard_flag:
                 assignment = Assignment()
                 assignment_failed = False
-                for query_answer_target, handle in zip(
-                    target_info, answer["targets"]
-                ):
-                    target = query_answer_target.grounded_atom
+                for query_answer_target, handle in zip(target_info, answer["targets"]):
+                    target = query_answer_target.subgraph
                     if target.get("atom_type", None) == "variable":
                         if not assignment.assign(target["name"], handle):
                             assignment_failed = True
                     else:
-                        if not assignment.merge(
-                            query_answer_target.assignment
-                        ):
+                        if not assignment.merge(query_answer_target.assignment):
                             assignment_failed = True
-                    if not assignment_failed:
+                    if assignment_failed:
                         break
                 if assignment_failed:
                     continue
                 assignment.freeze()
 
-            lazy_query_answer.append(
-                QueryAnswer(self._replace_target_handles(answer), assignment)
-            )
+            lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
         self.buffered_answer = ListIterator(lazy_query_answer)
         return self.buffered_answer.__next__()
