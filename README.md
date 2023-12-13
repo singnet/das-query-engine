@@ -12,6 +12,9 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
     - [Local](#local)
     - [Remote](#remote)
     - [Server](#server)
+  - [Examples](#examples)
+    - [Local DAS](#local-das)
+    - [Remote DAS](#remote-das)
   - [Tests](#tests)
 
 ## Installation
@@ -114,9 +117,180 @@ das = DistributedAtomSpace(
     redis_port=6379
 )
 ```
+
+## Examples
+
+### Local DAS
+
+This way it is only possible to make queries in your local memory with the Atoms that you placed in the DAS. See bellow:
+
+```python
+from hyperon_das import DistributedAtomSpace
+
+das = DistributedAtomSpace()
+
+das.count_atoms() # (0, 0)
+
+das.add_link({
+    'type': 'Inheritance',
+    'targets': [
+        {'type': 'Concept', 'name': 'human'},
+        {'type': 'Concept', 'name': 'mammal'}
+    ],
+})
+
+das.add_link({
+    'type': 'Inheritance',
+    'targets': [
+        {'type': 'Concept', 'name': 'monkey'},
+        {'type': 'Concept', 'name': 'mammal'}
+    ]
+})
+
+das.count_atoms() # (3, 2)
+
+query = {
+    'atom_type': 'link',
+    'type': 'Inheritance',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v1'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
+    ]
+}
+
+query_params = {
+    "toplevel_only": False
+}
+
+resp = das.query(query, query_params)
+
+print(resp)
+```
+```bash
+[
+    {
+        "handle": "c93e1e758c53912638438e2a7d7f7b7f",
+        "type": "Inheritance",
+        "template": ["Inheritance", "Concept", "Concept"],
+        "targets": [
+            {
+                "handle": "af12f10f9ae2002a1607ba0b47ba8407",
+                "type": "Concept",
+                "name": "human",
+            },
+            {
+                "handle": "bdfe4e7a431f73386f37c6448afe5840",
+                "type": "Concept",
+                "name": "mammal",
+            },
+        ],
+    },
+    {
+        "handle": "f31dfe97db782e8cec26de18dddf8965",
+        "type": "Inheritance",
+        "template": ["Inheritance", "Concept", "Concept"],
+        "targets": [
+            {
+                "handle": "1cdffc6b0b89ff41d68bec237481d1e1",
+                "type": "Concept",
+                "name": "monkey",
+            },
+            {
+                "handle": "bdfe4e7a431f73386f37c6448afe5840",
+                "type": "Concept",
+                "name": "mammal",
+            },
+        ],
+    },
+]
+```
+
+### Remote DAS
+
+This way it'ss possible to make queries in your local memory and on the remote machine that you need to pass during the creation of DAS instance. See below:
+
+```python
+from hyperon_das import DistributedAtomSpace
+
+das = DistributedAtomSpace(query_engine='remote', host='192.32.11.45', port=9000)
+```
+
+In the query method you can pass the query_scope parameter specifying whether you want to make the query local or remote. Using "local_only" or "remote_only". If you don't pass the default is remote_only. See bellow:
+
+1. Remote scope
+
+```python
+from hyperon_das import DistributedAtomSpace
+
+das = DistributedAtomSpace(query_engine='remote', host='192.32.11.45', port=9000)
+
+query = {
+    'atom_type': 'link',
+    'type': 'Inheritance',
+    'targets': [
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'human'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
+    ]
+}
+
+query_params = {
+    "toplevel_only": False
+}
+
+resp = das.query(query, query_params)
+
+print(resp)
+```
+```bash
+[
+    {
+        "handle": "c93e1e758c53912638438e2a7d7f7b7f",
+        "type": "Inheritance",
+        "template": ["Inheritance", "Concept", "Concept"],
+        "targets": [
+            {
+                "handle": "af12f10f9ae2002a1607ba0b47ba8407",
+                "type": "Concept",
+                "name": "human",
+            },
+            {
+                "handle": "bdfe4e7a431f73386f37c6448afe5840",
+                "type": "Concept",
+                "name": "mammal",
+            },
+        ],
+    }
+]
+```
+
+1. Local Scope
+
+```python
+query = {
+    'atom_type': 'link',
+    'type': 'Inheritance',
+    'targets': [
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'humana'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammala'},
+    ]
+}
+
+query_params = {
+    "toplevel_only": False,
+    "query_scope": "local_only"
+}
+
+resp = das.query(query, query_params)
+print(resp)
+```
+```bash
+[]
+```
+
 ## Tests
 
 You can run the command below to run the unit tests
-test
+
 ```bash
 make test-unit
+```
