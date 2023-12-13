@@ -224,9 +224,9 @@ In the query method is possible pass query_scope parameter with four available v
 - Only local query 
 2. "remote_only"
 - Only remote query
-1. "local_and_remote"
+3. "local_and_remote"
 - This type is not available yet. So, this will raise an exception
-1. "synchronous_update"
+4. "synchronous_update"
 - Before make query it will commit your local changes and then make the remote query
 
 
