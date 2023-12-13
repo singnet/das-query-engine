@@ -47,7 +47,7 @@ class FunctionsClient:
         return self._send_request(payload)
 
     def get_links(
-        self, link_type: str, target_types: str = None, link_targets: List[str] = None
+        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
         payload = {
             'action': 'get_links',

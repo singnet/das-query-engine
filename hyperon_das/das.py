@@ -143,7 +143,7 @@ class DistributedAtomSpace:
         return self.query_engine.get_link(link_type, link_targets)
 
     def get_links(
-        self, link_type: str, target_types: str = None, link_targets: List[str] = None
+        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
         """
         Retrieve information about Links based on specified criteria.
@@ -155,7 +155,7 @@ class DistributedAtomSpace:
 
         Args:
             link_type (str): The type of links being queried.
-            target_types (str, optional): The type(s) of targets being queried. Defaults to None.
+            target_types (List[str], optional): The type(s) of targets being queried. Defaults to None.
             targets (List[str], optional): A list of target identifiers that the links are associated with.
                 Defaults to None.
 
@@ -168,8 +168,7 @@ class DistributedAtomSpace:
         Example:
             >>> result = obj.get_links(
                     link_type='Similarity',
-                    target_types=['Concept', 'Concept'],
-                    output_format=QueryOutputFormat.ATOM_INFO
+                    target_types=['Concept', 'Concept']
                 )
             >>> print(result)
             [
@@ -398,7 +397,7 @@ class QueryEngine(ABC):
 
     @abstractmethod
     def get_links(
-        self, link_type: str, target_types: str = None, link_targets: List[str] = None
+        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
         ...
 
@@ -499,7 +498,7 @@ class LocalQueryEngine(QueryEngine):
             return None
 
     def get_links(
-        self, link_type: str, target_types: str = None, link_targets: List[str] = None
+        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
         if target_types is not None and link_type != WILDCARD:
             db_answer = self.local_backend.get_matched_type_template([link_type, *target_types])
@@ -589,7 +588,7 @@ class RemoteQueryEngine(QueryEngine):
             return self.remote_das.get_link(link_type, link_targets)
 
     def get_links(
-        self, link_type: str, target_types: str = None, link_targets: List[str] = None
+        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
         local = self.local_query_engine.get_links(link_type, target_types, link_targets)
         if not local:
