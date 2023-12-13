@@ -15,6 +15,9 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
   - [Examples](#examples)
     - [Local DAS](#local-das)
     - [Remote DAS](#remote-das)
+      - [Local Scope](#local-scope)
+      - [Remote scope](#remote-scope)
+      - [Remote scope synchronized with local Atoms](#remote-scope-synchronized-with-local-atoms)
   - [Tests](#tests)
 
 ## Installation
@@ -215,15 +218,45 @@ from hyperon_das import DistributedAtomSpace
 das = DistributedAtomSpace(query_engine='remote', host='192.32.11.45', port=9000)
 ```
 
-In the query method you can pass the query_scope parameter specifying whether you want to make the query local or remote. Using "local_only" or "remote_only". If you don't pass the default is remote_only. See bellow:
+In the query method is possible pass query_scope parameter with four available values. This specifying whether you want to make the query local, remote, local and remote or synchronize and remote. If you don't pass the default is "remote_only"
 
-1. Remote scope
+1. "local_only"
+- Only local query 
+2. "remote_only"
+- Only remote query
+1. "local_and_remote"
+- This type is not available yet. So, this will raise an exception
+1. "synchronous_update"
+- Before make query it will commit your local changes and then make the remote query
+
+
+#### Local Scope
 
 ```python
-from hyperon_das import DistributedAtomSpace
+query = {
+    'atom_type': 'link',
+    'type': 'Inheritance',
+    'targets': [
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'humana'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammala'},
+    ]
+}
 
-das = DistributedAtomSpace(query_engine='remote', host='192.32.11.45', port=9000)
+query_params = {
+    "toplevel_only": False,
+    "query_scope": "local_only"
+}
 
+resp = das.query(query, query_params)
+print(resp)
+```
+```bash
+[]
+```
+
+#### Remote scope
+
+```python
 query = {
     'atom_type': 'link',
     'type': 'Inheritance',
@@ -263,28 +296,74 @@ print(resp)
 ]
 ```
 
-1. Local Scope
+#### Remote scope synchronized with local Atoms
 
 ```python
+
+# Add a local Link
+das.add_link({
+    'type': 'Inheritance',
+    'targets': [
+        {'type': 'Concept', 'name': 'monkey'},
+        {'type': 'Concept', 'name': 'mammal'}
+    ]
+})
+
 query = {
     'atom_type': 'link',
     'type': 'Inheritance',
     'targets': [
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'humana'},
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammala'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'human'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
     ]
 }
 
 query_params = {
     "toplevel_only": False,
-    "query_scope": "local_only"
+    "query_scope": "synchronous_update"
 }
 
 resp = das.query(query, query_params)
+
 print(resp)
 ```
 ```bash
-[]
+[
+    {
+        "handle": "c93e1e758c53912638438e2a7d7f7b7f",
+        "type": "Inheritance",
+        "template": ["Inheritance", "Concept", "Concept"],
+        "targets": [
+            {
+                "handle": "af12f10f9ae2002a1607ba0b47ba8407",
+                "type": "Concept",
+                "name": "human",
+            },
+            {
+                "handle": "bdfe4e7a431f73386f37c6448afe5840",
+                "type": "Concept",
+                "name": "mammal",
+            },
+        ],
+    },
+    {
+        "handle": "f31dfe97db782e8cec26de18dddf8965",
+        "type": "Inheritance",
+        "template": ["Inheritance", "Concept", "Concept"],
+        "targets": [
+            {
+                "handle": "1cdffc6b0b89ff41d68bec237481d1e1",
+                "type": "Concept",
+                "name": "monkey",
+            },
+            {
+                "handle": "bdfe4e7a431f73386f37c6448afe5840",
+                "type": "Concept",
+                "name": "mammal",
+            },
+        ],
+    },
+]
 ```
 
 ## Tests
