@@ -14,14 +14,18 @@ class FunctionsClient:
         try:
             response = requests.request('POST', url=self.url, data=json.dumps(payload))
             if response.status_code == 200:
-                text = response.text.rstrip('\n')
                 try:
-                    ret = eval(text)
+                    return response.json()
                 except Exception:
-                    ret = text
-                return ret
+                    # Check if function return could be only string(text)
+                    text = response.text.rstrip('\n')
+                    try:
+                        ret = eval(text)
+                    except Exception:
+                        ret = text
+                    return ret
             else:
-                return response.text
+                return response.json()['error']
         except requests.exceptions.RequestException as e:
             raise e
 
@@ -51,12 +55,14 @@ class FunctionsClient:
     ) -> Union[List[str], List[Dict]]:
         payload = {
             'action': 'get_links',
-            'input': {
-                'link_type': link_type,
-                'target_types': target_types,
-                'link_targets': link_targets,
-            },
+            'input': {'link_type': link_type},
         }
+        if target_types:
+            payload['input']['target_types'] = target_types
+
+        if link_targets:
+            payload['input']['link_targets'] = link_targets
+
         return self._send_request(payload)
 
     def query(
@@ -64,7 +70,6 @@ class FunctionsClient:
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        """"""
         payload = {
             'action': 'query',
             'input': {'query': query, 'parameters': parameters},
