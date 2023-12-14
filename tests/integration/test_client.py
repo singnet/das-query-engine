@@ -220,7 +220,7 @@ class TestVultrClientIntegration:
 
     def test_get_links(self, server: FunctionsClient):
         ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
-        # assert ret == []
+        assert ret is not None
 
     def test_count_atoms(self, server: FunctionsClient):
         ret = server.count_atoms()
