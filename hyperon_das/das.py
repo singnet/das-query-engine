@@ -30,8 +30,10 @@ class DistributedAtomSpace:
 
         if query_engine_parameter == 'local':
             self.query_engine = LocalQueryEngine(self.backend, kwargs)
+            logger().info('Initialized local Das')
         elif query_engine_parameter == "remote":
             self.query_engine = RemoteQueryEngine(self.backend, kwargs)
+            logger().info('Initialized remote Das')
         else:
             raise InvalidQueryEngine(
                 message='The possible values are: `local` or `remote`',

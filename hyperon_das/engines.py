@@ -203,6 +203,7 @@ class RemoteQueryEngine(QueryEngine):
         return url
 
     def _is_server_connect(self, url: str) -> bool:
+        logger().debug(f'connecting to remote Das {url}')
         try:
             response = requests.request(
                 'POST',
