@@ -14,14 +14,9 @@ class FunctionsClient:
         try:
             response = requests.request('POST', url=self.url, data=json.dumps(payload))
             if response.status_code == 200:
-                text = response.text.rstrip('\n')
-                try:
-                    ret = eval(text)
-                except Exception:
-                    ret = text
-                return ret
+                return response.json()
             else:
-                return response.text
+                return response.json()['error']
         except requests.exceptions.RequestException as e:
             raise e
 
