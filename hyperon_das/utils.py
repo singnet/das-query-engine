@@ -1,12 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
 
-from dotenv import dotenv_values
-
 from hyperon_das.constants import QueryOutputFormat
 from hyperon_das.exceptions import InvalidAssignment
-
-config = dotenv_values('.env')
 
 
 @dataclass
