@@ -381,6 +381,23 @@ class DistributedAtomSpace:
         self.backend.clear_database()
         logger().debug('The database has been cleaned.')
 
+    def get_traversal_cursor(self, handle: str, **kwargs) -> "TraverseEngine":
+        """determines the starting point of the traversal
+
+        Args:
+            handle (str): _description_
+
+        Raises:
+            InvalidTraversalParameters: _description_
+
+        Returns:
+            TraverseEngine: _description_
+        """
+        handle_only_traverse_engine = kwargs.get('handles_only', True)
+        if handle_only_traverse_engine:
+            return HandleOnlyTraverseEngine(handle, self.backend, self.query_engine, kwargs)
+        else:
+            raise ValueError
 
 class QueryEngine(ABC):
     @abstractmethod
@@ -619,3 +636,40 @@ class RemoteQueryEngine(QueryEngine):
 
     def commit(self):
         return self.remote_das.commit_changes()
+
+
+class TraverseEngine(ABC):
+    def __init__(self, handle: str, **kwargs) -> None:
+        super().__init__()
+    @abstractmethod
+    def get(self): ...    
+    @abstractmethod
+    def get_links(self, kwargs): ...
+    @abstractmethod
+    def get_neighbors(self, kwargs): ...
+    @abstractmethod
+    def follow_link(self, kwargs): ...
+    @abstractmethod
+    def goto(self, handle: str): ...
+
+
+class HandleOnlyTraverseEngine(TraverseEngine):
+    def __init__(self, handle: str, backend, query_engine, **kwargs) -> None:
+        self._cursor = query_engine.get_atom(handle)
+    
+    def get(self) -> Dict[str, Any]:
+        return self._cursor
+    
+    def get_links(self, kwargs):
+        """Dado o cursor atual, retorne os links que tem esse curso como um dos seus elementos, não importa a posição.
+
+        Args:
+            kwargs (Dict[str , Any]): _description_
+        """
+        link_type = kwar
+    
+    def get_neighbors(self, kwargs): ...
+    
+    def follow_link(self, kwargs): ...
+    
+    def goto(self, handle: str): ...
