@@ -9,16 +9,6 @@ from hyperon_das.exceptions import InvalidAssignment
 config = dotenv_values('.env')
 
 
-@dataclass
-class QueryParameters:
-    toplevel_only: Optional[bool] = False
-    return_type: Optional[QueryOutputFormat] = QueryOutputFormat.HANDLE.value
-
-    @classmethod
-    def values(cls) -> list:
-        return list(cls.__dataclass_fields__.keys())
-
-
 class Assignment:
     @staticmethod
     def compose(components: List["Assignment"]) -> Optional["Assignment"]:

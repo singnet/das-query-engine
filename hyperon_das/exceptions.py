@@ -10,14 +10,6 @@ class BaseException(Exception):
         super().__init__(self.message, self.details)
 
 
-class DasTypeException(BaseException):
-    ...  # pragma no cover
-
-
-class MethodNotAllowed(BaseException):
-    ...  # pragma no cover
-
-
 class QueryParametersException(BaseException):
     ...  # pragma no cover
 
@@ -27,10 +19,6 @@ class UnexpectedQueryFormat(BaseException):
 
 
 class InvalidAssignment(BaseException):
-    ...  # pragma no cover
-
-
-class InitializeDasServerException(BaseException):
     ...  # pragma no cover
 
 
