@@ -255,6 +255,11 @@ class RemoteQueryEngine(QueryEngine):
         if not local:
             return self.remote_das.get_links(link_type, target_types, link_targets)
 
+    def get_links_pointing_atom(self, atom_handle: str) -> [List[Dict]]:
+        local = self.local_query_engine.get_links_pointing_atom(atom_handle)
+        if not local:
+            return self.remote_das.getget_links_pointing_atom(atom_handle)
+
     def query(
         self,
         query: Dict[str, Any],
