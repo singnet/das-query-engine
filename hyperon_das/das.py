@@ -3,10 +3,14 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from hyperon_das_atomdb import AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
-from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.exceptions import InvalidDASParameters, InvalidQueryEngine
 from hyperon_das.logger import logger
-from hyperon_das.traversal_engines import HandleOnlyTraverseEngine, TraverseEngine
+from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
+from hyperon_das.traversal_engines import (
+    DocumentTraverseEngine,
+    HandleOnlyTraverseEngine,
+    TraverseEngine,
+)
 
 
 class DistributedAtomSpace:
@@ -188,6 +192,11 @@ class DistributedAtomSpace:
             ]
         """
         return self.query_engine.get_links(link_type, target_types, link_targets)
+
+    def get_incoming_links(
+        self, atom_handle: str, handles_only: bool = False
+    ) -> List[Dict[str, Any]]:
+        return self.query_engine.get_incoming_links(atom_handle, handles_only)
 
     def count_atoms(self) -> Tuple[int, int]:
         """
@@ -406,15 +415,15 @@ class DistributedAtomSpace:
         Returns:
             TraverseEngine: _description_
         """
-        handle_only_traverse_engine = kwargs.get('handles_only', True)
+        handle_only_traverse_engine = kwargs.get('handles_only', False)
         if handle_only_traverse_engine:
-            return HandleOnlyTraverseEngine(handle, backend=self.backend, query_engine=self.query_engine, **kwargs)
+            return HandleOnlyTraverseEngine()
         else:
-            raise ValueError
-        
+            return DocumentTraverseEngine(handle, das=self, **kwargs)
+
+
 if __name__ == '__main__':
-    #das = DistributedAtomSpace(query_engine='remote', host='104.238.183.115')
-    das = DistributedAtomSpace()
+    das = DistributedAtomSpace(query_engine='remote', host='104.238.183.115')
     all_links = [
         {
             'type': 'Similarity',
@@ -597,10 +606,44 @@ if __name__ == '__main__':
                 {'type': 'Concept', 'name': 'ent'},
                 {'type': 'Concept', 'name': 'human'},
             ],
-        },
+        }
     ]
     for link in all_links:
         das.add_link(link)
-    mammal_handle = das.get_node_handle('Concept', 'mammal')
-    traversal = das.get_traversal_cursor(handle=mammal_handle)
-    traversal.get_links(link_type='Inheritance', cursor_position=0, target_type='Concept')
+    human = das.get_node_handle('Concept', 'human')
+    monkey = das.get_node_handle('Concept', 'monkey')
+    dinosaur = das.get_node_handle('Concept', 'dinosaur')
+    handle = das.get_link_handle('Similarity', link_targets=[human, monkey])
+
+    traversal = das.get_traversal_cursor(handle=dinosaur)
+
+    links = traversal.get_links()
+    neighbors = traversal.get_neighbors()
+    
+    print(traversal.get()['name'])
+    traversal.follow_link()
+    print(traversal.get()['name'])
+    traversal.follow_link()
+    print(traversal.get()['name'])
+    traversal.follow_link()
+    print(traversal.get()['name'])
+    traversal.follow_link()
+    print(traversal.get()['name'])
+    traversal.follow_link()
+    print(traversal.get()['name'])
+    traversal.follow_link()
+    print(traversal.get()['name'])
+    traversal.follow_link()
+    print(traversal.get()['name'])
+    traversal.follow_link(unique_path=True, link_type='Similarity')
+    print(traversal.get()['name'])
+    traversal.follow_link()
+    print(traversal.get()['name'])
+
+
+    new_cursor = traversal.goto(monkey)
+    links = traversal.get_links()
+    neighbors = traversal.get_neighbors()
+    cursor = traversal.get()
+
+    print('End')

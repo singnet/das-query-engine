@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+import random
+from typing import Any, Dict, List, Set
 
 from hyperon_das_atomdb import AtomDB
+from hyperon_das.cache import ListIterator
 
 from hyperon_das.query_engines import QueryEngine
 
@@ -9,64 +11,145 @@ from hyperon_das.query_engines import QueryEngine
 class TraverseEngine(ABC):
     def __init__(self, handle: str, **kwargs) -> None:
         super().__init__()
+
     @abstractmethod
-    def get(self): ...    
+    def get(self):
+        ...
+
     @abstractmethod
-    def get_links(self, kwargs): ...
+    def get_links(self, kwargs):
+        ...
+
     @abstractmethod
-    def get_neighbors(self, kwargs): ...
+    def get_neighbors(self, kwargs):
+        ...
+
     @abstractmethod
-    def follow_link(self, kwargs): ...
+    def follow_link(self, kwargs):
+        ...
+
     @abstractmethod
-    def goto(self, handle: str): ...
+    def goto(self, handle: str):
+        ...
+
+
+class HandleOnlyTraverseEngine:
+    pass
+
 
 class DocumentTraverseEngine(TraverseEngine):
     def __init__(self, handle: str, **kwargs) -> None:
-        self.backend: AtomDB = kwargs['backend']
-        self.query_engine = kwargs['query_engine']
+        self.das = kwargs['das']
         self._cursor = handle
-        
+
     def get(self) -> Dict[str, Any]:
-        return self.query_engine.get_atom(self._cursor)
-    
-    def get_links(self, **kwargs) -> List[Dict[str, Any]]:
+        return self.das.get_atom(self._cursor)
+
+    def get_links(self, **kwargs) -> ListIterator:
         link_type = kwargs.get('link_type')
         cursor_position = kwargs.get('cursor_position')
         target_type = kwargs.get('target_type')
-        
-        #links = self.backend.get_links_pointing_atom(atom_handle=self._cursor)
-        
-        links = self.query_engine.get_links_pointing_atom(atom_handle=self._cursor)
-        
-        if link_type:
-            links = [link for link in links if link_type == link['named_type']]
-        
-        if cursor_position is not None:
-            links = [link for link in links if link['targets'].index(self._cursor) == cursor_position]
-        
-        if target_type:
-            links2 = []
-            for link in links:
-                for target in link['targets']:
-                    try:
-                        _type = self.backend.get_link_type(target)
-                    except Exception:
-                        try:
-                            _type = self.backend.get_node_type(target)
-                        except Exception:
-                            _type = None
-                    if _type == target_type:
-                        links2.append(link)
-                        break                    
-        
-        return links
+        custom_filter = kwargs.get('filter')
 
-    def get_neighbors(self, **kwargs):
-        pass
-    
+        links = self.das.get_incoming_links(atom_handle=self._cursor, handles_only=False)
+        
+        # Approach 1
+        def approach_1(links):
+            if link_type:
+                links = [link for link in links if link_type == link['named_type']]
+
+            if cursor_position is not None:
+                links = [
+                    link for link in links if link['targets'].index(self._cursor) == cursor_position
+                ]
+
+            if target_type:
+                links = [link for link in links if target_type in link['targets_type']]
+            return links
+
+        # Approach 2
+        if link_type or cursor_position is not None or target_type or custom_filter:
+            filtered_links = []
+            for link in links:
+                if link_type and link_type != link['named_type']:
+                    continue
+                if cursor_position is not None and link['targets'].index(self._cursor) != cursor_position:
+                    continue
+                if target_type and target_type not in link['targets_type']:
+                    continue
+                # WIP
+                if custom_filter:
+                    pass
+                filtered_links.append(link)
+            links = filtered_links
+
+        return ListIterator(links)
+
+    def get_neighbors(self, **kwargs) -> Set:
+        link_type = kwargs.get('link_type')
+        target_type = kwargs.get('target_type')
+        custom_filter = kwargs.get('filter')
+
+        links = self.das.get_incoming_links(atom_handle=self._cursor, handles_only=False)
+
+        if link_type or target_type or custom_filter:
+            filtered_links = []
+
+            for link in links:
+                if link_type and link_type != link['named_type']:
+                    continue
+
+                if target_type and target_type not in link['targets_type']:
+                    continue
+
+                # WIP
+                if custom_filter:
+                    pass
+
+                filtered_links.append(link)
+
+            links = filtered_links
+
+        result = set()
+
+        for link in links:
+            for target in link['targets']:
+                if target != self._cursor:
+                    result.add(target)
+
+        return list(result)
+
     def follow_link(self, **kwargs):
-        pass
-    
+        link_type = kwargs.get('link_type')
+        target_type = kwargs.get('target_type')
+        unique_path = kwargs.get('unique_path', False)
+        #custom_filter = kwargs.get('filter')
+        
+        links = self.das.get_incoming_links(atom_handle=self._cursor, handles_only=False)
+
+        if link_type or target_type:
+            filtered_links = []
+
+            for link in links:
+                if link_type and link_type != link['named_type']:
+                    continue
+
+                if target_type and target_type not in link['targets_type']:
+                    continue
+
+                filtered_links.append(link)
+            
+            links = filtered_links
+
+        if unique_path and len(links) > 1:
+            raise ValueError
+
+        link = random.choice(links)
+        link['targets'].remove(self._cursor)
+        handle = random.choice(link['targets'])
+        
+        self.goto(handle)
+
     def goto(self, handle: str):
         self._cursor = handle
         return self.get()
