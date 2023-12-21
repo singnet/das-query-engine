@@ -1,10 +1,10 @@
-from abc import ABC, abstractmethod
 import random
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Set
 
 from hyperon_das_atomdb import AtomDB
-from hyperon_das.cache import ListIterator
 
+from hyperon_das.cache import ListIterator
 from hyperon_das.query_engines import QueryEngine
 
 
@@ -52,22 +52,7 @@ class DocumentTraverseEngine(TraverseEngine):
         custom_filter = kwargs.get('filter')
 
         links = self.das.get_incoming_links(atom_handle=self._cursor, handles_only=False)
-        
-        # Approach 1
-        def approach_1(links):
-            if link_type:
-                links = [link for link in links if link_type == link['named_type']]
 
-            if cursor_position is not None:
-                links = [
-                    link for link in links if link['targets'].index(self._cursor) == cursor_position
-                ]
-
-            if target_type:
-                links = [link for link in links if target_type in link['targets_type']]
-            return links
-
-        # Approach 2
         if link_type or cursor_position is not None or target_type or custom_filter:
             filtered_links = []
             for link in links:
@@ -85,7 +70,7 @@ class DocumentTraverseEngine(TraverseEngine):
 
         return ListIterator(links)
 
-    def get_neighbors(self, **kwargs) -> Set:
+    def get_neighbors(self, **kwargs) -> List[str]:
         link_type = kwargs.get('link_type')
         target_type = kwargs.get('target_type')
         custom_filter = kwargs.get('filter')
@@ -98,24 +83,20 @@ class DocumentTraverseEngine(TraverseEngine):
             for link in links:
                 if link_type and link_type != link['named_type']:
                     continue
-
                 if target_type and target_type not in link['targets_type']:
                     continue
-
                 # WIP
                 if custom_filter:
                     pass
-
                 filtered_links.append(link)
 
             links = filtered_links
 
         result = set()
-
         for link in links:
-            for target in link['targets']:
-                if target != self._cursor:
-                    result.add(target)
+            result.update(link['targets'])
+        
+        result.discard(self._cursor)
 
         return list(result)
 
@@ -123,8 +104,8 @@ class DocumentTraverseEngine(TraverseEngine):
         link_type = kwargs.get('link_type')
         target_type = kwargs.get('target_type')
         unique_path = kwargs.get('unique_path', False)
-        #custom_filter = kwargs.get('filter')
-        
+        # custom_filter = kwargs.get('filter')
+
         links = self.das.get_incoming_links(atom_handle=self._cursor, handles_only=False)
 
         if link_type or target_type:
@@ -133,12 +114,10 @@ class DocumentTraverseEngine(TraverseEngine):
             for link in links:
                 if link_type and link_type != link['named_type']:
                     continue
-
                 if target_type and target_type not in link['targets_type']:
                     continue
-
                 filtered_links.append(link)
-            
+
             links = filtered_links
 
         if unique_path and len(links) > 1:
@@ -147,7 +126,7 @@ class DocumentTraverseEngine(TraverseEngine):
         link = random.choice(links)
         link['targets'].remove(self._cursor)
         handle = random.choice(link['targets'])
-        
+
         self.goto(handle)
 
     def goto(self, handle: str):

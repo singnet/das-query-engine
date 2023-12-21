@@ -606,7 +606,7 @@ if __name__ == '__main__':
                 {'type': 'Concept', 'name': 'ent'},
                 {'type': 'Concept', 'name': 'human'},
             ],
-        }
+        },
     ]
     for link in all_links:
         das.add_link(link)
@@ -619,7 +619,7 @@ if __name__ == '__main__':
 
     links = traversal.get_links()
     neighbors = traversal.get_neighbors()
-    
+
     print(traversal.get()['name'])
     traversal.follow_link()
     print(traversal.get()['name'])
@@ -639,7 +639,6 @@ if __name__ == '__main__':
     print(traversal.get()['name'])
     traversal.follow_link()
     print(traversal.get()['name'])
-
 
     new_cursor = traversal.goto(monkey)
     links = traversal.get_links()

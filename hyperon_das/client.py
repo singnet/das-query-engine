@@ -83,5 +83,5 @@ class FunctionsClient:
     def get_incoming_links(
         self, atom_handle: str, handles_only: bool = False
     ) -> List[Dict[str, Any]]:
-        # return [{'handle': 'c93e1e758c53912638438e2a7d7f7b7f', 'named_type': 'Inheritance', 'targets': ['af12f10f9ae2002a1607ba0b47ba8407', 'bdfe4e7a431f73386f37c6448afe5840']}]
-        return []
+        return [{'handle': 'c93e1e758c53912638438e2a7d7f7b7f', 'named_type': 'Inheritance', 'targets': ['af12f10f9ae2002a1607ba0b47ba8407', 'bdfe4e7a431f73386f37c6448afe5840']}]
+        #return []

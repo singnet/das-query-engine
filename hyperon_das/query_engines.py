@@ -72,7 +72,9 @@ class LocalQueryEngine(QueryEngine):
         elif query["atom_type"] == "node":
             try:
                 atom_handle = self.local_backend.get_node_handle(query["type"], query["name"])
-                return ListIterator([QueryAnswer(self.local_backend.get_atom_as_dict(atom_handle), None)])
+                return ListIterator(
+                    [QueryAnswer(self.local_backend.get_atom_as_dict(atom_handle), None)]
+                )
             except NodeDoesNotExist:
                 return ListIterator([])
         elif query["atom_type"] == "link":
@@ -155,7 +157,7 @@ class LocalQueryEngine(QueryEngine):
 
     def get_incoming_links(
         self, atom_handle: str, handles_only: bool = False
-    ) -> List[Dict[str, Any]]:        
+    ) -> List[Dict[str, Any]]:
         return self.local_backend.get_incoming_links(atom_handle, handles_only)
 
     def query(
@@ -263,12 +265,20 @@ class RemoteQueryEngine(QueryEngine):
     ) -> List[Dict[str, Any]]:
         local_links = self.local_query_engine.get_incoming_links(atom_handle, handles_only)
         remote_links = self.remote_das.get_incoming_links(atom_handle, handles_only)
-        
+
         from itertools import product
-        
-        #f local_links and remote_links and not handles_only:
-            #for local_link, remote_link in product(*[1,2])
-        
+
+        if local_links and remote_links and not handles_only:
+            answer = remote_links[:]
+            for local_link, (idx, remote_link) in product(local_links, enumerate(remote_links)):
+                if local_link['handle'] == remote_link['handle']:
+                    answer[idx] = local_link
+                else:
+                    answer.append(local_link)
+            return answer
+        else:
+            return local_links + remote_links                  
+
         # Refactor this part
         if local_links and remote_links and not handles_only:
             answer = remote_links[:]
