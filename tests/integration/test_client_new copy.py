@@ -130,6 +130,8 @@ class TestVultrClientIntegration:
     @pytest.fixture()
     def server(self):
         return FunctionsClient(url='http://45.63.85.59:8081/function/query-engine')
+    #    return FunctionsClient(url='http://104.238.183.115:8081/function/query-engine')
+
 
     @pytest.fixture()
     def node_FBgg0001581(self):
@@ -179,12 +181,23 @@ class TestVultrClientIntegration:
     @pytest.fixture()
     def node_monkey(self):
         return ExpressionHasher.terminal_hash('Concept', 'monkey')
+    
+    @pytest.fixture()
+    def node_mammal(self):
+        return ExpressionHasher.terminal_hash('Concept', 'mammal')
 
     @pytest.fixture()
-    def link_inheritance_concept_concept(self, node_human, node_monkey):
+    def link_similarity_concept_concept(self, node_human, node_monkey):
+        return ExpressionHasher.expression_hash(
+            ExpressionHasher.named_type_hash('Similarity'),
+            [node_human, node_monkey],
+        )
+
+    @pytest.fixture()
+    def link_inheritance_concept_concept(self, node_human, node_mammal):
         return ExpressionHasher.expression_hash(
             ExpressionHasher.named_type_hash('Inheritance'),
-            [node_human, node_monkey],
+            [node_human, node_mammal],
         )
 
     def test_get_atom(
@@ -192,7 +205,7 @@ class TestVultrClientIntegration:
         server: FunctionsClient,
         node_human: str,
         node_monkey: str,
-        link_inheritance_concept_concept: str
+        link_similarity_concept_concept: str
     ):
         result = server.get_atom(handle=node_human)
         assert result['handle'] == node_human
@@ -204,35 +217,45 @@ class TestVultrClientIntegration:
         assert result['name'] == 'monkey'
         assert result['named_type'] == 'Concept'
 
-        result = server.get_atom(handle=link_inheritance_concept_concept)
-        assert result['handle'] == link_inheritance_concept_concept
-        assert result['named_type'] == 'Inheritance'
+        result = server.get_atom(handle=link_similarity_concept_concept)
+        assert result['handle'] == link_similarity_concept_concept
+        assert result['named_type'] == 'Similarity'
         assert result['targets'] == [node_human, node_monkey]
 
-    def test_get_node(self, server: FunctionsClient, node_FBgg0001581: str, node_FBgg0001782: str):
-        result = server.get_node(node_type='Verbatim', node_name='FBgg0001581')
-        assert result['handle'] == node_FBgg0001581
-        assert result['name'] == 'FBgg0001581'
-        assert result['named_type'] == 'Verbatim'
+    def test_get_node(self, server: FunctionsClient, node_human: str, node_monkey: str):
+        result = server.get_node(node_type='Concept', node_name='human')
+        assert result['handle'] == node_human
+        assert result['name'] == 'human'
+        assert result['named_type'] == 'Concept'
 
-        result = server.get_node(node_type='Verbatim', node_name='FBgg0001782')
-        assert result['handle'] == node_FBgg0001782
-        assert result['name'] == 'FBgg0001782'
-        assert result['named_type'] == 'Verbatim'
+        result = server.get_node(node_type='Concept', node_name='monkey')
+        assert result['handle'] == node_monkey
+        assert result['name'] == 'monkey'
+        assert result['named_type'] == 'Concept'
 
     def test_get_link(
         self,
         server: FunctionsClient,
-        node_FBgg0001581: str,
-        node_FBgg0001782: str,
-        link_inheritance_verbatim_verbatim: str,
+        node_monkey: str,
+        node_human: str,
+        node_mammal: str,
+        link_similarity_concept_concept: str,
+        link_inheritance_concept_concept: str,
     ):
         result = server.get_link(
-            link_type='Inheritance', link_targets=[node_FBgg0001581, node_FBgg0001782]
+            link_type='Similarity', link_targets=[node_human, node_monkey]
         )
-        assert result['handle'] == link_inheritance_verbatim_verbatim
+        assert result['handle'] == link_similarity_concept_concept
+        assert result['named_type'] == 'Similarity'
+        assert result['targets'] == [node_human, node_monkey]
+        
+        result = server.get_link(
+            link_type='Inheritance', link_targets=[node_human, node_mammal]
+        )
+        assert result['handle'] == link_inheritance_concept_concept
         assert result['named_type'] == 'Inheritance'
-        assert result['targets'] == [node_FBgg0001581, node_FBgg0001782]
+        assert result['targets'] == [node_human, node_mammal]
+
 
     def test_get_links(self, server: FunctionsClient):
         ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
@@ -253,15 +276,10 @@ class TestVultrClientIntegration:
         answer = server.query(
             {
                 "atom_type": "link",
-                "type": "Execution",
+                "type": "Inheritance",
                 "targets": [
-                    {
-                        "atom_type": "node",
-                        "type": "Schema",
-                        "name": "Schema:fb_synonym_primary_FBid",
-                    },
-                    {"atom_type": "node", "type": "Verbatim", "name": "Myc"},
                     {"atom_type": "variable", "name": "v1"},
+                    {"atom_type": "variable", "name": "v2"},
                 ],
             },
             {"toplevel_only": False},
