@@ -85,7 +85,12 @@ class FunctionsClient:
     ) -> List[Dict[str, Any]]:
         from hyperon_das_atomdb.adapters import RedisMongoDB
         server = RedisMongoDB(
-            
+            mongo_hostname='127.0.0.2',
+            mongo_port=27017,
+            mongo_username='mongo',
+            mongo_password='mongo',
+            redis_hostname='127.0.0.1',
+            redis_port=6379
         )
         links = server.get_incoming_links(atom_handle, handles_only)
         return links
