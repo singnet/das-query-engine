@@ -10,20 +10,11 @@ class FunctionsClient:
             self.name = f'server-{server_count}'
         self.url = url
 
-    def _send_request(self, payload) -> str | dict | int:
+    def _send_request(self, payload) -> Any:
         try:
             response = requests.request('POST', url=self.url, data=json.dumps(payload))
             if response.status_code == 200:
-                try:
-                    return response.json()
-                except Exception:
-                    # Check if function return could be only string(text)
-                    text = response.text.rstrip('\n')
-                    try:
-                        ret = eval(text)
-                    except Exception:
-                        ret = text
-                    return ret
+                return response.json()
             else:
                 return response.json()['error']
         except requests.exceptions.RequestException as e:

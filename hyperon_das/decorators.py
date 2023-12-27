@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 from functools import wraps
 from typing import Callable
 
@@ -17,11 +16,13 @@ def retry(attempts: int, timeout_seconds: int):
 
             while retry_count < attempts and timer_count < timeout_seconds:
                 try:
-                    start_time = datetime.now()
+                    start_time = time.time()
                     response = function(*args, **kwargs)
-                    end_time = datetime.now()
+                    end_time = time.time()
                     if response is not None:
-                        logger().info(f'Connection attempts: {attempts}')
+                        logger().debug(
+                            f'{retry_count + 1} successful connection attempt at [host={args[1]}]'
+                        )
                         return response
                 except Exception as e:
                     raise ConnectionServerException(
@@ -29,17 +30,18 @@ def retry(attempts: int, timeout_seconds: int):
                         details=str(e),
                     )
                 else:
+                    logger().debug(f'{retry_count + 1} unsuccessful connection attempt')
                     time.sleep(waiting_time_seconds)
                     retry_count += 1
-                    timer_count += int((end_time - start_time).total_seconds())
-
-            raise RetryException(
-                message='The number of attempts has been exceeded or a timeout has occurred',
-                details={
-                    'attempts': retry_count,
-                    'time': f'{timer_count} seconds',
-                },
+                    timer_count += end_time - start_time
+            port = f':{args[2]}' if args[2] else ''
+            message = (
+                f'Failed to connect to remote Das {args[1]}'
+                + port
+                + f' - attempts:{retry_count} - time_attempted: {timer_count}'
             )
+            logger().info(message)
+            raise ConnectionError(message)
 
         return wrapper
 
