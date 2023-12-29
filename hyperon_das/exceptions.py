@@ -36,3 +36,11 @@ class InvalidDASParameters(BaseException):
 
 class InvalidQueryEngine(BaseException):
     ...  # pragma no cover
+
+
+class GetTraversalCursorException(BaseException):
+    ...  # pragma no cover
+
+
+class MultiplePathsError(BaseException):
+    ...  # pragma no cover

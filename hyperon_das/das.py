@@ -1,9 +1,13 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from hyperon_das_atomdb import AtomDB
+from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
-from hyperon_das.exceptions import InvalidDASParameters, InvalidQueryEngine
+from hyperon_das.exceptions import (
+    GetTraversalCursorException,
+    InvalidDASParameters,
+    InvalidQueryEngine,
+)
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traversal_engines import (
@@ -195,7 +199,17 @@ class DistributedAtomSpace:
 
     def get_incoming_links(
         self, atom_handle: str, handles_only: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> Union[List[Dict[str, Any]], List[str]]:
+        """Retrieve all links pointing to Atom
+
+        Args:
+            atom_handle (str): The unique handle of the atom
+            handles_only (bool, optional): If True return only handles. Defaults to False.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms
+            or a list of strings containing the atom handles
+        """
         return self.query_engine.get_incoming_links(atom_handle, handles_only)
 
     def count_atoms(self) -> Tuple[int, int]:
@@ -404,245 +418,14 @@ class DistributedAtomSpace:
         logger().debug('The database has been cleaned.')
 
     def get_traversal_cursor(self, handle: str, **kwargs) -> TraverseEngine:
-        """Determines the starting point of the traversal
+        try:
+            self.get_atom(handle)
+        except AtomDoesNotExist:
+            raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
 
-        Args:
-            handle (str): _description_
-
-        Raises:
-            InvalidTraversalParameters: _description_
-
-        Returns:
-            TraverseEngine: _description_
-        """
         handle_only_traverse_engine = kwargs.get('handles_only', False)
+
         if handle_only_traverse_engine:
-            return HandleOnlyTraverseEngine()
+            return HandleOnlyTraverseEngine(handle, das=self, **kwargs)
         else:
             return DocumentTraverseEngine(handle, das=self, **kwargs)
-
-
-if __name__ == '__main__':
-    das = DistributedAtomSpace(query_engine='remote', host='104.238.183.115')
-    all_links = [
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'human'},
-                {'type': 'Concept', 'name': 'monkey'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'human'},
-                {'type': 'Concept', 'name': 'chimp'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'chimp'},
-                {'type': 'Concept', 'name': 'monkey'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'snake'},
-                {'type': 'Concept', 'name': 'earthworm'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'rhino'},
-                {'type': 'Concept', 'name': 'triceratops'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'snake'},
-                {'type': 'Concept', 'name': 'vine'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'human'},
-                {'type': 'Concept', 'name': 'ent'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'human'},
-                {'type': 'Concept', 'name': 'mammal'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'monkey'},
-                {'type': 'Concept', 'name': 'mammal'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'chimp'},
-                {'type': 'Concept', 'name': 'mammal'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'mammal'},
-                {'type': 'Concept', 'name': 'animal'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'reptile'},
-                {'type': 'Concept', 'name': 'animal'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'snake'},
-                {'type': 'Concept', 'name': 'reptile'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'dinosaur'},
-                {'type': 'Concept', 'name': 'reptile'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'triceratops'},
-                {'type': 'Concept', 'name': 'dinosaur'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'earthworm'},
-                {'type': 'Concept', 'name': 'animal'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'rhino'},
-                {'type': 'Concept', 'name': 'mammal'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'vine'},
-                {'type': 'Concept', 'name': 'plant'},
-            ],
-        },
-        {
-            'type': 'Inheritance',
-            'targets': [
-                {'type': 'Concept', 'name': 'ent'},
-                {'type': 'Concept', 'name': 'plant'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'monkey'},
-                {'type': 'Concept', 'name': 'human'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'chimp'},
-                {'type': 'Concept', 'name': 'human'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'monkey'},
-                {'type': 'Concept', 'name': 'chimp'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'earthworm'},
-                {'type': 'Concept', 'name': 'snake'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'triceratops'},
-                {'type': 'Concept', 'name': 'rhino'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'vine'},
-                {'type': 'Concept', 'name': 'snake'},
-            ],
-        },
-        {
-            'type': 'Similarity',
-            'targets': [
-                {'type': 'Concept', 'name': 'ent'},
-                {'type': 'Concept', 'name': 'human'},
-            ],
-        },
-    ]
-    for link in all_links:
-        das.add_link(link)
-    human = das.get_node_handle('Concept', 'human')
-    monkey = das.get_node_handle('Concept', 'monkey')
-    dinosaur = das.get_node_handle('Concept', 'dinosaur')
-    handle = das.get_link_handle('Similarity', link_targets=[human, monkey])
-
-    traversal = das.get_traversal_cursor(handle=dinosaur)
-
-    links = traversal.get_links()
-    neighbors = traversal.get_neighbors()
-
-    print(traversal.get()['name'])
-    traversal.follow_link()
-    print(traversal.get()['name'])
-    traversal.follow_link()
-    print(traversal.get()['name'])
-    traversal.follow_link()
-    print(traversal.get()['name'])
-    traversal.follow_link()
-    print(traversal.get()['name'])
-    traversal.follow_link()
-    print(traversal.get()['name'])
-    traversal.follow_link()
-    print(traversal.get()['name'])
-    traversal.follow_link()
-    print(traversal.get()['name'])
-    traversal.follow_link(unique_path=True, link_type='Similarity')
-    print(traversal.get()['name'])
-    traversal.follow_link()
-    print(traversal.get()['name'])
-
-    new_cursor = traversal.goto(monkey)
-    links = traversal.get_links()
-    neighbors = traversal.get_neighbors()
-    cursor = traversal.get()
-
-    print('End')

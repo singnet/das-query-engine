@@ -2,6 +2,7 @@ import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
+from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
 
 class FunctionsClient:
@@ -25,21 +26,30 @@ class FunctionsClient:
             'action': 'get_atom',
             'input': {'handle': handle},
         }
-        return self._send_request(payload)
+        response = self._send_request(payload)
+        if 'not exist' in response:
+            raise AtomDoesNotExist('error')
+        return response
 
     def get_node(self, node_type: str, node_name: str) -> Union[str, Dict]:
         payload = {
             'action': 'get_node',
             'input': {'node_type': node_type, 'node_name': node_name},
         }
-        return self._send_request(payload)
+        response = self._send_request(payload)
+        if 'not exist' in response:
+            raise NodeDoesNotExist('error')
+        return response
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         payload = {
             'action': 'get_link',
             'input': {'link_type': link_type, 'link_targets': link_targets},
         }
-        return self._send_request(payload)
+        response = self._send_request(payload)
+        if 'not exist' in response:
+            raise LinkDoesNotExist('error')
+        return response
 
     def get_links(
         self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
@@ -82,15 +92,9 @@ class FunctionsClient:
 
     def get_incoming_links(
         self, atom_handle: str, handles_only: bool = False
-    ) -> List[Dict[str, Any]]:
-        from hyperon_das_atomdb.adapters import RedisMongoDB
-        server = RedisMongoDB(
-            mongo_hostname='127.0.0.2',
-            mongo_port=27017,
-            mongo_username='mongo',
-            mongo_password='mongo',
-            redis_hostname='127.0.0.1',
-            redis_port=6379
-        )
-        links = server.get_incoming_links(atom_handle, handles_only)
-        return links
+    ) -> Union[List[Dict[str, Any]], List[str]]:
+        payload = {
+            'action': 'get_incoming_links',
+            'input': {'atom_handle': atom_handle, 'handles_only': handles_only},
+        }
+        return self._send_request(payload)
