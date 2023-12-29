@@ -2,7 +2,7 @@ import pytest
 
 from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.exceptions import GetTraversalCursorException, MultiplePathsError
-from hyperon_das.traversal_engines import DocumentTraverseEngine, HandleOnlyTraverseEngine
+from hyperon_das.traverse_engines import DocumentTraverseEngine, HandleOnlyTraverseEngine
 
 
 def simplify_links(links: list, das: DistributedAtomSpace) -> set:

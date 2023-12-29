@@ -10,7 +10,7 @@ from hyperon_das.exceptions import (
 )
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
-from hyperon_das.traversal_engines import (
+from hyperon_das.traverse_engines import (
     DocumentTraverseEngine,
     HandleOnlyTraverseEngine,
     TraverseEngine,
