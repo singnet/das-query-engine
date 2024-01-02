@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
+from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
@@ -31,11 +32,9 @@ class DistributedAtomSpace:
                     message="'redis_mongo' backend requires local query engine ('query_engine=local')"
                 )
         else:
-            raise ValueError
-            # implement this exception in AtomDB
-            # raise InvalidAtomDB(
-            #    message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'"
-            # )
+            raise InvalidAtomDB(
+               message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'"
+            )
 
         if query_engine_parameter == 'local':
             self.query_engine = LocalQueryEngine(self.backend, kwargs)
