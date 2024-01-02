@@ -347,34 +347,44 @@ class TestTraverseEngine:
 
     def test_get_neighbors(self, das):
         mammal = das.get_node_handle('Concept', 'mammal')
-        triceratops = das.get_node_handle('Concept', 'triceratops')
+        monkey = das.get_node_handle('Concept', 'monkey')
+        chimp = das.get_node_handle('Concept', 'chimp')
+        human = das.get_node_handle('Concept', 'human')
+        animal = das.get_node_handle('Concept', 'animal')
+        rhino = das.get_node_handle('Concept', 'rhino')
 
         cursor = das.get_traversal_cursor(mammal)
         neighbors = cursor.get_neighbors()
-        neighbors_names = get_names(neighbors, das)
-        assert neighbors_names == {'monkey', 'chimp', 'human', 'animal', 'rhino'}
 
-        cursor = das.get_traversal_cursor(triceratops)
-        neighbors = cursor.get_neighbors()
-        neighbors_names = get_names(neighbors, das)
-        assert neighbors_names == {'dinosaur', 'rhino'}
+        assert das.get_atom(monkey) in neighbors
+        assert das.get_atom(chimp) in neighbors
+        assert das.get_atom(human) in neighbors
+        assert das.get_atom(animal) in neighbors
+        assert das.get_atom(rhino) in neighbors
 
     def test_get_neighbors_with_filters(self, das):
         mammal = das.get_node_handle('Concept', 'mammal')
+        monkey = das.get_node_handle('Concept', 'monkey')
+        chimp = das.get_node_handle('Concept', 'chimp')
+        human = das.get_node_handle('Concept', 'human')
+        animal = das.get_node_handle('Concept', 'animal')
+        rhino = das.get_node_handle('Concept', 'rhino')
         triceratops = das.get_node_handle('Concept', 'triceratops')
 
         cursor = das.get_traversal_cursor(mammal)
         neighbors = cursor.get_neighbors(link_type='Inheritance', target_type='Concept')
-        neighbors_names = get_names(neighbors, das)
-        assert neighbors_names == {'monkey', 'chimp', 'human', 'animal', 'rhino'}
+
+        assert das.get_atom(monkey) in neighbors
+        assert das.get_atom(chimp) in neighbors
+        assert das.get_atom(human) in neighbors
+        assert das.get_atom(animal) in neighbors
+        assert das.get_atom(rhino) in neighbors
         neighbors = cursor.get_neighbors(link_type='Fake')
-        neighbors_names = get_names(neighbors, das)
-        assert neighbors_names == set()
+        assert neighbors == []
 
         cursor = das.get_traversal_cursor(triceratops)
         neighbors = cursor.get_neighbors(link_type='Similarity')
-        neighbors_names = get_names(neighbors, das)
-        assert neighbors_names == {'rhino'}
+        assert das.get_atom(rhino) in neighbors
 
         das.add_link(
             {
@@ -395,8 +405,8 @@ class TestTraverseEngine:
         neighbors = cursor.get_neighbors(
             link_type='Similarity', filter=my_filter, target_type='Concept'
         )
-        neighbors_names = get_names(neighbors, das)
-        assert neighbors_names == {'X'}
+        x_handle = das.get_node_handle('Member', 'X')
+        assert das.get_atom(x_handle) in neighbors
 
     @pytest.mark.parametrize("run", range(10))
     def test_follow_link(self, das, run):

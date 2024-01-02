@@ -32,9 +32,7 @@ class DistributedAtomSpace:
                     message="'redis_mongo' backend requires local query engine ('query_engine=local')"
                 )
         else:
-            raise InvalidAtomDB(
-               message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'"
-            )
+            raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
 
         if query_engine_parameter == 'local':
             self.query_engine = LocalQueryEngine(self.backend, kwargs)
@@ -417,6 +415,17 @@ class DistributedAtomSpace:
         logger().debug('The database has been cleaned.')
 
     def get_traversal_cursor(self, handle: str, **kwargs) -> TraverseEngine:
+        """_summary_
+
+        Args:
+            handle (str): _description_
+
+        Raises:
+            GetTraversalCursorException: _description_
+
+        Returns:
+            TraverseEngine: _description_
+        """
         try:
             self.get_atom(handle)
         except AtomDoesNotExist:
