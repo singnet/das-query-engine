@@ -415,16 +415,17 @@ class DistributedAtomSpace:
         logger().debug('The database has been cleaned.')
 
     def get_traversal_cursor(self, handle: str, **kwargs) -> TraverseEngine:
-        """_summary_
+        """Create an instance of the TraverseEngine
 
         Args:
-            handle (str): _description_
+            handle (str): atom handle
 
         Raises:
-            GetTraversalCursorException: _description_
+            GetTraversalCursorException: If Atom does not exist
 
         Returns:
-            TraverseEngine: _description_
+            TraverseEngine: The TraverseEngine TraverseEngine which can be HandleOnlyTraverseEngine
+            or DocumentTraverseEngine depending on the 'handles_only' parameter
         """
         try:
             self.get_atom(handle)
