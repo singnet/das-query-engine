@@ -1,4 +1,4 @@
-import random
+from random import choice
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
 
@@ -56,7 +56,7 @@ class TraverseEngine(ABC):
         ...
 
     @abstractmethod
-    def get_neighbors(self, **kwargs) -> List[str]:
+    def get_neighbors(self, **kwargs) -> Union[List[str], List[Dict[str, Any]]]:
         ...
 
     def follow_link(self, **kwargs) -> None:
@@ -79,12 +79,12 @@ class TraverseEngine(ABC):
                 details=f'{len(filtered_links)} paths',
             )
 
-        link = random.choice(filtered_links)
+        link = choice(filtered_links)
 
         if self._cursor in link['targets']:
             link['targets'].remove(self._cursor)
 
-        handle = random.choice(link['targets'])
+        handle = choice(link['targets'])
 
         self.goto(handle)
 
@@ -149,7 +149,7 @@ class DocumentTraverseEngine(TraverseEngine):
 
         return ListIterator(filtered_links)
 
-    def get_neighbors(self, **kwargs) -> List[str]:
+    def get_neighbors(self, **kwargs) -> List[Dict[str, Any]]:
         filtered_links_iterator = self.get_links(
             link_type=kwargs.get('link_type'),
             target_type=kwargs.get('target_type'),
