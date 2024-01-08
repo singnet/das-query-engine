@@ -281,7 +281,7 @@ class RemoteQueryEngine(QueryEngine):
                     answer.append(local_link)
             return answer
         else:
-            return local_links + remote_links
+            return remote_links.extend(local_links)
 
     def query(
         self,
