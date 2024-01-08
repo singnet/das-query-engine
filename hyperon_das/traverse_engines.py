@@ -59,34 +59,9 @@ class TraverseEngine(ABC):
     def get_neighbors(self, **kwargs) -> Union[List[str], List[Dict[str, Any]]]:
         ...
 
+    @abstractmethod
     def follow_link(self, **kwargs) -> None:
-        filtered_links_iterator = self.get_links(
-            link_type=kwargs.get('link_type'),
-            target_type=kwargs.get('target_type'),
-            filter=kwargs.get('filter'),
-        )
-
-        filtered_links = [link for link in filtered_links_iterator]
-
-        if not filtered_links:
-            return
-
-        unique_path = kwargs.get('unique_path', False)
-
-        if unique_path and len(filtered_links) > 1:
-            raise MultiplePathsError(
-                message='Unable to follow the link. More than one path found',
-                details=f'{len(filtered_links)} paths',
-            )
-
-        link = choice(filtered_links)
-
-        if self._cursor in link['targets']:
-            link['targets'].remove(self._cursor)
-
-        handle = choice(link['targets'])
-
-        self.goto(handle)
+       ...
 
     def goto(self, handle: str) -> None:
         self._cursor = handle
@@ -115,8 +90,7 @@ class HandleOnlyTraverseEngine(TraverseEngine):
     def get_neighbors(self, **kwargs) -> List[str]:
         filtered_links_iterator = self.get_links(
             link_type=kwargs.get('link_type'),
-            target_type=kwargs.get('target_type'),
-            filter=kwargs.get('filter'),
+            target_type=kwargs.get('target_type')
         )
 
         targets_set = {target for link in filtered_links_iterator for target in link['targets']}
@@ -127,6 +101,34 @@ class HandleOnlyTraverseEngine(TraverseEngine):
         targets_set.discard(self._cursor)
 
         return list(targets_set)
+
+    def follow_link(self, **kwargs) -> None:
+        filtered_links_iterator = self.get_links(
+            link_type=kwargs.get('link_type'),
+            target_type=kwargs.get('target_type')
+        )
+
+        filtered_links = [link for link in filtered_links_iterator]
+
+        if not filtered_links:
+            return
+
+        unique_path = kwargs.get('unique_path', False)
+
+        if unique_path and len(filtered_links) > 1:
+            raise MultiplePathsError(
+                message='Unable to follow the link. More than one path found',
+                details=f'{len(filtered_links)} paths',
+            )
+
+        link = choice(filtered_links)
+
+        if self._cursor in link['targets']:
+            link['targets'].remove(self._cursor)
+
+        handle = choice(link['targets'])
+
+        self.goto(handle)
 
 
 class DocumentTraverseEngine(TraverseEngine):
@@ -164,3 +166,32 @@ class DocumentTraverseEngine(TraverseEngine):
                 targets_document.append(document)
 
         return targets_document
+
+    def follow_link(self, **kwargs) -> None:
+        filtered_links_iterator = self.get_links(
+            link_type=kwargs.get('link_type'),
+            target_type=kwargs.get('target_type'),
+            filter=kwargs.get('filter'),
+        )
+
+        filtered_links = [link for link in filtered_links_iterator]
+
+        if not filtered_links:
+            return
+
+        unique_path = kwargs.get('unique_path', False)
+
+        if unique_path and len(filtered_links) > 1:
+            raise MultiplePathsError(
+                message='Unable to follow the link. More than one path found',
+                details=f'{len(filtered_links)} paths',
+            )
+
+        link = choice(filtered_links)
+
+        if self._cursor in link['targets']:
+            link['targets'].remove(self._cursor)
+
+        handle = choice(link['targets'])
+
+        self.goto(handle)
