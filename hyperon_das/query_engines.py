@@ -280,9 +280,9 @@ class RemoteQueryEngine(QueryEngine):
                 handle = local_link['handle']
                 if handle in remote_links_set:
                     answer.append(local_link)
-                    remote_links.remove(remote_links_set[handle])
+                    remote_links_set.pop(handle)
 
-            answer.extend(remote_links)
+            answer.extend(remote_links_set.values())
 
             return answer
         else:
