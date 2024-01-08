@@ -273,12 +273,17 @@ class RemoteQueryEngine(QueryEngine):
         remote_links = self.remote_das.get_incoming_links(atom_handle, handles_only)
 
         if local_links and remote_links and not handles_only:
-            answer = remote_links[:]
-            for local_link, (idx, remote_link) in product(local_links, enumerate(remote_links)):
-                if local_link['handle'] == remote_link['handle']:
-                    answer[idx] = local_link
-                else:
+            remote_links_set = {link['handle']: link for link in remote_links}
+            answer = []
+
+            for local_link in local_links:
+                handle = local_link['handle']
+                if handle in remote_links_set:
                     answer.append(local_link)
+                    remote_links.remove(remote_links_set[handle])
+
+            answer.extend(remote_links)
+
             return answer
         else:
             return remote_links.extend(local_links)
