@@ -424,7 +424,7 @@ class DistributedAtomSpace:
             GetTraversalCursorException: If Atom does not exist
 
         Returns:
-            TraverseEngine: The TraverseEngine TraverseEngine which can be HandleOnlyTraverseEngine
+            TraverseEngine: The TraverseEngine which can be HandleOnlyTraverseEngine
             or DocumentTraverseEngine depending on the 'handles_only' parameter
         """
         try:

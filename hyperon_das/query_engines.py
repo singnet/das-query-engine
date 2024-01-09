@@ -271,8 +271,12 @@ class RemoteQueryEngine(QueryEngine):
     ) -> Union[List[Dict[str, Any]], List[str]]:
         local_links = self.local_query_engine.get_incoming_links(atom_handle, handles_only)
         remote_links = self.remote_das.get_incoming_links(atom_handle, handles_only)
-
-        if local_links and remote_links and not handles_only:
+        
+        if handles_only:
+            local_links_set = set(local_links)
+            remote_links_set = set(remote_links)
+            return list(local_links_set.union(remote_links_set))
+        else:
             remote_links_set = {link['handle']: link for link in remote_links}
             answer = []
 
@@ -285,8 +289,6 @@ class RemoteQueryEngine(QueryEngine):
             answer.extend(remote_links_set.values())
 
             return answer
-        else:
-            return remote_links.extend(local_links)
 
     def query(
         self,
