@@ -1,11 +1,21 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from hyperon_das_atomdb import AtomDB
+from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
+from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
-from hyperon_das.exceptions import InvalidDASParameters, InvalidQueryEngine
+from hyperon_das.exceptions import (
+    GetTraversalCursorException,
+    InvalidDASParameters,
+    InvalidQueryEngine,
+)
 from hyperon_das.logger import logger
+from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
+from hyperon_das.traverse_engines import (
+    DocumentTraverseEngine,
+    HandleOnlyTraverseEngine,
+    TraverseEngine,
+)
 
 
 class DistributedAtomSpace:
@@ -22,11 +32,7 @@ class DistributedAtomSpace:
                     message="'redis_mongo' backend requires local query engine ('query_engine=local')"
                 )
         else:
-            raise ValueError
-            # implement this exception in AtomDB
-            # raise InvalidAtomDB(
-            #    message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'"
-            # )
+            raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
 
         if query_engine_parameter == 'local':
             self.query_engine = LocalQueryEngine(self.backend, kwargs)
@@ -187,6 +193,21 @@ class DistributedAtomSpace:
             ]
         """
         return self.query_engine.get_links(link_type, target_types, link_targets)
+
+    def get_incoming_links(
+        self, atom_handle: str, handles_only: bool = False
+    ) -> Union[List[Dict[str, Any]], List[str]]:
+        """Retrieve all links pointing to Atom
+
+        Args:
+            atom_handle (str): The unique handle of the atom
+            handles_only (bool, optional): If True return only handles. Defaults to False.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms
+            or a list of strings containing the atom handles
+        """
+        return self.query_engine.get_incoming_links(atom_handle, handles_only)
 
     def count_atoms(self) -> Tuple[int, int]:
         """
@@ -392,3 +413,28 @@ class DistributedAtomSpace:
         """Clear all data"""
         self.backend.clear_database()
         logger().debug('The database has been cleaned.')
+
+    def get_traversal_cursor(self, handle: str, **kwargs) -> TraverseEngine:
+        """Create an instance of the TraverseEngine
+
+        Args:
+            handle (str): atom handle
+
+        Raises:
+            GetTraversalCursorException: If Atom does not exist
+
+        Returns:
+            TraverseEngine: The TraverseEngine which can be HandleOnlyTraverseEngine
+            or DocumentTraverseEngine depending on the 'handles_only' parameter
+        """
+        try:
+            self.get_atom(handle)
+        except AtomDoesNotExist:
+            raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
+
+        handle_only_traverse_engine = kwargs.get('handles_only', False)
+
+        if handle_only_traverse_engine:
+            return HandleOnlyTraverseEngine(handle, das=self, **kwargs)
+        else:
+            return DocumentTraverseEngine(handle, das=self, **kwargs)

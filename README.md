@@ -12,12 +12,17 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
     - [Local](#local)
     - [Remote](#remote)
     - [Server](#server)
+  - [TraverseEngine](#traverseengine)
+    - [Creating a TraverseEngine object](#creating-a-traverseengine-object)
+    - [Traversal Methods](#traversal-methods)
+    - [Parameters for Traversal Methods](#parameters-for-traversal-methods)
   - [Examples](#examples)
     - [Local DAS](#local-das)
     - [Remote DAS](#remote-das)
       - [Local Scope](#local-scope)
       - [Remote scope](#remote-scope)
       - [Remote scope synchronized with local Atoms](#remote-scope-synchronized-with-local-atoms)
+    - [Traverse](#traverse)
   - [Tests](#tests)
 
 ## Installation
@@ -120,6 +125,47 @@ das = DistributedAtomSpace(
     redis_port=6379
 )
 ```
+
+## TraverseEngine
+
+Introducing TraverseEngine! This API functionality can process some requests related to hypergraph traversal. In other words, it allows a given Atom to travel to it's neighborhood through adjacent Links.
+
+### Creating a TraverseEngine object
+
+To create a TraverseEngine object, use the `get_traversal_cursor` method, which expects a handle as a starting point for the traversal.
+
+Optionally, you can provide kwargs parameters: 
+    - `handles_only` is a bool and dafaults is False. If True, `get` methods in TraverseEngine return handles only.
+
+Example:
+
+```python
+from hyperon_das import DistributedAtomSpace
+
+das = DistributedAtomSpace()
+
+traverse_engine = das.get_traversal_cursor(handle='12345', handles_only=True)
+```
+
+### Traversal Methods
+
+The TraverseEngine provides some methods for graph traversal:
+
+1. **get()**: Return the current cursor.
+2. **get_links(kwargs)**: Return any links having current cursor as one of its targets, i.e. any links pointing to cursor.
+3. **get_neighbors(kwargs)**: Returns the set formed by all targets of all links that point to the current cursor. In other words, the set of “neighbors” of the current cursor.
+4. **follow_link(kwargs)**: Updates the current cursor by following a link and selecting one of its targets, randomly.
+5. **goto(handle)**: Reset the current cursor to the passed handle.
+
+### Parameters for Traversal Methods
+
+Various parameters can be passed to the traversal methods to filter the results. For example:
+
+1. **link_type=XXX**: Filters to contain only links whose named_type == XXX.
+2. **cursor_position=N**: filters the response so that only links with the current cursor at the nth position of their target are returned. (only available in the `get_links` method)
+3. **target_type=XXX**: Filters to contain only links whose at least one of the targets has named_type == XXX.
+4. **unique_path=FLAG**: if FLAG is True, raise an exception if there's more then one possible neighbor to select after applying all filters. (only available in the `follow_link` method)
+5. **filter=F**: F is a function used to filter results after every other filters have been applied. F should expect a dict (the atom document) and return True if and only if this atom should be kept. (only available when the TraverseEngine object is created by passing the `handles_only=False` parameter)
 
 ## Examples
 
@@ -364,6 +410,28 @@ print(resp)
         ],
     },
 ]
+```
+
+### Traverse
+
+```python
+from hyperon_das import DistributedAtomSpace
+
+das = DistributedAtomSpace(query_engine='remote', host='192.32.11.45', port=9000)
+
+traverse = das.get_traversal_cursor(handle='12345', handles_only=True)
+
+
+current_cursor = traverse.get()
+
+links = traverse.get_links(link_type='Similarity', cursor_position=0, target_type='Concept')
+
+neighbors = traverse.get_neighbors(link_type='Inheritance', target_type='Concept')
+
+traverse.follow_link(link_type='Similarity', unique_path=True)
+
+traverse.goto(handle='9990')
+
 ```
 
 ## Tests

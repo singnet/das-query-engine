@@ -1,5 +1,6 @@
 import json
 from abc import ABC, abstractmethod
+from itertools import product
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
@@ -155,6 +156,11 @@ class LocalQueryEngine(QueryEngine):
 
         return self._to_link_dict_list(db_answer)
 
+    def get_incoming_links(
+        self, atom_handle: str, handles_only: bool = False
+    ) -> Union[List[Dict[str, Any]], List[str]]:
+        return self.local_backend.get_incoming_links(atom_handle, handles_only)
+
     def query(
         self,
         query: Dict[str, Any],
@@ -221,31 +227,36 @@ class RemoteQueryEngine(QueryEngine):
         try:
             atom = self.local_query_engine.get_atom(handle)
         except AtomDoesNotExist:
-            atom = self.remote_das.get_atom(handle)
-        if not atom:
-            raise AtomDoesNotExist(message='This atom does not exist', details=f'handle:{handle}')
+            try:
+                atom = self.remote_das.get_atom(handle)
+            except AtomDoesNotExist:
+                raise AtomDoesNotExist(
+                    message='This atom does not exist', details=f'handle:{handle}'
+                )
         return atom
 
     def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
         try:
             node = self.local_query_engine.get_node(node_type, node_name)
         except NodeDoesNotExist:
-            node = self.remote_das.get_node(node_type, node_name)
-        if not node:
-            raise NodeDoesNotExist(
-                message='This node does not exist', details=f'{node_type}:{node_name}'
-            )
+            try:
+                node = self.remote_das.get_node(node_type, node_name)
+            except NodeDoesNotExist:
+                raise NodeDoesNotExist(
+                    message='This node does not exist', details=f'{node_type}:{node_name}'
+                )
         return node
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         try:
             link = self.local_query_engine.get_link(link_type, link_targets)
         except LinkDoesNotExist:
-            link = self.remote_das.get_link(link_type, link_targets)
-        if not link:
-            raise LinkDoesNotExist(
-                message='This link does not exist', details=f'{link_type}:{link_targets}'
-            )
+            try:
+                link = self.remote_das.get_link(link_type, link_targets)
+            except LinkDoesNotExist:
+                raise LinkDoesNotExist(
+                    message='This link does not exist', details=f'{link_type}:{link_targets}'
+                )
         return link
 
     def get_links(
@@ -254,6 +265,30 @@ class RemoteQueryEngine(QueryEngine):
         local = self.local_query_engine.get_links(link_type, target_types, link_targets)
         if not local:
             return self.remote_das.get_links(link_type, target_types, link_targets)
+
+    def get_incoming_links(
+        self, atom_handle: str, handles_only: bool = False
+    ) -> Union[List[Dict[str, Any]], List[str]]:
+        local_links = self.local_query_engine.get_incoming_links(atom_handle, handles_only)
+        remote_links = self.remote_das.get_incoming_links(atom_handle, handles_only)
+        
+        if handles_only:
+            local_links_set = set(local_links)
+            remote_links_set = set(remote_links)
+            return list(local_links_set.union(remote_links_set))
+        else:
+            remote_links_set = {link['handle']: link for link in remote_links}
+            answer = []
+
+            for local_link in local_links:
+                handle = local_link['handle']
+                if handle in remote_links_set:
+                    answer.append(local_link)
+                    remote_links_set.pop(handle)
+
+            answer.extend(remote_links_set.values())
+
+            return answer
 
     def query(
         self,

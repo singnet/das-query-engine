@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from hyperon_das_atomdb.adapters import InMemoryDB
+from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.exceptions import InvalidQueryEngine
@@ -20,7 +21,7 @@ class TestDistributedAtomSpace:
         assert isinstance(das.backend, InMemoryDB)
         assert isinstance(das.query_engine, RemoteQueryEngine)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidAtomDB):
             das = DistributedAtomSpace(atomdb='snet')
 
         with pytest.raises(InvalidQueryEngine) as exc:
