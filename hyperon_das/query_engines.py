@@ -1,6 +1,5 @@
 import json
 from abc import ABC, abstractmethod
-from itertools import product
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
@@ -271,7 +270,7 @@ class RemoteQueryEngine(QueryEngine):
     ) -> Union[List[Dict[str, Any]], List[str]]:
         local_links = self.local_query_engine.get_incoming_links(atom_handle, handles_only)
         remote_links = self.remote_das.get_incoming_links(atom_handle, handles_only)
-        
+
         if handles_only:
             local_links_set = set(local_links)
             remote_links_set = set(remote_links)

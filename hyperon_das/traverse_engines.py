@@ -1,5 +1,5 @@
-from random import choice
 from abc import ABC, abstractmethod
+from random import choice
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
 
 from hyperon_das.cache import ListIterator
@@ -25,27 +25,45 @@ class TraverseEngine(ABC):
         target_type: str = None,
         custom_filter: Callable = None,
         handles_only: bool = False,
-    ) -> List[Dict[str, Any]]:
-        if link_type or cursor_position is not None or target_type or custom_filter or handles_only:
-            filtered_links = []
-            for link in links:
-                if link_type and link_type != link['named_type']:
-                    continue
-                if cursor_position is not None and link['targets'].index(self._cursor) != cursor_position:
-                    continue
-                if target_type and target_type not in link['targets_type']:
-                    continue
-                if custom_filter and callable(custom_filter):
-                    ret = custom_filter(link)
-                    if not isinstance(ret, bool):
-                        raise TypeError('The function must return a boolean')
-                    if ret is False:
+    ) -> Union[List[Dict[str, Any]], List[str]]:
+        if (
+            not link_type
+            and cursor_position is None
+            and not target_type
+            and not custom_filter
+            and handles_only is False
+        ):
+            return links
+
+        filtered_links = []
+
+        for link in links:
+            if link_type and link_type != link['named_type']:
+                continue
+
+            if isinstance(cursor_position, int) and cursor_position >= 0:
+                try:
+                    if self._cursor != link['targets'][cursor_position]:
                         continue
-                if handles_only:
-                    link = link['handle']
-                filtered_links.append(link)
-            links = filtered_links
-        return links
+                except IndexError:
+                    continue
+
+            if target_type and target_type not in link['targets_type']:
+                continue
+
+            if custom_filter and callable(custom_filter):
+                ret = custom_filter(link)
+                if not isinstance(ret, bool):
+                    raise TypeError('The function must return a boolean')
+                if ret is False:
+                    continue
+
+            if handles_only:
+                link = link['handle']
+
+            filtered_links.append(link)
+
+        return filtered_links
 
     @abstractmethod
     def get(self) -> Union[str, Dict[str, Any]]:
@@ -61,7 +79,7 @@ class TraverseEngine(ABC):
 
     @abstractmethod
     def follow_link(self, **kwargs) -> None:
-       ...
+        ...
 
     def goto(self, handle: str) -> None:
         self._cursor = handle
@@ -89,8 +107,7 @@ class HandleOnlyTraverseEngine(TraverseEngine):
 
     def get_neighbors(self, **kwargs) -> List[str]:
         filtered_links_iterator = self.get_links(
-            link_type=kwargs.get('link_type'),
-            target_type=kwargs.get('target_type')
+            link_type=kwargs.get('link_type'), target_type=kwargs.get('target_type')
         )
 
         targets_set = {target for link in filtered_links_iterator for target in link['targets']}
@@ -104,8 +121,7 @@ class HandleOnlyTraverseEngine(TraverseEngine):
 
     def follow_link(self, **kwargs) -> None:
         filtered_links_iterator = self.get_links(
-            link_type=kwargs.get('link_type'),
-            target_type=kwargs.get('target_type')
+            link_type=kwargs.get('link_type'), target_type=kwargs.get('target_type')
         )
 
         filtered_links = [link for link in filtered_links_iterator]
@@ -128,7 +144,7 @@ class HandleOnlyTraverseEngine(TraverseEngine):
 
         handle = choice(link['targets'])
 
-        self.goto(handle)
+        self._cursor = handle
 
 
 class DocumentTraverseEngine(TraverseEngine):
@@ -194,4 +210,4 @@ class DocumentTraverseEngine(TraverseEngine):
 
         handle = choice(link['targets'])
 
-        self.goto(handle)
+        self._cursor = handle
