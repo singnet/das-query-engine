@@ -46,12 +46,14 @@ class FunctionsClient:
     ) -> Union[List[str], List[Dict]]:
         payload = {
             'action': 'get_links',
-            'input': {
-                'link_type': link_type,
-                'target_types': target_types,
-                'link_targets': link_targets,
-            },
+            'input': {'link_type': link_type},
         }
+        if target_types:
+            payload['input']['target_types'] = target_types
+
+        if link_targets:
+            payload['input']['link_targets'] = link_targets
+
         return self._send_request(payload)
 
     def query(
@@ -59,7 +61,6 @@ class FunctionsClient:
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        """"""
         payload = {
             'action': 'query',
             'input': {'query': query, 'parameters': parameters},
