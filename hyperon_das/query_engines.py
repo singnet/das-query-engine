@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
-from hyperon_das_atomdb import WILDCARD, LinkDoesNotExist
-from hyperon_das_atomdb.exceptions import AtomDoesNotExist, NodeDoesNotExist
+from hyperon_das_atomdb import WILDCARD
+from hyperon_das_atomdb.exceptions import LinkDoesNotExistException, AtomDoesNotExistException, NodeDoesNotExistException
 
 from hyperon_das.cache import AndEvaluator, LazyQueryEvaluator, ListIterator, QueryAnswerIterator
 from hyperon_das.client import FunctionsClient
@@ -75,7 +75,7 @@ class LocalQueryEngine(QueryEngine):
                 return ListIterator(
                     [QueryAnswer(self.local_backend.get_atom_as_dict(atom_handle), None)]
                 )
-            except NodeDoesNotExist:
+            except NodeDoesNotExistException:
                 return ListIterator([])
         elif query["atom_type"] == "link":
             matched_targets = []
@@ -120,15 +120,15 @@ class LocalQueryEngine(QueryEngine):
     def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
         try:
             return self.local_backend.get_atom(handle)
-        except AtomDoesNotExist as e:
+        except AtomDoesNotExistException as e:
             raise e
 
     def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
         try:
             node_handle = self.local_backend.node_handle(node_type, node_name)
             return self.local_backend.get_atom(node_handle)
-        except AtomDoesNotExist:
-            raise NodeDoesNotExist(
+        except AtomDoesNotExistException:
+            raise NodeDoesNotExistException(
                 message='This node does not exist', details=f'{node_type}:{node_name}'
             )
 
@@ -136,8 +136,8 @@ class LocalQueryEngine(QueryEngine):
         try:
             link_handle = self.local_backend.link_handle(link_type, link_targets)
             return self.local_backend.get_atom(link_handle)
-        except AtomDoesNotExist:
-            raise LinkDoesNotExist(
+        except AtomDoesNotExistException:
+            raise LinkDoesNotExistException(
                 message='This link does not exist', details=f'{link_type}:{link_targets}'
             )
 
@@ -220,19 +220,19 @@ class RemoteQueryEngine(QueryEngine):
     def get_atom(self, handle: str) -> Dict[str, Any]:
         try:
             atom = self.local_query_engine.get_atom(handle)
-        except AtomDoesNotExist:
+        except AtomDoesNotExistException:
             atom = self.remote_das.get_atom(handle)
         if not atom:
-            raise AtomDoesNotExist(message='This atom does not exist', details=f'handle:{handle}')
+            raise AtomDoesNotExistException(message='This atom does not exist', details=f'handle:{handle}')
         return atom
 
     def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
         try:
             node = self.local_query_engine.get_node(node_type, node_name)
-        except NodeDoesNotExist:
+        except NodeDoesNotExistException:
             node = self.remote_das.get_node(node_type, node_name)
         if not node:
-            raise NodeDoesNotExist(
+            raise NodeDoesNotExistException(
                 message='This node does not exist', details=f'{node_type}:{node_name}'
             )
         return node
@@ -240,10 +240,10 @@ class RemoteQueryEngine(QueryEngine):
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         try:
             link = self.local_query_engine.get_link(link_type, link_targets)
-        except LinkDoesNotExist:
+        except LinkDoesNotExistException:
             link = self.remote_das.get_link(link_type, link_targets)
         if not link:
-            raise LinkDoesNotExist(
+            raise LinkDoesNotExistException(
                 message='This link does not exist', details=f'{link_type}:{link_targets}'
             )
         return link
