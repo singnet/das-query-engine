@@ -46,7 +46,7 @@ class DistributedAtomSpace:
                 details=f'query_engine={query_engine_parameter}',
             )
 
-    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
+    def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
         """
         Retrieve information about an Atom using its handle.
 
@@ -72,7 +72,7 @@ class DistributedAtomSpace:
                 'named_type': 'Concept'
             }
         """
-        return self.query_engine.get_atom(handle)
+        return self.query_engine.get_atom(handle, **kwargs)
 
     def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
         """
@@ -195,8 +195,8 @@ class DistributedAtomSpace:
         return self.query_engine.get_links(link_type, target_types, link_targets)
 
     def get_incoming_links(
-        self, atom_handle: str, handles_only: bool = False
-    ) -> Union[List[Dict[str, Any]], List[str]]:
+        self, atom_handle: str, **kwargs
+    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
         """Retrieve all links pointing to Atom
 
         Args:
@@ -207,7 +207,7 @@ class DistributedAtomSpace:
             List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms
             or a list of strings containing the atom handles
         """
-        return self.query_engine.get_incoming_links(atom_handle, handles_only)
+        return self.query_engine.get_incoming_links(atom_handle, **kwargs)
 
     def count_atoms(self) -> Tuple[int, int]:
         """

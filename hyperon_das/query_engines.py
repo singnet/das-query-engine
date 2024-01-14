@@ -38,6 +38,12 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
+    def get_incoming_links(
+        self, atom_handle: str, **kwargs
+    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+        ...
+
+    @abstractmethod
     def query(
         self,
         query: Dict[str, Any],
@@ -156,9 +162,9 @@ class LocalQueryEngine(QueryEngine):
         return self._to_link_dict_list(db_answer)
 
     def get_incoming_links(
-        self, atom_handle: str, handles_only: bool = False
-    ) -> Union[List[Dict[str, Any]], List[str]]:
-        return self.local_backend.get_incoming_links(atom_handle, handles_only)
+        self, atom_handle: str, **kwargs
+    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+        return self.local_backend.get_incoming_links(atom_handle, **kwargs)
 
     def query(
         self,
@@ -266,12 +272,12 @@ class RemoteQueryEngine(QueryEngine):
             return self.remote_das.get_links(link_type, target_types, link_targets)
 
     def get_incoming_links(
-        self, atom_handle: str, handles_only: bool = False
-    ) -> Union[List[Dict[str, Any]], List[str]]:
-        local_links = self.local_query_engine.get_incoming_links(atom_handle, handles_only)
-        remote_links = self.remote_das.get_incoming_links(atom_handle, handles_only)
+        self, atom_handle: str, **kwargs
+    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+        local_links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
+        remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
 
-        if handles_only:
+        if kwargs.get('handles_only', False):
             local_links_set = set(local_links)
             remote_links_set = set(remote_links)
             return list(local_links_set.union(remote_links_set))

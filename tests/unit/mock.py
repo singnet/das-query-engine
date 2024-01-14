@@ -290,7 +290,7 @@ class DatabaseMock(AtomDB):
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         assert False
 
-    def get_incoming_links(self, atom_handle: str, handles_only: bool = False):
+    def get_incoming_links(self, atom_handle: str, **kwargs):
         pass
 
     def get_atom_type(self, handle: str) -> str:
