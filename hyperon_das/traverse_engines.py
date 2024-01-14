@@ -1,8 +1,13 @@
 from abc import ABC, abstractmethod
 from random import choice
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
-from hyperon_das.cache import ListIterator
+from hyperon_das.cache import (
+    ListIterator,
+    QueryAnswerIterator,
+    TraverselinksIterator,
+    TraverseNeighborsIterator,
+)
 from hyperon_das.exceptions import MultiplePathsError
 
 if TYPE_CHECKING:
@@ -14,67 +19,19 @@ class TraverseEngine(ABC):
         self.das: DistributedAtomSpace = kwargs['das']
         self._cursor = handle
 
-    def _get_incoming_links(self):
-        return self.das.get_incoming_links(atom_handle=self._cursor, handles_only=False)
-
-    def _filter_links(
-        self,
-        links: List[Dict[str, Any]],
-        link_type: str = None,
-        cursor_position: int = None,
-        target_type: str = None,
-        custom_filter: Callable = None,
-        handles_only: bool = False,
-    ) -> Union[List[Dict[str, Any]], List[str]]:
-        if (
-            not link_type
-            and cursor_position is None
-            and not target_type
-            and not custom_filter
-            and handles_only is False
-        ):
-            return links
-
-        filtered_links = []
-
-        for link in links:
-            if link_type and link_type != link['named_type']:
-                continue
-
-            if isinstance(cursor_position, int) and cursor_position >= 0:
-                try:
-                    if self._cursor != link['targets'][cursor_position]:
-                        continue
-                except IndexError:
-                    continue
-
-            if target_type and target_type not in link['targets_type']:
-                continue
-
-            if custom_filter and callable(custom_filter):
-                ret = custom_filter(link)
-                if not isinstance(ret, bool):
-                    raise TypeError('The function must return a boolean')
-                if ret is False:
-                    continue
-
-            if handles_only:
-                link = link['handle']
-
-            filtered_links.append(link)
-
-        return filtered_links
+    def _get_incoming_links(self, **kwargs) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+        return self.das.get_incoming_links(atom_handle=self._cursor, **kwargs)
 
     @abstractmethod
     def get(self) -> Union[str, Dict[str, Any]]:
         ...
 
     @abstractmethod
-    def get_links(self, **kwargs) -> ListIterator:
+    def get_links(self, **kwargs) -> QueryAnswerIterator:
         ...
 
     @abstractmethod
-    def get_neighbors(self, **kwargs) -> Union[List[str], List[Dict[str, Any]]]:
+    def get_neighbors(self, **kwargs) -> QueryAnswerIterator:
         ...
 
     @abstractmethod
@@ -88,22 +45,10 @@ class TraverseEngine(ABC):
 class HandleOnlyTraverseEngine(TraverseEngine):
     def get(self) -> str:
         return self._cursor
-
-    def get_links(self, **kwargs) -> ListIterator:
-        incoming_links = self._get_incoming_links()
-
-        if not incoming_links:
-            return ListIterator([])
-
-        filtered_links = self._filter_links(
-            links=incoming_links,
-            link_type=kwargs.get('link_type'),
-            cursor_position=kwargs.get('cursor_position'),
-            target_type=kwargs.get('target_type'),
-            handles_only=True,
-        )
-
-        return ListIterator(filtered_links)
+   
+    def get_links(self, **kwargs) -> QueryAnswerIterator:
+        incoming_links = self._get_incoming_links(handles_only=False, targets_document=True)
+        return TraverselinksIterator(source=incoming_links, cursor=self._cursor, handles_only=True, **kwargs)
 
     def get_neighbors(self, **kwargs) -> List[str]:
         filtered_links_iterator = self.get_links(
@@ -120,8 +65,10 @@ class HandleOnlyTraverseEngine(TraverseEngine):
         return list(targets_set)
 
     def follow_link(self, **kwargs) -> None:
+        target_type = kwargs.get('target_type')
+
         filtered_links_iterator = self.get_links(
-            link_type=kwargs.get('link_type'), target_type=kwargs.get('target_type')
+            link_type=kwargs.get('link_type'), target_type=target_type, handles_only=False
         )
 
         filtered_links = [link for link in filtered_links_iterator]
@@ -139,75 +86,79 @@ class HandleOnlyTraverseEngine(TraverseEngine):
 
         link = choice(filtered_links)
 
-        if self._cursor in link['targets']:
-            link['targets'].remove(self._cursor)
+        valid_targets = []
 
-        handle = choice(link['targets'])
+        valid_targets = []
+        for target in link['targets_document']:
+            handle = target['handle']
+            if target_type:
+                if handle != self._cursor and target['named_type'] == target_type:
+                    valid_targets.append(target)
+            else:
+                if handle != self._cursor:
+                    valid_targets.append(target)
 
-        self._cursor = handle
+        valid_targets2 = []
+        for target in link['targets_document']:
+            if (
+                target['handle'] != self._cursor and target['named_type'] == target_type
+            ) or not target_type:
+                valid_targets2.append(target)
+
+        if valid_targets:
+            handle = choice(valid_targets)
+            self._cursor = handle
 
 
 class DocumentTraverseEngine(TraverseEngine):
     def get(self) -> Dict[str, Any]:
         return self.das.get_atom(self._cursor)
 
-    def get_links(self, **kwargs) -> ListIterator:
-        incoming_links = self._get_incoming_links()
+    def get_links(self, **kwargs) -> QueryAnswerIterator:
+        incoming_links = self._get_incoming_links(handles_only=False, targets_document=True)
+        return TraverselinksIterator(source=incoming_links, cursor=self._cursor, **kwargs)
 
-        if not incoming_links:
-            return ListIterator([])
-
-        filtered_links = self._filter_links(
-            links=incoming_links,
-            link_type=kwargs.get('link_type'),
-            cursor_position=kwargs.get('cursor_position'),
-            target_type=kwargs.get('target_type'),
-            custom_filter=kwargs.get('filter'),
-        )
-
-        return ListIterator(filtered_links)
-
-    def get_neighbors(self, **kwargs) -> List[Dict[str, Any]]:
-        filtered_links_iterator = self.get_links(
+    def get_neighbors(self, **kwargs) -> QueryAnswerIterator:
+        filtered_targets_iterator = self.get_links(
+            targets_only=True,
             link_type=kwargs.get('link_type'),
             target_type=kwargs.get('target_type'),
             filter=kwargs.get('filter'),
         )
-
-        targets_document = []
-        for link in filtered_links_iterator:
-            for document in link['targets_document']:
-                if self._cursor == document['handle'] or document in targets_document:
-                    continue
-                targets_document.append(document)
-
-        return targets_document
+        return TraverseNeighborsIterator(source=filtered_targets_iterator)
 
     def follow_link(self, **kwargs) -> None:
-        filtered_links_iterator = self.get_links(
+        target_type = kwargs.get('target_type')
+
+        filtered_targets_iterator = self.get_links(
+            targets_only=True,
             link_type=kwargs.get('link_type'),
-            target_type=kwargs.get('target_type'),
+            target_type=target_type,
             filter=kwargs.get('filter'),
         )
 
-        filtered_links = [link for link in filtered_links_iterator]
+        filtered_targets = [target for target in filtered_targets_iterator]
 
-        if not filtered_links:
+        if not filtered_targets:
             return
 
         unique_path = kwargs.get('unique_path', False)
 
-        if unique_path and len(filtered_links) > 1:
+        if unique_path and len(filtered_targets) > 1:
             raise MultiplePathsError(
                 message='Unable to follow the link. More than one path found',
-                details=f'{len(filtered_links)} paths',
+                details=f'{len(filtered_targets)} paths',
             )
 
-        link = choice(filtered_links)
+        targets = filtered_targets[0]
 
-        if self._cursor in link['targets']:
-            link['targets'].remove(self._cursor)
+        valid_targets = []
+        for target in targets:
+            if self._cursor != target['handle'] and (
+                target_type == target['named_type'] or not target_type
+            ):
+                valid_targets.append(target)
 
-        handle = choice(link['targets'])
-
-        self._cursor = handle
+        if valid_targets:
+            target = choice(valid_targets)
+            self._cursor = target['handle']
