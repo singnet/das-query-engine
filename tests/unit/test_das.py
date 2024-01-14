@@ -5,7 +5,8 @@ from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
-from hyperon_das.exceptions import InvalidQueryEngine
+from hyperon_das.exceptions import GetTraversalCursorException, InvalidQueryEngine
+from hyperon_das.traverse_engines import DocumentTraverseEngine, HandleOnlyTraverseEngine
 
 
 class TestDistributedAtomSpace:
@@ -29,3 +30,21 @@ class TestDistributedAtomSpace:
 
         assert exc.value.message == 'The possible values are: `local` or `remote`'
         assert exc.value.details == 'query_engine=snet'
+
+    def test_get_traversal_cursor(self):
+        das = DistributedAtomSpace()
+        das.add_node({'type': 'Concept', 'name': 'human'})
+        human = das.get_node_handle('Concept', 'human')
+
+        document_cursor = das.get_traversal_cursor(human)
+
+        assert isinstance(document_cursor, DocumentTraverseEngine)
+
+        handle_only_cursor = das.get_traversal_cursor(human, handles_only=True)
+
+        assert isinstance(handle_only_cursor, HandleOnlyTraverseEngine)
+
+        with pytest.raises(GetTraversalCursorException) as exc:
+            das.get_traversal_cursor(handle='snet')
+
+        assert exc.value.message == 'Cannot start Traversal. Atom does not exist'
