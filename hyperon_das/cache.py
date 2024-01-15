@@ -141,15 +141,21 @@ class LazyQueryEvaluator(ProductIterator):
 
 
 class TraverselinksIterator(ListIterator):
-    def __init__(self, source: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]], cursor: str, handles_only: Optional[bool] = False, **kwargs) -> None:
+    def __init__(
+        self,
+        source: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]],
+        cursor: str,
+        handles_only: Optional[bool] = False,
+        **kwargs,
+    ) -> None:
         super().__init__(source)
         self.cursor = cursor
+        self.handles_only = handles_only
         self.link_type = kwargs.get('link_type')
         self.cursor_position = kwargs.get('cursor_position')
         self.target_type = kwargs.get('target_type')
         self.custom_filter = kwargs.get('filter')
         self.targets_only = kwargs.get('targets_only', False)
-        # self.handles_only = kwargs.get('handles_only', False)
 
     def __next__(self):
         if not self.source:
@@ -164,6 +170,8 @@ class TraverselinksIterator(ListIterator):
             link, targets = super().__next__()
             if self.targets_only:
                 return targets
+            if self.handles_only:
+                return link['handle']
             return link
 
         while True:
@@ -171,6 +179,8 @@ class TraverselinksIterator(ListIterator):
             if self._filter(link, targets):
                 if self.targets_only:
                     return targets
+                if self.handles_only:
+                    return link['handle']
                 return link
 
     def __getitem__(self, index):
@@ -199,9 +209,6 @@ class TraverselinksIterator(ListIterator):
             if ret is False:
                 return
 
-        # if self.handles_only:
-        #    return link['handle']
-
         return True
 
 
@@ -209,6 +216,7 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
     def __init__(self, source: TraverselinksIterator) -> None:
         super().__init__(source)
         self.cursor = self.source.cursor
+        self.handles_only = self.source.handles_only
         self.target_type = self.source.target_type
         self.buffered_answer = None
         self.visited_neighbors = []
@@ -228,14 +236,19 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
             _new_neighbors = []
             match_found = False
             for target in targets:
+                handle = target['handle']
                 if (
-                    self.cursor != target['handle']
-                    and target not in self.visited_neighbors
+                    self.cursor != handle
+                    and handle not in self.visited_neighbors
                     and (self.target_type == target['named_type'] or not self.target_type)
                 ):
                     match_found = True
-                    _new_neighbors.append(target)
-                    self.visited_neighbors.append(target)
+                    self.visited_neighbors.append(handle)
+                    if self.handles_only:
+                        _new_neighbors.append(handle)
+
+                    else:
+                        _new_neighbors.append(target)
 
             if match_found:
                 self.buffered_answer = ListIterator(_new_neighbors)
