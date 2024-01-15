@@ -3,9 +3,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from hyperon_das_atomdb import AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 
-from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.exceptions import InvalidDASParameters, InvalidQueryEngine
 from hyperon_das.logger import logger
+from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 
 
 class DistributedAtomSpace:

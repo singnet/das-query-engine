@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from hyperon_das_atomdb import WILDCARD
 
-from hyperon_das.utils import Assignment, QueryAnswer, QueryOutputFormat
+from hyperon_das.utils import Assignment, QueryAnswer
 
 
 class QueryAnswerIterator(ABC):
@@ -80,7 +80,8 @@ class LazyQueryEvaluator(ProductIterator):
         self,
         link_type: str,
         source: List[QueryAnswerIterator],
-        das: "DistributedAtomSpace",
+        # das: "DistributedAtomSpace" Circular import,
+        das,
         query_parameters: Optional[Dict[str, Any]],
     ):
         super().__init__(source)
@@ -103,7 +104,7 @@ class LazyQueryEvaluator(ProductIterator):
         if self.buffered_answer:
             try:
                 return self.buffered_answer.__next__()
-            except StopIteration as exception:
+            except StopIteration:
                 self.buffered_answer = None
         target_info = super().__next__()
         target_handle = []

@@ -1,6 +1,7 @@
-import json
-from unittest.mock import patch, Mock
+from unittest.mock import patch
+
 import pytest
+
 from hyperon_das.client import FunctionsClient
 
 

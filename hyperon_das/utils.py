@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
 
-from hyperon_das.constants import QueryOutputFormat
 from hyperon_das.exceptions import InvalidAssignment
 
 
@@ -37,7 +36,6 @@ class Assignment:
         return self.hashcode < other.hashcode
 
     def __repr__(self) -> str:
-        labels = sorted(self.labels)
         return str([tuple([label, self.mapping[label]]) for label in sorted(self.labels)])
 
     def __str__(self) -> str:
@@ -63,7 +61,7 @@ class Assignment:
     ) -> bool:
         if label is None or value is None or self.frozen():
             raise InvalidAssignment(
-                message=f"Invalid assignment",
+                message="Invalid assignment",
                 details=f"label = {label} value = {value} hashcode = {self.hashcode}",
             )
         if label in self.labels:
