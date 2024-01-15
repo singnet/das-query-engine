@@ -11,7 +11,7 @@ class FunctionsClient:
             self.name = f'server-{server_count}'
         self.url = url
 
-    def _send_request(self, payload) -> str | dict | int:
+    def _send_request(self, payload) -> Any:
         try:
             response = requests.request('POST', url=self.url, data=json.dumps(payload))
             if response.status_code == 200:
@@ -56,12 +56,14 @@ class FunctionsClient:
     ) -> Union[List[str], List[Dict]]:
         payload = {
             'action': 'get_links',
-            'input': {
-                'link_type': link_type,
-                'target_types': target_types,
-                'link_targets': link_targets,
-            },
+            'input': {'link_type': link_type},
         }
+        if target_types:
+            payload['input']['target_types'] = target_types
+
+        if link_targets:
+            payload['input']['link_targets'] = link_targets
+
         return self._send_request(payload)
 
     def query(
