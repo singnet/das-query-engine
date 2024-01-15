@@ -69,7 +69,6 @@ class FunctionsClient:
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        """"""
         payload = {
             'action': 'query',
             'input': {'query': query, 'parameters': parameters},
@@ -91,10 +90,10 @@ class FunctionsClient:
         return self._send_request(payload)
 
     def get_incoming_links(
-        self, atom_handle: str, handles_only: bool = False
+        self, atom_handle: str, **kwargs
     ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
         payload = {
             'action': 'get_incoming_links',
-            'input': {'atom_handle': atom_handle, 'handles_only': handles_only},
+            'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
         }
         return self._send_request(payload)
