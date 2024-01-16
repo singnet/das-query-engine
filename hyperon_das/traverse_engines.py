@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 from hyperon_das.cache import (
     ListIterator,
     QueryAnswerIterator,
-    TraverselinksIterator,
+    TraverseLinksIterator,
     TraverseNeighborsIterator,
 )
 from hyperon_das.exceptions import MultiplePathsError
@@ -50,7 +50,7 @@ class HandleOnlyTraverseEngine(TraverseEngine):
 
     def get_links(self, **kwargs) -> QueryAnswerIterator:
         incoming_links = self._get_incoming_links(handles_only=False, targets_document=True)
-        return TraverselinksIterator(
+        return TraverseLinksIterator(
             source=incoming_links, cursor=self._cursor, handles_only=True, **kwargs
         )
 
@@ -104,7 +104,7 @@ class DocumentTraverseEngine(TraverseEngine):
 
     def get_links(self, **kwargs) -> QueryAnswerIterator:
         incoming_links = self._get_incoming_links(handles_only=False, targets_document=True)
-        return TraverselinksIterator(source=incoming_links, cursor=self._cursor, **kwargs)
+        return TraverseLinksIterator(source=incoming_links, cursor=self._cursor, **kwargs)
 
     def get_neighbors(self, **kwargs) -> QueryAnswerIterator:
         filtered_targets_iterator = self.get_links(

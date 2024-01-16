@@ -140,7 +140,7 @@ class LazyQueryEvaluator(ProductIterator):
         return self.buffered_answer.__next__()
 
 
-class TraverselinksIterator(ListIterator):
+class TraverseLinksIterator(ListIterator):
     def __init__(
         self,
         source: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]],
@@ -213,7 +213,7 @@ class TraverselinksIterator(ListIterator):
 
 
 class TraverseNeighborsIterator(QueryAnswerIterator):
-    def __init__(self, source: TraverselinksIterator) -> None:
+    def __init__(self, source: TraverseLinksIterator) -> None:
         super().__init__(source)
         self.cursor = self.source.cursor
         self.handles_only = self.source.handles_only

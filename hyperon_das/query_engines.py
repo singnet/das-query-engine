@@ -282,16 +282,16 @@ class RemoteQueryEngine(QueryEngine):
             remote_links_set = set(remote_links)
             return list(local_links_set.union(remote_links_set))
         else:
-            remote_links_set = {link['handle']: link for link in remote_links}
+            remote_links_dict = {link['handle']: link for link in remote_links}
             answer = []
 
             for local_link in local_links:
                 handle = local_link['handle']
-                if handle in remote_links_set:
+                if handle in remote_links_dict:
                     answer.append(local_link)
-                    remote_links_set.pop(handle)
+                    remote_links_dict.pop(handle)
 
-            answer.extend(remote_links_set.values())
+            answer.extend(remote_links_dict.values())
 
             return answer
 
