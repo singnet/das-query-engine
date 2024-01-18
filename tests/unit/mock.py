@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from hyperon_das_atomdb import WILDCARD, AtomDB
 
 from hyperon_das import DistributedAtomSpace
-from hyperon_das.das import LocalQueryEngine
+from hyperon_das.das import LocalQueryEngine, RemoteQueryEngine
 
 
 def _build_node_handle(node_type: str, node_name: str) -> str:
@@ -23,15 +23,16 @@ def _build_link_handle(link_type: str, target_handles: List[str]) -> str:
 
 
 class DistributedAtomSpaceMock(DistributedAtomSpace):
-    def __init__(self) -> None:
-        self.backend = DatabaseMock()
-        self.query_engine = LocalQueryEngine(self.backend)
+    def __init__(self, query_engine: Optional[str] = 'local', **kwargs) -> None:
+        self.backend = DatabaseAnimals()
+        if query_engine == 'remote':
+            self.query_engine = RemoteQueryEngine(self.backend, kwargs)
+        else:
+            self.query_engine = LocalQueryEngine(self.backend)
 
 
 class DatabaseMock(AtomDB):
-    def __init__(self, name: str = 'das'):
-        self.database_name = name
-
+    def __init__(self):
         human = _build_node_handle('Concept', 'human')
         monkey = _build_node_handle('Concept', 'monkey')
         chimp = _build_node_handle('Concept', 'chimp')
@@ -112,6 +113,7 @@ class DatabaseMock(AtomDB):
         ]
 
         self.template_index = {}
+        self.incoming_set = {}
 
         for link in self.all_links:
             key = [link[0]]
@@ -122,11 +124,20 @@ class DatabaseMock(AtomDB):
             v = self.template_index.get(key, [])
             v.append([_build_link_handle(link[0], link[1:]), link[1:]])
             self.template_index[key] = v
+            self._add_incoming_set(str(link), link[1:])
 
         self.all_links.append(nested_link)
 
     def __repr__(self):
         return "<Atom database Mock>"
+
+    def _add_incoming_set(self, key, targets):
+        for target in targets:
+            incoming_set = self.incoming_set.get(target)
+            if incoming_set is None:
+                self.incoming_set[target] = [key]
+            else:
+                self.incoming_set[target].append(key)
 
     def node_exists(self, node_type: str, node_name: str) -> bool:
         return _build_node_handle(node_type, node_name) in self.all_nodes
@@ -291,7 +302,88 @@ class DatabaseMock(AtomDB):
         assert False
 
     def get_incoming_links(self, atom_handle: str, **kwargs):
-        pass
+        links = self.incoming_set.get(atom_handle)
+
+        if not links:
+            return []
+
+        return links
 
     def get_atom_type(self, handle: str) -> str:
         pass
+
+
+class DatabaseAnimals(DatabaseMock):
+    def __init__(self):
+        human = _build_node_handle('Concept', 'human')
+        monkey = _build_node_handle('Concept', 'monkey')
+        chimp = _build_node_handle('Concept', 'chimp')
+        snake = _build_node_handle('Concept', 'snake')
+        earthworm = _build_node_handle('Concept', 'earthworm')
+        rhino = _build_node_handle('Concept', 'rhino')
+        triceratops = _build_node_handle('Concept', 'triceratops')
+        vine = _build_node_handle('Concept', 'vine')
+        ent = _build_node_handle('Concept', 'ent')
+        mammal = _build_node_handle('Concept', 'mammal')
+        animal = _build_node_handle('Concept', 'animal')
+        reptile = _build_node_handle('Concept', 'reptile')
+        dinosaur = _build_node_handle('Concept', 'dinosaur')
+        plant = _build_node_handle('Concept', 'plant')
+
+        self.all_nodes = [
+            human,
+            monkey,
+            chimp,
+            snake,
+            earthworm,
+            rhino,
+            triceratops,
+            vine,
+            ent,
+            mammal,
+            animal,
+            reptile,
+            dinosaur,
+            plant,
+        ]
+
+        self.all_links = [
+            ['Similarity', human, monkey],
+            ['Similarity', human, chimp],
+            ['Similarity', chimp, monkey],
+            ['Similarity', snake, earthworm],
+            ['Similarity', rhino, triceratops],
+            ['Similarity', snake, vine],
+            ['Similarity', human, ent],
+            ['Inheritance', human, mammal],
+            ['Inheritance', monkey, mammal],
+            ['Inheritance', chimp, mammal],
+            ['Inheritance', mammal, animal],
+            ['Inheritance', reptile, animal],
+            ['Inheritance', snake, reptile],
+            ['Inheritance', dinosaur, reptile],
+            ['Inheritance', triceratops, dinosaur],
+            ['Inheritance', earthworm, animal],
+            ['Inheritance', rhino, mammal],
+            ['Inheritance', vine, plant],
+            ['Inheritance', ent, plant],
+            ['Similarity', monkey, human],
+            ['Similarity', chimp, human],
+            ['Similarity', monkey, chimp],
+            ['Similarity', earthworm, snake],
+            ['Similarity', triceratops, rhino],
+            ['Similarity', vine, snake],
+            ['Similarity', ent, human],
+        ]
+
+        self.incoming_set = {}
+
+        for link in self.all_links:
+            self._add_incoming_set(str(link), link[1:])
+
+    def add_link(self, link_params: Dict[str, Any], toplevel: bool = True) -> Dict[str, Any]:
+        if link_params in self.all_links:
+            index = self.all_links.index(link_params)
+            self.all_links[index] = link_params
+        else:
+            self.all_links.append(link_params)
