@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
+from hyperon_das.logger import logger
 
 
 class FunctionsClient:
@@ -98,4 +99,8 @@ class FunctionsClient:
             'action': 'get_incoming_links',
             'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
         }
-        return self._send_request(payload)
+        response = self._send_request(payload)
+        if response and 'error' in response:
+            logger().debug(f'Error during `get_incoming_links` request on remote Das: {response["error"]}')
+            return []
+        return response
