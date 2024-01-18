@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 
+from hyperon_das.logger import logger
+
 
 class FunctionsClient:
     def __init__(self, url: str, server_count: int = 0, name: Optional[str] = None):
@@ -80,3 +82,18 @@ class FunctionsClient:
             'input': {},
         }
         return self._send_request(payload)
+
+    def get_incoming_links(
+        self, atom_handle: str, **kwargs
+    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+        payload = {
+            'action': 'get_incoming_links',
+            'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
+        }
+        response = self._send_request(payload)
+        if response and 'error' in response:
+            logger().debug(
+                f'Error during `get_incoming_links` request on remote Das: {response["error"]}'
+            )
+            return []
+        return response

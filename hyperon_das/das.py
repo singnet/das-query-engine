@@ -188,6 +188,20 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_links(link_type, target_types, link_targets)
 
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> List[Union[Dict[str, Any], str]]:
+        """Retrieve all links pointing to Atom
+
+        Args:
+            atom_handle (str): The unique handle of the atom
+            kwargs (optional): You can send `handles_only` as a bool value.
+                True returns only atom handles.
+
+        Returns:
+            List[Union[Dict[str, Any], str]]:  A list of dictionaries containing detailed
+                atom information or a list of strings containing only the atom identifiers
+        """
+        return self.query_engine.get_incoming_links(atom_handle, **kwargs)
+
     def count_atoms(self) -> Tuple[int, int]:
         """
         This method is useful for returning the count of atoms in the database.
