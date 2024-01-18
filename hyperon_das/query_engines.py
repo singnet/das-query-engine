@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import requests
 from hyperon_das_atomdb import WILDCARD
-from hyperon_das_atomdb.exceptions import LinkDoesNotExist, AtomDoesNotExist, NodeDoesNotExist
+from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
 from hyperon_das.cache import AndEvaluator, LazyQueryEvaluator, ListIterator, QueryAnswerIterator
 from hyperon_das.client import FunctionsClient
@@ -211,7 +211,7 @@ class RemoteQueryEngine(QueryEngine):
                 data=json.dumps({"action": "ping", "input": {}}),
                 timeout=10,
             )
-        except Exception as e:
+        except Exception:
             return False
         if response.status_code == 200:
             return True

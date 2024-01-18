@@ -1,5 +1,5 @@
+from hyperon_das.constants import QueryOutputFormat
 from hyperon_das.das import DistributedAtomSpace
-from hyperon_das.utils import QueryOutputFormat
 
 
 def _name(link, index, typed=False):

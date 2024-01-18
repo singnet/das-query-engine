@@ -1,8 +1,9 @@
-import time
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import patch, Mock
-from hyperon_das.exceptions import ConnectionServerException, RetryException
+
 from hyperon_das.decorators import retry
+from hyperon_das.exceptions import ConnectionServerException
 
 logger_mock = Mock()
 
