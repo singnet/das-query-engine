@@ -277,19 +277,35 @@ class RemoteQueryEngine(QueryEngine):
         local_links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
         remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
 
+        if not local_links and remote_links:
+            return remote_links
+        elif local_links and not remote_links:
+            return local_links
+        elif not local_links and not remote_links:
+            return []
+
         if kwargs.get('handles_only', False):
-            local_links_set = set(local_links)
-            remote_links_set = set(remote_links)
-            return list(local_links_set.union(remote_links_set))
+            return list(set(local_links + remote_links))
         else:
-            remote_links_dict = {link['handle']: link for link in remote_links}
             answer = []
 
+            if isinstance(remote_links[0], dict):
+                remote_links_dict = {link['handle']: link for link in remote_links}
+            else:
+                remote_links_dict = {
+                    link['handle']: (link, targets) for link, targets in remote_links
+                }
+
             for local_link in local_links:
-                handle = local_link['handle']
+                if isinstance(local_link, dict):
+                    handle = local_link['handle']
+                else:
+                    handle = local_link[0]['handle']
+                    local_link = local_link[0]
+
                 if handle in remote_links_dict:
                     answer.append(local_link)
-                    remote_links_dict.pop(handle)
+                    del remote_links_dict[handle]
 
             answer.extend(remote_links_dict.values())
 
