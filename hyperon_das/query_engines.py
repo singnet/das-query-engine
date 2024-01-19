@@ -298,9 +298,9 @@ class RemoteQueryEngine(QueryEngine):
                     handle = local_link[0]['handle']
                     local_link = local_link[0]
 
-                if handle in remote_links_dict:
-                    answer.append(local_link)
-                    del remote_links_dict[handle]
+                answer.append(local_link)
+
+                remote_links_dict.pop(handle, None)
 
             answer.extend(remote_links_dict.values())
 
