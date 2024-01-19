@@ -38,6 +38,12 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
+    def get_incoming_links(
+        self, atom_handle: str, **kwargs
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
+        ...
+
+    @abstractmethod
     def query(
         self,
         query: Dict[str, Any],
@@ -155,6 +161,11 @@ class LocalQueryEngine(QueryEngine):
 
         return self._to_link_dict_list(db_answer)
 
+    def get_incoming_links(
+        self, atom_handle: str, **kwargs
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
+        return self.local_backend.get_incoming_links(atom_handle, **kwargs)
+
     def query(
         self,
         query: Dict[str, Any],
@@ -254,6 +265,46 @@ class RemoteQueryEngine(QueryEngine):
         local = self.local_query_engine.get_links(link_type, target_types, link_targets)
         if not local:
             return self.remote_das.get_links(link_type, target_types, link_targets)
+
+    def get_incoming_links(
+        self, atom_handle: str, **kwargs
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
+        local_links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
+        remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
+
+        if not local_links and remote_links:
+            return remote_links
+        elif local_links and not remote_links:
+            return local_links
+        elif not local_links and not remote_links:
+            return []
+
+        if kwargs.get('handles_only', False):
+            return list(set(local_links + remote_links))
+        else:
+            answer = []
+
+            if isinstance(remote_links[0], dict):
+                remote_links_dict = {link['handle']: link for link in remote_links}
+            else:
+                remote_links_dict = {
+                    link['handle']: (link, targets) for link, targets in remote_links
+                }
+
+            for local_link in local_links:
+                if isinstance(local_link, dict):
+                    handle = local_link['handle']
+                else:
+                    handle = local_link[0]['handle']
+                    local_link = local_link[0]
+
+                answer.append(local_link)
+
+                remote_links_dict.pop(handle, None)
+
+            answer.extend(remote_links_dict.values())
+
+            return answer
 
     def query(
         self,
