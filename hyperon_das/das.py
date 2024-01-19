@@ -11,11 +11,7 @@ from hyperon_das.exceptions import (
 )
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
-from hyperon_das.traverse_engines import (
-    DocumentTraverseEngine,
-    HandleOnlyTraverseEngine,
-    TraverseEngine,
-)
+from hyperon_das.traverse_engines import TraverseEngine
 
 
 class DistributedAtomSpace:
@@ -194,9 +190,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_links(link_type, target_types, link_targets)
 
-    def get_incoming_links(
-        self, atom_handle: str, **kwargs
-    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> List[Union[Dict[str, Any], str]]:
         """Retrieve all links pointing to Atom
 
         Args:
@@ -424,17 +418,11 @@ class DistributedAtomSpace:
             GetTraversalCursorException: If Atom does not exist
 
         Returns:
-            TraverseEngine: The TraverseEngine which can be HandleOnlyTraverseEngine
-            or DocumentTraverseEngine depending on the 'handles_only' parameter
+            TraverseEngine: The object that allows traversal of the hypergraph
         """
         try:
             self.get_atom(handle)
         except AtomDoesNotExist:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
 
-        handle_only_traverse_engine = kwargs.get('handles_only', False)
-
-        if handle_only_traverse_engine:
-            return HandleOnlyTraverseEngine(handle, das=self, **kwargs)
-        else:
-            return DocumentTraverseEngine(handle, das=self, **kwargs)
+        return TraverseEngine(handle, das=self, **kwargs)

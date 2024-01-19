@@ -95,7 +95,7 @@ class FunctionsClient:
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
         payload = {
             'action': 'get_incoming_links',
             'input': {'atom_handle': atom_handle, 'kwargs': kwargs},

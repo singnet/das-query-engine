@@ -40,7 +40,7 @@ class QueryEngine(ABC):
     @abstractmethod
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
         ...
 
     @abstractmethod
@@ -163,7 +163,7 @@ class LocalQueryEngine(QueryEngine):
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
         return self.local_backend.get_incoming_links(atom_handle, **kwargs)
 
     def query(
@@ -273,7 +273,7 @@ class RemoteQueryEngine(QueryEngine):
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[Tuple[Dict[str, Any], List[Dict[str, Any]]], Dict[str, Any]]]:
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
         local_links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
         remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
 
@@ -303,9 +303,9 @@ class RemoteQueryEngine(QueryEngine):
                     handle = local_link[0]['handle']
                     local_link = local_link[0]
 
-                if handle in remote_links_dict:
-                    answer.append(local_link)
-                    del remote_links_dict[handle]
+                answer.append(local_link)
+
+                remote_links_dict.pop(handle, None)
 
             answer.extend(remote_links_dict.values())
 

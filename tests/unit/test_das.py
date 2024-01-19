@@ -6,7 +6,7 @@ from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.exceptions import GetTraversalCursorException, InvalidQueryEngine
-from hyperon_das.traverse_engines import DocumentTraverseEngine, HandleOnlyTraverseEngine
+from hyperon_das.traverse_engines import TraverseEngine
 
 
 class TestDistributedAtomSpace:
@@ -36,13 +36,9 @@ class TestDistributedAtomSpace:
         das.add_node({'type': 'Concept', 'name': 'human'})
         human = das.get_node_handle('Concept', 'human')
 
-        document_cursor = das.get_traversal_cursor(human)
+        cursor = das.get_traversal_cursor(human)
 
-        assert isinstance(document_cursor, DocumentTraverseEngine)
-
-        handle_only_cursor = das.get_traversal_cursor(human, handles_only=True)
-
-        assert isinstance(handle_only_cursor, HandleOnlyTraverseEngine)
+        assert isinstance(cursor, TraverseEngine)
 
         with pytest.raises(GetTraversalCursorException) as exc:
             das.get_traversal_cursor(handle='snet')
