@@ -1,5 +1,5 @@
 import pytest
-from hyperon_das_atomdb import AtomDB
+from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 
 from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.exceptions import MultiplePathsError
@@ -1283,3 +1283,13 @@ class TestTraverseEngine:
             assert previous_cursor == current_cursor
 
         _mammal()
+
+    def test_goto(self, das):
+        cursor = das.get_traversal_cursor(human)
+        cursor.get()['name'] == 'human'
+
+        cursor.goto(ent)
+        assert cursor.get()['name'] == 'ent'
+
+        with pytest.raises(AtomDoesNotExist):
+            cursor.goto('snet')

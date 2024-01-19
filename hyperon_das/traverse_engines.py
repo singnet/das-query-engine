@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from random import choice
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
+from hyperon_das_atomdb import AtomDoesNotExist
+
 from hyperon_das.cache import (
     FollowLinkIterator,
     ListIterator,
@@ -34,16 +36,17 @@ class TraverseEngine:
         filtered_links = self.get_links(targets_only=True, **kwargs)
         return TraverseNeighborsIterator(source=filtered_links)
 
-    def follow_link(self, **kwargs) -> None:
+    def follow_link(self, **kwargs) -> Dict[str, Any]:
         filtered_neighbors = self.get_neighbors(**kwargs)
-        ret = FollowLinkIterator(source=filtered_neighbors)
         with contextlib.suppress(StopIteration):
-            atom = next(ret)
+            atom = next(FollowLinkIterator(source=filtered_neighbors))
             self._cursor = atom['handle']
+        return self.get()
 
-    def goto(self, handle: str) -> None:
+    def goto(self, handle: str) -> Dict[str, Any]:
         try:
             self.das.get_atom(handle)
         except AtomDoesNotExist as e:
             raise e
         self._cursor = handle
+        return self.get()
