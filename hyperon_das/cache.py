@@ -145,7 +145,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
         super().__init__(source)
         if not self.is_empty():
             self.iterator = iter(source)
-            self.current_value = source[0][1]  # link
+            self.current_value = source[0][0]  # link
             self.cursor = kwargs.get('cursor')
             self.link_type = kwargs.get('link_type')
             self.cursor_position = kwargs.get('cursor_position')

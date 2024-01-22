@@ -21,16 +21,16 @@ if TYPE_CHECKING:
 class TraverseEngine:
     def __init__(self, handle: str, **kwargs) -> None:
         self.das: DistributedAtomSpace = kwargs['das']
-        self._cursor = handle
+        self._cursor = self.das.get_atom(handle)
 
     def get(self) -> Dict[str, Any]:
-        return self.das.get_atom(self._cursor)
+        return self.das.get_atom(self._cursor['handle'])
 
     def get_links(self, **kwargs) -> QueryAnswerIterator:
         incoming_links = self.das.get_incoming_links(
-            atom_handle=self._cursor, handles_only=False, targets_document=True
+            atom_handle=self._cursor['handle'], handles_only=False, targets_document=True
         )
-        return TraverseLinksIterator(source=incoming_links, cursor=self._cursor, **kwargs)
+        return TraverseLinksIterator(source=incoming_links, cursor=self._cursor['handle'], **kwargs)
 
     def get_neighbors(self, **kwargs) -> QueryAnswerIterator:
         filtered_links = self.get_links(targets_only=True, **kwargs)
@@ -40,13 +40,13 @@ class TraverseEngine:
         filtered_neighbors = self.get_neighbors(**kwargs)
         with contextlib.suppress(StopIteration):
             atom = next(FollowLinkIterator(source=filtered_neighbors))
-            self._cursor = atom['handle']
-        return self.get()
+            self._cursor = atom
+        return self._cursor
 
     def goto(self, handle: str) -> Dict[str, Any]:
         try:
-            self.das.get_atom(handle)
+            atom = self.das.get_atom(handle)
         except AtomDoesNotExist as e:
             raise e
-        self._cursor = handle
-        return self.get()
+        self._cursor = atom
+        return self._cursor

@@ -7,8 +7,6 @@ from hyperon_das import DistributedAtomSpace
 
 redis_port = "15926"
 mongo_port = "15927"
-# redis_port = "29000"
-# mongo_port = "28000"
 scripts_path = "./tests/integration/scripts/"
 devnull = open(os.devnull, 'w')
 
@@ -78,8 +76,7 @@ def cleanup(request):
             os.environ["DAS_USE_REDIS_SSL"] = DAS_USE_REDIS_SSL
 
     def enforce_containers_removal():
-        pass
-        # _db_down()
+        _db_down()
 
     request.addfinalizer(restore_environment)
     request.addfinalizer(enforce_containers_removal)
@@ -354,14 +351,5 @@ class TestLocalRedisMongo:
         assert das.count_atoms() == (0, 0)
         das.commit_changes()
         assert das.count_atoms() == (14, 26)
-
-        # print(das.query({
-        #    "atom_type": "link",
-        #    "type": "Inheritance",
-        #    "targets": [
-        #        {"atom_type": "variable", "name": "v0"},
-        #        {"atom_type": "variable", "name": "v1"},
-        #    ]
-        # }))
 
         _db_down()
