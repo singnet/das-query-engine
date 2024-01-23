@@ -295,3 +295,7 @@ class TestVultrClientIntegration:
         handles = [target['handle'] for target in link['targets']]
 
         assert handles == [node_human, node_monkey]
+
+    # WIP
+    def test_get_incoming_links(self, server: FunctionsClient):
+        pass

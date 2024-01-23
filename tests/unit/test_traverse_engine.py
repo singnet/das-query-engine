@@ -2,7 +2,6 @@ import pytest
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 
 from hyperon_das.das import DistributedAtomSpace
-from hyperon_das.exceptions import MultiplePathsError
 
 human = AtomDB.node_handle('Concept', 'human')
 monkey = AtomDB.node_handle('Concept', 'monkey')

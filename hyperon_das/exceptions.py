@@ -40,7 +40,3 @@ class InvalidQueryEngine(BaseException):
 
 class GetTraversalCursorException(BaseException):
     ...  # pragma no cover
-
-
-class MultiplePathsError(BaseException):
-    ...  # pragma no cover

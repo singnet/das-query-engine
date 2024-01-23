@@ -6,15 +6,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 from hyperon_das_atomdb import AtomDoesNotExist
 
 from hyperon_das.cache import (
-    FollowLinkIterator,
     ListIterator,
     QueryAnswerIterator,
     TraverseLinksIterator,
     TraverseNeighborsIterator,
 )
-from hyperon_das.exceptions import MultiplePathsError
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma no cover
     from hyperon_das.das import DistributedAtomSpace
 
 
@@ -38,15 +36,13 @@ class TraverseEngine:
 
     def follow_link(self, **kwargs) -> Dict[str, Any]:
         filtered_neighbors = self.get_neighbors(**kwargs)
-        with contextlib.suppress(StopIteration):
-            atom = next(FollowLinkIterator(source=filtered_neighbors))
-            self._cursor = atom
+        if not filtered_neighbors.is_empty():
+            self._cursor = filtered_neighbors.get()
         return self._cursor
 
     def goto(self, handle: str) -> Dict[str, Any]:
         try:
-            atom = self.das.get_atom(handle)
+            self._cursor = self.das.get_atom(handle)
         except AtomDoesNotExist as e:
             raise e
-        self._cursor = atom
         return self._cursor

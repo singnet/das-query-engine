@@ -143,17 +143,15 @@ class LazyQueryEvaluator(ProductIterator):
 class TraverseLinksIterator(QueryAnswerIterator):
     def __init__(self, source: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]], **kwargs) -> None:
         super().__init__(source)
+        self.cursor = kwargs.get('cursor')
+        self.link_type = kwargs.get('link_type')
+        self.cursor_position = kwargs.get('cursor_position')
+        self.target_type = kwargs.get('target_type')
+        self.custom_filter = kwargs.get('filter')
+        self.targets_only = kwargs.get('targets_only', False)
+        self.current_value = self._find_first_valid_element()
         if not self.is_empty():
             self.iterator = iter(source)
-            self.current_value = source[0][0]  # link
-            self.cursor = kwargs.get('cursor')
-            self.link_type = kwargs.get('link_type')
-            self.cursor_position = kwargs.get('cursor_position')
-            self.target_type = kwargs.get('target_type')
-            self.custom_filter = kwargs.get('filter')
-            self.targets_only = kwargs.get('targets_only', False)
-            if self.targets_only:
-                self.current_value = source[0][1]  # targets
 
     def __next__(self):
         while True:
@@ -169,8 +167,11 @@ class TraverseLinksIterator(QueryAnswerIterator):
 
         return self.current_value
 
-    def is_empty(self) -> bool:
-        return not self.source
+    def _find_first_valid_element(self):
+        if self.source:
+            for link, targets in self.source:
+                if self._filter(link, targets):
+                    return targets if self.targets_only else link
 
     def _filter(self, link: Dict[str, Any], targets: Dict[str, Any]) -> bool:
         if self.link_type and self.link_type != link['named_type']:
@@ -200,17 +201,20 @@ class TraverseLinksIterator(QueryAnswerIterator):
 
         return True
 
+    def is_empty(self) -> bool:
+        return not self.current_value
+
 
 class TraverseNeighborsIterator(QueryAnswerIterator):
     def __init__(self, source: TraverseLinksIterator, **kwargs) -> None:
         super().__init__(source)
         self.buffered_answer = None
+        self.cursor = self.source.cursor
+        self.target_type = self.source.target_type
+        self.visited_neighbors = []
+        self.current_value = self._find_first_valid_element()
         if not self.is_empty():
             self.iterator = source
-            self.current_value = source.get()[0] if source else None
-            self.cursor = self.source.cursor
-            self.target_type = self.source.target_type
-            self.visited_neighbors = []
 
     def __next__(self):
         if self.buffered_answer:
@@ -224,14 +228,9 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
             _new_neighbors = []
             match_found = False
             for target in targets:
-                handle = target['handle']
-                if (
-                    self.cursor != handle
-                    and handle not in self.visited_neighbors
-                    and (self.target_type == target['named_type'] or not self.target_type)
-                ):
+                if self._filter(target):
                     match_found = True
-                    self.visited_neighbors.append(handle)
+                    self.visited_neighbors.append(target['handle'])
                     _new_neighbors.append(target)
 
             if match_found:
@@ -239,21 +238,21 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
                 self.current_value = self.buffered_answer.__next__()
                 return self.current_value
 
+    def _find_first_valid_element(self):
+        if self.source.current_value:
+            for target in self.source.current_value:
+                if self._filter(target):
+                    return target
+
+    def _filter(self, target: Dict[str, Any]) -> bool:
+        handle = target['handle']
+        if (
+            self.cursor != handle
+            and handle not in self.visited_neighbors
+            and (self.target_type == target['named_type'] or not self.target_type)
+        ):
+            return True
+        return False
+
     def is_empty(self) -> bool:
-        return self.source.is_empty()
-
-
-class FollowLinkIterator(QueryAnswerIterator):
-    def __init__(self, source: TraverseNeighborsIterator, **kwargs) -> None:
-        super().__init__(source)
-        if not self.is_empty():
-            self.iterator = source
-            self.current_value = source.get() if source else None
-
-    def __next__(self):
-        neighbor = super().__next__()
-        self.current_value = neighbor
-        return self.current_value
-
-    def is_empty(self) -> bool:
-        return self.source.is_empty()
+        return not self.current_value
