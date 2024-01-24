@@ -232,31 +232,36 @@ class RemoteQueryEngine(QueryEngine):
         try:
             atom = self.local_query_engine.get_atom(handle)
         except AtomDoesNotExist:
-            atom = self.remote_das.get_atom(handle)
-        if not atom:
-            raise AtomDoesNotExist(message='This atom does not exist', details=f'handle:{handle}')
+            try:
+                atom = self.remote_das.get_atom(handle)
+            except AtomDoesNotExist:
+                raise AtomDoesNotExist(
+                    message='This atom does not exist', details=f'handle:{handle}'
+                )
         return atom
 
     def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
         try:
             node = self.local_query_engine.get_node(node_type, node_name)
         except NodeDoesNotExist:
-            node = self.remote_das.get_node(node_type, node_name)
-        if not node:
-            raise NodeDoesNotExist(
-                message='This node does not exist', details=f'{node_type}:{node_name}'
-            )
+            try:
+                node = self.remote_das.get_node(node_type, node_name)
+            except NodeDoesNotExist:
+                raise NodeDoesNotExist(
+                    message='This node does not exist', details=f'{node_type}:{node_name}'
+                )
         return node
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         try:
             link = self.local_query_engine.get_link(link_type, link_targets)
         except LinkDoesNotExist:
-            link = self.remote_das.get_link(link_type, link_targets)
-        if not link:
-            raise LinkDoesNotExist(
-                message='This link does not exist', details=f'{link_type}:{link_targets}'
-            )
+            try:
+                link = self.remote_das.get_link(link_type, link_targets)
+            except LinkDoesNotExist:
+                raise LinkDoesNotExist(
+                    message='This link does not exist', details=f'{link_type}:{link_targets}'
+                )
         return link
 
     def get_links(

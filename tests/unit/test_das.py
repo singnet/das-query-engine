@@ -2,9 +2,11 @@ from unittest import mock
 
 import pytest
 from hyperon_das_atomdb.adapters import InMemoryDB
+from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
-from hyperon_das.exceptions import InvalidQueryEngine
+from hyperon_das.exceptions import GetTraversalCursorException, InvalidQueryEngine
+from hyperon_das.traverse_engines import TraverseEngine
 
 from .mock import DistributedAtomSpaceMock
 
@@ -22,7 +24,7 @@ class TestDistributedAtomSpace:
         assert isinstance(das.backend, InMemoryDB)
         assert isinstance(das.query_engine, RemoteQueryEngine)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidAtomDB):
             das = DistributedAtomSpace(atomdb='snet')
 
         with pytest.raises(InvalidQueryEngine) as exc:
@@ -65,3 +67,17 @@ class TestDistributedAtomSpace:
             "['Similarity', '<Concept: human>', '<Concept: ent>']",
             "['Inheritance', '<Concept: ent>', '<Concept: snet>']",
         }
+
+    def test_get_traversal_cursor(self):
+        das = DistributedAtomSpace()
+        das.add_node({'type': 'Concept', 'name': 'human'})
+        human = das.get_node_handle('Concept', 'human')
+
+        cursor = das.get_traversal_cursor(human)
+
+        assert isinstance(cursor, TraverseEngine)
+
+        with pytest.raises(GetTraversalCursorException) as exc:
+            das.get_traversal_cursor(handle='snet')
+
+        assert exc.value.message == 'Cannot start Traversal. Atom does not exist'
