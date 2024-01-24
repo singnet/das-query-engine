@@ -296,6 +296,43 @@ class TestVultrClientIntegration:
 
         assert handles == [node_human, node_monkey]
 
-    # WIP
-    def test_get_incoming_links(self, server: FunctionsClient):
-        pass
+    def test_get_incoming_links(self, server: FunctionsClient, node_human: str):
+        expected_handles = [
+            'bad7472f41a0e7d601ca294eb4607c3a',
+            'a45af31b43ee5ea271214338a5a5bd61',
+            '16f7e407087bfa0b35b13d13a1aadcae',
+            '2a8a69c01305563932b957de4b3a9ba6',
+            '2c927fdc6c0f1272ee439ceb76a6d1a4',
+            'c93e1e758c53912638438e2a7d7f7b7f',
+            'b5459e299a5c5e8662c427f7e01b3bf1',
+        ]
+
+        expected_atoms = [server.get_atom(handle) for handle in expected_handles]
+
+        expected_atoms_targets = []
+        for atom in expected_atoms:
+            targets_document = []
+            for target in atom['targets']:
+                targets_document.append(server.get_atom(target))
+            expected_atoms_targets.append([atom, targets_document])
+
+        response_handles = server.get_incoming_links(
+            node_human, targets_document=False, handles_only=True
+        )
+        assert response_handles == expected_handles
+        response_handles = server.get_incoming_links(
+            node_human, targets_document=True, handles_only=True
+        )
+        assert response_handles == expected_handles
+
+        response_atoms = server.get_incoming_links(
+            node_human, targets_document=False, handles_only=False
+        )
+        assert response_atoms == expected_atoms
+        response_atoms = server.get_incoming_links(node_human)
+        assert response_atoms == expected_atoms
+
+        response_atoms_targets = server.get_incoming_links(
+            node_human, targets_document=True, handles_only=False
+        )
+        assert response_atoms_targets == expected_atoms_targets
