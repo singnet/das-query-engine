@@ -8,6 +8,8 @@ from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryE
 from hyperon_das.exceptions import GetTraversalCursorException, InvalidQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
 
+from .mock import DistributedAtomSpaceMock
+
 
 class TestDistributedAtomSpace:
     def test_create_das(self):
@@ -30,6 +32,41 @@ class TestDistributedAtomSpace:
 
         assert exc.value.message == 'The possible values are: `local` or `remote`'
         assert exc.value.details == 'query_engine=snet'
+
+    def test_get_incoming_links(self):
+        das = DistributedAtomSpaceMock()
+        links = das.get_incoming_links('<Concept: human>', handles_only=True)
+        assert len(links) == 7
+
+        links = das.get_incoming_links('<Concept: human>')
+        assert len(links) == 7
+
+        with mock.patch(
+            'hyperon_das.query_engines.RemoteQueryEngine._connect_server', return_value='fake'
+        ):
+            das_remote = DistributedAtomSpaceMock('remote', host='test')
+
+        with mock.patch('hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[]):
+            links = das_remote.get_incoming_links('<Concept: human>')
+        assert len(links) == 7
+
+        with mock.patch(
+            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[1, 2, 3, 4]
+        ):
+            links = das_remote.get_incoming_links('<Concept: snet>')
+        assert links == [1, 2, 3, 4]
+
+        with mock.patch(
+            'hyperon_das.client.FunctionsClient.get_incoming_links',
+            return_value=["['Inheritance', '<Concept: ent>', '<Concept: snet>']"],
+        ):
+            links = das_remote.get_incoming_links('<Concept: ent>', handles_only=True)
+        assert set(links) == {
+            "['Inheritance', '<Concept: ent>', '<Concept: plant>']",
+            "['Similarity', '<Concept: ent>', '<Concept: human>']",
+            "['Similarity', '<Concept: human>', '<Concept: ent>']",
+            "['Inheritance', '<Concept: ent>', '<Concept: snet>']",
+        }
 
     def test_get_traversal_cursor(self):
         das = DistributedAtomSpace()

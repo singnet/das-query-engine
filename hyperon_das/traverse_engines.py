@@ -1,16 +1,8 @@
-import contextlib
-from abc import ABC, abstractmethod
-from random import choice
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict
 
 from hyperon_das_atomdb import AtomDoesNotExist
 
-from hyperon_das.cache import (
-    ListIterator,
-    QueryAnswerIterator,
-    TraverseLinksIterator,
-    TraverseNeighborsIterator,
-)
+from hyperon_das.cache import QueryAnswerIterator, TraverseLinksIterator, TraverseNeighborsIterator
 
 if TYPE_CHECKING:  # pragma no cover
     from hyperon_das.das import DistributedAtomSpace

@@ -1,12 +1,7 @@
-import json
 from copy import deepcopy
-from typing import List
 
 import pytest
-from hyperon_das_atomdb.adapters import InMemoryDB
 
-from hyperon_das.das import DistributedAtomSpace
-from hyperon_das.exceptions import QueryParametersException
 from hyperon_das.pattern_matcher import (
     And,
     Link,
@@ -20,7 +15,6 @@ from hyperon_das.pattern_matcher import (
     Variable,
 )
 from hyperon_das.pattern_matcher.constants import CompatibilityStatus
-from hyperon_das.utils import QueryOutputFormat
 from tests.unit.mock import DatabaseMock
 
 
@@ -1045,8 +1039,6 @@ class TestPatternMatchingAnswer:
         va2 = UnorderedAssignment()
         va3 = UnorderedAssignment()
         va4 = UnorderedAssignment()
-        va5 = UnorderedAssignment()
-        va6 = UnorderedAssignment()
         va7 = UnorderedAssignment()
         va1.assign('v1', '1')
         va1.assign('v2', '2')

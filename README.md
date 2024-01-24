@@ -71,6 +71,14 @@ If you prefer to manage your Python projects with [Poetry](https://python-poetry
 
 Now you can run the project within the Poetry virtual environment.
 
+## Pre-Commit Setup
+
+Before pushing your changes, it's recommended to set up pre-commit to run automated tests locally. Run the following command (needs to be done once):
+
+```bash
+pre-commit install
+```
+
 ## Usage
 
 You can instantiate DAS in three different ways. see below:

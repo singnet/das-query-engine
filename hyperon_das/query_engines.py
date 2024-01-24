@@ -222,7 +222,7 @@ class RemoteQueryEngine(QueryEngine):
                 data=json.dumps({"action": "ping", "input": {}}),
                 timeout=10,
             )
-        except Exception as e:
+        except Exception:
             return False
         if response.status_code == 200:
             return True

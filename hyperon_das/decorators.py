@@ -2,7 +2,7 @@ import time
 from functools import wraps
 from typing import Callable
 
-from hyperon_das.exceptions import ConnectionServerException, RetryException
+from hyperon_das.exceptions import ConnectionServerException
 from hyperon_das.logger import logger
 
 
