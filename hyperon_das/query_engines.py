@@ -153,7 +153,10 @@ class LocalQueryEngine(QueryEngine):
         if target_types is not None and link_type != WILDCARD:
             db_answer = self.local_backend.get_matched_type_template([link_type, *target_types])
         elif link_targets is not None:
-            db_answer = self.local_backend.get_matched_links(link_type, link_targets)
+            try:
+                db_answer = self.local_backend.get_matched_links(link_type, link_targets)
+            except LinkDoesNotExist:
+                return []
         elif link_type != WILDCARD:
             db_answer = self.local_backend.get_matched_type(link_type)
         else:
