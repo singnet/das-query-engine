@@ -121,16 +121,9 @@ class TestRemoteDistributedAtomSpace:
         assert len(links) == 12
         assert set([link['handle'] for link in links]) == set(all_inheritance)
 
-        # links = remote_das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
-        # assert len(links) == 12
-        # assert set([link['handle'] for link in links]) == set(all_inheritance)
-
-        # links = remote_das.get_links(
-        #     link_type='Inheritance',
-        #     target_types=['Concept', 'Concept'],
-        #     link_targets=[earthworm, animal],
-        # )
-        # assert links[0]['handle'] == inheritance_earthworm_animal
+        links = remote_das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
+        assert len(links) == 12
+        assert set([link['handle'] for link in links]) == set(all_inheritance)
 
         links = remote_das.get_links(link_type='Inheritance', link_targets=[earthworm, animal])
         assert links[0]['handle'] == inheritance_earthworm_animal
@@ -202,17 +195,6 @@ class TestRemoteDistributedAtomSpace:
                     {'handle': rhino, 'type': 'Concept', 'name': 'rhino'},
                     {'handle': mammal, 'type': 'Concept', 'name': 'mammal'},
                 ]
-
-    # def test_commit_changes(self, remote_das: DistributedAtomSpace):
-    #     assert remote_das.count_atoms() == (14, 26)
-    #     remote_das.add_link(
-    #         {
-    #             'type': 'Dark',
-    #             'targets': [{'type': 'Myth', 'name': 'eve'}, {'type': 'Myth', 'name': 'adam'}],
-    #         }
-    #     )
-    #     remote_das.commit_changes()
-    #     assert remote_das.count_atoms() == (16, 27)
 
     def test_get_traversal_cursor(self, remote_das: DistributedAtomSpace):
         cursor = remote_das.get_traversal_cursor(human)
