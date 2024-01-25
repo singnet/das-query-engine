@@ -66,7 +66,7 @@ class TestRemoteDistributedAtomSpace:
         except Exception as e:
             pytest.fail(f'Connection with OpenFaaS server fail, Details: {str(e)}')
         if not das.query_engine.remote_das.url:
-            pytest.xfail('Connection with server fail')
+            pytest.fail('Connection with server fail')
         assert das.query_engine.remote_das.url == f'http://{host}:{port}/function/query-engine'
 
     def test_get_atom(self, remote_das: DistributedAtomSpace):
