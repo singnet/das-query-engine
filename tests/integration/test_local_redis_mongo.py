@@ -334,7 +334,7 @@ class TestLocalRedisMongo:
             }
         )
 
-    def test_queries(self):
+    def _test_queries(self):
         _db_up()
         das = DistributedAtomSpace(
             query_engine='local',
@@ -351,5 +351,50 @@ class TestLocalRedisMongo:
         assert das.count_atoms() == (0, 0)
         das.commit_changes()
         assert das.count_atoms() == (14, 26)
+
+        _db_down()
+
+    def test_add_atom_persistence(self):
+        _db_up()
+        das = DistributedAtomSpace(
+            query_engine='local',
+            atomdb='redis_mongo',
+            mongo_port=mongo_port,
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
+            redis_port=redis_port,
+            redis_cluster=False,
+            redis_ssl=False,
+        )
+        assert das.count_atoms() == (0, 0)
+        self._add_atoms(das)
+        assert das.count_atoms() == (0, 0)
+        das.commit_changes()
+        assert das.count_atoms() == (14, 26)
+
+        das.add_node({"type": "Concept", "name": "dog"})
+        das.add_link(
+            {
+                "type": "Inheritance",
+                "targets": [
+                    {"type": "Concept", "name": "dog"},
+                    {"type": "Concept", "name": "mammal"},
+                ],
+            }
+        )
+        das.commit_changes()
+        assert das.count_atoms() == (15, 27)
+
+        das2 = DistributedAtomSpace(
+            query_engine='local',
+            atomdb='redis_mongo',
+            mongo_port=mongo_port,
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
+            redis_port=redis_port,
+            redis_cluster=False,
+            redis_ssl=False,
+        )
+        assert das2.count_atoms() == (15, 27)
 
         _db_down()
