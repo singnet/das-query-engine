@@ -312,6 +312,9 @@ class DatabaseMock(AtomDB):
     def get_atom_type(self, handle: str) -> str:
         pass
 
+    def reindex(self, not_used):
+        pass
+
 
 class DatabaseAnimals(DatabaseMock):
     def __init__(self):
