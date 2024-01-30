@@ -55,6 +55,10 @@ class QueryEngine(ABC):
     def count_atoms(self) -> Tuple[int, int]:
         ...
 
+    @abstractmethod
+    def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
+        ...
+
 
 class LocalQueryEngine(QueryEngine):
     def __init__(self, backend, kwargs: Optional[dict] = None) -> None:
@@ -192,6 +196,9 @@ class LocalQueryEngine(QueryEngine):
 
     def commit(self):
         self.local_backend.commit()
+
+    def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]] = None):
+        self.local_backend.reindex(pattern_index_templates)
 
 
 class RemoteQueryEngine(QueryEngine):
@@ -339,3 +346,6 @@ class RemoteQueryEngine(QueryEngine):
 
     def commit(self):
         return self.remote_das.commit_changes()
+
+    def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
+        raise NotImplementedError()
