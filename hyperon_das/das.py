@@ -403,7 +403,7 @@ class DistributedAtomSpace:
         """
         return self.backend.add_link(link_params)
 
-    def reindex(self, pattern_index_templates: Dict[str, Dict[str, Any]]):
+    def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]] = None):
         """
         Rebuild all indexes according to the passed specification
 
@@ -461,7 +461,7 @@ class DistributedAtomSpace:
                     *(handle1, handle2)
                     Similarity(handle1, *)
         """
-        return self.backend.reindex(pattern_index_templates)
+        return self.query_engine.reindex(pattern_index_templates)
 
     def clear(self) -> None:
         """Clear all data"""
