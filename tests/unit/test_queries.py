@@ -23,7 +23,7 @@ def _print_query_answer(query_answer, typed=False):
 def _check_query_answer(query_answer, expected_answer):
     assert len(query_answer) == len(expected_answer)
     for answer in query_answer:
-        handles = [link["handle"] for link in answer]
+        handles = [link["handle"] for link in answer[1]]
         for expected in expected_answer:
             if len(expected) != len(handles):
                 continue
@@ -290,6 +290,7 @@ class TestQueries:
         query_params = {
             "toplevel_only": False,
             "return_type": QueryOutputFormat.ATOM_INFO,
+            "no_iterator": True,
         }
         q1 = {
             "atom_type": "link",
@@ -308,12 +309,12 @@ class TestQueries:
         }
         answer = das.query(q1, query_params)
         assert len(answer) == 1
-        assert answer[0]["handle"] == "dbcf1c7b610a5adea335bf08f6509978"
+        assert answer[0][1]["handle"] == "dbcf1c7b610a5adea335bf08f6509978"
 
     def test_conjunction(self):
         das = DistributedAtomSpace()
         self.setup_animals_kb(das)
-
+        query_params = {"no_iterator": True}
         exp1 = {
             "atom_type": "link",
             "type": "Inheritance",
@@ -330,7 +331,7 @@ class TestQueries:
                 {"atom_type": "variable", "name": "v3"},
             ],
         }
-        query_answer = das.query([exp1, exp2])
+        query_answer = das.query([exp1, exp2], query_params)
         _check_query_answer(
             query_answer,
             [

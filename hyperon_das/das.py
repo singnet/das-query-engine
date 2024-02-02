@@ -4,6 +4,7 @@ from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
+from hyperon_das.cache import QueryAnswerIterator
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
     InvalidDASParameters,
@@ -12,6 +13,7 @@ from hyperon_das.exceptions import (
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
+from hyperon_das.utils import Assignment
 
 
 class DistributedAtomSpace:
@@ -217,10 +219,12 @@ class DistributedAtomSpace:
         self,
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> List[Dict[str, Any]]:
+    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
         """
-        Perform a query on the knowledge base using a dict as input. Returns a
-        list of dicts as result.
+        Perform a query on the knowledge base using a dict as input and return an
+        iterator of QueryAnswer objects. Each such object carries the resulting mapping
+        of variables in the query and the corresponding subgraph which is the result
+        of ap[plying such mapping to rewrite the query.
 
         The input dict is a link, used as a pattern to make the query.
         Variables can be used as link targets as well as nodes. Nested links are
@@ -232,7 +236,10 @@ class DistributedAtomSpace:
             paramaters (Dict[str, Any], optional): query optional parameters
 
         Returns:
-            List[Dict[str, Any]]: a list of dicts with the matching subgraphs
+            QueryAnswerIterator: An iterator of QueryAnswer objects, which have a field
+            'assignment', with a mapping from variables to handles and another field
+            'subgraph', with the resulting subgraph after applying 'assignment' to rewrite
+            the query.
 
         Raises:
             UnexpectedQueryFormat: If query resolution lead to an invalid state
@@ -272,8 +279,12 @@ class DistributedAtomSpace:
                     }
                 ]
             }
-            >>> result = das.query(q1, query_params)
-            >>> print(result)
+            >>> for result in das.query(q1, query_params):
+            >>>     print(result.assignment.mapping['v1'])
+            >>>     print(result.assignment.mapping['v2'])
+            >>>     print(result.assignment.subgraph)
+            '233d9a6da7d49d4164d863569e9ab7b6'
+            '963d66edfb77236054125e3eb866c8b5'
             [
                 {
                     'handle': 'dbcf1c7b610a5adea335bf08f6509978',
