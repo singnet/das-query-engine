@@ -48,7 +48,7 @@ class QueryEngine(ABC):
         self,
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> List[Dict[str, Any]]:
+    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
         ...
 
     @abstractmethod
@@ -177,19 +177,24 @@ class LocalQueryEngine(QueryEngine):
         self,
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> List[Dict[str, Any]]:
-        logger().debug(
-            {
-                'message': '[DistributedAtomSpace][query] - Start',
-                'data': {'query': query, 'parameters': parameters},
-            }
-        )
+    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
+        no_iterator = parameters.get("no_iterator", False)
+        if no_iterator:
+            logger().debug(
+                {
+                    'message': '[DistributedAtomSpace][query] - Start',
+                    'data': {'query': query, 'parameters': parameters},
+                }
+            )
         query_results = self._recursive_query(query, parameters)
-        logger().debug(f"query: {query} result: {str(query_results)}")
-        answer = []
-        for result in query_results:
-            answer.append(result.subgraph)
-        return answer
+        if no_iterator:
+            answer = []
+            for result in query_results:
+                answer.append(tuple([result.assignment, result.subgraph]))
+            logger().debug(f"query: {query} result: {str(answer)}")
+            return answer
+        else:
+            return query_results
 
     def count_atoms(self) -> Tuple[int, int]:
         return self.local_backend.count_atoms()
@@ -327,16 +332,22 @@ class RemoteQueryEngine(QueryEngine):
         parameters: Optional[Dict[str, Any]] = {},
     ) -> List[Dict[str, Any]]:
         query_scope = parameters.get('query_scope', 'remote_only')
-        if query_scope == 'remote_only':
+        if query_scope == 'remote_only' or query_scope == 'synchronous_update':
+            if query_scope == 'synchronous_update':
+                self.commit()
+            previous_value = parameters.get('no_iterator', False)
+            parameters['no_iterator'] = True
             answer = self.remote_das.query(query, parameters)
+            parameters['no_iterator'] = previous_value
         elif query_scope == 'local_only':
             answer = self.local_query_engine.query(query, parameters)
         elif query_scope == 'local_and_remote':
             # This type is not available yet
             raise QueryParametersException
-        elif query_scope == 'synchronous_update':
-            self.commit()
-            answer = self.remote_das.query(query, parameters)
+        else:
+            raise QueryParametersException(
+                message=f'Invalid value for parameter "query_scope": "{query_scope}"'
+            )
         return answer
 
     def count_atoms(self) -> Tuple[int, int]:
