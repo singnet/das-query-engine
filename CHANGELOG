@@ -1,0 +1,5 @@
+[#114] Added test to check persistence in local DBs after add_atom() 
+[#39] Add reindex() to rebuild pattern index in local DAS
+[HOTFIX] Add empty implementation of reindex() 
+[#121] Change das.query() return to QueryAnswerIterator
+[#122] Add integration test to DAS API used by MeTTa
