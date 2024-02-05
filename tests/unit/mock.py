@@ -315,6 +315,9 @@ class DatabaseMock(AtomDB):
     def reindex(self, not_used):
         pass
 
+    def delete_atom(self, handle: str, **kwargs) -> None:
+        pass
+
 
 class DatabaseAnimals(DatabaseMock):
     def __init__(self):
