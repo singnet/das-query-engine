@@ -449,3 +449,7 @@ You can run the command below to run the unit tests
 ```bash
 make test-unit
 ```
+
+## Release Notes
+
+[DAS Query Engine Releases](https://github.com/singnet/das-query-engine/releases)
