@@ -114,10 +114,12 @@ class TestMettaAPI:
         assert handle == '233d9a6da7d49d4164d863569e9ab7b6'
         symbol = das.get_atom(handle)
         assert symbol["type"] == "Expression"
-        assert symbol["targets"][0]["type"] == "Symbol"
-        assert symbol["targets"][0]["name"] == "Test"
-        assert symbol["targets"][1]["type"] == "Symbol"
-        assert symbol["targets"][1]["name"] == "2"
+        symbol1 = das.get_atom(symbol["targets"][0])
+        assert symbol1["type"] == "Symbol"
+        assert symbol1["name"] == "Test"
+        symbol2 = das.get_atom(symbol["targets"][1])
+        assert symbol2["type"] == "Symbol"
+        assert symbol2["name"] == "2"
 
         das.add_link({
             "type": "Expression",
@@ -134,17 +136,36 @@ class TestMettaAPI:
         })
 
         answer = [query_answer for query_answer in das.query(query_4)]
-        assert len(answer) == 1
+
+        assert len(answer) == 2
         handle = answer[0].assignment.mapping["$v"]
-        assert handle == 'a709a08a70b1bec528d3573aa5b93f16'
+        assert handle == '963d66edfb77236054125e3eb866c8b5'
         symbol = das.get_atom(handle)
         assert symbol["type"] == "Symbol"
-        assert symbol["name"] == "Best"
+        assert symbol["name"] == "Test"
         handle = answer[0].assignment.mapping["$x"]
         assert handle == '233d9a6da7d49d4164d863569e9ab7b6'
         symbol = das.get_atom(handle)
         assert symbol["type"] == "Expression"
-        assert symbol["targets"][0]["type"] == "Symbol"
-        assert symbol["targets"][0]["name"] == "Test"
-        assert symbol["targets"][1]["type"] == "Symbol"
-        assert symbol["targets"][1]["name"] == "2"
+        symbol1 = das.get_atom(symbol["targets"][0])
+        assert symbol1["type"] == "Symbol"
+        assert symbol1["name"] == "Test"
+        symbol2 = das.get_atom(symbol["targets"][1])
+        assert symbol2["type"] == "Symbol"
+        assert symbol2["name"] == "2"
+
+        handle = answer[1].assignment.mapping["$v"]
+        assert handle == 'a709a08a70b1bec528d3573aa5b93f16'
+        symbol = das.get_atom(handle)
+        assert symbol["type"] == "Symbol"
+        assert symbol["name"] == "Best"
+        handle = answer[1].assignment.mapping["$x"]
+        assert handle == '233d9a6da7d49d4164d863569e9ab7b6'
+        symbol = das.get_atom(handle)
+        assert symbol["type"] == "Expression"
+        symbol1 = das.get_atom(symbol["targets"][0])
+        assert symbol1["type"] == "Symbol"
+        assert symbol1["name"] == "Test"
+        symbol2 = das.get_atom(symbol["targets"][1])
+        assert symbol2["type"] == "Symbol"
+        assert symbol2["name"] == "2"
