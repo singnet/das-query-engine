@@ -263,48 +263,18 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
         return not self.current_value
 
 
-class IncomingLinksRamOnlyIterator(QueryAnswerIterator):
+class IncomingLinksIterator(QueryAnswerIterator):
     def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
         super().__init__(source)
         if not self.source.is_empty():
-            self.targets_document = kwargs.get('targets_document', False)
             self.backend = kwargs.get('backend')
-            self.iterator = self.source
-            self.current_value = self.backend.get_atom(
-                self.source.get(), targets_document=self.targets_document
-            )
-
-    def __next__(self) -> dict:
-        if self.iterator:
-            try:
-                link_handle = next(self.iterator)
-                link_document = self.backend.get_atom(
-                    link_handle, targets_document=self.targets_document
-                )
-                self.current_value = link_document
-                return self.current_value
-            except StopIteration as e:
-                raise e
-        return self.get()
-
-    def is_empty(self) -> bool:
-        return not self.iterator
-
-
-class IncomingLinksDatabaseIterator(QueryAnswerIterator):
-    def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
-        super().__init__(source)
-        if not self.source.is_empty():
             self.targets_document = kwargs.get('targets_document', False)
-            self.backend = kwargs.get('backend')
             self.atom_handle = kwargs.get('atom_handle')
             self.chunk_size = kwargs.get('chunk_size', 1000)
             self.cursor = kwargs.get('cursor', 0)
             self.buffer_queue = deque()
             self.iterator = self.source
-            self.current_value = self.backend.get_atom(
-                self.source.get(), targets_document=self.targets_document
-            )
+            self.current_value = self._get_current_value()
             self.fetch_data_thread = Thread(target=self._fetch_data)
             self.semaphore = Semaphore(1)
             if self.cursor != 0:
@@ -313,12 +283,7 @@ class IncomingLinksDatabaseIterator(QueryAnswerIterator):
     def __next__(self):
         if self.iterator:
             try:
-                link_handle = next(self.iterator)
-                link_document = self.backend.get_atom(
-                    link_handle, targets_document=self.targets_document
-                )
-                self.current_value = link_document
-                return self.current_value
+                self._get_next_value()
             except StopIteration as e:
                 if self.fetch_data_thread.is_alive():
                     self.fetch_data_thread.join()
@@ -329,15 +294,11 @@ class IncomingLinksDatabaseIterator(QueryAnswerIterator):
                 self.fetch_data_thread = Thread(target=self._fetch_data)
                 if self.cursor != 0:
                     self.fetch_data_thread.start()
-
         return self.get()
 
     def _fetch_data(self) -> None:
         while True:
-            kwargs = {'no_cursor': False, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
-            # cursor, links_handle = self.backend.get_incoming_links(self.atom_handle, **kwargs)
-            # self.cursor = cursor
-            # self.buffer_queue.extend(links_handle)
+            kwargs = self._get_fetch_data_kwargs()
             if self.semaphore.acquire(blocking=False):
                 try:
                     cursor, links_handle = self.backend.get_incoming_links(
@@ -355,220 +316,122 @@ class IncomingLinksDatabaseIterator(QueryAnswerIterator):
             try:
                 self.source = ListIterator(list(self.buffer_queue))
                 self.iterator = self.source
-                self.current_value = self.backend.get_atom(
-                    self.source.get(), targets_document=self.targets_document
-                )
+                self.current_value = self._get_current_value()
                 self.buffer_queue.clear()
             finally:
                 self.semaphore.release()
-        # self.source = ListIterator(list(self.buffer_queue))
-        # self.iterator = self.source
-        # self.current_value = self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
-        # self.buffer_queue.clear()
 
     def is_empty(self) -> bool:
         return not self.iterator and self.cursor == 0
 
+    def _get_next_value(self):
+        raise NotImplementedError("Subclasses must implement _get_next_value method")
 
-class CompositeIncomingLinksIterator:
-    def __init__(self, *iterators) -> None:
-        self.active_iterators = list(iterators)
+    def _get_current_value(self):
+        raise NotImplementedError("Subclasses must implement _get_current_value method")
+
+    def _get_fetch_data_kwargs(self):
+        raise NotImplementedError("Subclasses must implement _get_fetch_data_kwargs method")
+
+
+class LocalIncomingLinksIterator(IncomingLinksIterator):
+    def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
+        super().__init__(source, **kwargs)
+
+    def _get_next_value(self):
+        link_handle = next(self.iterator)
+        link_document = self.backend.get_atom(link_handle, targets_document=self.targets_document)
+        self.current_value = link_document
+
+    def _get_current_value(self):
+        return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
+
+    def _get_fetch_data_kwargs(self):
+        return {'handle_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
+
+
+class RemoteIncomingLinksIterator(IncomingLinksIterator):
+    def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
+        super().__init__(source, **kwargs)
         self.returned_handles = set()
 
-    def __iter__(self):
-        return self
+    def _get_next_value(self):
+        while True:
+            link_document = next(self.iterator)
+            if isinstance(link_document, tuple):
+                handle = link_document[0]['handle']
+            else:
+                handle = link_document['handle']
+            if handle not in self.returned_handles:
+                self.returned_handles.add(handle)
+                self.current_value = link_document
+                break
 
-    def __next__(self):
-        if not self.active_iterators:
-            raise StopIteration
+    def _get_current_value(self):
+        return self.source.get()
 
-        while self.active_iterators:
-            iterator = self.active_iterators[0]
-            try:
-                document = next(iterator)
-
-                if isinstance(document, tuple):
-                    handle = document[0]['handle']
-                else:
-                    handle = document['handle']
-
-                if handle not in self.returned_handles:
-                    self.returned_handles.add(handle)
-                    return document
-            except StopIteration:
-                self.active_iterators.pop(0)
-
-        raise StopIteration
+    def _get_fetch_data_kwargs(self):
+        return {
+            'cursor': self.cursor,
+            'chunk_size': self.chunk_size,
+            'targets_document': self.targets_document,
+        }
 
 
-# class DualIncomingLinksIterator:
-#     def __init__(self, source: Tuple[QueryAnswerIterator, QueryAnswerIterator], **kwargs) -> None:
-#         self.source_local = source[0]
-#         self.source_remote = source[1]
-#         self.targets_document = kwargs.get('targets_document', False)
-#         self.kwargs = kwargs
-#         self.local_worker_done = False
-#         self.current_worker = self.local_worker()
-#         # print(f'\n===> Inicializou o Dual: {kwargs}')
-
-#     def local_worker(self):
-#         kwargs = {'backend': self.kwargs.get('backend'), 'targets_document': self.targets_document}
-#         try:
-#             # print(f'\n===> Entrou local_worker: {kwargs} - {self.source_local}')
-#             for i in IncomingLinksRamOnlyIterator(self.source_local, **kwargs):
-#                 yield i
-#         except StopIteration:
-#             self.local_worker_done = True
-#             # print(f'\n===> Stop local_worker: {self.local_worker_done}')
-
-#     def remote_worker(self):
-#         kwargs = {
-#             'atom_handle': self.kwargs.get('atom_handle'),
-#             'backend': self.kwargs.get('remote_das'),
-#             'chunk_size': self.kwargs.get('chunk_size', 1000),
-#             'cursor': self.kwargs.get('cursor', 0),
-#         }
-#         # print(f'\n===> Entrou no remote_worker: {kwargs} - {self.current_worker}')
-#         for i in IncomingLinksDatabaseIterator(self.source_remote, **kwargs):
-#             yield i
-
-#     def __iter__(self):
-#         # print(f'\n===> retornou objeto Dual: {self}')
-#         return self
-
-#     def __next__(self):
-#         # print(f'\n===> Entrou no next Dual: {self}')
-#         if not self.local_worker_done:
-#             try:
-#                 # print(f'\n===> Tenta rodar Local: {self.current_worker}')
-#                 return next(self.current_worker)
-#             except StopIteration:
-#                 self.current_worker = self.remote_worker()
-#                 # print(f'\n===> Tenta rodar Remoto: {self.current_worker}')
-#                 return next(self.current_worker)
-#         else:
-#             # print(f'\n===> Tenta rodar Remoto - else: {self.current_worker}')
-#             return next(self.current_worker)
-
-
-# class DualIncomingLinksIterator:
-#     def __init__(self, source: Tuple[QueryAnswerIterator, QueryAnswerIterator], **kwargs) -> None:
-#         self.source_local = source[0]
-#         self.source_remote = source[1]
-#         self.targets_document = kwargs.get('targets_document', False)
-#         self.kwargs = kwargs
-#         self.current_iterator = self.local_iterator()
-
-#     def local_iterator(self):
-#         kwargs = {'backend': self.kwargs.get('backend'), 'targets_document': self.targets_document}
-#         return IncomingLinksRamOnlyIterator(self.source_local, **kwargs)
-
-#     def remote_iterator(self):
-#         kwargs = {
-#             'atom_handle': self.kwargs.get('atom_handle'),
-#             'backend': self.kwargs.get('remote_das'),
-#             'chunk_size': self.kwargs.get('chunk_size', 1000),
-#             'cursor': self.kwargs.get('cursor', 0),
-#         }
-#         return IncomingLinksDatabaseIterator(self.source_remote, **kwargs)
-
-#     def __iter__(self):
-#         return self
-
-#     def __next__(self):
-#         try:
-#             t0=time()
-#             return next(self.current_iterator)
-#             print(f'\n===> Tempo rodar o next do local ou remoto: {time()-t0}')
-#             sleep(5)
-#         except StopIteration:
-#             if isinstance(self.current_iterator, IncomingLinksRamOnlyIterator):
-#                 self.current_iterator = self.remote_iterator()
-#                 t0=time()
-#                 net = next(self.current_iterator)
-#                 print(f'\n===> Tempo rodar o primeiro next do remoto: {time()-t0}')
-#                 sleep(5)
-#             else:
-#                 raise StopIteration
-
-
-# class IncomingLinksRemoteIterator(QueryAnswerIterator):
+# class IncomingLinksRamOnlyIterator(QueryAnswerIterator):
 #     def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
-#         self.source = source
-#         self.initial_source = kwargs.get('initial_source', 'local')
-#         self.targets_document = kwargs.get('targets_document', False)
-#         self.backend = kwargs.get('backend')
-#         self.remote_das = kwargs.get('remote_das')
-#         self.atom_handle = kwargs.get('atom_handle')
-#         self.chunk_size = kwargs.get('chunk_size', 1000)
-#         self.cursor = kwargs.get('cursor', 0)
-#         self.buffer_queue = deque()
-#         self.iterator = self.source
-
-#         if self.initial_source == 'local':
+#         super().__init__(source)
+#         if not self.source.is_empty():
+#             self.targets_document = kwargs.get('targets_document', False)
+#             self.backend = kwargs.get('backend')
+#             self.iterator = self.source
 #             self.current_value = self.backend.get_atom(
 #                 self.source.get(), targets_document=self.targets_document
 #             )
-#         else:
-#             self.current_value = self.remote_das.get_atom(
-#                 self.source.get(), targets_document=self.targets_document
-#             )
 
-#         if self.initial_source == 'local' or self.cursor != 0:
-#             self._start_data_fetch_thread()
-
-#     def __next__(self):
+#     def __next__(self) -> dict:
 #         if self.iterator:
 #             try:
 #                 link_handle = next(self.iterator)
-
-#                 if self.initial_source == 'local':
-#                     link_document = self.backend.get_atom(
-#                         link_handle, targets_document=self.targets_document
-#                     )
-#                 else:
-#                     link_document = self.remote_das.get_atom(
-#                         link_handle, targets_document=self.targets_document
-#                     )
-
+#                 link_document = self.backend.get_atom(
+#                     link_handle, targets_document=self.targets_document
+#                 )
 #                 self.current_value = link_document
 #                 return self.current_value
 #             except StopIteration as e:
-#                 self.initial_source = 'remote'
-#                 self.iterator = None
-#                 if self.cursor == 0 and len(self.buffer_queue) == 0:
-#                     raise e
-#                 self._refresh_iterator()
-#                 if self.cursor != 0:
-#                     self._start_data_fetch_thread()
-
+#                 raise e
 #         return self.get()
 
-#     def _start_data_fetch_thread(self) -> None:
-#         fetch_data_thread = Thread(target=self._fetch_data)
-#         fetch_data_thread.start()
-
-#     def _fetch_data(self) -> None:
-#         while True:
-#             kwargs = {'no_iterator': False, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
-#             if self.initial_source == 'local':
-#                 cursor, links_handle = self.backend.get_incoming_links(self.atom_handle, **kwargs)
-#             else:
-#                 cursor, links_handle = self.remote_das.get_incoming_links(
-#                     self.atom_handle, **kwargs
-#                 )
-#             self.cursor = cursor
-#             self.buffer_queue.extend(links_handle)
-#             if len(self.buffer_queue) >= self.chunk_size or self.cursor == 0:
-#                 break
-
-#     def _refresh_iterator(self) -> None:
-#         self.source = ListIterator(list(self.buffer_queue))
-#         self.iterator = self.source
-#         self.current_value = self.remote_das.get_atom(
-#             self.source.get(), targets_document=self.targets_document
-#         )
-#         self.buffer_queue.clear()
-
 #     def is_empty(self) -> bool:
-#         return not self.iterator and self.cursor == 0
+#         return not self.iterator
+
+
+# class CompositeIncomingLinksIterator:
+#     def __init__(self, *iterators) -> None:
+#         self.active_iterators = list(iterators)
+#         self.returned_handles = set()
+
+#     def __iter__(self):
+#         return self
+
+#     def __next__(self):
+#         if not self.active_iterators:
+#             raise StopIteration
+
+#         while self.active_iterators:
+#             iterator = self.active_iterators[0]
+#             try:
+#                 document = next(iterator)
+
+#                 if isinstance(document, tuple):
+#                     handle = document[0]['handle']
+#                 else:
+#                     handle = document['handle']
+
+#                 if handle not in self.returned_handles:
+#                     self.returned_handles.add(handle)
+#                     return document
+#             except StopIteration:
+#                 self.active_iterators.pop(0)
+
+#         raise StopIteration
