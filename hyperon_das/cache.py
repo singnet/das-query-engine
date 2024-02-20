@@ -1,10 +1,8 @@
-import contextlib
 from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
-from threading import Event, Lock, Semaphore, Thread
-from time import sleep, time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from threading import Semaphore, Thread
+from typing import Any, Dict, List, Optional, Tuple
 
 from hyperon_das_atomdb import WILDCARD
 
@@ -280,7 +278,7 @@ class IncomingLinksIterator(QueryAnswerIterator):
             if self.cursor != 0:
                 self.fetch_data_thread.start()
 
-    def __next__(self):
+    def __next__(self) -> Any:
         if self.iterator:
             try:
                 self._get_next_value()
@@ -324,38 +322,38 @@ class IncomingLinksIterator(QueryAnswerIterator):
     def is_empty(self) -> bool:
         return not self.iterator and self.cursor == 0
 
-    def _get_next_value(self):
+    def _get_next_value(self) -> None:
         raise NotImplementedError("Subclasses must implement _get_next_value method")
 
-    def _get_current_value(self):
+    def _get_current_value(self) -> Any:
         raise NotImplementedError("Subclasses must implement _get_current_value method")
 
-    def _get_fetch_data_kwargs(self):
+    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
         raise NotImplementedError("Subclasses must implement _get_fetch_data_kwargs method")
 
 
-class LocalIncomingLinksIterator(IncomingLinksIterator):
+class LocalIncomingLinks(IncomingLinksIterator):
     def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
         super().__init__(source, **kwargs)
 
-    def _get_next_value(self):
+    def _get_next_value(self) -> None:
         link_handle = next(self.iterator)
         link_document = self.backend.get_atom(link_handle, targets_document=self.targets_document)
         self.current_value = link_document
 
-    def _get_current_value(self):
+    def _get_current_value(self) -> Any:
         return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
 
-    def _get_fetch_data_kwargs(self):
+    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {'handle_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
 
 
-class RemoteIncomingLinksIterator(IncomingLinksIterator):
+class RemoteIncomingLinks(IncomingLinksIterator):
     def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
         super().__init__(source, **kwargs)
         self.returned_handles = set()
 
-    def _get_next_value(self):
+    def _get_next_value(self) -> None:
         while True:
             link_document = next(self.iterator)
             if isinstance(link_document, tuple):
@@ -367,71 +365,12 @@ class RemoteIncomingLinksIterator(IncomingLinksIterator):
                 self.current_value = link_document
                 break
 
-    def _get_current_value(self):
+    def _get_current_value(self) -> Any:
         return self.source.get()
 
-    def _get_fetch_data_kwargs(self):
+    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {
             'cursor': self.cursor,
             'chunk_size': self.chunk_size,
             'targets_document': self.targets_document,
         }
-
-
-# class IncomingLinksRamOnlyIterator(QueryAnswerIterator):
-#     def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
-#         super().__init__(source)
-#         if not self.source.is_empty():
-#             self.targets_document = kwargs.get('targets_document', False)
-#             self.backend = kwargs.get('backend')
-#             self.iterator = self.source
-#             self.current_value = self.backend.get_atom(
-#                 self.source.get(), targets_document=self.targets_document
-#             )
-
-#     def __next__(self) -> dict:
-#         if self.iterator:
-#             try:
-#                 link_handle = next(self.iterator)
-#                 link_document = self.backend.get_atom(
-#                     link_handle, targets_document=self.targets_document
-#                 )
-#                 self.current_value = link_document
-#                 return self.current_value
-#             except StopIteration as e:
-#                 raise e
-#         return self.get()
-
-#     def is_empty(self) -> bool:
-#         return not self.iterator
-
-
-# class CompositeIncomingLinksIterator:
-#     def __init__(self, *iterators) -> None:
-#         self.active_iterators = list(iterators)
-#         self.returned_handles = set()
-
-#     def __iter__(self):
-#         return self
-
-#     def __next__(self):
-#         if not self.active_iterators:
-#             raise StopIteration
-
-#         while self.active_iterators:
-#             iterator = self.active_iterators[0]
-#             try:
-#                 document = next(iterator)
-
-#                 if isinstance(document, tuple):
-#                     handle = document[0]['handle']
-#                 else:
-#                     handle = document['handle']
-
-#                 if handle not in self.returned_handles:
-#                     self.returned_handles.add(handle)
-#                     return document
-#             except StopIteration:
-#                 self.active_iterators.pop(0)
-
-#         raise StopIteration
