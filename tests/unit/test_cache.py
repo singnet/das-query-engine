@@ -1,7 +1,11 @@
+from unittest import mock
+
 import pytest
 
-from hyperon_das.cache import ListIterator, ProductIterator
+from hyperon_das import DistributedAtomSpace
+from hyperon_das.cache import ListIterator, LocalIncomingLinks, ProductIterator
 from hyperon_das.utils import Assignment
+from tests.unit.mock import up_knowledge_base_animals, up_n_links_in_database
 
 
 class TestCache:
@@ -131,3 +135,95 @@ class TestCache:
             for element in iterator:
                 assert False
             assert iterator.is_empty()
+
+    def test_local_incoming_links_ram_only_iterator(self):
+        def mock_get_incoming_links_ram_only(atom_handle: str, **kwargs):
+            links = self.backend.db.incoming_set.get(atom_handle, [])
+            if kwargs.get('handles_only', False):
+                return links
+            else:
+                return [self.backend.get_atom(handle, **kwargs) for handle in links]
+
+        das = DistributedAtomSpace()
+        self.backend = das.backend
+        up_knowledge_base_animals(das)
+        atom_handle = das.get_node_handle('Concept', 'human')
+        with mock.patch(
+            'hyperon_das_atomdb.adapters.ram_only.InMemoryDB.get_incoming_links',
+            side_effect=mock_get_incoming_links_ram_only,
+        ):
+            links = das.backend.get_incoming_links(atom_handle, handles_only=True)
+            it = LocalIncomingLinks(
+                ListIterator(links), backend=das.backend, atom_handle=atom_handle
+            )
+            current_value = it.get()
+            assert isinstance(current_value, dict)
+            assert current_value == next(it)
+            assert it.is_empty() is False
+            [i for i in it]
+            assert it.is_empty() is True
+            with pytest.raises(StopIteration):
+                it.get()
+
+    def test_local_incoming_links_redis_mongo_iterator(self):
+        from tests.integration.test_local_redis_mongo import (
+            _db_down,
+            _db_up,
+            mongo_port,
+            redis_port,
+        )
+
+        def mock_get_incoming_links_redis_mongo(atom_handle: str, **kwargs):
+            cursor, links = self.backend._retrieve_incoming_set(atom_handle, **kwargs)
+            if kwargs.get('cursor') is not None:
+                if kwargs.get('handles_only', False):
+                    return cursor, links
+                else:
+                    return cursor, [self.backend.get_atom(handle, **kwargs) for handle in links]
+            else:
+                if kwargs.get('handles_only', False):
+                    return links
+                else:
+                    return [self.backend.get_atom(handle, **kwargs) for handle in links]
+
+        _db_up()
+        das = DistributedAtomSpace(
+            query_engine='local',
+            atomdb='redis_mongo',
+            mongo_port=mongo_port,
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
+            redis_port=redis_port,
+            redis_cluster=False,
+            redis_ssl=False,
+        )
+        up_n_links_in_database(das, 2000)
+        das.commit_changes()
+
+        self.backend = das.backend
+
+        atom_handle = das.get_node_handle('Concept', 'human')
+        chunk_size = 500
+        with mock.patch(
+            'hyperon_das_atomdb.adapters.redis_mongo_db.RedisMongoDB.get_incoming_links',
+            side_effect=mock_get_incoming_links_redis_mongo,
+        ):
+            cursor, links = das.backend.get_incoming_links(
+                atom_handle, handles_only=True, cursor=0, chunk_size=chunk_size
+            )
+            it = LocalIncomingLinks(
+                ListIterator(links),
+                backend=das.backend,
+                atom_handle=atom_handle,
+                cursor=cursor,
+                chunk_size=chunk_size,
+            )
+            current_value = it.get()
+            assert isinstance(current_value, dict)
+            assert current_value == next(it)
+            assert it.is_empty() is False
+            [i for i in it]
+            assert it.is_empty() is True
+            with pytest.raises(StopIteration):
+                it.get()
+        _db_down()
