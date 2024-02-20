@@ -24,22 +24,6 @@ class FunctionsClient:
             raise e
 
     def get_atom(self, handle: str, **kwargs) -> Union[str, Dict]:
-        # from hyperon_das import DistributedAtomSpace
-
-        # das = DistributedAtomSpace(
-        #     atomdb='redis_mongo',
-        #     mongo_hostname='172.20.0.3',
-        #     mongo_port=27017,
-        #     mongo_username='dbadmin',
-        #     mongo_password='dassecret',
-        #     redis_hostname='172.20.0.2',
-        #     redis_port=6379,
-        #     redis_cluster=False,
-        #     redis_ssl=False,
-        # )
-        # response = das.get_atom(handle, **kwargs)
-        # return response
-
         payload = {
             'action': 'get_atom',
             'input': {'handle': handle},
@@ -112,24 +96,6 @@ class FunctionsClient:
     def get_incoming_links(
         self, atom_handle: str, **kwargs
     ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
-        # from time import sleep
-
-        # from hyperon_das import DistributedAtomSpace
-
-        # das = DistributedAtomSpace(
-        #     atomdb='redis_mongo',
-        #     mongo_hostname='172.20.0.3',
-        #     mongo_port=27017,
-        #     mongo_username='dbadmin',
-        #     mongo_password='dassecret',
-        #     redis_hostname='172.20.0.2',
-        #     redis_port=6379,
-        #     redis_cluster=False,
-        #     redis_ssl=False,
-        # )
-        # response = das.get_incoming_links(atom_handle, **kwargs)
-        # sleep(10) # add network latence
-        # return response
         payload = {
             'action': 'get_incoming_links',
             'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
