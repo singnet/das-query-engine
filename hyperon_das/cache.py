@@ -287,6 +287,7 @@ class IncomingLinksIterator(QueryAnswerIterator):
                     self.fetch_data_thread.join()
                 self.iterator = None
                 if self.cursor == 0 and len(self.buffer_queue) == 0:
+                    self.current_value = None
                     raise e
                 self._refresh_iterator()
                 self.fetch_data_thread = Thread(target=self._fetch_data)
@@ -345,7 +346,7 @@ class LocalIncomingLinks(IncomingLinksIterator):
         return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
 
     def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
-        return {'handle_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
+        return {'handles_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
 
 
 class RemoteIncomingLinks(IncomingLinksIterator):
