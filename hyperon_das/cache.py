@@ -262,7 +262,7 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
 
 
 class IncomingLinksIterator(QueryAnswerIterator):
-    def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
+    def __init__(self, source: ListIterator, **kwargs) -> None:
         super().__init__(source)
         if not self.source.is_empty():
             self.backend = kwargs.get('backend')
@@ -274,8 +274,8 @@ class IncomingLinksIterator(QueryAnswerIterator):
             self.iterator = self.source
             self.current_value = self._get_current_value()
             self.fetch_data_thread = Thread(target=self._fetch_data)
-            self.semaphore = Semaphore(1)
             if self.cursor != 0:
+                self.semaphore = Semaphore(1)
                 self.fetch_data_thread.start()
 
     def __next__(self) -> Any:
@@ -296,8 +296,8 @@ class IncomingLinksIterator(QueryAnswerIterator):
         return self.get()
 
     def _fetch_data(self) -> None:
+        kwargs = self._get_fetch_data_kwargs()
         while True:
-            kwargs = self._get_fetch_data_kwargs()
             if self.semaphore.acquire(blocking=False):
                 try:
                     cursor, links_handle = self.backend.get_incoming_links(
@@ -307,7 +307,6 @@ class IncomingLinksIterator(QueryAnswerIterator):
                     self.buffer_queue.extend(links_handle)
                 finally:
                     self.semaphore.release()
-            if len(self.buffer_queue) >= self.chunk_size or self.cursor == 0:
                 break
 
     def _refresh_iterator(self) -> None:
