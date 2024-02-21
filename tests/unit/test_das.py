@@ -46,22 +46,24 @@ class TestDistributedAtomSpace:
         ):
             das_remote = DistributedAtomSpaceMock('remote', host='test')
 
-        with mock.patch('hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[]):
+        with mock.patch(
+            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=(0, [])
+        ):
             links = das_remote.get_incoming_links('<Concept: human>')
-        assert len(links) == 7
+        assert len(links.source.source) == 7
 
         with mock.patch(
-            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[1, 2, 3, 4]
+            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=(0, [1, 2, 3, 4])
         ):
             links = das_remote.get_incoming_links('<Concept: snet>')
-        assert links == [1, 2, 3, 4]
+        assert links.source.source == [1, 2, 3, 4]
 
         with mock.patch(
             'hyperon_das.client.FunctionsClient.get_incoming_links',
-            return_value=["['Inheritance', '<Concept: ent>', '<Concept: snet>']"],
+            return_value=(0, ["['Inheritance', '<Concept: ent>', '<Concept: snet>']"]),
         ):
             links = das_remote.get_incoming_links('<Concept: ent>', handles_only=True)
-        assert set(links) == {
+        assert set(links.source.source) == {
             "['Inheritance', '<Concept: ent>', '<Concept: plant>']",
             "['Similarity', '<Concept: ent>', '<Concept: human>']",
             "['Similarity', '<Concept: human>', '<Concept: ent>']",

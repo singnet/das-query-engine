@@ -23,7 +23,7 @@ class FunctionsClient:
         except requests.exceptions.RequestException as e:
             raise e
 
-    def get_atom(self, handle: str) -> Union[str, Dict]:
+    def get_atom(self, handle: str, **kwargs) -> Union[str, Dict]:
         payload = {
             'action': 'get_atom',
             'input': {'handle': handle},

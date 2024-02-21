@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+from collections import deque
 from itertools import product
+from threading import Semaphore, Thread
 from typing import Any, Dict, List, Optional, Tuple
 
 from hyperon_das_atomdb import WILDCARD
@@ -26,17 +28,17 @@ class QueryAnswerIterator(ABC):
             raise exception
         return self.current_value
 
-    def get(self) -> Any:
-        if not self.source or self.current_value is None:
-            raise StopIteration
-        return self.current_value
-
     def __str__(self):
         return str(self.source)
 
     @abstractmethod
     def is_empty(self) -> bool:
         pass
+
+    def get(self) -> Any:
+        if not self.source or self.current_value is None:
+            raise StopIteration
+        return self.current_value
 
 
 class ListIterator(QueryAnswerIterator):
@@ -257,3 +259,118 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
 
     def is_empty(self) -> bool:
         return not self.current_value
+
+
+class IncomingLinksIterator(QueryAnswerIterator):
+    def __init__(self, source: ListIterator, **kwargs) -> None:
+        super().__init__(source)
+        if not self.source.is_empty():
+            self.backend = kwargs.get('backend')
+            self.targets_document = kwargs.get('targets_document', False)
+            self.atom_handle = kwargs.get('atom_handle')
+            self.chunk_size = kwargs.get('chunk_size', 1000)
+            self.cursor = kwargs.get('cursor', 0)
+            self.buffer_queue = deque()
+            self.iterator = self.source
+            self.current_value = self._get_current_value()
+            self.fetch_data_thread = Thread(target=self._fetch_data)
+            if self.cursor != 0:
+                self.semaphore = Semaphore(1)
+                self.fetch_data_thread.start()
+
+    def __next__(self) -> Any:
+        if self.iterator:
+            try:
+                self._get_next_value()
+            except StopIteration as e:
+                if self.fetch_data_thread.is_alive():
+                    self.fetch_data_thread.join()
+                self.iterator = None
+                if self.cursor == 0 and len(self.buffer_queue) == 0:
+                    self.current_value = None
+                    raise e
+                self._refresh_iterator()
+                self.fetch_data_thread = Thread(target=self._fetch_data)
+                if self.cursor != 0:
+                    self.fetch_data_thread.start()
+        return self.get()
+
+    def _fetch_data(self) -> None:
+        kwargs = self._get_fetch_data_kwargs()
+        while True:
+            if self.semaphore.acquire(blocking=False):
+                try:
+                    cursor, links_handle = self.backend.get_incoming_links(
+                        self.atom_handle, **kwargs
+                    )
+                    self.cursor = cursor
+                    self.buffer_queue.extend(links_handle)
+                finally:
+                    self.semaphore.release()
+                break
+
+    def _refresh_iterator(self) -> None:
+        if self.semaphore.acquire(blocking=False):
+            try:
+                self.source = ListIterator(list(self.buffer_queue))
+                self.iterator = self.source
+                self.current_value = self._get_current_value()
+                self.buffer_queue.clear()
+            finally:
+                self.semaphore.release()
+
+    def is_empty(self) -> bool:
+        return not self.iterator and self.cursor == 0
+
+    def _get_next_value(self) -> None:
+        raise NotImplementedError("Subclasses must implement _get_next_value method")
+
+    def _get_current_value(self) -> Any:
+        raise NotImplementedError("Subclasses must implement _get_current_value method")
+
+    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+        raise NotImplementedError("Subclasses must implement _get_fetch_data_kwargs method")
+
+
+class LocalIncomingLinks(IncomingLinksIterator):
+    def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
+        super().__init__(source, **kwargs)
+
+    def _get_next_value(self) -> None:
+        link_handle = next(self.iterator)
+        link_document = self.backend.get_atom(link_handle, targets_document=self.targets_document)
+        self.current_value = link_document
+
+    def _get_current_value(self) -> Any:
+        return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
+
+    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+        return {'handles_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
+
+
+class RemoteIncomingLinks(IncomingLinksIterator):
+    def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
+        super().__init__(source, **kwargs)
+        self.returned_handles = set()
+
+    def _get_next_value(self) -> None:
+        while True:
+            link_document = next(self.iterator)
+            if isinstance(link_document, tuple):
+                handle = link_document[0]['handle']
+            else:
+                handle = link_document['handle']
+            if handle not in self.returned_handles:
+                self.returned_handles.add(handle)
+                self.current_value = link_document
+                break
+
+    def _get_current_value(self) -> Any:
+        return self.source.get()
+
+    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+        return {
+            'cursor': self.cursor,
+            'chunk_size': self.chunk_size,
+            'targets_document': self.targets_document,
+        }

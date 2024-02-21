@@ -261,16 +261,16 @@ class TestVultrClientIntegration:
                     {"atom_type": "variable", "name": "v2"},
                 ],
             },
-            {"toplevel_only": False},
+            {"no_iterator": True},
         )
 
         assert len(answer) == 12
 
         for link in answer:
-            if link['handle'] == link_inheritance_concept_concept:
+            if link[1]['handle'] == link_inheritance_concept_concept:
                 break
 
-        handles = [target['handle'] for target in link['targets']]
+        handles = [target['handle'] for target in link[1]['targets']]
 
         assert handles == [node_human, node_mammal]
 
@@ -283,16 +283,16 @@ class TestVultrClientIntegration:
                     {"atom_type": "variable", "name": "v2"},
                 ],
             },
-            {"toplevel_only": False},
+            {"no_iterator": True},
         )
 
         assert len(answer) == 14
 
         for link in answer:
-            if link['handle'] == link_similarity_concept_concept:
+            if link[1]['handle'] == link_similarity_concept_concept:
                 break
 
-        handles = [target['handle'] for target in link['targets']]
+        handles = [target['handle'] for target in link[1]['targets']]
 
         assert handles == [node_human, node_monkey]
 

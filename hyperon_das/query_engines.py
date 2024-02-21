@@ -1,12 +1,19 @@
 import json
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import requests
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
-from hyperon_das.cache import AndEvaluator, LazyQueryEvaluator, ListIterator, QueryAnswerIterator
+from hyperon_das.cache import (
+    AndEvaluator,
+    LazyQueryEvaluator,
+    ListIterator,
+    LocalIncomingLinks,
+    QueryAnswerIterator,
+    RemoteIncomingLinks,
+)
 from hyperon_das.client import FunctionsClient
 from hyperon_das.decorators import retry
 from hyperon_das.exceptions import (
@@ -127,9 +134,9 @@ class LocalQueryEngine(QueryEngine):
             answer.append(self.local_backend.get_atom_as_dict(handle, arity))
         return answer
 
-    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
+    def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
         try:
-            return self.local_backend.get_atom(handle)
+            return self.local_backend.get_atom(handle, **kwargs)
         except AtomDoesNotExist as e:
             raise e
 
@@ -170,8 +177,18 @@ class LocalQueryEngine(QueryEngine):
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
-        return self.local_backend.get_incoming_links(atom_handle, **kwargs)
+    ) -> Union[Iterator, List[Union[dict, str, Tuple[dict, List[dict]]]]]:
+        if kwargs.get('no_iterator', True):
+            return self.local_backend.get_incoming_links(atom_handle, **kwargs)
+        else:
+            kwargs['handles_only'] = True
+            links = self.local_backend.get_incoming_links(atom_handle, **kwargs)
+            kwargs['backend'] = self.local_backend
+            kwargs['atom_handle'] = atom_handle
+            if isinstance(links, tuple):  # redis_mongo use case
+                kwargs['cursor'] = links[0]
+                links = links[1]
+            return LocalIncomingLinks(ListIterator(links), **kwargs)
 
     def query(
         self,
@@ -243,12 +260,12 @@ class RemoteQueryEngine(QueryEngine):
             return True
         return False
 
-    def get_atom(self, handle: str) -> Dict[str, Any]:
+    def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         try:
-            atom = self.local_query_engine.get_atom(handle)
+            atom = self.local_query_engine.get_atom(handle, **kwargs)
         except AtomDoesNotExist:
             try:
-                atom = self.remote_das.get_atom(handle)
+                atom = self.remote_das.get_atom(handle, **kwargs)
             except AtomDoesNotExist:
                 raise AtomDoesNotExist(
                     message='This atom does not exist', details=f'handle:{handle}'
@@ -286,45 +303,17 @@ class RemoteQueryEngine(QueryEngine):
         if not local:
             return self.remote_das.get_links(link_type, target_types, link_targets)
 
-    def get_incoming_links(
-        self, atom_handle: str, **kwargs
-    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
-        local_links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
-        remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
-
-        if not local_links and remote_links:
-            return remote_links
-        elif local_links and not remote_links:
-            return local_links
-        elif not local_links and not remote_links:
-            return []
-
-        if kwargs.get('handles_only', False):
-            return list(set(local_links + remote_links))
-        else:
-            answer = []
-
-            if isinstance(remote_links[0], dict):
-                remote_links_dict = {link['handle']: link for link in remote_links}
-            else:
-                remote_links_dict = {
-                    link['handle']: (link, targets) for link, targets in remote_links
-                }
-
-            for local_link in local_links:
-                if isinstance(local_link, dict):
-                    handle = local_link['handle']
-                else:
-                    handle = local_link[0]['handle']
-                    local_link = local_link[0]
-
-                answer.append(local_link)
-
-                remote_links_dict.pop(handle, None)
-
-            answer.extend(remote_links_dict.values())
-
-            return answer
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> Iterator:
+        kwargs.pop('no_iterator', None)
+        if kwargs.get('cursor') is None:
+            kwargs['cursor'] = 0
+        links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
+        cursor, remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
+        kwargs['cursor'] = cursor
+        kwargs['backend'] = self.remote_das
+        kwargs['atom_handle'] = atom_handle
+        links.extend(remote_links)
+        return RemoteIncomingLinks(ListIterator(links), **kwargs)
 
     def query(
         self,

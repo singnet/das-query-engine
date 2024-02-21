@@ -5,3 +5,4 @@
 [#122] Add integration test to DAS API used by MeTTa
 [BUGFIX] Add delete_atom method in DatabaseMock class
 [#134] Update package version
+[#138] Implement iterators to incoming_links
