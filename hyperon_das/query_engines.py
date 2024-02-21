@@ -307,6 +307,7 @@ class RemoteQueryEngine(QueryEngine):
         kwargs.pop('no_iterator', None)
         if kwargs.get('cursor') is None:
             kwargs['cursor'] = 0
+        kwargs['handles_only'] = False
         links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
         cursor, remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
         kwargs['cursor'] = cursor
