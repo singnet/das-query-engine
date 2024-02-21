@@ -6,3 +6,4 @@
 [BUGFIX] Add delete_atom method in DatabaseMock class
 [#134] Update package version
 [#138] Implement iterators to incoming_links
+[#139] Update TraveseEngine to use IncomingLinksIterators

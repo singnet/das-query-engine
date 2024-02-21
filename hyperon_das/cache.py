@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
 from threading import Semaphore, Thread
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from hyperon_das_atomdb import WILDCARD
 
@@ -143,125 +143,7 @@ class LazyQueryEvaluator(ProductIterator):
         return self.buffered_answer.__next__()
 
 
-class TraverseLinksIterator(QueryAnswerIterator):
-    def __init__(self, source: List[Tuple[Dict[str, Any], List[Dict[str, Any]]]], **kwargs) -> None:
-        super().__init__(source)
-        self.cursor = kwargs.get('cursor')
-        self.link_type = kwargs.get('link_type')
-        self.cursor_position = kwargs.get('cursor_position')
-        self.target_type = kwargs.get('target_type')
-        self.custom_filter = kwargs.get('filter')
-        self.targets_only = kwargs.get('targets_only', False)
-        self.current_value = self._find_first_valid_element()
-        if not self.is_empty():
-            self.iterator = iter(source)
-
-    def __next__(self):
-        while True:
-            link, targets = super().__next__()
-            if (
-                not self.link_type
-                and self.cursor_position is None
-                and not self.target_type
-                and not self.custom_filter
-            ) or self._filter(link, targets):
-                self.current_value = targets if self.targets_only else link
-                break
-
-        return self.current_value
-
-    def _find_first_valid_element(self):
-        if self.source:
-            for link, targets in self.source:
-                if self._filter(link, targets):
-                    return targets if self.targets_only else link
-
-    def _filter(self, link: Dict[str, Any], targets: Dict[str, Any]) -> bool:
-        if self.link_type and self.link_type != link['named_type']:
-            return False
-
-        try:
-            if (
-                self.cursor_position is not None
-                and self.cursor != link['targets'][self.cursor_position]
-            ):
-                return False
-        except IndexError:
-            return False
-        except Exception as e:
-            raise e
-
-        if self.target_type:
-            if not any(target['named_type'] == self.target_type for target in targets):
-                return False
-
-        if self.custom_filter and callable(self.custom_filter):
-            ret = self.custom_filter(link)
-            if not isinstance(ret, bool):
-                raise TypeError('The function must return a boolean')
-            if ret is False:
-                return False
-
-        return True
-
-    def is_empty(self) -> bool:
-        return not self.current_value
-
-
-class TraverseNeighborsIterator(QueryAnswerIterator):
-    def __init__(self, source: TraverseLinksIterator, **kwargs) -> None:
-        super().__init__(source)
-        self.buffered_answer = None
-        self.cursor = self.source.cursor
-        self.target_type = self.source.target_type
-        self.visited_neighbors = []
-        self.current_value = self._find_first_valid_element()
-        if not self.is_empty():
-            self.iterator = source
-
-    def __next__(self):
-        if self.buffered_answer:
-            try:
-                return self.buffered_answer.__next__()
-            except StopIteration:
-                self.buffered_answer = None
-
-        while True:
-            targets = super().__next__()
-            _new_neighbors = []
-            match_found = False
-            for target in targets:
-                if self._filter(target):
-                    match_found = True
-                    self.visited_neighbors.append(target['handle'])
-                    _new_neighbors.append(target)
-
-            if match_found:
-                self.buffered_answer = ListIterator(_new_neighbors)
-                self.current_value = self.buffered_answer.__next__()
-                return self.current_value
-
-    def _find_first_valid_element(self):
-        if self.source.current_value:
-            for target in self.source.current_value:
-                if self._filter(target):
-                    return target
-
-    def _filter(self, target: Dict[str, Any]) -> bool:
-        handle = target['handle']
-        if (
-            self.cursor != handle
-            and handle not in self.visited_neighbors
-            and (self.target_type == target['named_type'] or not self.target_type)
-        ):
-            return True
-        return False
-
-    def is_empty(self) -> bool:
-        return not self.current_value
-
-
-class IncomingLinksIterator(QueryAnswerIterator):
+class IncomingLinksIterator(QueryAnswerIterator, ABC):
     def __init__(self, source: ListIterator, **kwargs) -> None:
         super().__init__(source)
         if not self.source.is_empty():
@@ -320,7 +202,7 @@ class IncomingLinksIterator(QueryAnswerIterator):
                 self.semaphore.release()
 
     def is_empty(self) -> bool:
-        return not self.iterator and self.cursor == 0
+        return not self.iterator
 
     def _get_next_value(self) -> None:
         raise NotImplementedError("Subclasses must implement _get_next_value method")
@@ -333,7 +215,7 @@ class IncomingLinksIterator(QueryAnswerIterator):
 
 
 class LocalIncomingLinks(IncomingLinksIterator):
-    def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
+    def __init__(self, source: ListIterator, **kwargs) -> None:
         super().__init__(source, **kwargs)
 
     def _get_next_value(self) -> None:
@@ -349,14 +231,14 @@ class LocalIncomingLinks(IncomingLinksIterator):
 
 
 class RemoteIncomingLinks(IncomingLinksIterator):
-    def __init__(self, source: QueryAnswerIterator, **kwargs) -> None:
+    def __init__(self, source: ListIterator, **kwargs) -> None:
         super().__init__(source, **kwargs)
         self.returned_handles = set()
 
     def _get_next_value(self) -> None:
         while True:
             link_document = next(self.iterator)
-            if isinstance(link_document, tuple):
+            if isinstance(link_document, tuple) or isinstance(link_document, list):
                 handle = link_document[0]['handle']
             else:
                 handle = link_document['handle']
@@ -374,3 +256,126 @@ class RemoteIncomingLinks(IncomingLinksIterator):
             'chunk_size': self.chunk_size,
             'targets_document': self.targets_document,
         }
+
+
+class TraverseLinksIterator(QueryAnswerIterator):
+    def __init__(self, source: IncomingLinksIterator, **kwargs) -> None:
+        super().__init__(source)
+        self.cursor = kwargs.get('cursor')
+        self.link_type = kwargs.get('link_type')
+        self.cursor_position = kwargs.get('cursor_position')
+        self.target_type = kwargs.get('target_type')
+        self.custom_filter = kwargs.get('filter')
+        self.targets_only = kwargs.get('targets_only', False)
+        self.buffer = None
+        if not self.is_empty():
+            self.iterator = self.source
+            self.current_value = self._find_first_valid_element()
+            self.buffer = self.current_value
+
+    def __next__(self):
+        while True:
+            if self.buffer:
+                buffered_value, self.buffer = self.buffer, None
+                return buffered_value
+            link, targets = super().__next__()
+            if (
+                not self.link_type
+                and self.cursor_position is None
+                and not self.target_type
+                and not self.custom_filter
+            ) or self._filter(link, targets):
+                self.current_value = targets if self.targets_only else link
+                break
+
+        return self.current_value
+
+    def _find_first_valid_element(self):
+        if self.source:
+            for link, targets in self.source:
+                if self._filter(link, targets):
+                    return targets if self.targets_only else link
+
+    def _filter(self, link: Dict[str, Any], targets: Dict[str, Any]) -> bool:
+        if self.link_type and self.link_type != link['named_type']:
+            return False
+
+        try:
+            if (
+                self.cursor_position is not None
+                and self.cursor != link['targets'][self.cursor_position]
+            ):
+                return False
+        except IndexError:
+            return False
+        except Exception as e:
+            raise e
+
+        if self.target_type:
+            if not any(target['named_type'] == self.target_type for target in targets):
+                return False
+
+        if self.custom_filter and callable(self.custom_filter):
+            ret = self.custom_filter(link)
+            if not isinstance(ret, bool):
+                raise TypeError('The function must return a boolean')
+            if ret is False:
+                return False
+
+        return True
+
+    def is_empty(self) -> bool:
+        return not self.current_value and self.source.is_empty()
+
+
+class TraverseNeighborsIterator(QueryAnswerIterator):
+    def __init__(self, source: TraverseLinksIterator, **kwargs) -> None:
+        super().__init__(source)
+        self.buffered_answer = None
+        self.cursor = self.source.cursor
+        self.target_type = self.source.target_type
+        self.visited_neighbors = []
+        self.current_value = self._find_first_valid_element()
+        if not self.is_empty():
+            self.iterator = source
+
+    def __next__(self):
+        if self.buffered_answer:
+            try:
+                return self.buffered_answer.__next__()
+            except StopIteration:
+                self.buffered_answer = None
+
+        while True:
+            targets = super().__next__()
+            _new_neighbors = []
+            match_found = False
+            for target in targets:
+                if self._filter(target):
+                    match_found = True
+                    self.visited_neighbors.append(target['handle'])
+                    _new_neighbors.append(target)
+
+            if match_found:
+                self.buffered_answer = ListIterator(_new_neighbors)
+                self.current_value = self.buffered_answer.__next__()
+                return self.current_value
+
+    def _find_first_valid_element(self):
+        if self.source.current_value:
+            for target in self.source.current_value:
+                if self._filter(target):
+                    return target
+
+    def _filter(self, target: Dict[str, Any]) -> bool:
+        handle = target['handle']
+        if (
+            self.cursor != handle
+            and handle not in self.visited_neighbors
+            and (self.target_type == target['named_type'] or not self.target_type)
+        ):
+            return True
+        return False
+
+    def is_empty(self) -> bool:
+        return not self.current_value

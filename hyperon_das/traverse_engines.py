@@ -18,7 +18,10 @@ class TraverseEngine:
 
     def get_links(self, **kwargs) -> QueryAnswerIterator:
         incoming_links = self.das.get_incoming_links(
-            atom_handle=self._cursor['handle'], handles_only=False, targets_document=True
+            atom_handle=self._cursor['handle'],
+            no_iterator=False,
+            targets_document=True,
+            cursor=0,
         )
         return TraverseLinksIterator(source=incoming_links, cursor=self._cursor['handle'], **kwargs)
 
