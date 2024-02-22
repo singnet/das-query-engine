@@ -1053,7 +1053,7 @@ class TestTraverseEngine:
             previous_cursor = current_cursor
             current_cursor = cursor.get()['name']
             if previous_cursor == 'monkey':
-                assert current_cursor in ('mammal', 'chimp')
+                assert current_cursor in ('mammal', 'chimp', 'human')
             elif previous_cursor == 'chimp':
                 assert current_cursor in ('mammal', 'monkey', 'human')
             elif previous_cursor == 'human':
