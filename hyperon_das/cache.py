@@ -268,7 +268,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
         self.custom_filter = kwargs.get('filter')
         self.targets_only = kwargs.get('targets_only', False)
         self.buffer = None
-        if not self.is_empty():
+        if not self.source.is_empty():
             self.iterator = self.source
             self.current_value = self._find_first_valid_element()
             self.buffer = self.current_value
@@ -287,7 +287,6 @@ class TraverseLinksIterator(QueryAnswerIterator):
             ) or self._filter(link, targets):
                 self.current_value = targets if self.targets_only else link
                 break
-
         return self.current_value
 
     def _find_first_valid_element(self):
@@ -325,7 +324,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
         return True
 
     def is_empty(self) -> bool:
-        return not self.current_value and self.source.is_empty()
+        return not self.current_value
 
 
 class TraverseNeighborsIterator(QueryAnswerIterator):
@@ -335,9 +334,9 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
         self.cursor = self.source.cursor
         self.target_type = self.source.target_type
         self.visited_neighbors = []
-        self.current_value = self._find_first_valid_element()
-        if not self.is_empty():
+        if not self.source.is_empty():
             self.iterator = source
+            self.current_value = self._find_first_valid_element()
 
     def __next__(self):
         if self.buffered_answer:
@@ -348,24 +347,28 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
 
         while True:
             targets = super().__next__()
-            _new_neighbors = []
-            match_found = False
-            for target in targets:
-                if self._filter(target):
-                    match_found = True
-                    self.visited_neighbors.append(target['handle'])
-                    _new_neighbors.append(target)
-
+            _new_neighbors, match_found = self._process_targets(targets)
             if match_found:
                 self.buffered_answer = ListIterator(_new_neighbors)
                 self.current_value = self.buffered_answer.__next__()
                 return self.current_value
 
     def _find_first_valid_element(self):
-        if self.source.current_value:
-            for target in self.source.current_value:
-                if self._filter(target):
-                    return target
+        for targets in self.iterator:
+            _new_neighbors, match_found = self._process_targets(targets)
+            if match_found:
+                self.buffered_answer = ListIterator(_new_neighbors)
+                return self.buffered_answer.get()
+
+    def _process_targets(self, targets: list) -> tuple:
+        answer = []
+        match_found = False
+        for target in targets:
+            if self._filter(target):
+                match_found = True
+                self.visited_neighbors.append(target['handle'])
+                answer.append(target)
+        return (answer, match_found)
 
     def _filter(self, target: Dict[str, Any]) -> bool:
         handle = target['handle']
