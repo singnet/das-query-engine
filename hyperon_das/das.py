@@ -149,7 +149,11 @@ class DistributedAtomSpace:
         return self.query_engine.get_link(link_type, link_targets)
 
     def get_links(
-        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None, **kwargs
+        self,
+        link_type: str,
+        target_types: List[str] = None,
+        link_targets: List[str] = None,
+        **kwargs,
     ) -> Union[List[str], List[Dict]]:
         """
         Retrieve information about Links based on specified criteria.
@@ -497,3 +501,39 @@ class DistributedAtomSpace:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
 
         return TraverseEngine(handle, das=self, **kwargs)
+
+
+if __name__ == '__main__':
+    from tests.unit.mock import up_knowledge_base_animals
+    human = AtomDB.node_handle('Concept', 'human')
+    monkey = AtomDB.node_handle('Concept', 'monkey')
+    
+    
+    # # === CASO 1
+    # das = DistributedAtomSpace()
+    # up_knowledge_base_animals(das)
+    
+    # # DAS local RamOnly - Normal
+    # caso_1_1 = das.get_links('Inheritance')
+    
+    # # DAS local RamOnly - Iterator
+    # caso_1_2 = das.get_links('Inheritance', no_iterator=False)
+        
+    
+    
+    # # === CASO 2
+    # das = DistributedAtomSpace(query_engine='local', atomdb='redis_mongo', mongo_hostname='45.63.85.59', mongo_port=28100, mongo_username='dbadmin', mongo_password='dassecret', redis_hostname='45.63.85.59', redis_port=29100, redis_cluster=False, redis_ssl=False)
+    
+    # # DAS local RedisMongoDB - Normal
+    # caso_2_1 = das.get_links('Inheritance')
+    
+    # # DAS local RedisMongoDB - Iterator
+    # caso_2_2 = das.get_links('Inheritance', no_iterator=False)
+    
+    
+    
+    # CASO 3 - DAS remoto - Iterator
+    das = DistributedAtomSpace(query_engine='remote', host='45.63.85.59', port=8080)
+    db_answer3 = das.get_links(link_type='Inheritance', no_iterator=False)
+    [i for i in db_answer3]
+    print('end')

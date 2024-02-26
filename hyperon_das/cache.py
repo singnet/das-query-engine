@@ -275,31 +275,32 @@ class RemoteIncomingLinks(BaseLinksIterator):
 
 class LocalGetLinks(BaseLinksIterator):
     def __init__(self, source: ListIterator, **kwargs) -> None:
-        self.action = kwargs.get('action')
         self.link_type = kwargs.get('link_type')
         self.target_types = kwargs.get('target_types')
         self.link_targets = kwargs.get('link_targets')
         self.toplevel_only = kwargs.get('toplevel_only')
+        self.returned_handles = set()
         super().__init__(source, **kwargs)
 
     def _get_next_value(self) -> None:
-        ret = next(self.iterator)
-        self.current_value = self._to_link_dict_list(ret)
+        value = next(self.iterator)
+
+        if isinstance(value, str):
+            handle = value
+        else:
+            handle = value[0]
+
+        if handle not in self.returned_handles:
+            self.returned_handles.add(handle)
+            self.current_value = self.backend._to_link_dict_list([value])[0]
 
     def _get_current_value(self) -> Any:
         try:
-            ret = self.source.get()
-            return self._to_link_dict_list(ret)
+            value = self.source.get()
+            return self.backend._to_link_dict_list([value])[0]
         except StopIteration:
             return None
 
-    def _to_link_dict_list(self, db_answer) -> List[Dict]:
-        if not db_answer:
-            return []
-        handle, targets = db_answer
-        arity = len(targets)
-        return self.backend.get_atom_as_dict(handle, arity)
-    
     def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {
             'cursor': self.cursor,
@@ -308,18 +309,40 @@ class LocalGetLinks(BaseLinksIterator):
         }
 
     def _get_fetch_data(self, **kwargs) -> tuple:
-        if self.action == 'get_matched_type_template':
-            return self.backend.get_matched_type_template(
-                [self.link_type, *self.target_types], **kwargs
-            )
-        elif self.action == 'get_matched_links':
-            return self.backend.get_matched_links(self.link_type, self.link_targets, **kwargs)
-        elif self.action == 'get_matched_type':
-            return self.backend.get_matched_type(self.link_type, **kwargs)
+        return self.backend._get_related_links(self.link_type, self.target_types, self.link_targets, **kwargs)
 
 
 class RemoteGetLinks(BaseLinksIterator):
-    pass
+    def __init__(self, source: ListIterator, **kwargs) -> None:
+        self.link_type = kwargs.get('link_type')
+        self.target_types = kwargs.get('target_types')
+        self.link_targets = kwargs.get('link_targets')
+        self.toplevel_only = kwargs.get('toplevel_only')
+        self.returned_handles = set()
+        super().__init__(source, **kwargs)
+
+    def _get_next_value(self) -> None:
+        value = next(self.iterator)
+        handle = value.get('handle')
+        if handle not in self.returned_handles:
+            self.returned_handles.add(handle)
+            self.current_value = value
+
+    def _get_current_value(self) -> Any:
+        try:
+            return self.source.get()
+        except StopIteration:
+            return None
+
+    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+        return {
+            'cursor': self.cursor,
+            'chunk_size': self.chunk_size,
+            'toplevel_only': self.toplevel_only,
+        }
+
+    def _get_fetch_data(self, **kwargs) -> tuple:
+        return self.backend.get_links(self.link_type, self.target_types, self.link_targets, **kwargs)
 
 
 class TraverseLinksIterator(QueryAnswerIterator):

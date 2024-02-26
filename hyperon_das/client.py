@@ -54,19 +54,34 @@ class FunctionsClient:
         return response
 
     def get_links(
-        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
+        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None, **kwargs
     ) -> Union[List[str], List[Dict]]:
-        payload = {
-            'action': 'get_links',
-            'input': {'link_type': link_type},
-        }
-        if target_types:
-            payload['input']['target_types'] = target_types
+        from hyperon_das import DistributedAtomSpace
+        das = DistributedAtomSpace(
+            query_engine='local',
+            atomdb='redis_mongo',
+            mongo_hostname='104.238.183.115',
+            mongo_port=28100,
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
+            redis_hostname='104.238.183.115',
+            redis_port=29100,
+            redis_cluster=False,
+            redis_ssl=False,
+        )
+        return das.get_links(link_type, target_types, link_targets, **kwargs)
+        
+        # payload = {
+        #     'action': 'get_links',
+        #     'input': {'link_type': link_type, 'kwargs': kwargs},
+        # }
+        # if target_types:
+        #     payload['input']['target_types'] = target_types
 
-        if link_targets:
-            payload['input']['link_targets'] = link_targets
+        # if link_targets:
+        #     payload['input']['link_targets'] = link_targets
 
-        return self._send_request(payload)
+        # return self._send_request(payload)
 
     def query(
         self,
