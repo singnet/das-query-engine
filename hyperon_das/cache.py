@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
 from threading import Semaphore, Thread
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from hyperon_das_atomdb import WILDCARD
 
@@ -143,13 +143,11 @@ class LazyQueryEvaluator(ProductIterator):
         return self.buffered_answer.__next__()
 
 
-class IncomingLinksIterator(QueryAnswerIterator, ABC):
+class BaseLinksIterator(QueryAnswerIterator, ABC):
     def __init__(self, source: ListIterator, **kwargs) -> None:
         super().__init__(source)
         if not self.source.is_empty():
             self.backend = kwargs.get('backend')
-            self.targets_document = kwargs.get('targets_document', False)
-            self.atom_handle = kwargs.get('atom_handle')
             self.chunk_size = kwargs.get('chunk_size', 1000)
             self.cursor = kwargs.get('cursor', 0)
             self.buffer_queue = deque()
@@ -182,11 +180,9 @@ class IncomingLinksIterator(QueryAnswerIterator, ABC):
         while True:
             if self.semaphore.acquire(blocking=False):
                 try:
-                    cursor, links_handle = self.backend.get_incoming_links(
-                        self.atom_handle, **kwargs
-                    )
+                    cursor, answer = self._get_fetch_data(**kwargs)
                     self.cursor = cursor
-                    self.buffer_queue.extend(links_handle)
+                    self.buffer_queue.extend(answer)
                 finally:
                     self.semaphore.release()
                 break
@@ -213,9 +209,14 @@ class IncomingLinksIterator(QueryAnswerIterator, ABC):
     def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
         raise NotImplementedError("Subclasses must implement _get_fetch_data_kwargs method")
 
+    def _get_fetch_data(self, **kwargs) -> tuple:
+        raise NotImplementedError("Subclasses must implement _get_fetch_data method")
 
-class LocalIncomingLinks(IncomingLinksIterator):
+
+class LocalIncomingLinks(BaseLinksIterator):
     def __init__(self, source: ListIterator, **kwargs) -> None:
+        self.atom_handle = kwargs.get('atom_handle')
+        self.targets_document = kwargs.get('targets_document', False)
         super().__init__(source, **kwargs)
 
     def _get_next_value(self) -> None:
@@ -224,16 +225,24 @@ class LocalIncomingLinks(IncomingLinksIterator):
         self.current_value = link_document
 
     def _get_current_value(self) -> Any:
-        return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
+        try:
+            return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
+        except StopIteration:
+            return None
 
     def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {'handles_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
 
+    def _get_fetch_data(self, **kwargs) -> tuple:
+        return self.backend.get_incoming_links(self.atom_handle, **kwargs)
 
-class RemoteIncomingLinks(IncomingLinksIterator):
+
+class RemoteIncomingLinks(BaseLinksIterator):
     def __init__(self, source: ListIterator, **kwargs) -> None:
-        super().__init__(source, **kwargs)
+        self.atom_handle = kwargs.get('atom_handle')
+        self.targets_document = kwargs.get('targets_document', False)
         self.returned_handles = set()
+        super().__init__(source, **kwargs)
 
     def _get_next_value(self) -> None:
         while True:
@@ -248,7 +257,10 @@ class RemoteIncomingLinks(IncomingLinksIterator):
                 break
 
     def _get_current_value(self) -> Any:
-        return self.source.get()
+        try:
+            return self.source.get()
+        except StopIteration:
+            return None
 
     def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {
@@ -257,9 +269,61 @@ class RemoteIncomingLinks(IncomingLinksIterator):
             'targets_document': self.targets_document,
         }
 
+    def _get_fetch_data(self, **kwargs) -> tuple:
+        return self.backend.get_incoming_links(self.atom_handle, **kwargs)
+
+
+class LocalGetLinks(BaseLinksIterator):
+    def __init__(self, source: ListIterator, **kwargs) -> None:
+        self.action = kwargs.get('action')
+        self.link_type = kwargs.get('link_type')
+        self.target_types = kwargs.get('target_types')
+        self.link_targets = kwargs.get('link_targets')
+        self.toplevel_only = kwargs.get('toplevel_only')
+        super().__init__(source, **kwargs)
+
+    def _get_next_value(self) -> None:
+        ret = next(self.iterator)
+        self.current_value = self._to_link_dict_list(ret)
+
+    def _get_current_value(self) -> Any:
+        try:
+            ret = self.source.get()
+            return self._to_link_dict_list(ret)
+        except StopIteration:
+            return None
+
+    def _to_link_dict_list(self, db_answer) -> List[Dict]:
+        if not db_answer:
+            return []
+        handle, targets = db_answer
+        arity = len(targets)
+        return self.backend.get_atom_as_dict(handle, arity)
+    
+    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+        return {
+            'cursor': self.cursor,
+            'chunk_size': self.chunk_size,
+            'toplevel_only': self.toplevel_only,
+        }
+
+    def _get_fetch_data(self, **kwargs) -> tuple:
+        if self.action == 'get_matched_type_template':
+            return self.backend.get_matched_type_template(
+                [self.link_type, *self.target_types], **kwargs
+            )
+        elif self.action == 'get_matched_links':
+            return self.backend.get_matched_links(self.link_type, self.link_targets, **kwargs)
+        elif self.action == 'get_matched_type':
+            return self.backend.get_matched_type(self.link_type, **kwargs)
+
+
+class RemoteGetLinks(BaseLinksIterator):
+    pass
+
 
 class TraverseLinksIterator(QueryAnswerIterator):
-    def __init__(self, source: IncomingLinksIterator, **kwargs) -> None:
+    def __init__(self, source: Union[LocalIncomingLinks, RemoteIncomingLinks], **kwargs) -> None:
         super().__init__(source)
         self.cursor = kwargs.get('cursor')
         self.link_type = kwargs.get('link_type')

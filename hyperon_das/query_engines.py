@@ -10,6 +10,7 @@ from hyperon_das.cache import (
     AndEvaluator,
     LazyQueryEvaluator,
     ListIterator,
+    LocalGetLinks,
     LocalIncomingLinks,
     QueryAnswerIterator,
     RemoteIncomingLinks,
@@ -159,21 +160,56 @@ class LocalQueryEngine(QueryEngine):
             )
 
     def get_links(
-        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
-    ) -> Union[List[str], List[Dict]]:
-        if target_types is not None and link_type != WILDCARD:
-            db_answer = self.local_backend.get_matched_type_template([link_type, *target_types])
-        elif link_targets is not None:
-            try:
-                db_answer = self.local_backend.get_matched_links(link_type, link_targets)
-            except LinkDoesNotExist:
-                return []
-        elif link_type != WILDCARD:
-            db_answer = self.local_backend.get_matched_type(link_type)
-        else:
-            self._error(ValueError("Invalid parameters"))
+        self,
+        link_type: str,
+        target_types: List[str] = None,
+        link_targets: List[str] = None,
+        **kwargs,
+    ) -> Union[Iterator, List[str], List[Dict]]:
+        if kwargs.get('no_iterator', True):
+            if target_types is not None and link_type != WILDCARD:
+                db_answer = self.local_backend.get_matched_type_template([link_type, *target_types])
+            elif link_targets is not None:
+                try:
+                    db_answer = self.local_backend.get_matched_links(link_type, link_targets)
+                except LinkDoesNotExist:
+                    return []
+            elif link_type != WILDCARD:
+                db_answer = self.local_backend.get_matched_type(link_type)
+            else:
+                self._error(ValueError("Invalid parameters"))
 
-        return self._to_link_dict_list(db_answer)
+            return self._to_link_dict_list(db_answer)
+        else:
+            if kwargs.get('cursor') is None:
+                kwargs['cursor'] = 0
+            if target_types is not None and link_type != WILDCARD:
+                answer = self.local_backend.get_matched_type_template(
+                    [link_type, *target_types], **kwargs
+                )
+                kwargs['action'] = 'get_matched_type_template'
+            elif link_targets is not None:
+                try:
+                    answer = self.local_backend.get_matched_links(link_type, link_targets, **kwargs)
+                    kwargs['action'] = 'get_matched_links'
+                except LinkDoesNotExist:
+                    return 0, []
+            elif link_type != WILDCARD:
+                answer = self.local_backend.get_matched_type(link_type, **kwargs)
+                kwargs['action'] = 'get_matched_type'
+            else:
+                self._error(ValueError("Invalid parameters"))
+
+            kwargs['backend'] = self.local_backend
+            kwargs['link_type'] = link_type
+            kwargs['target_types'] = target_types
+            kwargs['link_targets'] = link_targets
+
+            if isinstance(answer, tuple):  # redis_mongo use case
+                kwargs['cursor'] = answer[0]
+                answer = answer[1]
+
+            return LocalGetLinks(ListIterator(answer), **kwargs)
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs

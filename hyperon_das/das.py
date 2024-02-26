@@ -149,7 +149,7 @@ class DistributedAtomSpace:
         return self.query_engine.get_link(link_type, link_targets)
 
     def get_links(
-        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
+        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None, **kwargs
     ) -> Union[List[str], List[Dict]]:
         """
         Retrieve information about Links based on specified criteria.
@@ -190,7 +190,7 @@ class DistributedAtomSpace:
                 ...
             ]
         """
-        return self.query_engine.get_links(link_type, target_types, link_targets)
+        return self.query_engine.get_links(link_type, target_types, link_targets, **kwargs)
 
     def get_incoming_links(self, atom_handle: str, **kwargs) -> List[Union[Dict[str, Any], str]]:
         """Retrieve all links pointing to Atom
