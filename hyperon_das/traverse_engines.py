@@ -22,7 +22,7 @@ class TraverseEngine:
             no_iterator=False,
             targets_document=True,
             cursor=0,
-            chunk_size=kwargs.get('chunk_size', 500)
+            chunk_size=kwargs.get('chunk_size', 500),
         )
         return TraverseLinksIterator(source=incoming_links, cursor=self._cursor['handle'], **kwargs)
 
