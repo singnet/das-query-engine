@@ -7,3 +7,4 @@
 [#134] Update package version
 [#138] Implement iterators to incoming_links
 [#139] Update TraveseEngine to use IncomingLinksIterators
+[#145] Refactor TraverseNeighborsIterator
