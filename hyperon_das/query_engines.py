@@ -204,7 +204,7 @@ class LocalQueryEngine(QueryEngine):
             if isinstance(answer, tuple):  # redis_mongo use case
                 kwargs['cursor'] = answer[0]
                 answer = answer[1]
-            return RemoteGetLinks(ListIterator(answer), **kwargs)
+            return LocalGetLinks(ListIterator(answer), **kwargs)
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
@@ -335,19 +335,17 @@ class RemoteQueryEngine(QueryEngine):
         **kwargs,
     ) -> Union[Iterator, List[str], List[Dict]]:
         kwargs.pop('no_iterator', None)
-
         if kwargs.get('cursor') is None:
             kwargs['cursor'] = 0
-
         links = self.local_query_engine.get_links(link_type, target_types, link_targets, **kwargs)
-        cursor, remote_links = self.remote_das.get_links(link_type, target_types, link_targets, **kwargs)
-
+        cursor, remote_links = self.remote_das.get_links(
+            link_type, target_types, link_targets, **kwargs
+        )
         kwargs['cursor'] = cursor
-        kwargs['backend'] = self
+        kwargs['backend'] = self.remote_das
         kwargs['link_type'] = link_type
         kwargs['target_types'] = target_types
         kwargs['link_targets'] = link_targets
-
         links.extend(remote_links)
         return RemoteGetLinks(ListIterator(links), **kwargs)
 

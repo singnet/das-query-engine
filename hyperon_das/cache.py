@@ -279,20 +279,11 @@ class LocalGetLinks(BaseLinksIterator):
         self.target_types = kwargs.get('target_types')
         self.link_targets = kwargs.get('link_targets')
         self.toplevel_only = kwargs.get('toplevel_only')
-        self.returned_handles = set()
         super().__init__(source, **kwargs)
 
     def _get_next_value(self) -> None:
         value = next(self.iterator)
-
-        if isinstance(value, str):
-            handle = value
-        else:
-            handle = value[0]
-
-        if handle not in self.returned_handles:
-            self.returned_handles.add(handle)
-            self.current_value = self.backend._to_link_dict_list([value])[0]
+        self.current_value = self.backend._to_link_dict_list([value])[0]
 
     def _get_current_value(self) -> Any:
         try:
@@ -309,7 +300,9 @@ class LocalGetLinks(BaseLinksIterator):
         }
 
     def _get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend._get_related_links(self.link_type, self.target_types, self.link_targets, **kwargs)
+        return self.backend._get_related_links(
+            self.link_type, self.target_types, self.link_targets, **kwargs
+        )
 
 
 class RemoteGetLinks(BaseLinksIterator):
@@ -342,7 +335,9 @@ class RemoteGetLinks(BaseLinksIterator):
         }
 
     def _get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend.get_links(self.link_type, self.target_types, self.link_targets, **kwargs)
+        return self.backend.get_links(
+            self.link_type, self.target_types, self.link_targets, **kwargs
+        )
 
 
 class TraverseLinksIterator(QueryAnswerIterator):
