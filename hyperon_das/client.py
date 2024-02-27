@@ -1,8 +1,8 @@
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import requests
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
+from requests import exceptions, sessions
 
 from hyperon_das.logger import logger
 
@@ -15,12 +15,13 @@ class FunctionsClient:
 
     def _send_request(self, payload) -> Any:
         try:
-            response = requests.request('POST', url=self.url, data=json.dumps(payload))
+            with sessions.Session() as session:
+                response = session.request(method='POST', url=self.url, data=json.dumps(payload))
             if response.status_code == 200:
                 return response.json()
             else:
                 return response.json()['error']
-        except requests.exceptions.RequestException as e:
+        except exceptions.RequestException as e:
             raise e
 
     def get_atom(self, handle: str, **kwargs) -> Union[str, Dict]:
