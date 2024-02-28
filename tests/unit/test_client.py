@@ -8,7 +8,7 @@ from hyperon_das.client import FunctionsClient
 class TestFunctionsClient:
     @pytest.fixture
     def mock_request(self):
-        with patch('requests.request') as mock_request:
+        with patch('requests.sessions.Session.request') as mock_request:
             yield mock_request
 
     def test_get_atom_success(self, mock_request):
@@ -26,7 +26,7 @@ class TestFunctionsClient:
         result = client.get_atom(handle='123')
 
         mock_request.assert_called_with(
-            'POST',
+            method='POST',
             url='http://example.com',
             data='{"action": "get_atom", "input": {"handle": "123"}}',
         )
@@ -48,7 +48,7 @@ class TestFunctionsClient:
         result = client.get_node(node_type='Concept', node_name='human')
 
         mock_request.assert_called_with(
-            'POST',
+            method='POST',
             url='http://example.com',
             data='{"action": "get_node", "input": {"node_type": "Concept", "node_name": "human"}}',
         )
@@ -80,7 +80,7 @@ class TestFunctionsClient:
         )
 
         mock_request.assert_called_with(
-            'POST',
+            method='POST',
             url='http://example.com',
             data='{"action": "get_link", "input": {"link_type": "Similarity", "link_targets": ["af12f10f9ae2002a1607ba0b47ba8407", "1cdffc6b0b89ff41d68bec237481d1e1"]}}',
         )
@@ -107,7 +107,7 @@ class TestFunctionsClient:
         )
 
         mock_request.assert_called_with(
-            'POST',
+            method='POST',
             url='http://example.com',
             data='{"action": "get_links", "input": {"link_type": "Inheritance", "kwargs": {}, "link_targets": ["4e8e26e3276af8a5c2ac2cc2dc95c6d2", "80aff30094874e75028033a38ce677bb"]}}',
         )
@@ -162,7 +162,7 @@ class TestFunctionsClient:
         result = client.count_atoms()
 
         mock_request.assert_called_once_with(
-            'POST', url='http://example.com', data='{"action": "count_atoms", "input": {}}'
+            method='POST', url='http://example.com', data='{"action": "count_atoms", "input": {}}'
         )
 
         assert result == tuple(expected_response)

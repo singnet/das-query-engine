@@ -11,10 +11,16 @@ if TYPE_CHECKING:  # pragma no cover
 class TraverseEngine:
     def __init__(self, handle: str, **kwargs) -> None:
         self.das: DistributedAtomSpace = kwargs['das']
-        self._cursor = self.das.get_atom(handle)
+
+        try:
+            atom = self.das.get_atom(handle)
+        except AtomDoesNotExist as e:
+            raise e
+
+        self._cursor = atom
 
     def get(self) -> Dict[str, Any]:
-        return self.das.get_atom(self._cursor['handle'])
+        return self._cursor
 
     def get_links(self, **kwargs) -> QueryAnswerIterator:
         incoming_links = self.das.get_incoming_links(

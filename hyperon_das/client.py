@@ -1,8 +1,9 @@
+import contextlib
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import requests
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
+from requests import exceptions, sessions
 
 from hyperon_das.logger import logger
 
@@ -15,13 +16,32 @@ class FunctionsClient:
 
     def _send_request(self, payload) -> Any:
         try:
-            response = requests.request('POST', url=self.url, data=json.dumps(payload))
+            with sessions.Session() as session:
+                response = session.request(method='POST', url=self.url, data=json.dumps(payload))
+
+            response.raise_for_status()
+
+            try:
+                response_data = response.json()
+            except exceptions.JSONDecodeError as e:
+                raise Exception(f"JSON decode error: {str(e)}")
+
             if response.status_code == 200:
-                return response.json()
+                return response_data
             else:
-                return response.json()['error']
-        except requests.exceptions.RequestException as e:
-            raise e
+                return response_data.get(
+                    'error', f'Unknown error with status code {response.status_code}'
+                )
+        except exceptions.ConnectionError as e:
+            raise Exception(f"Connection error: {str(e)}")
+        except exceptions.Timeout as e:
+            raise Exception(f"Request timed out: {str(e)}")
+        except exceptions.HTTPError as e:
+            with contextlib.suppress(exceptions.JSONDecodeError):
+                return response.json().get('error')
+            raise Exception(f"HTTP error occurred: {str(e)}")
+        except exceptions.RequestException as e:
+            raise Exception(f"Request exception occurred: {str(e)}")
 
     def get_atom(self, handle: str, **kwargs) -> Union[str, Dict]:
         payload = {

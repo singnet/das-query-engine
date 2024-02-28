@@ -496,8 +496,6 @@ class DistributedAtomSpace:
             TraverseEngine: The object that allows traversal of the hypergraph
         """
         try:
-            self.get_atom(handle)
+            return TraverseEngine(handle, das=self, **kwargs)
         except AtomDoesNotExist:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
-
-        return TraverseEngine(handle, das=self, **kwargs)

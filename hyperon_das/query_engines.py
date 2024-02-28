@@ -2,9 +2,9 @@ import json
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
-import requests
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
+from requests import sessions
 
 from hyperon_das.cache import (
     AndEvaluator,
@@ -279,12 +279,13 @@ class RemoteQueryEngine(QueryEngine):
     def _is_server_connect(self, url: str) -> bool:
         logger().debug(f'connecting to remote Das {url}')
         try:
-            response = requests.request(
-                'POST',
-                url=url,
-                data=json.dumps({"action": "ping", "input": {}}),
-                timeout=10,
-            )
+            with sessions.Session() as session:
+                response = session.request(
+                    method='POST',
+                    url=url,
+                    data=json.dumps({"action": "ping", "input": {}}),
+                    timeout=10,
+                )
         except Exception:
             return False
         if response.status_code == 200:
