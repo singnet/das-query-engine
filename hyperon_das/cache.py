@@ -152,7 +152,7 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
             self.cursor = kwargs.get('cursor', 0)
             self.buffer_queue = deque()
             self.iterator = self.source
-            self.current_value = self._get_current_value()
+            self.current_value = self.get_current_value()
             self.fetch_data_thread = Thread(target=self._fetch_data)
             if self.cursor != 0:
                 self.semaphore = Semaphore(1)
@@ -161,7 +161,7 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
     def __next__(self) -> Any:
         if self.iterator:
             try:
-                self._get_next_value()
+                self.get_next_value()
             except StopIteration as e:
                 if self.fetch_data_thread.is_alive():
                     self.fetch_data_thread.join()
@@ -176,11 +176,11 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
         return self.get()
 
     def _fetch_data(self) -> None:
-        kwargs = self._get_fetch_data_kwargs()
+        kwargs = self.get_fetch_data_kwargs()
         while True:
             if self.semaphore.acquire(blocking=False):
                 try:
-                    cursor, answer = self._get_fetch_data(**kwargs)
+                    cursor, answer = self.get_fetch_data(**kwargs)
                     self.cursor = cursor
                     self.buffer_queue.extend(answer)
                 finally:
@@ -192,7 +192,7 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
             try:
                 self.source = ListIterator(list(self.buffer_queue))
                 self.iterator = self.source
-                self.current_value = self._get_current_value()
+                self.current_value = self.get_current_value()
                 self.buffer_queue.clear()
             finally:
                 self.semaphore.release()
@@ -200,17 +200,21 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
     def is_empty(self) -> bool:
         return not self.iterator
 
-    def _get_next_value(self) -> None:
-        raise NotImplementedError("Subclasses must implement _get_next_value method")
+    @abstractmethod
+    def get_next_value(self) -> None:
+        raise NotImplementedError("Subclasses must implement get_next_value method")
 
-    def _get_current_value(self) -> Any:
-        raise NotImplementedError("Subclasses must implement _get_current_value method")
+    @abstractmethod
+    def get_current_value(self) -> Any:
+        raise NotImplementedError("Subclasses must implement get_current_value method")
 
-    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
-        raise NotImplementedError("Subclasses must implement _get_fetch_data_kwargs method")
+    @abstractmethod
+    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+        raise NotImplementedError("Subclasses must implement get_fetch_data_kwargs method")
 
-    def _get_fetch_data(self, **kwargs) -> tuple:
-        raise NotImplementedError("Subclasses must implement _get_fetch_data method")
+    @abstractmethod
+    def get_fetch_data(self, **kwargs) -> tuple:
+        raise NotImplementedError("Subclasses must implement get_fetch_data method")
 
 
 class LocalIncomingLinks(BaseLinksIterator):
@@ -219,21 +223,21 @@ class LocalIncomingLinks(BaseLinksIterator):
         self.targets_document = kwargs.get('targets_document', False)
         super().__init__(source, **kwargs)
 
-    def _get_next_value(self) -> None:
+    def get_next_value(self) -> None:
         link_handle = next(self.iterator)
         link_document = self.backend.get_atom(link_handle, targets_document=self.targets_document)
         self.current_value = link_document
 
-    def _get_current_value(self) -> Any:
+    def get_current_value(self) -> Any:
         try:
             return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
         except StopIteration:
             return None
 
-    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {'handles_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
 
-    def _get_fetch_data(self, **kwargs) -> tuple:
+    def get_fetch_data(self, **kwargs) -> tuple:
         return self.backend.get_incoming_links(self.atom_handle, **kwargs)
 
 
@@ -244,7 +248,7 @@ class RemoteIncomingLinks(BaseLinksIterator):
         self.returned_handles = set()
         super().__init__(source, **kwargs)
 
-    def _get_next_value(self) -> None:
+    def get_next_value(self) -> None:
         while True:
             link_document = next(self.iterator)
             if isinstance(link_document, tuple) or isinstance(link_document, list):
@@ -256,20 +260,20 @@ class RemoteIncomingLinks(BaseLinksIterator):
                 self.current_value = link_document
                 break
 
-    def _get_current_value(self) -> Any:
+    def get_current_value(self) -> Any:
         try:
             return self.source.get()
         except StopIteration:
             return None
 
-    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {
             'cursor': self.cursor,
             'chunk_size': self.chunk_size,
             'targets_document': self.targets_document,
         }
 
-    def _get_fetch_data(self, **kwargs) -> tuple:
+    def get_fetch_data(self, **kwargs) -> tuple:
         return self.backend.get_incoming_links(self.atom_handle, **kwargs)
 
 
@@ -281,25 +285,25 @@ class LocalGetLinks(BaseLinksIterator):
         self.toplevel_only = kwargs.get('toplevel_only')
         super().__init__(source, **kwargs)
 
-    def _get_next_value(self) -> None:
+    def get_next_value(self) -> None:
         value = next(self.iterator)
         self.current_value = self.backend._to_link_dict_list([value])[0]
 
-    def _get_current_value(self) -> Any:
+    def get_current_value(self) -> Any:
         try:
             value = self.source.get()
             return self.backend._to_link_dict_list([value])[0]
         except StopIteration:
             return None
 
-    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {
             'cursor': self.cursor,
             'chunk_size': self.chunk_size,
             'toplevel_only': self.toplevel_only,
         }
 
-    def _get_fetch_data(self, **kwargs) -> tuple:
+    def get_fetch_data(self, **kwargs) -> tuple:
         return self.backend._get_related_links(
             self.link_type, self.target_types, self.link_targets, **kwargs
         )
@@ -314,27 +318,27 @@ class RemoteGetLinks(BaseLinksIterator):
         self.returned_handles = set()
         super().__init__(source, **kwargs)
 
-    def _get_next_value(self) -> None:
+    def get_next_value(self) -> None:
         value = next(self.iterator)
         handle = value.get('handle')
         if handle not in self.returned_handles:
             self.returned_handles.add(handle)
             self.current_value = value
 
-    def _get_current_value(self) -> Any:
+    def get_current_value(self) -> Any:
         try:
             return self.source.get()
         except StopIteration:
             return None
 
-    def _get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {
             'cursor': self.cursor,
             'chunk_size': self.chunk_size,
             'toplevel_only': self.toplevel_only,
         }
 
-    def _get_fetch_data(self, **kwargs) -> tuple:
+    def get_fetch_data(self, **kwargs) -> tuple:
         return self.backend.get_links(
             self.link_type, self.target_types, self.link_targets, **kwargs
         )
