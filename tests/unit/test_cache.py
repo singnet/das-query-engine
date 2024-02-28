@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from hyperon_das import DistributedAtomSpace
-from hyperon_das.cache import ListIterator, LocalIncomingLinks, ProductIterator
+from hyperon_das.cache import ListIterator, LocalGetLinks, LocalIncomingLinks, ProductIterator
 from hyperon_das.utils import Assignment
 from tests.unit.mock import up_knowledge_base_animals, up_n_links_in_database
 
@@ -226,4 +226,78 @@ class TestCache:
             assert it.is_empty() is True
             with pytest.raises(StopIteration):
                 it.get()
+        _db_down()
+
+    def test_local_get_links_ram_only_iterator(self):
+        das = DistributedAtomSpace()
+        up_knowledge_base_animals(das)
+        link_type = 'Inheritance'
+        answer = das.query_engine._get_related_links(link_type)
+        it = LocalGetLinks(ListIterator(answer), backend=das.query_engine, link_type=link_type)
+        current_value = it.get()
+        assert isinstance(current_value, dict)
+        assert current_value == next(it)
+        assert it.is_empty() is False
+        [i for i in it]
+        assert it.is_empty() is True
+        with pytest.raises(StopIteration):
+            it.get()
+        answer = das.query_engine._get_related_links('Fake')
+        it = LocalGetLinks(ListIterator(answer), backend=das.query_engine, link_type=link_type)
+        assert it.is_empty() is True
+        with pytest.raises(StopIteration):
+            it.get()
+        assert [i for i in it] == []
+
+    def test_local_get_links_redis_mongo_iterator(self):
+        from tests.integration.test_local_redis_mongo import (
+            _db_down,
+            _db_up,
+            mongo_port,
+            redis_port,
+        )
+
+        _db_up()
+
+        das = DistributedAtomSpace(
+            query_engine='local',
+            atomdb='redis_mongo',
+            mongo_port=mongo_port,
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
+            redis_port=redis_port,
+            redis_cluster=False,
+            redis_ssl=False,
+        )
+        up_knowledge_base_animals(das)
+        das.commit_changes()
+
+        link_type = 'Similarity'
+        cursor, answer = das.query_engine._get_related_links(link_type, cursor=0)
+        it = LocalGetLinks(
+            ListIterator(answer), backend=das.query_engine, link_type=link_type, cursor=cursor
+        )
+        current_value = it.get()
+        assert isinstance(current_value, dict)
+        assert current_value == next(it)
+        assert it.is_empty() is False
+        [i for i in it]
+        assert it.is_empty() is True
+        with pytest.raises(StopIteration):
+            it.get()
+
+        up_n_links_in_database(das, 2000)
+        das.commit_changes()
+        link_type = 'Inheritance'
+        cursor, answer = das.query_engine._get_related_links(link_type, cursor=0, chunk_size=500)
+        it = LocalGetLinks(
+            ListIterator(answer), backend=das.query_engine, link_type=link_type, cursor=cursor
+        )
+        assert it.is_empty() is False
+        result = [i for i in it]
+        assert it.is_empty() is True
+        with pytest.raises(StopIteration):
+            it.get()
+        assert len(result) >= 1000
+
         _db_down()
