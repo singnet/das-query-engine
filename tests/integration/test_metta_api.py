@@ -22,64 +22,63 @@ class TestMettaAPI:
         )
 
         query_1 = {
-                'atom_type': 'link',
-                'type': 'Expression',
-                'targets': [
-                    {'atom_type': 'variable', 'name': '$v1'},
-                    {
-                        'atom_type': 'link',
-                        'type': 'Expression',
-                        'targets': [
-                            {'atom_type': 'node', 'type': 'Symbol', 'name': 'Test'},
-                            {'atom_type': 'node', 'type': 'Symbol', 'name': '2'},
-                        ],
-                    },
-                ],
+            'atom_type': 'link',
+            'type': 'Expression',
+            'targets': [
+                {'atom_type': 'variable', 'name': '$v1'},
+                {
+                    'atom_type': 'link',
+                    'type': 'Expression',
+                    'targets': [
+                        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Test'},
+                        {'atom_type': 'node', 'type': 'Symbol', 'name': '2'},
+                    ],
+                },
+            ],
         }
 
         query_2 = {
-                "atom_type": "link",
-                "type": "Expression",
-                "targets": [
-                    {"atom_type": "variable", "name": "v1"},
-                    {
-                        "atom_type": "link",
-                        "type": "Expression",
-                        "targets": [
-                            {"atom_type": "variable", "name": "v2"},
-                            {"atom_type": "node", "type": "Symbol", "name": "2"},
-                        ]
-                    }
-
-                ]
+            "atom_type": "link",
+            "type": "Expression",
+            "targets": [
+                {"atom_type": "variable", "name": "v1"},
+                {
+                    "atom_type": "link",
+                    "type": "Expression",
+                    "targets": [
+                        {"atom_type": "variable", "name": "v2"},
+                        {"atom_type": "node", "type": "Symbol", "name": "2"},
+                    ],
+                },
+            ],
         }
 
         query_3 = {
-                'atom_type': 'link',
-                'type': 'Expression',
-                'targets': [
-                    {'atom_type': 'node', 'type': 'Symbol', 'name': 'Test'},
-                    {'atom_type': 'variable', 'name': '$v2'}
-                ]
+            'atom_type': 'link',
+            'type': 'Expression',
+            'targets': [
+                {'atom_type': 'node', 'type': 'Symbol', 'name': 'Test'},
+                {'atom_type': 'variable', 'name': '$v2'},
+            ],
         }
 
         query_4 = [
-                {
-                    'atom_type': 'link',
-                    'type': 'Expression',
-                    'targets': [
-                        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Best'},
-                        {'atom_type': 'variable', 'name': '$x'}
-                    ]
-                },
-                {
-                    'atom_type': 'link',
-                    'type': 'Expression',
-                    'targets': [
-                        {'atom_type': 'variable', 'name': '$v'},
-                        {'atom_type': 'variable', 'name': '$x'}
-                    ]
-                }
+            {
+                'atom_type': 'link',
+                'type': 'Expression',
+                'targets': [
+                    {'atom_type': 'node', 'type': 'Symbol', 'name': 'Best'},
+                    {'atom_type': 'variable', 'name': '$x'},
+                ],
+            },
+            {
+                'atom_type': 'link',
+                'type': 'Expression',
+                'targets': [
+                    {'atom_type': 'variable', 'name': '$v'},
+                    {'atom_type': 'variable', 'name': '$x'},
+                ],
+            },
         ]
 
         answer = [query_answer for query_answer in das.query(query_1)]
@@ -121,19 +120,21 @@ class TestMettaAPI:
         assert symbol2["type"] == "Symbol"
         assert symbol2["name"] == "2"
 
-        das.add_link({
-            "type": "Expression",
-            "targets": [
-                {"type": "Symbol", "name": "Best"},
-                {
-                    "type": "Expression",
-                    "targets": [
-                        {"type": "Symbol", "name": "Test"},
-                        {"type": "Symbol", "name": "2"}
-                    ]
-                }
-            ]
-        })
+        das.add_link(
+            {
+                "type": "Expression",
+                "targets": [
+                    {"type": "Symbol", "name": "Best"},
+                    {
+                        "type": "Expression",
+                        "targets": [
+                            {"type": "Symbol", "name": "Test"},
+                            {"type": "Symbol", "name": "2"},
+                        ],
+                    },
+                ],
+            }
+        )
 
         answer = [query_answer for query_answer in das.query(query_4)]
 

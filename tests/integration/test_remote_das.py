@@ -101,42 +101,42 @@ class TestRemoteDistributedAtomSpace:
         with pytest.raises(LinkDoesNotExist):
             remote_das.get_link(link_type='Fake', link_targets=['fake1', 'fake2'])
 
-    def test_get_links(self, remote_das: DistributedAtomSpace):
-        all_inheritance = [
-            inheritance_human_mammal,
-            inheritance_monkey_mammal,
-            inheritance_chimp_mammal,
-            inheritance_mammal_animal,
-            inheritance_reptile_animal,
-            inheritance_snake_reptile,
-            inheritance_dinosaur_reptile,
-            inheritance_triceratops_dinosaur,
-            inheritance_earthworm_animal,
-            inheritance_rhino_mammal,
-            inheritance_vine_plant,
-            inheritance_ent_plant,
-        ]
-
-        links = remote_das.get_links(link_type='Inheritance')
-        assert len(links) == 12
-        assert set([link['handle'] for link in links]) == set(all_inheritance)
-
-        links = remote_das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
-        assert len(links) == 12
-        assert set([link['handle'] for link in links]) == set(all_inheritance)
-
-        links = remote_das.get_links(link_type='Inheritance', link_targets=[earthworm, animal])
-        assert links[0]['handle'] == inheritance_earthworm_animal
-
     # TODO: uncomment test after update package version
-    # def test_get_incoming_links(self, remote_das: DistributedAtomSpace):
-    #     expected_handles = [inheritance_vine_plant, similarity_snake_vine, similarity_vine_snake]
+    # def test_get_links(self, remote_das: DistributedAtomSpace):
+    #     all_inheritance = [
+    #         inheritance_human_mammal,
+    #         inheritance_monkey_mammal,
+    #         inheritance_chimp_mammal,
+    #         inheritance_mammal_animal,
+    #         inheritance_reptile_animal,
+    #         inheritance_snake_reptile,
+    #         inheritance_dinosaur_reptile,
+    #         inheritance_triceratops_dinosaur,
+    #         inheritance_earthworm_animal,
+    #         inheritance_rhino_mammal,
+    #         inheritance_vine_plant,
+    #         inheritance_ent_plant,
+    #     ]
 
-    #     expected_atoms = [remote_das.get_atom(handle) for handle in expected_handles]
+    #     links = remote_das.get_links(link_type='Inheritance')
+    #     assert len(links) == 12
+    #     assert set([link['handle'] for link in links]) == set(all_inheritance)
 
-    #     response_atoms = remote_das.get_incoming_links(vine, handles_only=False)
-    #     for atom in response_atoms:
-    #         assert atom in expected_atoms
+    #     links = remote_das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
+    #     assert len(links) == 12
+    #     assert set([link['handle'] for link in links]) == set(all_inheritance)
+
+    #     links = remote_das.get_links(link_type='Inheritance', link_targets=[earthworm, animal])
+    #     assert links[0]['handle'] == inheritance_earthworm_animal
+
+    def test_get_incoming_links(self, remote_das: DistributedAtomSpace):
+        expected_handles = [inheritance_vine_plant, similarity_snake_vine, similarity_vine_snake]
+
+        expected_atoms = [remote_das.get_atom(handle) for handle in expected_handles]
+
+        response_atoms = remote_das.get_incoming_links(vine, handles_only=False)
+        for atom in response_atoms:
+            assert atom in expected_atoms
 
     def test_count_atoms(self, remote_das: DistributedAtomSpace):
         nodes = 14
@@ -196,24 +196,23 @@ class TestRemoteDistributedAtomSpace:
         with pytest.raises(GetTraversalCursorException):
             remote_das.get_traversal_cursor('fake_handle')
 
-    # TODO: uncomment test after update package version
-    # def test_traverse_engine_methods(self, remote_das: DistributedAtomSpace):
-    #     cursor: TraverseEngine = self.traversal(remote_das, dinosaur)
-    #     assert cursor.get()['handle'] == dinosaur
+    def test_traverse_engine_methods(self, remote_das: DistributedAtomSpace):
+        cursor: TraverseEngine = self.traversal(remote_das, dinosaur)
+        assert cursor.get()['handle'] == dinosaur
 
-    #     links_iter = cursor.get_links()
-    #     expected_links = [
-    #         remote_das.get_atom(handle)
-    #         for handle in [inheritance_dinosaur_reptile, inheritance_triceratops_dinosaur]
-    #     ]
-    #     for link in links_iter:
-    #         assert link in expected_links
+        links_iter = cursor.get_links()
+        expected_links = [
+            remote_das.get_atom(handle)
+            for handle in [inheritance_dinosaur_reptile, inheritance_triceratops_dinosaur]
+        ]
+        for link in links_iter:
+            assert link in expected_links
 
-    #     neighbors_iter = cursor.get_neighbors(cursor_position=0)
-    #     assert neighbors_iter.get()['handle'] == reptile
+        neighbors_iter = cursor.get_neighbors(cursor_position=0)
+        assert neighbors_iter.get()['handle'] == reptile
 
-    #     atom = cursor.follow_link(cursor_position=1)
-    #     assert atom['handle'] == triceratops
+        atom = cursor.follow_link(cursor_position=1)
+        assert atom['handle'] == triceratops
 
-    #     cursor.goto(human)
-    #     assert cursor.get()['handle'] == human
+        cursor.goto(human)
+        assert cursor.get()['handle'] == human

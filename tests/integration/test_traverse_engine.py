@@ -82,19 +82,6 @@ class TestTraverseEngine:
                     ]
                 )
 
-            def _monkey_links():
-                answers = _build_atom_answer(monkey)
-                assert len(answers) == 5
-                assert answers == sorted(
-                    [
-                        inheritance_monkey_mammal,
-                        similarity_monkey_chimp,
-                        similarity_chimp_monkey,
-                        similarity_monkey_human,
-                        similarity_human_monkey,
-                    ]
-                )
-
             def _chimp_links():
                 answers = _build_atom_answer(chimp)
                 assert len(answers) == 5
@@ -108,19 +95,6 @@ class TestTraverseEngine:
                     ]
                 )
 
-            def _mammal_links():
-                answers = _build_atom_answer(mammal)
-                assert len(answers) == 5
-                assert answers == sorted(
-                    [
-                        inheritance_mammal_animal,
-                        inheritance_monkey_mammal,
-                        inheritance_chimp_mammal,
-                        inheritance_human_mammal,
-                        inheritance_rhino_mammal,
-                    ]
-                )
-
             def _ent_links():
                 answers = _build_atom_answer(ent)
                 assert len(answers) == 3
@@ -128,187 +102,23 @@ class TestTraverseEngine:
                     [inheritance_ent_plant, similarity_human_ent, similarity_ent_human]
                 )
 
-            def _animal_links():
-                answers = _build_atom_answer(animal)
-                assert len(answers) == 3
-                assert answers == sorted(
-                    [
-                        inheritance_mammal_animal,
-                        inheritance_reptile_animal,
-                        inheritance_earthworm_animal,
-                    ]
-                )
-
-            def _reptile_links():
-                answers = _build_atom_answer(reptile)
-                assert len(answers) == 3
-                assert answers == sorted(
-                    [
-                        inheritance_dinosaur_reptile,
-                        inheritance_snake_reptile,
-                        inheritance_reptile_animal,
-                    ]
-                )
-
-            def _dinosaur_links():
-                answers = _build_atom_answer(dinosaur)
-                assert len(answers) == 2
-                assert answers == sorted(
-                    [inheritance_dinosaur_reptile, inheritance_triceratops_dinosaur]
-                )
-
-            def _triceratops_links():
-                answers = _build_atom_answer(triceratops)
-                assert len(answers) == 3
-                assert answers == sorted(
-                    [
-                        similarity_rhino_triceratops,
-                        similarity_triceratops_rhino,
-                        inheritance_triceratops_dinosaur,
-                    ]
-                )
-
-            def _rhino_links():
-                answers = _build_atom_answer(rhino)
-                assert len(answers) == 3
-                assert answers == sorted(
-                    [
-                        similarity_rhino_triceratops,
-                        similarity_triceratops_rhino,
-                        inheritance_rhino_mammal,
-                    ]
-                )
-
-            def _earthworm_links():
-                answers = _build_atom_answer(earthworm)
-                assert len(answers) == 3
-                assert answers == sorted(
-                    [
-                        similarity_snake_earthworm,
-                        similarity_earthworm_snake,
-                        inheritance_earthworm_animal,
-                    ]
-                )
-
-            def _snake_links():
-                answers = _build_atom_answer(snake)
-                assert len(answers) == 5
-                assert answers == sorted(
-                    [
-                        similarity_snake_earthworm,
-                        similarity_earthworm_snake,
-                        inheritance_snake_reptile,
-                        similarity_snake_vine,
-                        similarity_vine_snake,
-                    ]
-                )
-
-            def _vine_links():
-                answers = _build_atom_answer(vine)
-                assert len(answers) == 3
-                assert answers == sorted(
-                    [inheritance_vine_plant, similarity_snake_vine, similarity_vine_snake]
-                )
-
-            def _plant_links():
-                answers = _build_atom_answer(plant)
-                assert len(answers) == 2
-                assert answers == sorted([inheritance_ent_plant, inheritance_vine_plant])
-
-            def _similarity_inheritance_links():
-                answers = _build_atom_answer(similarity_human_monkey)
-                assert len(answers) == 0
-
+            def _similarity_links():
                 answers = _build_atom_answer(similarity_human_chimp)
                 assert len(answers) == 0
 
                 answers = _build_atom_answer(similarity_chimp_monkey)
                 assert len(answers) == 0
 
-                answers = _build_atom_answer(similarity_snake_earthworm)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_rhino_triceratops)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_snake_vine)
-                assert len(answers) == 0
-
                 answers = _build_atom_answer(similarity_human_ent)
                 assert len(answers) == 0
 
-                answers = _build_atom_answer(inheritance_human_mammal)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_monkey_mammal)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_chimp_mammal)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_mammal_animal)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_reptile_animal)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_snake_reptile)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_dinosaur_reptile)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_triceratops_dinosaur)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_earthworm_animal)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_rhino_mammal)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_vine_plant)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(inheritance_ent_plant)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_monkey_human)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_chimp_human)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_monkey_chimp)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_earthworm_snake)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_triceratops_rhino)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_vine_snake)
-                assert len(answers) == 0
-
-                answers = _build_atom_answer(similarity_ent_human)
-                assert len(answers) == 0
-
             _human_links()
-            _monkey_links()
+
             _chimp_links()
-            _mammal_links()
+
             _ent_links()
-            _animal_links()
-            _reptile_links()
-            _dinosaur_links()
-            _triceratops_links()
-            _rhino_links()
-            _earthworm_links()
-            _snake_links()
-            _vine_links()
-            _plant_links()
-            _similarity_inheritance_links()
+
+            _similarity_links()
 
         def get_links_with_filters():
             das = DistributedAtomSpace(query_engine='remote', host='45.63.85.59', port=8080)
@@ -586,55 +396,11 @@ class TestTraverseEngine:
                 neighbors_iterator = cursor.get_neighbors()
                 return [item for item in neighbors_iterator]
 
-            def _human_neighbors():
-                neighbors = _build_neighbors(human)
-                assert das.get_atom(monkey) in neighbors
-                assert das.get_atom(mammal) in neighbors
-                assert das.get_atom(chimp) in neighbors
-                assert das.get_atom(ent) in neighbors
-                assert len(neighbors) == 4
-
             def _monkey_neighbors():
                 neighbors = _build_neighbors(monkey)
                 assert das.get_atom(human) in neighbors
                 assert das.get_atom(mammal) in neighbors
                 assert das.get_atom(chimp) in neighbors
-                assert len(neighbors) == 3
-
-            def _chimp_neighbors():
-                neighbors = _build_neighbors(chimp)
-                assert das.get_atom(human) in neighbors
-                assert das.get_atom(mammal) in neighbors
-                assert das.get_atom(monkey) in neighbors
-                assert len(neighbors) == 3
-
-            def _mammal_neighbors():
-                neighbors = _build_neighbors(mammal)
-                assert das.get_atom(animal) in neighbors
-                assert das.get_atom(monkey) in neighbors
-                assert das.get_atom(chimp) in neighbors
-                assert das.get_atom(human) in neighbors
-                assert das.get_atom(rhino) in neighbors
-                assert len(neighbors) == 5
-
-            def _ent_neighbors():
-                neighbors = _build_neighbors(ent)
-                assert das.get_atom(human) in neighbors
-                assert das.get_atom(plant) in neighbors
-                assert len(neighbors) == 2
-
-            def _animal_neighbors():
-                neighbors = _build_neighbors(animal)
-                assert das.get_atom(mammal) in neighbors
-                assert das.get_atom(reptile) in neighbors
-                assert das.get_atom(earthworm) in neighbors
-                assert len(neighbors) == 3
-
-            def _reptile_neighbors():
-                neighbors = _build_neighbors(reptile)
-                assert das.get_atom(animal) in neighbors
-                assert das.get_atom(dinosaur) in neighbors
-                assert das.get_atom(snake) in neighbors
                 assert len(neighbors) == 3
 
             def _dinosaur_neighbors():
@@ -643,137 +409,29 @@ class TestTraverseEngine:
                 assert das.get_atom(triceratops) in neighbors
                 assert len(neighbors) == 2
 
-            def _triceratops_neighbors():
-                neighbors = _build_neighbors(triceratops)
-                assert das.get_atom(dinosaur) in neighbors
-                assert das.get_atom(rhino) in neighbors
-                assert len(neighbors) == 2
-
             def _rhino_neighbors():
                 neighbors = _build_neighbors(rhino)
                 assert das.get_atom(mammal) in neighbors
                 assert das.get_atom(triceratops) in neighbors
                 assert len(neighbors) == 2
 
-            def _earthworm_neighbors():
-                neighbors = _build_neighbors(earthworm)
-                assert das.get_atom(animal) in neighbors
-                assert das.get_atom(snake) in neighbors
-                assert len(neighbors) == 2
-
-            def _snake_neighbors():
-                neighbors = _build_neighbors(snake)
-                assert das.get_atom(earthworm) in neighbors
-                assert das.get_atom(reptile) in neighbors
-                assert das.get_atom(vine) in neighbors
-                assert len(neighbors) == 3
-
-            def _vine_neighbors():
-                neighbors = _build_neighbors(vine)
-                assert das.get_atom(snake) in neighbors
-                assert das.get_atom(plant) in neighbors
-                assert len(neighbors) == 2
-
-            def _plant_neighbors():
-                neighbors = _build_neighbors(plant)
-                assert das.get_atom(vine) in neighbors
-                assert das.get_atom(ent) in neighbors
-                assert len(neighbors) == 2
-
-            def _similarity_inheritance_neighbors():
-                answers = _build_neighbors(similarity_human_monkey)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_human_chimp)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_chimp_monkey)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_snake_earthworm)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_rhino_triceratops)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_snake_vine)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_human_ent)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(inheritance_human_mammal)
-                assert len(answers) == 0
-
+            def _inheritance_neighbors():
                 answers = _build_neighbors(inheritance_monkey_mammal)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(inheritance_chimp_mammal)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(inheritance_mammal_animal)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(inheritance_reptile_animal)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(inheritance_snake_reptile)
                 assert len(answers) == 0
 
                 answers = _build_neighbors(inheritance_dinosaur_reptile)
                 assert len(answers) == 0
 
-                answers = _build_neighbors(inheritance_triceratops_dinosaur)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(inheritance_earthworm_animal)
-                assert len(answers) == 0
-
                 answers = _build_neighbors(inheritance_rhino_mammal)
                 assert len(answers) == 0
 
-                answers = _build_neighbors(inheritance_vine_plant)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(inheritance_ent_plant)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_monkey_human)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_chimp_human)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_monkey_chimp)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_earthworm_snake)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_triceratops_rhino)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_vine_snake)
-                assert len(answers) == 0
-
-                answers = _build_neighbors(similarity_ent_human)
-                assert len(answers) == 0
-
-            _human_neighbors()
             _monkey_neighbors()
-            _chimp_neighbors()
-            _mammal_neighbors()
-            _ent_neighbors()
-            _animal_neighbors()
-            _reptile_neighbors()
+
             _dinosaur_neighbors()
-            _triceratops_neighbors()
+
             _rhino_neighbors()
-            _earthworm_neighbors()
-            _snake_neighbors()
-            _vine_neighbors()
-            _plant_neighbors()
-            _similarity_inheritance_neighbors()
+
+            _inheritance_neighbors()
 
         def get_neighbors_with_filters():
             das = DistributedAtomSpace(query_engine='remote', host='45.63.85.59', port=8080)

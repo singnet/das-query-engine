@@ -109,7 +109,7 @@ class TestFunctionsClient:
         mock_request.assert_called_with(
             'POST',
             url='http://example.com',
-            data='{"action": "get_links", "input": {"link_type": "Inheritance", "link_targets": ["4e8e26e3276af8a5c2ac2cc2dc95c6d2", "80aff30094874e75028033a38ce677bb"]}}',
+            data='{"action": "get_links", "input": {"link_type": "Inheritance", "kwargs": {}, "link_targets": ["4e8e26e3276af8a5c2ac2cc2dc95c6d2", "80aff30094874e75028033a38ce677bb"]}}',
         )
 
         assert result == expected_response

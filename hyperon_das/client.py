@@ -54,11 +54,15 @@ class FunctionsClient:
         return response
 
     def get_links(
-        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
+        self,
+        link_type: str,
+        target_types: List[str] = None,
+        link_targets: List[str] = None,
+        **kwargs,
     ) -> Union[List[str], List[Dict]]:
         payload = {
             'action': 'get_links',
-            'input': {'link_type': link_type},
+            'input': {'link_type': link_type, 'kwargs': kwargs},
         }
         if target_types:
             payload['input']['target_types'] = target_types
@@ -105,5 +109,5 @@ class FunctionsClient:
             logger().debug(
                 f'Error during `get_incoming_links` request on remote Das: {response["error"]}'
             )
-            return []
+            return None, [] if kwargs.get('cursor') is not None else []
         return response
