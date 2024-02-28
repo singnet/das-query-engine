@@ -1,10 +1,1 @@
-[#114] Added test to check persistence in local DBs after add_atom() 
-[#39] Add reindex() to rebuild pattern index in local DAS
-[HOTFIX] Add empty implementation of reindex() 
-[#121] Change das.query() return to QueryAnswerIterator
-[#122] Add integration test to DAS API used by MeTTa
-[BUGFIX] Add delete_atom method in DatabaseMock class
-[#134] Update package version
-[#138] Implement iterators to incoming_links
-[#139] Update TraveseEngine to use IncomingLinksIterators
-[#145] Refactor TraverseNeighborsIterator
+[#154] Refactor remote tests to use a single declaration of remote host/port
