@@ -1,4 +1,4 @@
-from importlib import metadata
+from importlib import import_module, metadata
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
@@ -505,18 +505,35 @@ class DistributedAtomSpace:
     def info() -> dict:
         try:
             dist_das = metadata.distribution('hyperon-das')
+            das_name = dist_das.metadata.get('Name')
+            das_version = dist_das.metadata.get('Version')
+            das_summary = dist_das.metadata.get('Summary')
+        except metadata.PackageNotFoundError:
+            package_module = import_module('hyperon_das')
+            das_version = getattr(package_module, '__version__', None)
+            das_name = 'hyperon-das'
+            das_summary = ''
+
+        try:
             dist_atomdb = metadata.distribution('hyperon-das-atomdb')
-            return {
-                'das': {
-                    'Name': dist_das.metadata.get('Name'),
-                    'Version': dist_das.metadata.get('Version'),
-                    'Summary': dist_das.metadata.get('Summary'),
-                },
-                'atom_db': {
-                    'Name': dist_atomdb.metadata.get('Name'),
-                    'Version': dist_atomdb.metadata.get('Version'),
-                    'Summary': dist_atomdb.metadata.get('Summary'),
-                },
-            }
-        except metadata.PackageNotFoundError as e:
-            raise Exception(f'Package "{e.msg or e.name}" was not found in your environment')
+            atomdb_name = dist_atomdb.metadata.get('Name')
+            atomdb_version = dist_atomdb.metadata.get('Version')
+            atomdb_summary = dist_atomdb.metadata.get('Summary')
+        except metadata.PackageNotFoundError:
+            package_module = import_module('hyperon_das_atomdb')
+            atomdb_version = getattr(package_module, '__version__', None)
+            atomdb_name = 'hyperon-das-atomdb'
+            atomdb_summary = ''
+
+        return {
+            'das': {
+                'Name': das_name,
+                'Version': das_version,
+                'Summary': das_summary,
+            },
+            'atom_db': {
+                'Name': atomdb_name,
+                'Version': atomdb_version,
+                'Summary': atomdb_summary,
+            },
+        }
