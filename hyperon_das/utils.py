@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
 from importlib import import_module
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
+
 from hyperon_das.exceptions import InvalidAssignment
 
 
