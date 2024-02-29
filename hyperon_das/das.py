@@ -1,4 +1,3 @@
-from importlib import import_module, metadata
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
@@ -14,7 +13,7 @@ from hyperon_das.exceptions import (
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
-from hyperon_das.utils import Assignment
+from hyperon_das.utils import Assignment, get_package_version
 
 
 class DistributedAtomSpace:
@@ -503,37 +502,15 @@ class DistributedAtomSpace:
 
     @staticmethod
     def info() -> dict:
-        try:
-            dist_das = metadata.distribution('hyperon-das')
-            das_name = dist_das.metadata.get('Name')
-            das_version = dist_das.metadata.get('Version')
-            das_summary = dist_das.metadata.get('Summary')
-        except metadata.PackageNotFoundError:
-            package_module = import_module('hyperon_das')
-            das_version = getattr(package_module, '__version__', None)
-            das_name = 'hyperon-das'
-            das_summary = ''
-
-        try:
-            dist_atomdb = metadata.distribution('hyperon-das-atomdb')
-            atomdb_name = dist_atomdb.metadata.get('Name')
-            atomdb_version = dist_atomdb.metadata.get('Version')
-            atomdb_summary = dist_atomdb.metadata.get('Summary')
-        except metadata.PackageNotFoundError:
-            package_module = import_module('hyperon_das_atomdb')
-            atomdb_version = getattr(package_module, '__version__', None)
-            atomdb_name = 'hyperon-das-atomdb'
-            atomdb_summary = ''
-
         return {
             'das': {
-                'Name': das_name,
-                'Version': das_version,
-                'Summary': das_summary,
+                'name': 'hyperon-das',
+                'version': get_package_version('hyperon_das'),
+                'summary': 'Query Engine API for Distributed AtomSpace',
             },
             'atom_db': {
-                'Name': atomdb_name,
-                'Version': atomdb_version,
-                'Summary': atomdb_summary,
+                'name': 'hyperon-das-atomdb',
+                'version': get_package_version('hyperon_das_atomdb'),
+                'summary': 'Persistence layer for Distributed AtomSpace',
             },
         }

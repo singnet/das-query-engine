@@ -89,5 +89,5 @@ class TestDistributedAtomSpace:
         assert isinstance(das.info(), dict)
         assert 'das' in das.info()
         assert 'atom_db' in das.info()
-        assert {'Name', 'Version', 'Summary'} == set(das.info().get('das').keys())
-        assert {'Name', 'Version', 'Summary'} == set(das.info().get('atom_db').keys())
+        assert {'name', 'version', 'summary'} == set(das.info().get('das').keys())
+        assert {'name', 'version', 'summary'} == set(das.info().get('atom_db').keys())

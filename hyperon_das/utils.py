@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
-
+from importlib import import_module
 from hyperon_das.exceptions import InvalidAssignment
 
 
@@ -95,3 +95,8 @@ class Assignment:
 class QueryAnswer:
     subgraph: Optional[Dict] = None
     assignment: Optional[Assignment] = None
+
+
+def get_package_version(package_name: str) -> str:
+    package_module = import_module(package_name)
+    return getattr(package_module, '__version__', None)
