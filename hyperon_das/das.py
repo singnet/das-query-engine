@@ -1,3 +1,4 @@
+from importlib import metadata
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
@@ -499,3 +500,23 @@ class DistributedAtomSpace:
             return TraverseEngine(handle, das=self, **kwargs)
         except AtomDoesNotExist:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
+
+    @staticmethod
+    def info() -> dict:
+        try:
+            dist_das = metadata.distribution('hyperon-das')
+            dist_atomdb = metadata.distribution('hyperon-das-atomdb')
+            return {
+                'das': {
+                    'Name': dist_das.metadata.get('Name'),
+                    'Version': dist_das.metadata.get('Version'),
+                    'Summary': dist_das.metadata.get('Summary'),
+                },
+                'atom_db': {
+                    'Name': dist_atomdb.metadata.get('Name'),
+                    'Version': dist_atomdb.metadata.get('Version'),
+                    'Summary': dist_atomdb.metadata.get('Summary'),
+                },
+            }
+        except metadata.PackageNotFoundError as e:
+            raise Exception(f'Package "{e.msg or e.name}" was not found in your environment')

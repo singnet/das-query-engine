@@ -83,3 +83,11 @@ class TestDistributedAtomSpace:
             das.get_traversal_cursor(handle='snet')
 
         assert exc.value.message == 'Cannot start Traversal. Atom does not exist'
+
+    def test_info(self):
+        das = DistributedAtomSpace()
+        assert isinstance(das.info(), dict)
+        assert 'das' in das.info()
+        assert 'atom_db' in das.info()
+        assert {'Name', 'Version', 'Summary'} == set(das.info().get('das').keys())
+        assert {'Name', 'Version', 'Summary'} == set(das.info().get('atom_db').keys())
