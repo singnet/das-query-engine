@@ -1,7 +1,9 @@
 import pytest
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
-from .remote_das_info import remote_das_host, remote_das_port
+
 from hyperon_das.das import DistributedAtomSpace
+
+from .remote_das_info import remote_das_host, remote_das_port
 
 human = AtomDB.node_handle('Concept', 'human')
 monkey = AtomDB.node_handle('Concept', 'monkey')
@@ -51,7 +53,9 @@ class TestTraverseEngine:
         """Test TraverseEngine methods with remote DAS in OpenFaas"""
 
         def get():
-            das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
             cursor = das.get_traversal_cursor(human)
             current_cursor = cursor.get()
 
@@ -60,7 +64,9 @@ class TestTraverseEngine:
             assert current_cursor['named_type'] == 'Concept'
 
         def get_links():
-            das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
 
             def _build_atom_answer(handle: str) -> dict:
                 cursor = das.get_traversal_cursor(handle)
@@ -121,7 +127,9 @@ class TestTraverseEngine:
             _similarity_links()
 
         def get_links_with_filters():
-            das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
 
             def _build_atom_answer(handle: str, **filters) -> dict:
                 cursor = das.get_traversal_cursor(handle)
@@ -389,7 +397,9 @@ class TestTraverseEngine:
             _similarity_human_monkey_links()
 
         def get_neighbors():
-            das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
 
             def _build_neighbors(handle: str) -> dict:
                 cursor = das.get_traversal_cursor(handle)
@@ -434,7 +444,9 @@ class TestTraverseEngine:
             _inheritance_neighbors()
 
         def get_neighbors_with_filters():
-            das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
 
             def _build_neighbors(handle: str, **filters) -> dict:
                 cursor = das.get_traversal_cursor(handle)
@@ -701,7 +713,9 @@ class TestTraverseEngine:
             _inheritance_dinosaur_reptile()
 
         def follow_link():
-            das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
 
             def _mammal():
                 cursor = das.get_traversal_cursor(mammal)
@@ -746,7 +760,9 @@ class TestTraverseEngine:
             _earthworm()
 
         def follow_link_with_filters():
-            das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
 
             def _mammal():
                 cursor = das.get_traversal_cursor(mammal)
@@ -781,7 +797,9 @@ class TestTraverseEngine:
             _mammal()
 
         def goto():
-            das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
             cursor = das.get_traversal_cursor(human)
             cursor.get()['name'] == 'human'
 

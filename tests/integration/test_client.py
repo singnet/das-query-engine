@@ -1,7 +1,9 @@
 import pytest
 from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
-from .remote_das_info import remote_das_host, remote_das_port
+
 from hyperon_das.client import FunctionsClient
+
+from .remote_das_info import remote_das_host, remote_das_port
 
 
 # AWS function is offline
@@ -154,7 +156,9 @@ class AWSClientIntegration:
 class TestVultrClientIntegration:
     @pytest.fixture()
     def server(self):
-        return FunctionsClient(url=f'http://{remote_das_host}:{remote_das_port}/function/query-engine')
+        return FunctionsClient(
+            url=f'http://{remote_das_host}:{remote_das_port}/function/query-engine'
+        )
 
     @pytest.fixture()
     def node_human(self):

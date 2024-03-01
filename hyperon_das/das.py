@@ -13,7 +13,7 @@ from hyperon_das.exceptions import (
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
-from hyperon_das.utils import Assignment
+from hyperon_das.utils import Assignment, get_package_version
 
 
 class DistributedAtomSpace:
@@ -499,3 +499,18 @@ class DistributedAtomSpace:
             return TraverseEngine(handle, das=self, **kwargs)
         except AtomDoesNotExist:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
+
+    @staticmethod
+    def about() -> dict:
+        return {
+            'das': {
+                'name': 'hyperon-das',
+                'version': get_package_version('hyperon_das'),
+                'summary': 'Query Engine API for Distributed AtomSpace',
+            },
+            'atom_db': {
+                'name': 'hyperon-das-atomdb',
+                'version': get_package_version('hyperon_das_atomdb'),
+                'summary': 'Persistence layer for Distributed AtomSpace',
+            },
+        }
