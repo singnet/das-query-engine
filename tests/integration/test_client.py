@@ -143,7 +143,6 @@ class TestVultrClientIntegration:
         handles = [target['handle'] for target in link[1]['targets']]
 
         assert handles == [node_human, node_mammal]
-        assert False
 
         answer = server.query(
             {
