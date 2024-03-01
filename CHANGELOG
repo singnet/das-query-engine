@@ -1,1 +1,2 @@
 [#153] Refactor the constructor of the TraverseEngine and the request method in the FunctionsClient
+[#156] Fix MeTTa->Nodes/Links mapping
