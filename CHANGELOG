@@ -1,1 +1,2 @@
-[#160] Create a method to identify the library version (hyperon-das and hyperon-das-atomdb)
+[#153] Refactor the constructor of the TraverseEngine and the request method in the FunctionsClient
+[#156] Fix MeTTa->Nodes/Links mapping

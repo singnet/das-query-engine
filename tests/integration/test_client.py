@@ -1,70 +1,86 @@
 import pytest
-from hyperon_das_atomdb import AtomDB
-
-from hyperon_das.client import FunctionsClient
-
+from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
 from .remote_das_info import remote_das_host, remote_das_port
+from hyperon_das.client import FunctionsClient
 
 
 class TestVultrClientIntegration:
     @pytest.fixture()
     def server(self):
-        return FunctionsClient(
-            url=f'http://{remote_das_host}:{remote_das_port}/function/query-engine'
-        )
+        return FunctionsClient(url=f'http://{remote_das_host}:{remote_das_port}/function/query-engine')
 
     @pytest.fixture()
     def node_human(self):
-        return AtomDB.node_handle('Concept', 'human')
+        return ExpressionHasher.terminal_hash('Symbol', '"human"')
 
     @pytest.fixture()
     def node_monkey(self):
-        return AtomDB.node_handle('Concept', 'monkey')
+        return ExpressionHasher.terminal_hash('Symbol', '"monkey"')
 
     @pytest.fixture()
     def node_mammal(self):
-        return AtomDB.node_handle('Concept', 'mammal')
+        return ExpressionHasher.terminal_hash('Symbol', '"mammal"')
+
+    @pytest.fixture()
+    def node_similarity(self):
+        return ExpressionHasher.terminal_hash('Symbol', 'Similarity')
+
+    @pytest.fixture()
+    def node_inheritance(self):
+        return ExpressionHasher.terminal_hash('Symbol', 'Inheritance')
 
     @pytest.fixture()
     def link_similarity_concept_concept(self, node_human, node_monkey):
-        return AtomDB.link_handle('Similarity', [node_human, node_monkey])
+        return ExpressionHasher.expression_hash(
+            ExpressionHasher.named_type_hash('Expression'),
+            [ExpressionHasher.terminal_hash('Symbol', 'Similarity'), node_human, node_monkey],
+        )
 
     @pytest.fixture()
     def link_inheritance_concept_concept(self, node_human, node_mammal):
-        return AtomDB.link_handle('Inheritance', [node_human, node_mammal])
+        return ExpressionHasher.expression_hash(
+            ExpressionHasher.named_type_hash('Expression'),
+            [ExpressionHasher.terminal_hash('Symbol', 'Inheritance'), node_human, node_mammal],
+        )
 
     def test_get_atom(
         self,
         server: FunctionsClient,
         node_human: str,
         node_monkey: str,
+        node_similarity: str,
         link_similarity_concept_concept: str,
     ):
         result = server.get_atom(handle=node_human)
         assert result['handle'] == node_human
-        assert result['name'] == 'human'
-        assert result['named_type'] == 'Concept'
+        assert result['name'] == '"human"'
+        assert result['named_type'] == 'Symbol'
 
         result = server.get_atom(handle=node_monkey)
         assert result['handle'] == node_monkey
-        assert result['name'] == 'monkey'
-        assert result['named_type'] == 'Concept'
+        assert result['name'] == '"monkey"'
+        assert result['named_type'] == 'Symbol'
 
         result = server.get_atom(handle=link_similarity_concept_concept)
         assert result['handle'] == link_similarity_concept_concept
-        assert result['named_type'] == 'Similarity'
-        assert result['targets'] == [node_human, node_monkey]
+        assert result['named_type'] == 'Expression'
+        assert result['targets'] == [node_similarity, node_human, node_monkey]
 
-    def test_get_node(self, server: FunctionsClient, node_human: str, node_monkey: str):
-        result = server.get_node(node_type='Concept', node_name='human')
+    def test_get_node(
+        self, 
+        server: FunctionsClient, 
+        node_human: str, 
+        node_monkey: str, 
+    ):
+        result = server.get_node(node_type='Symbol', node_name='"human"')
         assert result['handle'] == node_human
-        assert result['name'] == 'human'
-        assert result['named_type'] == 'Concept'
+        assert result['name'] == '"human"'
+        assert result['named_type'] == 'Symbol'
 
-        result = server.get_node(node_type='Concept', node_name='monkey')
+        result = server.get_node(node_type='Symbol', node_name='"monkey"')
         assert result['handle'] == node_monkey
-        assert result['name'] == 'monkey'
-        assert result['named_type'] == 'Concept'
+        assert result['name'] == '"monkey"'
+        assert result['named_type'] == 'Symbol'
 
     def test_get_link(
         self,
@@ -74,16 +90,18 @@ class TestVultrClientIntegration:
         node_mammal: str,
         link_similarity_concept_concept: str,
         link_inheritance_concept_concept: str,
+        node_similarity: str, 
+        node_inheritance: str,
     ):
-        result = server.get_link(link_type='Similarity', link_targets=[node_human, node_monkey])
+        result = server.get_link(link_type='Expression', link_targets=[node_similarity, node_human, node_monkey])
         assert result['handle'] == link_similarity_concept_concept
-        assert result['named_type'] == 'Similarity'
-        assert result['targets'] == [node_human, node_monkey]
+        assert result['named_type'] == 'Expression'
+        assert result['targets'] == [node_similarity, node_human, node_monkey]
 
-        result = server.get_link(link_type='Inheritance', link_targets=[node_human, node_mammal])
+        result = server.get_link(link_type='Expression', link_targets=[node_inheritance, node_human, node_mammal])
         assert result['handle'] == link_inheritance_concept_concept
-        assert result['named_type'] == 'Inheritance'
-        assert result['targets'] == [node_human, node_mammal]
+        assert result['named_type'] == 'Expression'
+        assert result['targets'] == [node_inheritance, node_human, node_mammal]
 
     def test_get_links(self, server: FunctionsClient):
         ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
@@ -91,8 +109,8 @@ class TestVultrClientIntegration:
 
     def test_count_atoms(self, server: FunctionsClient):
         ret = server.count_atoms()
-        assert ret[0] == 14
-        assert ret[1] == 26
+        assert ret[0] == 21
+        assert ret[1] == 43
 
     def test_query(
         self,
@@ -106,8 +124,9 @@ class TestVultrClientIntegration:
         answer = server.query(
             {
                 "atom_type": "link",
-                "type": "Inheritance",
+                "type": "Expression",
                 "targets": [
+                    {"atom_type": "node", "type": "Symbol", "name": "Inheritance"},
                     {"atom_type": "variable", "name": "v1"},
                     {"atom_type": "variable", "name": "v2"},
                 ],

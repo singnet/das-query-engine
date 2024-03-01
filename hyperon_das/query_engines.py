@@ -131,7 +131,8 @@ class LocalQueryEngine(QueryEngine):
                 handle = atom
                 arity = -1
             else:
-                handle, targets = atom
+                handle = atom[0]
+                targets = atom[1:]
                 arity = len(targets)
             answer.append(self.local_backend.get_atom_as_dict(handle, arity))
         return answer
