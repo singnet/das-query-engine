@@ -86,8 +86,8 @@ class TestDistributedAtomSpace:
 
     def test_info(self):
         das = DistributedAtomSpace()
-        assert isinstance(das.info(), dict)
-        assert 'das' in das.info()
-        assert 'atom_db' in das.info()
-        assert {'name', 'version', 'summary'} == set(das.info().get('das').keys())
-        assert {'name', 'version', 'summary'} == set(das.info().get('atom_db').keys())
+        assert isinstance(das.about(), dict)
+        assert 'das' in das.about()
+        assert 'atom_db' in das.about()
+        assert {'name', 'version', 'summary'} == set(das.about().get('das').keys())
+        assert {'name', 'version', 'summary'} == set(das.about().get('atom_db').keys())
