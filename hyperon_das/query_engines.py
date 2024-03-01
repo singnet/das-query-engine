@@ -1,10 +1,12 @@
 import json
 from abc import ABC, abstractmethod
+from http import HTTPStatus
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import sessions
+from requests.exceptions import ConnectionError, HTTPError, RequestException, Timeout
 
 from hyperon_das.cache import (
     AndEvaluator,
@@ -24,7 +26,7 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer
+from hyperon_das.utils import Assignment, QueryAnswer, get_package_version
 
 
 class QueryEngine(ABC):
@@ -278,19 +280,37 @@ class RemoteQueryEngine(QueryEngine):
 
     def _is_server_connect(self, url: str) -> bool:
         logger().debug(f'connecting to remote Das {url}')
+
         try:
             with sessions.Session() as session:
                 response = session.request(
                     method='POST',
                     url=url,
-                    data=json.dumps({"action": "ping", "input": {}}),
+                    data=json.dumps(
+                        {
+                            'action': 'handshake',
+                            'input': {
+                                'das_version': get_package_version('hyperon_das'),
+                                'atomdb_version': get_package_version('hyperon_das_atomdb'),
+                            },
+                        }
+                    ),
                     timeout=10,
                 )
-        except Exception:
+                if response.status_code == HTTPStatus.CONFLICT:
+                    logger().debug(
+                        f'Package version conflict error when connecting to remote DAS `{url}`'
+                    )
+                    raise Exception(
+                        'The version of the package you provided does not match the version currently running on the server.'
+                    )
+                elif response.status_code == HTTPStatus.OK:
+                    return True
+                else:
+                    response.raise_for_status()
+                    return False
+        except (ConnectionError, Timeout, HTTPError, RequestException):
             return False
-        if response.status_code == 200:
-            return True
-        return False
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         try:
