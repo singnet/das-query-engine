@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 
@@ -809,11 +811,15 @@ class TestTraverseEngine:
             with pytest.raises(AtomDoesNotExist):
                 cursor.goto('snet')
 
-        get()
-        get_links()
-        get_links_with_filters()
-        get_neighbors()
-        get_neighbors_with_filters()
-        follow_link()
-        follow_link_with_filters()
-        goto()
+        with mock.patch(
+            'hyperon_das.query_engines.RemoteQueryEngine._connect_server',
+            return_value=f'http://{remote_das_host}:{remote_das_port}/function/query-engine',
+        ):
+            get()
+            get_links()
+            get_links_with_filters()
+            get_neighbors()
+            get_neighbors_with_filters()
+            follow_link()
+            follow_link_with_filters()
+            goto()

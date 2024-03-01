@@ -297,18 +297,18 @@ class RemoteQueryEngine(QueryEngine):
                     ),
                     timeout=10,
                 )
-                if response.status_code == HTTPStatus.CONFLICT:
-                    logger().debug(
-                        f'Package version conflict error when connecting to remote DAS `{url}`'
-                    )
-                    raise Exception(
-                        'The version of the package you provided does not match the version currently running on the server.'
-                    )
-                elif response.status_code == HTTPStatus.OK:
-                    return True
-                else:
-                    response.raise_for_status()
-                    return False
+            if response.status_code == HTTPStatus.CONFLICT:
+                logger().debug(
+                    f'Package version conflict error when connecting to remote DAS `{url}`'
+                )
+                raise Exception(
+                    'The version of the package you provided does not match the version currently running on the server.'
+                )
+            elif response.status_code == HTTPStatus.OK:
+                return True
+            else:
+                response.raise_for_status()
+                return False
         except (ConnectionError, Timeout, HTTPError, RequestException):
             return False
 
