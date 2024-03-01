@@ -501,7 +501,7 @@ class DistributedAtomSpace:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
 
     @staticmethod
-    def info() -> dict:
+    def about() -> dict:
         return {
             'das': {
                 'name': 'hyperon-das',
