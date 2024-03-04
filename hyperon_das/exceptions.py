@@ -22,7 +22,19 @@ class InvalidAssignment(BaseException):
     ...  # pragma no cover
 
 
-class ConnectionServerException(BaseException):
+class ConnectionError(BaseException):
+    ...  # pragma no cover
+
+
+class TimeoutError(BaseException):
+    ...  # pragma no cover
+
+
+class HTTPError(BaseException):
+    ...  # pragma no cover
+
+
+class RequestError(BaseException):
     ...  # pragma no cover
 
 

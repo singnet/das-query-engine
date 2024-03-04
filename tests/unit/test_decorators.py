@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from hyperon_das.decorators import retry
-from hyperon_das.exceptions import ConnectionServerException
+from hyperon_das.exceptions import ConnectionError
 
 logger_mock = Mock()
 
@@ -27,7 +27,5 @@ def test_retry_exception_raised(logger_mock):
     def exception_function():
         raise ValueError("Simulated exception")
 
-    with pytest.raises(
-        ConnectionServerException, match='An error occurs while connecting to the server'
-    ):
+    with pytest.raises(ConnectionError, match='An error occurs while connecting to the server'):
         exception_function()
