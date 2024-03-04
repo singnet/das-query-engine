@@ -6,7 +6,13 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import sessions
-from requests.exceptions import ConnectionError, HTTPError, RequestException, Timeout
+from requests.exceptions import (
+    ConnectionError,
+    HTTPError,
+    JSONDecodeError,
+    RequestException,
+    Timeout,
+)
 
 from hyperon_das.cache import (
     AndEvaluator,
@@ -280,6 +286,7 @@ class RemoteQueryEngine(QueryEngine):
 
     def _is_server_connect(self, url: str) -> bool:
         logger().debug(f'connecting to remote Das {url}')
+        das_version = get_package_version('hyperon_das')
 
         try:
             with sessions.Session() as session:
@@ -290,7 +297,7 @@ class RemoteQueryEngine(QueryEngine):
                         {
                             'action': 'handshake',
                             'input': {
-                                'das_version': get_package_version('hyperon_das'),
+                                'das_version': das_version,
                                 'atomdb_version': get_package_version('hyperon_das_atomdb'),
                             },
                         }
@@ -298,11 +305,15 @@ class RemoteQueryEngine(QueryEngine):
                     timeout=10,
                 )
             if response.status_code == HTTPStatus.CONFLICT:
-                logger().debug(
-                    f'Package version conflict error when connecting to remote DAS `{url}`'
+                try:
+                    remote_das_version = response.json().get('das').get('version')
+                except JSONDecodeError as e:
+                    raise Exception(str(e))
+                logger().error(
+                    f'Package version conflict error when connecting to remote DAS - Local DAS: `{das_version}` - Remote DAS: `{remote_das_version}`'
                 )
                 raise Exception(
-                    'The version of the package you provided does not match the version currently running on the server.'
+                    f'The version sent by the local DAS is {das_version}, but the expected version on the server is {remote_das_version}'
                 )
             elif response.status_code == HTTPStatus.OK:
                 return True
