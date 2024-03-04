@@ -5,7 +5,7 @@ import pytest
 from hyperon_das import DistributedAtomSpace
 from hyperon_das.cache import ListIterator, LocalGetLinks, LocalIncomingLinks, ProductIterator
 from hyperon_das.utils import Assignment
-from tests.unit.mock import up_knowledge_base_animals, up_n_links_in_database
+from tests.utils import up_knowledge_base_animals, up_n_links_in_database
 
 
 class TestCache:

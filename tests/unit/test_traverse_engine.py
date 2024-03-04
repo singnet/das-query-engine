@@ -2,7 +2,7 @@ import pytest
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 
 from hyperon_das.das import DistributedAtomSpace
-from tests.unit.mock import up_knowledge_base_animals
+from tests.utils import up_knowledge_base_animals
 
 human = AtomDB.node_handle('Concept', 'human')
 monkey = AtomDB.node_handle('Concept', 'monkey')

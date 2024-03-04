@@ -1,54 +1,25 @@
 import os
-import subprocess
 
 import pytest
 
 from hyperon_das import DistributedAtomSpace
 
-redis_port = "15926"
-mongo_port = "15927"
-scripts_path = "./tests/integration/scripts/"
-devnull = open(os.devnull, 'w')
-
-DAS_MONGODB_HOSTNAME = os.environ.get("DAS_MONGODB_HOSTNAME")
-DAS_MONGODB_PORT = os.environ.get("DAS_MONGODB_PORT")
-DAS_MONGODB_USERNAME = os.environ.get("DAS_MONGODB_USERNAME")
-DAS_MONGODB_PASSWORD = os.environ.get("DAS_MONGODB_PASSWORD")
-DAS_REDIS_HOSTNAME = os.environ.get("DAS_REDIS_HOSTNAME")
-DAS_REDIS_PORT = os.environ.get("DAS_REDIS_PORT")
-DAS_REDIS_USERNAME = os.environ.get("DAS_REDIS_USERNAME")
-DAS_REDIS_PASSWORD = os.environ.get("DAS_REDIS_PASSWORD")
-DAS_USE_REDIS_CLUSTER = os.environ.get("DAS_USE_REDIS_CLUSTER")
-DAS_USE_REDIS_SSL = os.environ.get("DAS_USE_REDIS_SSL")
-
-os.environ["DAS_MONGODB_HOSTNAME"] = "localhost"
-os.environ["DAS_MONGODB_PORT"] = mongo_port
-os.environ["DAS_MONGODB_USERNAME"] = "dbadmin"
-os.environ["DAS_MONGODB_PASSWORD"] = "dassecret"
-os.environ["DAS_REDIS_HOSTNAME"] = "localhost"
-os.environ["DAS_REDIS_PORT"] = redis_port
-os.environ["DAS_REDIS_USERNAME"] = ""
-os.environ["DAS_REDIS_PASSWORD"] = ""
-os.environ["DAS_USE_REDIS_CLUSTER"] = "false"
-os.environ["DAS_USE_REDIS_SSL"] = "false"
-
-
-def _db_up():
-    subprocess.call(
-        ["bash", f"{scripts_path}/redis-up.sh", redis_port], stdout=devnull, stderr=devnull
-    )
-    subprocess.call(
-        ["bash", f"{scripts_path}/mongo-up.sh", mongo_port], stdout=devnull, stderr=devnull
-    )
-
-
-def _db_down():
-    subprocess.call(
-        ["bash", f"{scripts_path}/redis-down.sh", redis_port], stdout=devnull, stderr=devnull
-    )
-    subprocess.call(
-        ["bash", f"{scripts_path}/mongo-down.sh", mongo_port], stdout=devnull, stderr=devnull
-    )
+from .local_redis_mongo import (
+    DAS_MONGODB_HOSTNAME,
+    DAS_MONGODB_PASSWORD,
+    DAS_MONGODB_PORT,
+    DAS_MONGODB_USERNAME,
+    DAS_REDIS_HOSTNAME,
+    DAS_REDIS_PASSWORD,
+    DAS_REDIS_PORT,
+    DAS_REDIS_USERNAME,
+    DAS_USE_REDIS_CLUSTER,
+    DAS_USE_REDIS_SSL,
+    _db_down,
+    _db_up,
+    mongo_port,
+    redis_port,
+)
 
 
 @pytest.fixture(scope="session", autouse=True)
