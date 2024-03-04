@@ -1,59 +1,15 @@
-import os
-
 import pytest
 
 from hyperon_das import DistributedAtomSpace
 
-from .local_redis_mongo import (
-    DAS_MONGODB_HOSTNAME,
-    DAS_MONGODB_PASSWORD,
-    DAS_MONGODB_PORT,
-    DAS_MONGODB_USERNAME,
-    DAS_REDIS_HOSTNAME,
-    DAS_REDIS_PASSWORD,
-    DAS_REDIS_PORT,
-    DAS_REDIS_USERNAME,
-    DAS_USE_REDIS_CLUSTER,
-    DAS_USE_REDIS_SSL,
-    _db_down,
-    _db_up,
-    mongo_port,
-    redis_port,
-)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def cleanup(request):
-    def restore_environment():
-        if DAS_MONGODB_HOSTNAME:
-            os.environ["DAS_MONGODB_HOSTNAME"] = DAS_MONGODB_HOSTNAME
-        if DAS_MONGODB_PORT:
-            os.environ["DAS_MONGODB_PORT"] = DAS_MONGODB_PORT
-        if DAS_MONGODB_USERNAME:
-            os.environ["DAS_MONGODB_USERNAME"] = DAS_MONGODB_USERNAME
-        if DAS_MONGODB_PASSWORD:
-            os.environ["DAS_MONGODB_PASSWORD"] = DAS_MONGODB_PASSWORD
-        if DAS_REDIS_HOSTNAME:
-            os.environ["DAS_REDIS_HOSTNAME"] = DAS_REDIS_HOSTNAME
-        if DAS_REDIS_PORT:
-            os.environ["DAS_REDIS_PORT"] = DAS_REDIS_PORT
-        if DAS_REDIS_USERNAME:
-            os.environ["DAS_REDIS_USERNAME"] = DAS_REDIS_USERNAME
-        if DAS_REDIS_PASSWORD:
-            os.environ["DAS_REDIS_PASSWORD"] = DAS_REDIS_PASSWORD
-        if DAS_USE_REDIS_CLUSTER:
-            os.environ["DAS_USE_REDIS_CLUSTER"] = DAS_USE_REDIS_CLUSTER
-        if DAS_USE_REDIS_SSL:
-            os.environ["DAS_USE_REDIS_SSL"] = DAS_USE_REDIS_SSL
-
-    def enforce_containers_removal():
-        _db_down()
-
-    request.addfinalizer(restore_environment)
-    request.addfinalizer(enforce_containers_removal)
+from .local_redis_mongo import _db_down, _db_up, cleanup, mongo_port, redis_port
 
 
 class TestLocalRedisMongo:
+    @pytest.fixture(scope="session", autouse=True)
+    def _cleanup(self, request):
+        return cleanup(request)
+
     def _add_atoms(self, das: DistributedAtomSpace):
         das.add_node({"type": "Concept", "name": "human"})
         das.add_node({"type": "Concept", "name": "monkey"})

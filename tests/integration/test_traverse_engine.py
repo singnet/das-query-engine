@@ -2,7 +2,7 @@ import pytest
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 
 from hyperon_das.das import DistributedAtomSpace
-from tests.integration.local_redis_mongo import _db_down, _db_up, mongo_port, redis_port
+from tests.integration.local_redis_mongo import _db_down, _db_up, cleanup, mongo_port, redis_port
 from tests.utils import up_knowledge_base_animals
 
 from .remote_das_info import remote_das_host, remote_das_port
@@ -51,6 +51,10 @@ similarity_ent_human = AtomDB.link_handle('Similarity', [ent, human])
 
 
 class TestTraverseEngine:
+    @pytest.fixture(scope="session")
+    def _cleanup(self, request):
+        return cleanup(request)
+
     def test_traverse_engine_remote(self):
         """Test TraverseEngine methods with remote DAS in OpenFaas"""
 
@@ -525,7 +529,7 @@ class TestTraverseEngine:
         follow_link_with_filters()
         goto()
 
-    def test_traverse_engine_local_with_redis_mongo(self):
+    def test_traverse_engine_local_with_redis_mongo(self, _cleanup):
         _db_up()
         das = DistributedAtomSpace(
             query_engine='local',
