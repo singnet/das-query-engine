@@ -2,7 +2,7 @@ import pytest
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 
 from hyperon_das.das import DistributedAtomSpace
-from tests.unit.mock import up_knowledge_base_animals
+from tests.utils import load_animals_base
 
 human = AtomDB.node_handle('Concept', 'human')
 monkey = AtomDB.node_handle('Concept', 'monkey')
@@ -68,7 +68,7 @@ class TestTraverseEngine:
     @pytest.fixture
     def das(self):
         das = DistributedAtomSpace()
-        up_knowledge_base_animals(das)
+        load_animals_base(das)
         return das
 
     def test_get(self, das):

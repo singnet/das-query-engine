@@ -4,6 +4,7 @@ import subprocess
 import pytest
 
 from hyperon_das import DistributedAtomSpace
+from tests.utils import load_animals_base
 
 redis_port = "15926"
 mongo_port = "15927"
@@ -83,257 +84,6 @@ def cleanup(request):
 
 
 class TestLocalRedisMongo:
-    def _add_atoms(self, das: DistributedAtomSpace):
-        das.add_node({"type": "Concept", "name": "human"})
-        das.add_node({"type": "Concept", "name": "monkey"})
-        das.add_node({"type": "Concept", "name": "chimp"})
-        das.add_node({"type": "Concept", "name": "mammal"})
-        das.add_node({"type": "Concept", "name": "reptile"})
-        das.add_node({"type": "Concept", "name": "snake"})
-        das.add_node({"type": "Concept", "name": "dinosaur"})
-        das.add_node({"type": "Concept", "name": "triceratops"})
-        das.add_node({"type": "Concept", "name": "earthworm"})
-        das.add_node({"type": "Concept", "name": "rhino"})
-        das.add_node({"type": "Concept", "name": "vine"})
-        das.add_node({"type": "Concept", "name": "ent"})
-        das.add_node({"type": "Concept", "name": "animal"})
-        das.add_node({"type": "Concept", "name": "plant"})
-
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "human"},
-                    {"type": "Concept", "name": "monkey"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "human"},
-                    {"type": "Concept", "name": "chimp"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "chimp"},
-                    {"type": "Concept", "name": "monkey"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "snake"},
-                    {"type": "Concept", "name": "earthworm"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "rhino"},
-                    {"type": "Concept", "name": "triceratops"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "snake"},
-                    {"type": "Concept", "name": "vine"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "human"},
-                    {"type": "Concept", "name": "ent"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "monkey"},
-                    {"type": "Concept", "name": "human"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "chimp"},
-                    {"type": "Concept", "name": "human"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "monkey"},
-                    {"type": "Concept", "name": "chimp"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "earthworm"},
-                    {"type": "Concept", "name": "snake"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "triceratops"},
-                    {"type": "Concept", "name": "rhino"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "vine"},
-                    {"type": "Concept", "name": "snake"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "ent"},
-                    {"type": "Concept", "name": "human"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "human"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "monkey"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "chimp"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "mammal"},
-                    {"type": "Concept", "name": "animal"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "reptile"},
-                    {"type": "Concept", "name": "animal"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "snake"},
-                    {"type": "Concept", "name": "reptile"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "dinosaur"},
-                    {"type": "Concept", "name": "reptile"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "triceratops"},
-                    {"type": "Concept", "name": "dinosaur"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "earthworm"},
-                    {"type": "Concept", "name": "animal"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "rhino"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "vine"},
-                    {"type": "Concept", "name": "plant"},
-                ],
-            }
-        )
-        das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "ent"},
-                    {"type": "Concept", "name": "plant"},
-                ],
-            }
-        )
-
     def _test_queries(self):
         _db_up()
         das = DistributedAtomSpace(
@@ -347,7 +97,7 @@ class TestLocalRedisMongo:
             redis_ssl=False,
         )
         assert das.count_atoms() == (0, 0)
-        self._add_atoms(das)
+        load_animals_base(das)
         assert das.count_atoms() == (0, 0)
         das.commit_changes()
         assert das.count_atoms() == (14, 26)
@@ -367,7 +117,7 @@ class TestLocalRedisMongo:
             redis_ssl=False,
         )
         assert das.count_atoms() == (0, 0)
-        self._add_atoms(das)
+        load_animals_base(das)
         assert das.count_atoms() == (0, 0)
         das.commit_changes()
         assert das.count_atoms() == (14, 26)
