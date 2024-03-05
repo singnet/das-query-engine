@@ -161,6 +161,34 @@ commit to return to the previous version.
 
 ![Merge Develop Branch into Master](media/img68.jpg)
 
+## Publishing a New Version for DAS Metta Parser
+
+1.  Go to the repository at the [<u>DAS Metta Parser repository</u>](https://github.com/singnet/das-metta-parser).
+
+To publish a new version of DAS Metta Parser, access the repository at[<u>https://github.com/singnet/das-metta-parser</u>](https://github.com/singnet/das-metta-parser)
+
+![DAS Metta Parser repository](media/img90.jpg)
+
+2.  Verify latest created tag before versioning
+
+It is important to note what the last version created was at [<u>https://github.com/singnet/das-metta-parser/tags</u>](https://github.com/singnet/das-metta-parser/tags) before creating a new version.
+
+3.  Execute DAS Metta Parser Build Workflow
+
+Initiate the 'DAS Metta Parser Build' Workflow Manually via the 'Actions' Tab in the Repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format v1.0.0 or 1.0.0, then click 'Run workflow' to proceed.
+
+![DAS Metta Parser Build Workflow](media/img91.jpg)
+
+4.  Monitor the workflow execution. Ensure all jobs complete successfully.
+
+Refresh the page and check if a new workflow is running. By clicking on it, you can track all jobs. At the end of the process, all jobs should have a green check mark. If there is an error in any job, it is possible to click on it to view the logs and identify the cause of the problem.
+
+![DAS Metta Parser Jobs](media/img92.jpg)
+
+5.  Verify the new tag at DAS Metta Parser repository tags and Docker Hub.
+
+It is important to note that this pipeline should generate an image on Docker Hub, following the format **v1.0.0-toolbox**. Make sure that the image is generated correctly and available at [<u>https://hub.docker.com/r/trueagi/das/tags</u>](https://hub.docker.com/r/trueagi/das/tags). After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at [<u>https://github.com/singnet/das-metta-parser/tags</u>](https://github.com/singnet/das-metta-parser/tags).
+
 ## Publishing DAS Toolbox
 
 1.  Go to the DAS Toolbox repository.
@@ -168,6 +196,16 @@ commit to return to the previous version.
 To publish a new version of DAS Toolbox, access the repository at [<u>https://github.com/singnet/das-toolbox/</u>](https://github.com/singnet/das-toolbox/).
 
 ![DAS Toolbox Repository](media/img72.jpg)
+
+2. Update the toolbox image version in **_src/config/config.py_**
+
+Ensure to update the toolbox image version number in the **src/config/config.py** file. This is important because syntax check and loader are executed from this toolbox image.
+
+![Update pyproject.toml](media/img30.jpg)
+
+3.  Commit this change to the master branch.
+
+After this change, it is necessary to commit to the master branch to record the change.
 
 2.  Verify latest created tag before versioning
 
