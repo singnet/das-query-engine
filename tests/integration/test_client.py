@@ -150,13 +150,16 @@ class TestVultrClientIntegration:
 
         handles = [target['handle'] for target in link[1]['targets']]
 
-        assert handles == [node_human, node_mammal]
+        assert len(handles) == 3
+        assert handles[1] == node_human
+        assert handles[2] == node_mammal
 
         answer = server.query(
             {
                 "atom_type": "link",
-                "type": "Similarity",
+                "type": "Expression",
                 "targets": [
+                    {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
                     {"atom_type": "variable", "name": "v1"},
                     {"atom_type": "variable", "name": "v2"},
                 ],
@@ -172,17 +175,27 @@ class TestVultrClientIntegration:
 
         handles = [target['handle'] for target in link[1]['targets']]
 
-        assert handles == [node_human, node_monkey]
+        assert len(handles) == 3
+        assert handles[1] == node_human
+        assert handles[2] == node_monkey
 
     def test_get_incoming_links(self, server: FunctionsClient, node_human: str):
+        expression = ExpressionHasher.named_type_hash("Expression");
+        similarity = ExpressionHasher.terminal_hash("Symbol", "Similarity");
+        inheritance = ExpressionHasher.terminal_hash("Symbol", "Inheritance");
+        mammal = ExpressionHasher.terminal_hash("Symbol", '"mammal"')
+        human = ExpressionHasher.terminal_hash("Symbol", '"human"')
+        monkey = ExpressionHasher.terminal_hash("Symbol", '"monkey"')
+        chimp = ExpressionHasher.terminal_hash("Symbol", '"chimp"')
+        ent = ExpressionHasher.terminal_hash("Symbol", '"ent"')
         expected_handles = [
-            'bad7472f41a0e7d601ca294eb4607c3a',
-            'a45af31b43ee5ea271214338a5a5bd61',
-            '16f7e407087bfa0b35b13d13a1aadcae',
-            '2a8a69c01305563932b957de4b3a9ba6',
-            '2c927fdc6c0f1272ee439ceb76a6d1a4',
-            'c93e1e758c53912638438e2a7d7f7b7f',
-            'b5459e299a5c5e8662c427f7e01b3bf1',
+            ExpressionHasher.expression_hash(expression, [similarity, human, monkey]),
+            ExpressionHasher.expression_hash(expression, [similarity, human, chimp]),
+            ExpressionHasher.expression_hash(expression, [similarity, human, ent]),
+            ExpressionHasher.expression_hash(expression, [similarity, monkey, human]),
+            ExpressionHasher.expression_hash(expression, [similarity, chimp, human]),
+            ExpressionHasher.expression_hash(expression, [similarity, ent, human]),
+            ExpressionHasher.expression_hash(expression, [inheritance, human, mammal]),
         ]
 
         expected_atoms = [server.get_atom(handle) for handle in expected_handles]
@@ -197,23 +210,33 @@ class TestVultrClientIntegration:
         response_handles = server.get_incoming_links(
             node_human, targets_document=False, handles_only=True
         )
-        assert sorted(response_handles) == sorted(expected_handles)
+        assert len(response_handles) == 8
+        # response_handles has an extra link defining the metta type of '"human"'--> Type
+        assert len(set(response_handles).difference(set(expected_handles))) == 1
         response_handles = server.get_incoming_links(
             node_human, targets_document=True, handles_only=True
         )
-        assert sorted(response_handles) == sorted(expected_handles)
+        assert len(response_handles) == 8
+        assert len(set(response_handles).difference(set(expected_handles))) == 1
 
         response_atoms = server.get_incoming_links(
             node_human, targets_document=False, handles_only=False
         )
+        assert len(response_atoms) == 8
         for atom in response_atoms:
-            assert atom in expected_atoms
+            if len(atom["targets"]) == 3:
+                assert atom in expected_atoms
+
         response_atoms = server.get_incoming_links(node_human)
+        assert len(response_atoms) == 8
         for atom in response_atoms:
-            assert atom in expected_atoms
+            if len(atom["targets"]) == 3:
+                assert atom in expected_atoms
 
         response_atoms_targets = server.get_incoming_links(
             node_human, targets_document=True, handles_only=False
         )
+        assert len(response_atoms_targets) == 8
         for atom_targets in response_atoms_targets:
-            assert atom_targets in expected_atoms_targets
+            if len(atom_targets[0]["targets"]) == 3:
+                assert atom_targets in expected_atoms_targets
