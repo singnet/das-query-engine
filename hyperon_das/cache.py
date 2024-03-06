@@ -87,7 +87,7 @@ class LazyQueryEvaluator(ProductIterator):
         query_parameters: Optional[Dict[str, Any]],
     ):
         super().__init__(source)
-        print(f"LQI.constructor() - link_type: {link_type} query_parameters: {query_parameters}")
+        print(f"LQI.constructor() - link_type: {link_type} self: {self} query_parameters: {query_parameters}")
         self.link_type = link_type
         self.query_parameters = query_parameters
         self.das = das
@@ -105,6 +105,7 @@ class LazyQueryEvaluator(ProductIterator):
 
     def __next__(self):
         #print(f"LQI.next() - self.buffered_answer {'None' if self.buffered_answer is None else 'Not None'}")
+        print(f"LQI.next() - self: {self}")
         if self.buffered_answer:
             try:
                 return self.buffered_answer.__next__()
