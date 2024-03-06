@@ -9,7 +9,9 @@ from .remote_das_info import remote_das_host, remote_das_port
 class TestVultrClientIntegration:
     @pytest.fixture()
     def server(self):
-        return FunctionsClient(url=f'http://{remote_das_host}:{remote_das_port}/function/query-engine')
+        return FunctionsClient(
+            url=f'http://{remote_das_host}:{remote_das_port}/function/query-engine'
+        )
 
     @pytest.fixture()
     def node_human(self):
@@ -69,10 +71,10 @@ class TestVultrClientIntegration:
         assert result['targets'] == [node_similarity, node_human, node_monkey]
 
     def test_get_node(
-        self, 
-        server: FunctionsClient, 
-        node_human: str, 
-        node_monkey: str, 
+        self,
+        server: FunctionsClient,
+        node_human: str,
+        node_monkey: str,
     ):
         result = server.get_node(node_type='Symbol', node_name='"human"')
         assert result['handle'] == node_human
@@ -92,15 +94,19 @@ class TestVultrClientIntegration:
         node_mammal: str,
         link_similarity_concept_concept: str,
         link_inheritance_concept_concept: str,
-        node_similarity: str, 
+        node_similarity: str,
         node_inheritance: str,
     ):
-        result = server.get_link(link_type='Expression', link_targets=[node_similarity, node_human, node_monkey])
+        result = server.get_link(
+            link_type='Expression', link_targets=[node_similarity, node_human, node_monkey]
+        )
         assert result['handle'] == link_similarity_concept_concept
         assert result['named_type'] == 'Expression'
         assert result['targets'] == [node_similarity, node_human, node_monkey]
 
-        result = server.get_link(link_type='Expression', link_targets=[node_inheritance, node_human, node_mammal])
+        result = server.get_link(
+            link_type='Expression', link_targets=[node_inheritance, node_human, node_mammal]
+        )
         assert result['handle'] == link_inheritance_concept_concept
         assert result['named_type'] == 'Expression'
         assert result['targets'] == [node_inheritance, node_human, node_mammal]
@@ -174,9 +180,9 @@ class TestVultrClientIntegration:
         assert handles[2] == node_monkey
 
     def test_get_incoming_links(self, server: FunctionsClient, node_human: str):
-        expression = ExpressionHasher.named_type_hash("Expression");
-        similarity = ExpressionHasher.terminal_hash("Symbol", "Similarity");
-        inheritance = ExpressionHasher.terminal_hash("Symbol", "Inheritance");
+        expression = ExpressionHasher.named_type_hash("Expression")
+        similarity = ExpressionHasher.terminal_hash("Symbol", "Similarity")
+        inheritance = ExpressionHasher.terminal_hash("Symbol", "Inheritance")
         mammal = ExpressionHasher.terminal_hash("Symbol", '"mammal"')
         human = ExpressionHasher.terminal_hash("Symbol", '"human"')
         monkey = ExpressionHasher.terminal_hash("Symbol", '"monkey"')

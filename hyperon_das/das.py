@@ -221,7 +221,7 @@ class DistributedAtomSpace:
 
     def query(
         self,
-        query: Dict[str, Any],
+        query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
     ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
         """
@@ -235,8 +235,9 @@ class DistributedAtomSpace:
         allowed as well.
 
         Args:
-            query (Dict[str, Any]): A pattern described as a link (possibly with nested links) with
-            nodes and variables used to query the knoeledge base.
+            query (Union[List[Dict[str, Any]], Dict[str, Any]]): A pattern described as a link (possibly with nested links)
+                with nodes and variables used to query the knowledge base.
+                If the query is represented as a list of dictionaries, it should be interpreted as a conjunction (AND) of all queries within the list
             paramaters (Dict[str, Any], optional): query optional parameters
 
         Returns:

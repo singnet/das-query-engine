@@ -2,7 +2,6 @@ import pytest
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
 
-
 from hyperon_das.das import DistributedAtomSpace
 
 from .remote_das_info import remote_das_host, remote_das_port
@@ -31,27 +30,55 @@ metta_type = ExpressionHasher.terminal_hash('Symbol', 'MettaType')
 similarity_human_monkey = ExpressionHasher.expression_hash(expression, [similarity, human, monkey])
 similarity_human_chimp = ExpressionHasher.expression_hash(expression, [similarity, human, chimp])
 similarity_chimp_monkey = ExpressionHasher.expression_hash(expression, [similarity, chimp, monkey])
-similarity_snake_earthworm = ExpressionHasher.expression_hash(expression, [similarity, snake, earthworm])
-similarity_rhino_triceratops = ExpressionHasher.expression_hash(expression, [similarity, rhino, triceratops])
+similarity_snake_earthworm = ExpressionHasher.expression_hash(
+    expression, [similarity, snake, earthworm]
+)
+similarity_rhino_triceratops = ExpressionHasher.expression_hash(
+    expression, [similarity, rhino, triceratops]
+)
 similarity_snake_vine = ExpressionHasher.expression_hash(expression, [similarity, snake, vine])
 similarity_human_ent = ExpressionHasher.expression_hash(expression, [similarity, human, ent])
-inheritance_human_mammal = ExpressionHasher.expression_hash(expression, [inheritance, human, mammal])
-inheritance_monkey_mammal = ExpressionHasher.expression_hash(expression, [inheritance, monkey, mammal])
-inheritance_chimp_mammal = ExpressionHasher.expression_hash(expression, [inheritance, chimp, mammal])
-inheritance_mammal_animal = ExpressionHasher.expression_hash(expression, [inheritance, mammal, animal])
-inheritance_reptile_animal = ExpressionHasher.expression_hash(expression, [inheritance, reptile, animal])
-inheritance_snake_reptile = ExpressionHasher.expression_hash(expression, [inheritance, snake, reptile])
-inheritance_dinosaur_reptile = ExpressionHasher.expression_hash(expression, [inheritance, dinosaur, reptile])
-inheritance_triceratops_dinosaur = ExpressionHasher.expression_hash(expression, [inheritance, triceratops, dinosaur])
-inheritance_earthworm_animal = ExpressionHasher.expression_hash(expression, [inheritance, earthworm, animal])
-inheritance_rhino_mammal = ExpressionHasher.expression_hash(expression, [inheritance, rhino, mammal])
+inheritance_human_mammal = ExpressionHasher.expression_hash(
+    expression, [inheritance, human, mammal]
+)
+inheritance_monkey_mammal = ExpressionHasher.expression_hash(
+    expression, [inheritance, monkey, mammal]
+)
+inheritance_chimp_mammal = ExpressionHasher.expression_hash(
+    expression, [inheritance, chimp, mammal]
+)
+inheritance_mammal_animal = ExpressionHasher.expression_hash(
+    expression, [inheritance, mammal, animal]
+)
+inheritance_reptile_animal = ExpressionHasher.expression_hash(
+    expression, [inheritance, reptile, animal]
+)
+inheritance_snake_reptile = ExpressionHasher.expression_hash(
+    expression, [inheritance, snake, reptile]
+)
+inheritance_dinosaur_reptile = ExpressionHasher.expression_hash(
+    expression, [inheritance, dinosaur, reptile]
+)
+inheritance_triceratops_dinosaur = ExpressionHasher.expression_hash(
+    expression, [inheritance, triceratops, dinosaur]
+)
+inheritance_earthworm_animal = ExpressionHasher.expression_hash(
+    expression, [inheritance, earthworm, animal]
+)
+inheritance_rhino_mammal = ExpressionHasher.expression_hash(
+    expression, [inheritance, rhino, mammal]
+)
 inheritance_vine_plant = ExpressionHasher.expression_hash(expression, [inheritance, vine, plant])
 inheritance_ent_plant = ExpressionHasher.expression_hash(expression, [inheritance, ent, plant])
 similarity_monkey_human = ExpressionHasher.expression_hash(expression, [similarity, monkey, human])
 similarity_chimp_human = ExpressionHasher.expression_hash(expression, [similarity, chimp, human])
 similarity_monkey_chimp = ExpressionHasher.expression_hash(expression, [similarity, monkey, chimp])
-similarity_earthworm_snake = ExpressionHasher.expression_hash(expression, [similarity, earthworm, snake])
-similarity_triceratops_rhino = ExpressionHasher.expression_hash(expression, [similarity, triceratops, rhino])
+similarity_earthworm_snake = ExpressionHasher.expression_hash(
+    expression, [similarity, earthworm, snake]
+)
+similarity_triceratops_rhino = ExpressionHasher.expression_hash(
+    expression, [similarity, triceratops, rhino]
+)
 similarity_vine_snake = ExpressionHasher.expression_hash(expression, [similarity, vine, snake])
 similarity_ent_human = ExpressionHasher.expression_hash(expression, [similarity, ent, human])
 metta_type_human_concept = ExpressionHasher.expression_hash(metta_type, [human, concept])
@@ -94,7 +121,8 @@ class TestTraverseEngine:
                         similarity_monkey_human,
                         similarity_chimp_human,
                         inheritance_human_mammal,
-                    ])
+                    ]
+                )
 
             def _chimp_links():
                 answers = _build_atom_answer(chimp)
@@ -105,7 +133,8 @@ class TestTraverseEngine:
                         similarity_chimp_monkey,
                         similarity_chimp_human,
                         similarity_human_chimp,
-                    ])
+                    ]
+                )
 
             def _ent_links():
                 answers = _build_atom_answer(ent)
@@ -152,11 +181,17 @@ class TestTraverseEngine:
                         similarity_monkey_human,
                         similarity_chimp_human,
                         inheritance_human_mammal,
-                    ])
+                    ]
+                )
 
                 answers = _build_atom_answer(human, link_type='Expression', cursor_position=1)
                 answers == sorted(
-                    [inheritance_human_mammal, similarity_human_chimp, similarity_human_monkey, similarity_human_ent]
+                    [
+                        inheritance_human_mammal,
+                        similarity_human_chimp,
+                        similarity_human_monkey,
+                        similarity_human_ent,
+                    ]
                 )
 
                 answers = _build_atom_answer(human, link_type='Expression', cursor_position=2)
@@ -182,7 +217,7 @@ class TestTraverseEngine:
                 answers = _build_atom_answer(human, target_type='Fake')
                 assert len(answers) == 0
 
-                #das.add_link(
+                # das.add_link(
                 #    {
                 #        'type': 'Expression',
                 #        'targets': [
@@ -192,24 +227,24 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.5,
                 #    }
-                #)
+                # )
 
-                #def my_filter(link) -> bool:
+                # def my_filter(link) -> bool:
                 #    if 'weight' in link:
                 #        return True
                 #    return False
 
-                #answers = _build_atom_answer(
+                # answers = _build_atom_answer(
                 #    human,
                 #    link_type='Expression',
                 #    cursor_position=1,
                 #    target_type='Symbol',
                 #    filter=my_filter,
-                #)
+                # )
                 # TODO Fix this test
-                #assert answers == [
+                # assert answers == [
                 #    AtomDB.link_handle('Expression', [similarity, human, AtomDB.node_handle('Symbol', 'snet')])
-                #]
+                # ]
 
                 def my_second_filter(link):
                     if 'weight' in link and link['weight'] >= 0.5:
@@ -259,7 +294,7 @@ class TestTraverseEngine:
                 answers = _build_atom_answer(mammal, target_type='Snet')
                 assert len(answers) == 0
 
-                #das.add_link(
+                # das.add_link(
                 #    {
                 #        'type': 'Inheritance',
                 #        'targets': [
@@ -268,8 +303,8 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.4,
                 #    }
-                #)
-                #das.add_link(
+                # )
+                # das.add_link(
                 #    {
                 #        'type': 'Inheritance',
                 #        'targets': [
@@ -278,24 +313,24 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.5,
                 #    }
-                #)
+                # )
 
-                #def my_filter(link) -> bool:
+                # def my_filter(link) -> bool:
                 #    if 'weight' in link and link['weight'] >= 0.5:
                 #        return True
                 #    return False
 
                 # TODO Fix this test
-                #answers = _build_atom_answer(
+                # answers = _build_atom_answer(
                 #    mammal,
                 #    link_type='Inheritance',
                 #    cursor_position=1,
                 #    target_type='Fake',
                 #    filter=my_filter,
-                #)
-                #assert answers == [
+                # )
+                # assert answers == [
                 #    AtomDB.link_handle('Inheritance', [AtomDB.node_handle('Fake', 'fake2'), mammal])
-                #]
+                # ]
 
             def _snake_links():
                 answers = _build_atom_answer(snake, link_type='Expression')
@@ -342,7 +377,7 @@ class TestTraverseEngine:
                 )
                 assert len(answers) == 0
 
-                #das.add_link(
+                # das.add_link(
                 #    {
                 #        'type': 'Similarity',
                 #        'targets': [
@@ -351,8 +386,8 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.2,
                 #    }
-                #)
-                #das.add_link(
+                # )
+                # das.add_link(
                 #    {
                 #        'type': 'Similarity',
                 #        'targets': [
@@ -361,20 +396,20 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.5,
                 #    }
-                #)
+                # )
 
-                #def my_filter(link) -> bool:
+                # def my_filter(link) -> bool:
                 #    if 'weight' in link and link['weight'] >= 0.5:
                 #        return True
                 #    return False
 
-                #answers = _build_atom_answer(
+                # answers = _build_atom_answer(
                 #    snake, link_type='Similarity', target_type='Fake', filter=my_filter
-                #)
+                # )
                 # TODO Fix this test
-                #assert answers == [
+                # assert answers == [
                 #    AtomDB.link_handle("Similarity", [snake, AtomDB.node_handle('Fake', 'fake1')])
-                #]
+                # ]
 
             def _similarity_human_monkey_links():
                 answers = _build_atom_answer(similarity_human_monkey, link_type='Similarity')
@@ -405,7 +440,7 @@ class TestTraverseEngine:
             _mammal_links()
             _snake_links()
             # TODO Fix this test
-            #_similarity_human_monkey_links()
+            # _similarity_human_monkey_links()
 
         def get_neighbors():
             das = DistributedAtomSpace(
@@ -487,13 +522,17 @@ class TestTraverseEngine:
                 neighbors = _build_neighbors(human, link_type='Expression', cursor_position=3)
                 assert len(neighbors) == 0
 
-                neighbors = _build_neighbors(human, link_type='Expression', cursor_position=2, target_type='Symbol')
+                neighbors = _build_neighbors(
+                    human, link_type='Expression', cursor_position=2, target_type='Symbol'
+                )
                 assert das.get_atom(monkey) in neighbors
                 assert das.get_atom(chimp) in neighbors
                 assert das.get_atom(ent) in neighbors
                 assert len(neighbors) == 4
 
-                neighbors = _build_neighbors(human, link_type='Expression', cursor_position=2, target_type='fake')
+                neighbors = _build_neighbors(
+                    human, link_type='Expression', cursor_position=2, target_type='fake'
+                )
                 assert len(neighbors) == 0
 
                 neighbors = _build_neighbors(human, link_type='Inheritance', target_type='Snet')
@@ -502,7 +541,7 @@ class TestTraverseEngine:
                 neighbors = _build_neighbors(human, link_type='Similarity', target_type='Snet')
                 assert len(neighbors) == 0
 
-                #das.add_link(
+                # das.add_link(
                 #    {
                 #        'type': 'Similarity',
                 #        'targets': [
@@ -511,8 +550,8 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.7,
                 #    }
-                #)
-                #das.add_link(
+                # )
+                # das.add_link(
                 #    {
                 #        'type': 'Similarity',
                 #        'targets': [
@@ -521,8 +560,8 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.3,
                 #    }
-                #)
-                #das.add_link(
+                # )
+                # das.add_link(
                 #    {
                 #        'type': 'Inheritance',
                 #        'targets': [
@@ -533,40 +572,40 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.3,
                 #    }
-                #)
+                # )
 
-                #def my_filter(link) -> bool:
+                # def my_filter(link) -> bool:
                 #    if 'weight' in link and link['weight'] >= 1:
                 #        return True
                 #    return False
 
-                #fake_h = AtomDB.node_handle('Fake', 'fake-h')
-                #fake_h2 = AtomDB.node_handle('Fake', 'fake-h2')
-                #fake_h3 = AtomDB.node_handle('Fake', 'fake-h3')
-                #fake_h4 = AtomDB.node_handle('Fake', 'fake-h4')
+                # fake_h = AtomDB.node_handle('Fake', 'fake-h')
+                # fake_h2 = AtomDB.node_handle('Fake', 'fake-h2')
+                # fake_h3 = AtomDB.node_handle('Fake', 'fake-h3')
+                # fake_h4 = AtomDB.node_handle('Fake', 'fake-h4')
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(human)
-                #assert das.get_atom(mammal) in neighbors
-                #assert das.get_atom(monkey) in neighbors
-                #assert das.get_atom(chimp) in neighbors
-                #assert das.get_atom(ent) in neighbors
-                #assert das.get_atom(fake_h) in neighbors
-                #assert das.get_atom(fake_h2) in neighbors
-                #assert das.get_atom(fake_h3) in neighbors
-                #assert das.get_atom(fake_h4) in neighbors
-                #assert len(neighbors) == 8
+                # neighbors = _build_neighbors(human)
+                # assert das.get_atom(mammal) in neighbors
+                # assert das.get_atom(monkey) in neighbors
+                # assert das.get_atom(chimp) in neighbors
+                # assert das.get_atom(ent) in neighbors
+                # assert das.get_atom(fake_h) in neighbors
+                # assert das.get_atom(fake_h2) in neighbors
+                # assert das.get_atom(fake_h3) in neighbors
+                # assert das.get_atom(fake_h4) in neighbors
+                # assert len(neighbors) == 8
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(human, link_type='Similarity', target_type='Fake')
-                #assert das.get_atom(fake_h) in neighbors
-                #assert len(neighbors) == 1
+                # neighbors = _build_neighbors(human, link_type='Similarity', target_type='Fake')
+                # assert das.get_atom(fake_h) in neighbors
+                # assert len(neighbors) == 1
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(
+                # neighbors = _build_neighbors(
                 #    human, link_type='Similarity', target_type='Fake', filter=my_filter
-                #)
-                #assert len(neighbors) == 0
+                # )
+                # assert len(neighbors) == 0
 
             def _vine_neighbors():
                 neighbors = _build_neighbors(vine, link_type='Expression')
@@ -583,10 +622,10 @@ class TestTraverseEngine:
                 assert das.get_atom(snake) in neighbors
                 assert len(neighbors) == 2
 
-                #fake_v1 = AtomDB.node_handle('Fake', 'fake-v1')
-                #fake_v2 = AtomDB.node_handle('Fake', 'fake-v2')
+                # fake_v1 = AtomDB.node_handle('Fake', 'fake-v1')
+                # fake_v2 = AtomDB.node_handle('Fake', 'fake-v2')
 
-                #das.add_link(
+                # das.add_link(
                 #    {
                 #        'type': 'Inheritance',
                 #        'targets': [
@@ -595,8 +634,8 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 1,
                 #    }
-                #)
-                #das.add_link(
+                # )
+                # das.add_link(
                 #    {
                 #        'type': 'Similarity',
                 #        'targets': [
@@ -605,8 +644,8 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.7,
                 #    }
-                #)
-                #das.add_link(
+                # )
+                # das.add_link(
                 #    {
                 #        'type': 'Similarity',
                 #        'targets': [
@@ -615,57 +654,57 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.3,
                 #    }
-                #)
+                # )
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(vine, link_type='Inheritance')
-                #assert das.get_atom(plant) in neighbors
-                #assert das.get_atom(fake_v1) in neighbors
-                #assert len(neighbors) == 2
+                # neighbors = _build_neighbors(vine, link_type='Inheritance')
+                # assert das.get_atom(plant) in neighbors
+                # assert das.get_atom(fake_v1) in neighbors
+                # assert len(neighbors) == 2
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(vine, link_type='Similarity')
-                #assert das.get_atom(snake) in neighbors
-                #assert das.get_atom(fake_v2) in neighbors
-                #assert len(neighbors) == 2
+                # neighbors = _build_neighbors(vine, link_type='Similarity')
+                # assert das.get_atom(snake) in neighbors
+                # assert das.get_atom(fake_v2) in neighbors
+                # assert len(neighbors) == 2
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(vine, link_type='Similarity', target_type='Concept')
-                #assert das.get_atom(snake) in neighbors
-                #assert len(neighbors) == 1
+                # neighbors = _build_neighbors(vine, link_type='Similarity', target_type='Concept')
+                # assert das.get_atom(snake) in neighbors
+                # assert len(neighbors) == 1
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(vine, link_type='Inheritance', target_type='Fake')
-                #assert das.get_atom(fake_v1) in neighbors
-                #assert len(neighbors) == 1
+                # neighbors = _build_neighbors(vine, link_type='Inheritance', target_type='Fake')
+                # assert das.get_atom(fake_v1) in neighbors
+                # assert len(neighbors) == 1
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(vine, link_type='Similarity', target_type='Fake')
-                #assert das.get_atom(fake_v2) in neighbors
-                #assert len(neighbors) == 1
+                # neighbors = _build_neighbors(vine, link_type='Similarity', target_type='Fake')
+                # assert das.get_atom(fake_v2) in neighbors
+                # assert len(neighbors) == 1
 
-                #def my_filter(link) -> bool:
+                # def my_filter(link) -> bool:
                 #    if 'weight' in link and link['weight'] >= 1:
                 #        return True
                 #    return False
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(vine, link_type='Similarity', filter=my_filter)
-                #assert len(neighbors) == 0
+                # neighbors = _build_neighbors(vine, link_type='Similarity', filter=my_filter)
+                # assert len(neighbors) == 0
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(vine, link_type='Inheritance', filter=my_filter)
-                #assert das.get_atom(fake_v1) in neighbors
-                #assert len(neighbors) == 1
+                # neighbors = _build_neighbors(vine, link_type='Inheritance', filter=my_filter)
+                # assert das.get_atom(fake_v1) in neighbors
+                # assert len(neighbors) == 1
 
             def _inheritance_dinosaur_reptile():
                 neighbors = _build_neighbors(inheritance_dinosaur_reptile)
                 assert len(neighbors) == 0
 
-                #fake_dr1 = AtomDB.node_handle('Fake', 'fake-dr1')
-                #fake_dr2 = AtomDB.node_handle('Fake', 'fake-dr2')
+                # fake_dr1 = AtomDB.node_handle('Fake', 'fake-dr1')
+                # fake_dr2 = AtomDB.node_handle('Fake', 'fake-dr2')
 
-                #das.add_link(
+                # das.add_link(
                 #    {
                 #        'type': 'Inheritance',
                 #        'targets': [
@@ -680,8 +719,8 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 1,
                 #    }
-                #)
-                #das.add_link(
+                # )
+                # das.add_link(
                 #    {
                 #        'type': 'Similarity',
                 #        'targets': [
@@ -696,8 +735,8 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.7,
                 #    }
-                #)
-                #das.add_link(
+                # )
+                # das.add_link(
                 #    {
                 #        'type': 'Similarity',
                 #        'targets': [
@@ -712,46 +751,46 @@ class TestTraverseEngine:
                 #        ],
                 #        'weight': 0.3,
                 #    }
-                #)
+                # )
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(inheritance_dinosaur_reptile)
-                #assert das.get_atom(fake_dr1) in neighbors
-                #assert das.get_atom(fake_dr2) in neighbors
-                #assert len(neighbors) == 2
+                # neighbors = _build_neighbors(inheritance_dinosaur_reptile)
+                # assert das.get_atom(fake_dr1) in neighbors
+                # assert das.get_atom(fake_dr2) in neighbors
+                # assert len(neighbors) == 2
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(inheritance_dinosaur_reptile, link_type='Similarity')
-                #assert das.get_atom(fake_dr2) in neighbors
-                #assert len(neighbors) == 1
+                # neighbors = _build_neighbors(inheritance_dinosaur_reptile, link_type='Similarity')
+                # assert das.get_atom(fake_dr2) in neighbors
+                # assert len(neighbors) == 1
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(inheritance_dinosaur_reptile, link_type='Inheritance')
-                #assert das.get_atom(fake_dr1) in neighbors
-                #assert len(neighbors) == 1
+                # neighbors = _build_neighbors(inheritance_dinosaur_reptile, link_type='Inheritance')
+                # assert das.get_atom(fake_dr1) in neighbors
+                # assert len(neighbors) == 1
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(
+                # neighbors = _build_neighbors(
                 #    inheritance_dinosaur_reptile, link_type='Inheritance', target_type='Fake'
-                #)
-                #assert das.get_atom(fake_dr1) in neighbors
-                #assert len(neighbors) == 1
+                # )
+                # assert das.get_atom(fake_dr1) in neighbors
+                # assert len(neighbors) == 1
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(
+                # neighbors = _build_neighbors(
                 #    inheritance_dinosaur_reptile, link_type='Inheritance', target_type='Concept'
-                #)
-                #assert len(neighbors) == 0
+                # )
+                # assert len(neighbors) == 0
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(inheritance_dinosaur_reptile, target_type='Concept')
-                #assert len(neighbors) == 0
+                # neighbors = _build_neighbors(inheritance_dinosaur_reptile, target_type='Concept')
+                # assert len(neighbors) == 0
 
                 # TODO Fix this test
-                #neighbors = _build_neighbors(inheritance_dinosaur_reptile, target_type='Fake')
-                #assert das.get_atom(fake_dr1) in neighbors
-                #assert das.get_atom(fake_dr2) in neighbors
-                #assert len(neighbors) == 2
+                # neighbors = _build_neighbors(inheritance_dinosaur_reptile, target_type='Fake')
+                # assert das.get_atom(fake_dr1) in neighbors
+                # assert das.get_atom(fake_dr2) in neighbors
+                # assert len(neighbors) == 2
 
             _human_neighbors()
             _vine_neighbors()
@@ -860,6 +899,6 @@ class TestTraverseEngine:
         get_neighbors()
         get_neighbors_with_filters()
         # TODO Redesign these tests
-        #follow_link()
-        #follow_link_with_filters()
+        # follow_link()
+        # follow_link_with_filters()
         goto()
