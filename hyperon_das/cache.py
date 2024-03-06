@@ -33,7 +33,7 @@ class QueryAnswerIterator(ABC):
 
     @abstractmethod
     def is_empty(self) -> bool:
-        pass
+        ...  # pragma no cover
 
     def get(self) -> Any:
         if not self.source or self.current_value is None:
@@ -224,9 +224,12 @@ class LocalIncomingLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        link_handle = next(self.iterator)
-        link_document = self.backend.get_atom(link_handle, targets_document=self.targets_document)
-        self.current_value = link_document
+        if not self.is_empty():
+            link_handle = next(self.iterator)
+            link_document = self.backend.get_atom(
+                link_handle, targets_document=self.targets_document
+            )
+            self.current_value = link_document
 
     def get_current_value(self) -> Any:
         try:
@@ -249,16 +252,17 @@ class RemoteIncomingLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        while True:
-            link_document = next(self.iterator)
-            if isinstance(link_document, tuple) or isinstance(link_document, list):
-                handle = link_document[0]['handle']
-            else:
-                handle = link_document['handle']
-            if handle not in self.returned_handles:
-                self.returned_handles.add(handle)
-                self.current_value = link_document
-                break
+        if not self.is_empty():
+            while True:
+                link_document = next(self.iterator)
+                if isinstance(link_document, tuple) or isinstance(link_document, list):
+                    handle = link_document[0]['handle']
+                else:
+                    handle = link_document['handle']
+                if handle not in self.returned_handles:
+                    self.returned_handles.add(handle)
+                    self.current_value = link_document
+                    break
 
     def get_current_value(self) -> Any:
         try:
@@ -286,8 +290,9 @@ class LocalGetLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        value = next(self.iterator)
-        self.current_value = self.backend._to_link_dict_list([value])[0]
+        if not self.is_empty():
+            value = next(self.iterator)
+            self.current_value = self.backend._to_link_dict_list([value])[0]
 
     def get_current_value(self) -> Any:
         try:
@@ -319,11 +324,12 @@ class RemoteGetLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        value = next(self.iterator)
-        handle = value.get('handle')
-        if handle not in self.returned_handles:
-            self.returned_handles.add(handle)
-            self.current_value = value
+        if not self.is_empty():
+            value = next(self.iterator)
+            handle = value.get('handle')
+            if handle not in self.returned_handles:
+                self.returned_handles.add(handle)
+                self.current_value = value
 
     def get_current_value(self) -> Any:
         try:

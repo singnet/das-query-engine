@@ -129,6 +129,7 @@ class TestVultrClientIntegration:
         node_monkey,
         node_mammal,
     ):
+        server.get_links('Expression', no_iterator=True)
         answer = server.query(
             {
                 "atom_type": "link",
@@ -180,9 +181,9 @@ class TestVultrClientIntegration:
         assert handles[2] == node_monkey
 
     def test_get_incoming_links(self, server: FunctionsClient, node_human: str):
-        expression = ExpressionHasher.named_type_hash("Expression");
-        similarity = ExpressionHasher.terminal_hash("Symbol", "Similarity");
-        inheritance = ExpressionHasher.terminal_hash("Symbol", "Inheritance");
+        expression = ExpressionHasher.named_type_hash("Expression")
+        similarity = ExpressionHasher.terminal_hash("Symbol", "Similarity")
+        inheritance = ExpressionHasher.terminal_hash("Symbol", "Inheritance")
         mammal = ExpressionHasher.terminal_hash("Symbol", '"mammal"')
         human = ExpressionHasher.terminal_hash("Symbol", '"human"')
         monkey = ExpressionHasher.terminal_hash("Symbol", '"monkey"')

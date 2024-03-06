@@ -31,27 +31,55 @@ concept = ExpressionHasher.terminal_hash('Symbol', 'Concept')
 similarity_human_monkey = ExpressionHasher.expression_hash(expression, [similarity, human, monkey])
 similarity_human_chimp = ExpressionHasher.expression_hash(expression, [similarity, human, chimp])
 similarity_chimp_monkey = ExpressionHasher.expression_hash(expression, [similarity, chimp, monkey])
-similarity_snake_earthworm = ExpressionHasher.expression_hash(expression, [similarity, snake, earthworm])
-similarity_rhino_triceratops = ExpressionHasher.expression_hash(expression, [similarity, rhino, triceratops])
+similarity_snake_earthworm = ExpressionHasher.expression_hash(
+    expression, [similarity, snake, earthworm]
+)
+similarity_rhino_triceratops = ExpressionHasher.expression_hash(
+    expression, [similarity, rhino, triceratops]
+)
 similarity_snake_vine = ExpressionHasher.expression_hash(expression, [similarity, snake, vine])
 similarity_human_ent = ExpressionHasher.expression_hash(expression, [similarity, human, ent])
-inheritance_human_mammal = ExpressionHasher.expression_hash(expression, [inheritance, human, mammal])
-inheritance_monkey_mammal = ExpressionHasher.expression_hash(expression, [inheritance, monkey, mammal])
-inheritance_chimp_mammal = ExpressionHasher.expression_hash(expression, [inheritance, chimp, mammal])
-inheritance_mammal_animal = ExpressionHasher.expression_hash(expression, [inheritance, mammal, animal])
-inheritance_reptile_animal = ExpressionHasher.expression_hash(expression, [inheritance, reptile, animal])
-inheritance_snake_reptile = ExpressionHasher.expression_hash(expression, [inheritance, snake, reptile])
-inheritance_dinosaur_reptile = ExpressionHasher.expression_hash(expression, [inheritance, dinosaur, reptile])
-inheritance_triceratops_dinosaur = ExpressionHasher.expression_hash(expression, [inheritance, triceratops, dinosaur])
-inheritance_earthworm_animal = ExpressionHasher.expression_hash(expression, [inheritance, earthworm, animal])
-inheritance_rhino_mammal = ExpressionHasher.expression_hash(expression, [inheritance, rhino, mammal])
+inheritance_human_mammal = ExpressionHasher.expression_hash(
+    expression, [inheritance, human, mammal]
+)
+inheritance_monkey_mammal = ExpressionHasher.expression_hash(
+    expression, [inheritance, monkey, mammal]
+)
+inheritance_chimp_mammal = ExpressionHasher.expression_hash(
+    expression, [inheritance, chimp, mammal]
+)
+inheritance_mammal_animal = ExpressionHasher.expression_hash(
+    expression, [inheritance, mammal, animal]
+)
+inheritance_reptile_animal = ExpressionHasher.expression_hash(
+    expression, [inheritance, reptile, animal]
+)
+inheritance_snake_reptile = ExpressionHasher.expression_hash(
+    expression, [inheritance, snake, reptile]
+)
+inheritance_dinosaur_reptile = ExpressionHasher.expression_hash(
+    expression, [inheritance, dinosaur, reptile]
+)
+inheritance_triceratops_dinosaur = ExpressionHasher.expression_hash(
+    expression, [inheritance, triceratops, dinosaur]
+)
+inheritance_earthworm_animal = ExpressionHasher.expression_hash(
+    expression, [inheritance, earthworm, animal]
+)
+inheritance_rhino_mammal = ExpressionHasher.expression_hash(
+    expression, [inheritance, rhino, mammal]
+)
 inheritance_vine_plant = ExpressionHasher.expression_hash(expression, [inheritance, vine, plant])
 inheritance_ent_plant = ExpressionHasher.expression_hash(expression, [inheritance, ent, plant])
 similarity_monkey_human = ExpressionHasher.expression_hash(expression, [similarity, monkey, human])
 similarity_chimp_human = ExpressionHasher.expression_hash(expression, [similarity, chimp, human])
 similarity_monkey_chimp = ExpressionHasher.expression_hash(expression, [similarity, monkey, chimp])
-similarity_earthworm_snake = ExpressionHasher.expression_hash(expression, [similarity, earthworm, snake])
-similarity_triceratops_rhino = ExpressionHasher.expression_hash(expression, [similarity, triceratops, rhino])
+similarity_earthworm_snake = ExpressionHasher.expression_hash(
+    expression, [similarity, earthworm, snake]
+)
+similarity_triceratops_rhino = ExpressionHasher.expression_hash(
+    expression, [similarity, triceratops, rhino]
+)
 similarity_vine_snake = ExpressionHasher.expression_hash(expression, [similarity, vine, snake])
 similarity_ent_human = ExpressionHasher.expression_hash(expression, [similarity, ent, human])
 
@@ -106,7 +134,9 @@ class TestRemoteDistributedAtomSpace:
             remote_das.get_node(node_type='Fake', node_name='fake')
 
     def test_get_link(self, remote_das: DistributedAtomSpace):
-        result = remote_das.get_link(link_type='Expression', link_targets=[inheritance, earthworm, animal])
+        result = remote_das.get_link(
+            link_type='Expression', link_targets=[inheritance, earthworm, animal]
+        )
         assert result['handle'] == inheritance_earthworm_animal
         assert result['named_type'] == 'Expression'
         assert result['targets'] == [inheritance, earthworm, animal]
@@ -233,11 +263,10 @@ class TestRemoteDistributedAtomSpace:
 
         # TODO: fix this test
 
-        #neighbors_iter = cursor.get_neighbors(cursor_position=1)
-        #assert neighbors_iter.get()['handle'] == reptile
-        #atom = cursor.follow_link(cursor_position=1)
-        #assert atom['handle'] == triceratops
-
+        # neighbors_iter = cursor.get_neighbors(cursor_position=1)
+        # assert neighbors_iter.get()['handle'] == reptile
+        # atom = cursor.follow_link(cursor_position=1)
+        # assert atom['handle'] == triceratops
 
         cursor.goto(human)
         assert cursor.get()['handle'] == human
