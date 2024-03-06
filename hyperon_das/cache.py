@@ -103,7 +103,7 @@ class LazyQueryEvaluator(ProductIterator):
         return link
 
     def __next__(self):
-        print(f"LQI.next() - self.buffered_answer {'None' if self.buffered_answer is None else 'Not None'}")
+        #print(f"LQI.next() - self.buffered_answer {'None' if self.buffered_answer is None else 'Not None'}")
         if self.buffered_answer:
             try:
                 return self.buffered_answer.__next__()
