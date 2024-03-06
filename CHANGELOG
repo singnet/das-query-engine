@@ -1,3 +1,1 @@
-[#153] Refactor the constructor of the TraverseEngine and the request method in the FunctionsClient
-[#156] Fix MeTTa->Nodes/Links mapping
-[#170] Fix tests after integration of new MeTTa -> nodes/links mapping
+[#173] Change the type hint in query()
