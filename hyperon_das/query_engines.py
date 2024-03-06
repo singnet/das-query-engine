@@ -224,7 +224,7 @@ class LocalQueryEngine(QueryEngine):
 
     def query(
         self,
-        query: Dict[str, Any],
+        query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
     ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
         no_iterator = parameters.get("no_iterator", False)
@@ -366,7 +366,7 @@ class RemoteQueryEngine(QueryEngine):
 
     def query(
         self,
-        query: Dict[str, Any],
+        query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
     ) -> List[Dict[str, Any]]:
         query_scope = parameters.get('query_scope', 'remote_only')
