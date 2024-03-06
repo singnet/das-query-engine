@@ -103,7 +103,7 @@ class LazyQueryEvaluator(ProductIterator):
         return link
 
     def __next__(self):
-        print(f"LQI.next() - self.buffered_answer {self.buffered_answer}")
+        print(f"LQI.next() - self.buffered_answer {'None' if self.buffered_answer is None else 'Not None'}")
         if self.buffered_answer:
             try:
                 return self.buffered_answer.__next__()
@@ -144,7 +144,7 @@ class LazyQueryEvaluator(ProductIterator):
                 assignment.freeze()
             lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
         self.buffered_answer = ListIterator(lazy_query_answer)
-        print(f"LQI.next() - LATE self.buffered_answer {self.buffered_answer}")
+        print(f"LQI.next() - LATE self.buffered_answer {'None' if self.buffered_answer is None else 'Not None'}")
         return self.buffered_answer.__next__()
 
 
