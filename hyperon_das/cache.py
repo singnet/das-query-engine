@@ -87,6 +87,7 @@ class LazyQueryEvaluator(ProductIterator):
         query_parameters: Optional[Dict[str, Any]],
     ):
         super().__init__(source)
+        print(f"LQI.constructor() - link_type: {link_type} query_parameters: {query_parameters}")
         self.link_type = link_type
         self.query_parameters = query_parameters
         self.das = das
