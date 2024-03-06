@@ -103,12 +103,14 @@ class LazyQueryEvaluator(ProductIterator):
         return link
 
     def __next__(self):
+        print(f"LQI.next() - self.buffered_answer {self.buffered_answer}")
         if self.buffered_answer:
             try:
                 return self.buffered_answer.__next__()
             except StopIteration:
                 self.buffered_answer = None
         target_info = super().__next__()
+        print(f"LQI.next() - target_info {target_info}")
         target_handle = []
         wildcard_flag = False
         for query_answer_target in target_info:
@@ -118,7 +120,9 @@ class LazyQueryEvaluator(ProductIterator):
                 wildcard_flag = True
             else:
                 target_handle.append(target["handle"])
+        print(f"LQI.next() - target_handle {target_handle}")
         das_query_answer = self.das.get_links(self.link_type, None, target_handle)
+        print(f"LQI.next() - das_query_answer {das_query_answer}")
         lazy_query_answer = []
         for answer in das_query_answer:
             assignment = None
@@ -140,6 +144,7 @@ class LazyQueryEvaluator(ProductIterator):
                 assignment.freeze()
             lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
         self.buffered_answer = ListIterator(lazy_query_answer)
+        print(f"LQI.next() - LATE self.buffered_answer {self.buffered_answer}")
         return self.buffered_answer.__next__()
 
 
