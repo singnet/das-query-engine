@@ -83,6 +83,7 @@ class LocalQueryEngine(QueryEngine):
         mappings: Set[Assignment] = None,
         parameters: Optional[Dict[str, Any]] = None,
     ) -> QueryAnswerIterator:
+        print(f"qe._recursive_query() - query: {query} mappings: {mappings}")
         if isinstance(query, list):
             sub_expression_results = [
                 self._recursive_query(expression, mappings, parameters) for expression in query
@@ -101,6 +102,7 @@ class LocalQueryEngine(QueryEngine):
             for target in query["targets"]:
                 if target["atom_type"] == "node" or target["atom_type"] == "link":
                     matched = self._recursive_query(target, mappings, parameters)
+                    print(f"qe._recursive_query() returned from recursion - matched: {matched}")
                     if matched:
                         matched_targets.append(matched)
                 elif target["atom_type"] == "variable":
