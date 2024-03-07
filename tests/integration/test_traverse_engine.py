@@ -86,6 +86,15 @@ metta_type_mammal_concept = ExpressionHasher.expression_hash(metta_type, [mammal
 
 
 class TestTraverseEngine:
+    def test_traverse_engine_with_local_das_ram_only(self):
+        pass
+
+    def test_traverse_engine_with_local_das_redis_mongo(self):
+        pass
+
+    def test_traverse_engine_with_remote_das(self):
+        pass
+
     def test_traverse_engine_remote(self):
         """Test TraverseEngine methods with remote DAS in OpenFaas"""
 
