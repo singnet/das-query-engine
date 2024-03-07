@@ -1,5 +1,5 @@
 import pytest
-from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
+from hyperon_das_atomdb import AtomDoesNotExist
 from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
 
 from hyperon_das.das import DistributedAtomSpace
