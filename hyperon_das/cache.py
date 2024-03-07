@@ -224,7 +224,7 @@ class LocalIncomingLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        if not self.is_empty():
+        if not self.is_empty() and self.backend:
             link_handle = next(self.iterator)
             link_document = self.backend.get_atom(
                 link_handle, targets_document=self.targets_document
@@ -232,16 +232,20 @@ class LocalIncomingLinks(BaseLinksIterator):
             self.current_value = link_document
 
     def get_current_value(self) -> Any:
-        try:
-            return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
-        except StopIteration:
-            return None
+        if self.backend:
+            try:
+                return self.backend.get_atom(
+                    self.source.get(), targets_document=self.targets_document
+                )
+            except StopIteration:
+                return None
 
     def get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {'handles_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
 
     def get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend.get_incoming_links(self.atom_handle, **kwargs)
+        if self.backend:
+            return self.backend.get_incoming_links(self.atom_handle, **kwargs)
 
 
 class RemoteIncomingLinks(BaseLinksIterator):
@@ -278,7 +282,8 @@ class RemoteIncomingLinks(BaseLinksIterator):
         }
 
     def get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend.get_incoming_links(self.atom_handle, **kwargs)
+        if self.backend:
+            return self.backend.get_incoming_links(self.atom_handle, **kwargs)
 
 
 class LocalGetLinks(BaseLinksIterator):
@@ -290,16 +295,17 @@ class LocalGetLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        if not self.is_empty():
+        if not self.is_empty() and self.backend:
             value = next(self.iterator)
             self.current_value = self.backend._to_link_dict_list([value])[0]
 
     def get_current_value(self) -> Any:
-        try:
-            value = self.source.get()
-            return self.backend._to_link_dict_list([value])[0]
-        except StopIteration:
-            return None
+        if self.backend:
+            try:
+                value = self.source.get()
+                return self.backend._to_link_dict_list([value])[0]
+            except StopIteration:
+                return None
 
     def get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {
@@ -309,9 +315,10 @@ class LocalGetLinks(BaseLinksIterator):
         }
 
     def get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend._get_related_links(
-            self.link_type, self.target_types, self.link_targets, **kwargs
-        )
+        if self.backend:
+            return self.backend._get_related_links(
+                self.link_type, self.target_types, self.link_targets, **kwargs
+            )
 
 
 class RemoteGetLinks(BaseLinksIterator):
@@ -345,9 +352,10 @@ class RemoteGetLinks(BaseLinksIterator):
         }
 
     def get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend.get_links(
-            self.link_type, self.target_types, self.link_targets, **kwargs
-        )
+        if self.backend:
+            return self.backend.get_links(
+                self.link_type, self.target_types, self.link_targets, **kwargs
+            )
 
 
 class TraverseLinksIterator(QueryAnswerIterator):

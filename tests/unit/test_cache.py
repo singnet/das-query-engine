@@ -1,22 +1,23 @@
+from collections import deque
 from unittest import mock
 
 import pytest
-from hyperon_das_atomdb.adapters import InMemoryDB
 
-from hyperon_das import DistributedAtomSpace
 from hyperon_das.cache import (
+    BaseLinksIterator,
     ListIterator,
     LocalGetLinks,
     LocalIncomingLinks,
     ProductIterator,
+    RemoteGetLinks,
     RemoteIncomingLinks,
+    TraverseLinksIterator,
+    TraverseNeighborsIterator,
 )
 from hyperon_das.utils import Assignment
-from tests.unit.helpers import load_n_random_links_by_type
-from tests.utils import animal_base_handles, load_animals_base
 
 
-class TestCache:
+class TestListIterator:
     def test_list_iterator(self):
         iterator = ListIterator(None)
         for element in iterator:
@@ -78,6 +79,8 @@ class TestCache:
         iterator = ListIterator(None)
         assert iterator.is_empty()
 
+
+class TestProductIterator:
     def test_product_iterator(self):
         ln = None
         l0 = []
@@ -144,150 +147,75 @@ class TestCache:
                 assert False
             assert iterator.is_empty()
 
-    # def test_local_incoming_links_ram_only_iterator(self):
-    #     db = InMemoryDB()
-    #     load_animals_base(db)
-    #     links = [
-    #         animal_base_handles.similarity_human_chimp,
-    #         animal_base_handles.similarity_human_ent,
-    #         animal_base_handles.similarity_human_monkey,
-    #         animal_base_handles.similarity_chimp_human,
-    #         animal_base_handles.similarity_ent_human,
-    #         animal_base_handles.similarity_monkey_human,
-    #         animal_base_handles.inheritance_human_mammal,
-    #     ]
-    #     it = LocalIncomingLinks(
-    #         ListIterator(links), backend=db, atom_handle=animal_base_handles.human
-    #     )
-    #     current_value = it.get()
-    #     assert isinstance(current_value, dict)
-    #     assert current_value == next(it)
-    #     assert it.is_empty() is False
-    #     [i for i in it]
-    #     assert it.is_empty() is True
-    #     with pytest.raises(StopIteration):
-    #         it.get()
 
-    # def test_local_incoming_links_redis_mongo_iterator(self):
-    #     from tests.integration.test_local_redis_mongo import (
-    #         _db_down,
-    #         _db_up,
-    #         mongo_port,
-    #         redis_port,
-    #     )
+class ConcreteBaseLinksIterator(BaseLinksIterator):
+    def get_current_value(self):
+        return 'current_value'
 
-    #     _db_up()
-    #     das = DistributedAtomSpace(
-    #         query_engine='local',
-    #         atomdb='redis_mongo',
-    #         mongo_port=mongo_port,
-    #         mongo_username='dbadmin',
-    #         mongo_password='dassecret',
-    #         redis_port=redis_port,
-    #         redis_cluster=False,
-    #         redis_ssl=False,
-    #     )
-    #     load_n_random_links_by_type(das=das, n=2000)
-    #     das.commit_changes()
+    def get_fetch_data(self, **kwargs):
+        return 2024, []
 
-    #     self.backend = das.backend
+    def get_fetch_data_kwargs(self):
+        return {'fetch_data_kwargs': True}
 
-    #     atom_handle = das.get_node_handle('Concept', 'human')
-    #     chunk_size = 500
-    #     cursor, links = das.backend.get_incoming_links(
-    #         atom_handle, handles_only=True, cursor=0, chunk_size=chunk_size
-    #     )
-    #     it = LocalIncomingLinks(
-    #         ListIterator(links),
-    #         backend=das.backend,
-    #         atom_handle=atom_handle,
-    #         cursor=cursor,
-    #         chunk_size=chunk_size,
-    #     )
-    #     current_value = it.get()
-    #     assert isinstance(current_value, dict)
-    #     assert current_value == next(it)
-    #     assert it.is_empty() is False
-    #     [i for i in it]
-    #     assert it.is_empty() is True
-    #     with pytest.raises(StopIteration):
-    #         it.get()
-    #     _db_down()
+    def get_next_value(self):
+        return 'next_value'
 
-    # def test_local_get_links_ram_only_iterator(self):
-    #     das = DistributedAtomSpace()
-    #     load_animals_base(das)
-    #     link_type = 'Inheritance'
-    #     answer = das.query_engine._get_related_links(link_type)
 
-    #     it = LocalGetLinks(ListIterator(answer), backend=das.query_engine, link_type=link_type)
-    #     current_value = it.get()
-    #     assert isinstance(current_value, dict)
-    #     assert current_value == next(it)
-    #     assert it.is_empty() is False
-    #     [i for i in it]
-    #     assert it.is_empty() is True
-    #     with pytest.raises(StopIteration):
-    #         it.get()
-    #     answer = das.query_engine._get_related_links('Fake')
-    #     it = LocalGetLinks(ListIterator(answer), backend=das.query_engine, link_type=link_type)
-    #     assert it.is_empty() is True
-    #     with pytest.raises(StopIteration):
-    #         it.get()
-    #     assert [i for i in it] == []
+class TestBaseLinksIterator:
+    def test_init(self):
+        source = ListIterator([1, 2, 3])
+        backend = mock.MagicMock()
+        chunk_size = 500
+        cursor = 2024
+        iterator = ConcreteBaseLinksIterator(
+            source, backend=backend, chunk_size=chunk_size, cursor=cursor
+        )
+        assert iterator.source == source
+        assert iterator.backend == backend
+        assert iterator.chunk_size == chunk_size
+        assert iterator.cursor == cursor
+        assert iterator.iterator == source
+        assert iterator.current_value == iterator.get_current_value()
+        assert iterator.semaphore._value == 1
 
-    # def test_local_get_links_redis_mongo_iterator(self):
-    #     from tests.integration.test_local_redis_mongo import (
-    #         _db_down,
-    #         _db_up,
-    #         mongo_port,
-    #         redis_port,
-    #     )
+    def test_next(self):
+        source = ListIterator([1, 2, 3])
+        iterator = ConcreteBaseLinksIterator(source)
+        iterator.get_next_value = mock.Mock(side_effect=[StopIteration()])
+        with pytest.raises(StopIteration):
+            next(iterator)
+        assert iterator.iterator is None
+        assert iterator.current_value is None
+        iterator.get_next_value.assert_called_once()
 
-    #     _db_up()
+    def test_fetch_data(self):
+        source = ListIterator([1, 2, 3])
+        iterator = ConcreteBaseLinksIterator(source, cursor=1)
+        iterator.get_fetch_data_kwargs = mock.MagicMock(return_value={})
+        iterator.get_fetch_data = mock.MagicMock(return_value=(0, []))
+        iterator._fetch_data()
+        iterator.get_fetch_data_kwargs.assert_called_once()
+        iterator.get_fetch_data.assert_called_once()
+        assert iterator.cursor == 0
 
-    #     das = DistributedAtomSpace(
-    #         query_engine='local',
-    #         atomdb='redis_mongo',
-    #         mongo_port=mongo_port,
-    #         mongo_username='dbadmin',
-    #         mongo_password='dassecret',
-    #         redis_port=redis_port,
-    #         redis_cluster=False,
-    #         redis_ssl=False,
-    #     )
-    #     load_animals_base(das)
-    #     das.commit_changes()
+    def test_refresh_iterator(self):
+        source = ListIterator([1, 2, 3])
+        iterator = ConcreteBaseLinksIterator(source, cursor=1)
+        iterator.get_current_value = mock.MagicMock(return_value='current_value')
+        iterator._refresh_iterator()
 
-    #     link_type = 'Similarity'
-    #     cursor, answer = das.query_engine._get_related_links(link_type, cursor=0)
-    #     it = LocalGetLinks(
-    #         ListIterator(answer), backend=das.query_engine, link_type=link_type, cursor=cursor
-    #     )
-    #     current_value = it.get()
-    #     assert isinstance(current_value, dict)
-    #     assert current_value == next(it)
-    #     assert it.is_empty() is False
-    #     [i for i in it]
-    #     assert it.is_empty() is True
-    #     with pytest.raises(StopIteration):
-    #         it.get()
+        iterator.get_current_value.assert_called_once()
+        assert iterator.source.source == ListIterator(list(iterator.buffer_queue)).source
+        assert iterator.iterator == iterator.source
+        assert iterator.current_value == 'current_value'
+        assert iterator.buffer_queue == deque()
 
-    #     load_n_random_links_by_type(das=das, n=2000)
-    #     das.commit_changes()
-    #     link_type = 'Inheritance'
-    #     cursor, answer = das.query_engine._get_related_links(link_type, cursor=0, chunk_size=500)
-    #     it = LocalGetLinks(
-    #         ListIterator(answer), backend=das.query_engine, link_type=link_type, cursor=cursor
-    #     )
-    #     assert it.is_empty() is False
-    #     result = [i for i in it]
-    #     assert it.is_empty() is True
-    #     with pytest.raises(StopIteration):
-    #         it.get()
-    #     assert len(result) >= 1000
-
-    #     _db_down()
+    def test_is_empty(self):
+        iterator = ConcreteBaseLinksIterator(ListIterator([1, 2, 3]))
+        assert iterator.is_empty() is False
+        iterator = ConcreteBaseLinksIterator(ListIterator([]))
+        assert iterator.is_empty() is True
 
 
 class TestLocalIncomingLinks:
@@ -455,3 +383,283 @@ class TestLocalGetLinks:
         fetch_data = iterator.get_fetch_data()
         expected_fetch_data = (0, [{'handle': 1, 'name': 'Link1'}, {'handle': 2, 'name': 'Link2'}])
         assert fetch_data == expected_fetch_data
+
+
+class TestRemoteGetLinks:
+    def test_get_next_value(self):
+        source = ListIterator([{'handle': 'handle1'}, {'handle': 'handle2'}, {'handle': 'handle3'}])
+        iterator = RemoteGetLinks(
+            source,
+            link_type='link_type',
+            target_types=['type1', 'type2'],
+            link_targets=['target1', 'target2'],
+            toplevel_only=True,
+        )
+
+        iterator.get_next_value()
+        assert iterator.current_value == {'handle': 'handle1'}
+
+        iterator.get_next_value()
+        assert iterator.current_value == {'handle': 'handle2'}
+
+        iterator.get_next_value()
+        assert iterator.current_value == {'handle': 'handle3'}
+
+        with pytest.raises(StopIteration):
+            iterator.get_next_value()
+
+    def test_get_current_value(self):
+        source = ListIterator([{'handle': 'handle1'}, {'handle': 'handle2'}, {'handle': 'handle3'}])
+        iterator = RemoteGetLinks(
+            source,
+            link_type='link_type',
+            target_types=['type1', 'type2'],
+            link_targets=['target1', 'target2'],
+            toplevel_only=True,
+        )
+
+        assert iterator.get_current_value() == {'handle': 'handle1'}
+
+        iterator.get_next_value()
+        assert iterator.get_current_value() == {'handle': 'handle1'}
+
+        iterator.get_next_value()
+        assert iterator.get_current_value() == {'handle': 'handle2'}
+
+        iterator.get_next_value()
+        assert iterator.get_current_value() == {'handle': 'handle3'}
+
+        with pytest.raises(StopIteration):
+            iterator.get_next_value()
+        assert iterator.get_current_value() is None
+
+    def test_get_fetch_data_kwargs(self):
+        source = ListIterator([{'handle': 'handle1'}, {'handle': 'handle2'}, {'handle': 'handle3'}])
+        iterator = RemoteGetLinks(
+            source,
+            link_type='link_type',
+            target_types=['type1', 'type2'],
+            link_targets=['target1', 'target2'],
+            toplevel_only=True,
+        )
+
+        kwargs = iterator.get_fetch_data_kwargs()
+        assert kwargs == {'cursor': 0, 'chunk_size': 1000, 'toplevel_only': True}
+
+    def test_get_fetch_data(self):
+        backend = mock.Mock()
+        backend.get_links.return_value = (
+            123,
+            [{'handle': 'link1'}, {'handle': 'link2'}, {'handle': 'link3'}],
+        )
+        iterator = RemoteGetLinks(
+            ListIterator([{'handle': 'handle1'}, {'handle': 'handle2'}, {'handle': 'handle3'}]),
+            link_type='link_type',
+            target_types=['type1', 'type2'],
+            link_targets=['target1', 'target2'],
+            toplevel_only=True,
+            backend=backend,
+        )
+
+        data = iterator.get_fetch_data(cursor=0, chunk_size=100)
+        assert data == (123, [{'handle': 'link1'}, {'handle': 'link2'}, {'handle': 'link3'}])
+
+
+class TestTraverseLinksIterator:
+    @pytest.fixture
+    def incoming_links(self):
+        source = ListIterator(['link1', 'link2', 'link3'])
+        backend = mock.Mock()
+        targets_document = True
+        backend.get_atom.side_effect = lambda handle, targets_document=targets_document: (
+            {
+                'handle': handle,
+                'named_type': f'Type{handle[-1]}',
+                'targets': ['node11', f'node{handle[-1]}2'],
+            },
+            [
+                {'handle': 'node11', 'named_type': 'Type2'},
+                {'handle': f'node{handle[-1]}2', 'named_type': f'Type{int(handle[-1]) + 1}'},
+            ],
+        )
+        return LocalIncomingLinks(source=source, backend=backend, targets_document=targets_document)
+
+    def test_empty_source(self):
+        source = LocalIncomingLinks(ListIterator([]))
+        iterator = TraverseLinksIterator(source)
+        assert iterator.is_empty() is True
+        with pytest.raises(StopIteration):
+            next(iterator)
+
+    def test_no_filters(self, incoming_links):
+        iterator = TraverseLinksIterator(source=incoming_links)
+
+        assert iterator.is_empty() is False
+        assert next(iterator) == {
+            'handle': 'link1',
+            'named_type': 'Type1',
+            'targets': ['node11', 'node12'],
+        }
+        assert next(iterator) == {
+            'handle': 'link2',
+            'named_type': 'Type2',
+            'targets': ['node11', 'node22'],
+        }
+        assert next(iterator) == {
+            'handle': 'link3',
+            'named_type': 'Type3',
+            'targets': ['node11', 'node32'],
+        }
+        with pytest.raises(StopIteration):
+            next(iterator)
+        assert iterator.is_empty() is True
+
+    def test_with_filters(self, incoming_links):
+        iterator = TraverseLinksIterator(
+            source=incoming_links, link_type='Type2', target_type='Type3'
+        )
+
+        assert iterator.is_empty() is False
+        assert next(iterator) == {
+            'handle': 'link2',
+            'named_type': 'Type2',
+            'targets': ['node11', 'node22'],
+        }
+        with pytest.raises(StopIteration):
+            next(iterator)
+        assert iterator.is_empty() is True
+
+    def test_cursor_position(self, incoming_links):
+        iterator = TraverseLinksIterator(incoming_links, cursor_position=0, cursor='node11')
+        assert iterator.is_empty() is False
+        assert next(iterator) == {
+            'handle': 'link1',
+            'named_type': 'Type1',
+            'targets': ['node11', 'node12'],
+        }
+        assert next(iterator) == {
+            'handle': 'link2',
+            'named_type': 'Type2',
+            'targets': ['node11', 'node22'],
+        }
+        assert next(iterator) == {
+            'handle': 'link3',
+            'named_type': 'Type3',
+            'targets': ['node11', 'node32'],
+        }
+        with pytest.raises(StopIteration):
+            next(iterator)
+        assert iterator.is_empty() is True
+
+    def test_custom_filter(self, incoming_links):
+        def custom_filter(link):
+            return link['named_type'] == 'Type3'
+
+        iterator = TraverseLinksIterator(incoming_links, filter=custom_filter)
+
+        assert iterator.is_empty() is False
+        assert next(iterator) == {
+            'handle': 'link3',
+            'named_type': 'Type3',
+            'targets': ['node11', 'node32'],
+        }
+        with pytest.raises(StopIteration):
+            next(iterator)
+        assert iterator.is_empty() is True
+
+    def test_targets_only(self, incoming_links):
+        iterator = TraverseLinksIterator(incoming_links, targets_only=True)
+        assert iterator.is_empty() is False
+        assert next(iterator) == [
+            {'handle': 'node11', 'named_type': 'Type2'},
+            {'handle': 'node12', 'named_type': 'Type2'},
+        ]
+        assert next(iterator) == [
+            {'handle': 'node11', 'named_type': 'Type2'},
+            {'handle': 'node22', 'named_type': 'Type3'},
+        ]
+        assert next(iterator) == [
+            {'handle': 'node11', 'named_type': 'Type2'},
+            {'handle': 'node32', 'named_type': 'Type4'},
+        ]
+        with pytest.raises(StopIteration):
+            next(iterator)
+        assert iterator.is_empty() is True
+
+
+class TestTraverseNeighborsIterator:
+    @pytest.fixture
+    def traverse_links_iterator(self):
+        source = ListIterator(['link1', 'link2', 'link3'])
+        backend = mock.Mock()
+        targets_document = True
+        backend.get_atom.side_effect = lambda handle, targets_document=targets_document: (
+            {
+                'handle': handle,
+                'named_type': f'Type{handle[-1]}',
+                'targets': ['node11', f'node{handle[-1]}2'],
+            },
+            [
+                {'handle': 'node11', 'named_type': 'Type2'},
+                {'handle': f'node{handle[-1]}2', 'named_type': f'Type{int(handle[-1]) + 1}'},
+            ],
+        )
+        incoming_links = LocalIncomingLinks(
+            source=source, backend=backend, targets_document=targets_document
+        )
+
+        return TraverseLinksIterator(incoming_links, targets_only=True, cursor='node11')
+
+    def test_init(self, traverse_links_iterator):
+        iterator = TraverseNeighborsIterator(source=traverse_links_iterator)
+        assert iterator.source == traverse_links_iterator
+        assert iterator.buffered_answer is not None
+        assert iterator.cursor == traverse_links_iterator.cursor
+        assert iterator.target_type == traverse_links_iterator.target_type
+        assert iterator.visited_neighbors == ['node12']
+        assert iterator.iterator == traverse_links_iterator
+        assert iterator.current_value == {'handle': 'node12', 'named_type': 'Type2'}
+
+    def test_next_with_buffered_answer(self):
+        iterator = TraverseNeighborsIterator(source=mock.Mock())
+        iterator.buffered_answer = ListIterator([1, 2, 3])
+        assert next(iterator) == 1
+        assert next(iterator) == 2
+        assert next(iterator) == 3
+
+    def test_next_without_buffered_answer(self, traverse_links_iterator):
+        iterator = TraverseNeighborsIterator(source=traverse_links_iterator)
+        assert next(iterator) == {'handle': 'node12', 'named_type': 'Type2'}
+        assert next(iterator) == {'handle': 'node22', 'named_type': 'Type3'}
+        assert next(iterator) == {'handle': 'node32', 'named_type': 'Type4'}
+        with pytest.raises(StopIteration):
+            next(iterator)
+
+    def test_process_targets(self, traverse_links_iterator):
+        iterator = TraverseNeighborsIterator(source=traverse_links_iterator)
+        targets = [
+            {'handle': 'node11', 'named_type': 'Type2'},
+            {'handle': 'node22', 'named_type': 'Type3'},
+        ]
+        answer, match_found = iterator._process_targets(targets)
+        assert answer == [{'handle': 'node22', 'named_type': 'Type3'}]
+        assert match_found is True
+
+    def test_filter(self, traverse_links_iterator):
+        iterator = TraverseNeighborsIterator(source=traverse_links_iterator)
+
+        target = {'handle': 'node11', 'named_type': 'Type2'}
+        assert iterator._filter(target) is False
+
+        target = {'handle': 'node22', 'named_type': 'Type3'}
+        assert iterator._filter(target) is True
+
+    def test_is_empty(self):
+        iterator = TraverseNeighborsIterator(
+            source=TraverseLinksIterator(LocalIncomingLinks(ListIterator([])))
+        )
+        iterator.current_value = None
+        assert iterator.is_empty() is True
+
+        iterator.current_value = {'handle': 1}
+        assert iterator.is_empty() is False
