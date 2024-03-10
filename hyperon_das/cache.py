@@ -414,7 +414,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
             if not any(target['named_type'] == self.target_type for target in targets):
                 return False
 
-        if self.custom_filter and callable(self.custom_filter):
+        if self.custom_filter and callable(self.custom_filter) and not self.targets_only:
             ret = self.custom_filter(link)
             if not isinstance(ret, bool):
                 raise TypeError('The function must return a boolean')
@@ -472,13 +472,21 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
 
     def _filter(self, target: Dict[str, Any]) -> bool:
         handle = target['handle']
-        if (
+        if not (
             self.cursor != handle
             and handle not in self.visited_neighbors
             and (self.target_type == target['named_type'] or not self.target_type)
         ):
-            return True
-        return False
+            return False
+
+        if self.source.custom_filter and callable(self.source.custom_filter):
+            ret = self.source.custom_filter(target)
+            if not isinstance(ret, bool):
+                raise TypeError('The function must return a boolean')
+            if ret is False:
+                return False
+
+        return True
 
     def is_empty(self) -> bool:
         return not self.current_value

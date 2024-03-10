@@ -784,36 +784,45 @@ class TestTraverseEngine:
                     'type': 'Similarity',
                     'targets': [
                         {'type': 'Concept', 'name': 'human'},
-                        {'type': 'Fake', 'name': 'fake-h'},
+                        {'type': 'Fake', 'name': 'fake-h', 'weight': 0.7},
                     ],
-                    'weight': 0.7,
                 }
             )
             das.add_link(
                 {
                     'type': 'Similarity',
                     'targets': [
-                        {'type': 'Fake', 'name': 'fake-h'},
+                        {'type': 'Fake', 'name': 'fake-h', 'weight': 0.3},
                         {'type': 'Concept', 'name': 'human'},
                     ],
-                    'weight': 0.3,
                 }
             )
             das.add_link(
                 {
                     'type': 'Inheritance',
                     'targets': [
-                        {'type': 'Fake', 'name': 'fake-h2'},
-                        {'type': 'Fake', 'name': 'fake-h3'},
-                        {'type': 'Fake', 'name': 'fake-h4'},
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-h2',
+                            'weight': 0.3,
+                        },
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-h3',
+                            'weight': 0.3,
+                        },
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-h4',
+                            'weight': 1.3,
+                        },
                         {'type': 'Concept', 'name': 'human'},
                     ],
-                    'weight': 0.3,
                 }
             )
 
-            def my_filter(link) -> bool:
-                if 'weight' in link and link['weight'] >= 1:
+            def my_filter(target) -> bool:
+                if 'weight' in target and target['weight'] >= 1:
                     return True
                 return False
 
@@ -841,11 +850,11 @@ class TestTraverseEngine:
 
             neighbors = _build_neighbors(
                 animal_base_handles.human,
-                link_type='Similarity',
+                link_type='Inheritance',
                 target_type='Fake',
                 filter=my_filter,
             )
-            assert len(neighbors) == 0
+            assert len(neighbors) == 1
 
         def _vine_neighbors():
             neighbors = _build_neighbors(animal_base_handles.vine, link_type='Similarity')
@@ -863,10 +872,13 @@ class TestTraverseEngine:
                 {
                     'type': 'Inheritance',
                     'targets': [
-                        {'type': 'Fake', 'name': 'fake-v1'},
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-v1',
+                            'weight': 1,
+                        },
                         {'type': 'Concept', 'name': 'vine'},
                     ],
-                    'weight': 1,
                 }
             )
             das.add_link(
@@ -874,19 +886,25 @@ class TestTraverseEngine:
                     'type': 'Similarity',
                     'targets': [
                         {'type': 'Concept', 'name': 'vine'},
-                        {'type': 'Fake', 'name': 'fake-v2'},
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-v2',
+                            'weight': 0.7,
+                        },
                     ],
-                    'weight': 0.7,
                 }
             )
             das.add_link(
                 {
                     'type': 'Similarity',
                     'targets': [
-                        {'type': 'Fake', 'name': 'fake-v2'},
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-v2',
+                            'weight': 0.3,
+                        },
                         {'type': 'Concept', 'name': 'vine'},
                     ],
-                    'weight': 0.3,
                 }
             )
 
@@ -918,8 +936,8 @@ class TestTraverseEngine:
             assert das.get_atom(fake_v2) in neighbors
             assert len(neighbors) == 1
 
-            def my_filter(link) -> bool:
-                if 'weight' in link and link['weight'] >= 1:
+            def my_filter(target) -> bool:
+                if 'weight' in target and target['weight'] >= 1:
                     return True
                 return False
 
