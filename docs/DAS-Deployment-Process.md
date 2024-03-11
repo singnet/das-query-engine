@@ -50,7 +50,7 @@ at
 and
 [<u>https://pypi.org/project/hyperon-das-atomdb/#history</u>](https://pypi.org/project/hyperon-das-atomdb/#history).
 
-## Publishing a New Version for DAS Query Engine
+## New Version of DAS Query Engine
 
 1.  Go to the repository at the [<u>Query Engine repository</u>](https://github.com/singnet/das-query-engine).
 
@@ -89,7 +89,7 @@ Just like in the case of DAS AtomDB, refresh the page and check if a new workflo
 If everything goes as expected, the new version tag should be available at [<u>https://github.com/singnet/das-query-engine/tags</u>](https://github.com/singnet/das-query-engine/tags)
 and [<u>https://pypi.org/project/hyperon-das/#history</u>](https://pypi.org/project/hyperon-das/#history).
 
-## Publishing a New Version for DAS Serverless Functions
+## New Version of DAS Serverless Functions
 
 1.  Navigate to the [<u>DAS Serverless Functions repository</u>](https://github.com/singnet/das-servless-functions/).
 
@@ -161,7 +161,7 @@ commit to return to the previous version.
 
 ![Merge Develop Branch into Master](media/img68.jpg)
 
-## New Version for DAS Metta Parser
+## New Version of DAS Metta Parser
 
 1.  Go to the repository at the [<u>DAS Metta Parser repository</u>](https://github.com/singnet/das-metta-parser).
 
