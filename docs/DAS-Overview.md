@@ -18,9 +18,7 @@ OpenCog Hyperon.
 
 <img src="media/persistence_layer.jpg" alt="drawing" width="600" style=“float:right”/>
 
-<div style="width:20%; margin: auto;">
-![DAS is OpenCog Hyperon's persistence layer](media/persistence_layer.jpg)
-</div>
+![DAS is OpenCog Hyperon's persistence layer](media/persistence_layer.jpg style="width:50%")
 
 
 
