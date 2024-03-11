@@ -29,8 +29,15 @@ OpenCog Hyperon.
 
 
 <img src="media/persistence_layer.jpg" width="400"/>
+
 *DAS is OpenCog Hyperon's persistence layer.*
 
+
+<div align="text-align:center;">
+    <img src="media/persistence_layer.jpg" width="400"/>
+
+    DAS is OpenCog Hyperon's persistence layer.
+</div>
 
 
 
