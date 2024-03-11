@@ -139,7 +139,8 @@ class LocalQueryEngine(QueryEngine):
                 handle = atom
                 arity = -1
             else:
-                handle, targets = atom
+                handle = atom[0]
+                targets = atom[1:]
                 arity = len(targets)
             answer.append(self.local_backend.get_atom_as_dict(handle, arity))
         return answer
@@ -231,7 +232,7 @@ class LocalQueryEngine(QueryEngine):
 
     def query(
         self,
-        query: Dict[str, Any],
+        query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
     ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
         no_iterator = parameters.get("no_iterator", False)
@@ -284,44 +285,61 @@ class RemoteQueryEngine(QueryEngine):
             url = aws_lambda_uri
         return url
 
+    # TODO: Use this method when version checking is running on the server
+    # def _is_server_connect(self, url: str) -> bool:
+    #     logger().debug(f'connecting to remote Das {url}')
+    #     das_version = get_package_version('hyperon_das')
+
+    #     try:
+    #         with sessions.Session() as session:
+    #             response = session.request(
+    #                 method='POST',
+    #                 url=url,
+    #                 data=json.dumps(
+    #                     {
+    #                         'action': 'handshake',
+    #                         'input': {
+    #                             'das_version': das_version,
+    #                             'atomdb_version': get_package_version('hyperon_das_atomdb'),
+    #                         },
+    #                     }
+    #                 ),
+    #                 timeout=10,
+    #             )
+    #         if response.status_code == HTTPStatus.CONFLICT:
+    #             try:
+    #                 remote_das_version = response.json().get('das').get('version')
+    #             except JSONDecodeError as e:
+    #                 raise Exception(str(e))
+    #             logger().error(
+    #                 f'Package version conflict error when connecting to remote DAS - Local DAS: `{das_version}` - Remote DAS: `{remote_das_version}`'
+    #             )
+    #             raise Exception(
+    #                 f'The version sent by the local DAS is {das_version}, but the expected version on the server is {remote_das_version}'
+    #             )
+    #         elif response.status_code == HTTPStatus.OK:
+    #             return True
+    #         else:
+    #             response.raise_for_status()
+    #             return False
+    #     except (ConnectionError, Timeout, HTTPError, RequestException):
+    #         return False
+
     def _is_server_connect(self, url: str) -> bool:
         logger().debug(f'connecting to remote Das {url}')
-        das_version = get_package_version('hyperon_das')
-
         try:
             with sessions.Session() as session:
                 response = session.request(
                     method='POST',
                     url=url,
-                    data=json.dumps(
-                        {
-                            'action': 'handshake',
-                            'input': {
-                                'das_version': das_version,
-                                'atomdb_version': get_package_version('hyperon_das_atomdb'),
-                            },
-                        }
-                    ),
+                    data=json.dumps({"action": "ping", "input": {}}),
                     timeout=10,
                 )
-            if response.status_code == HTTPStatus.CONFLICT:
-                try:
-                    remote_das_version = response.json().get('das').get('version')
-                except JSONDecodeError as e:
-                    raise Exception(str(e))
-                logger().error(
-                    f'Package version conflict error when connecting to remote DAS - Local DAS: `{das_version}` - Remote DAS: `{remote_das_version}`'
-                )
-                raise Exception(
-                    f'The version sent by the local DAS is {das_version}, but the expected version on the server is {remote_das_version}'
-                )
-            elif response.status_code == HTTPStatus.OK:
-                return True
-            else:
-                response.raise_for_status()
-                return False
-        except (ConnectionError, Timeout, HTTPError, RequestException):
+        except Exception:
             return False
+        if response.status_code == 200:
+            return True
+        return False
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         try:
@@ -396,7 +414,7 @@ class RemoteQueryEngine(QueryEngine):
 
     def query(
         self,
-        query: Dict[str, Any],
+        query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
     ) -> List[Dict[str, Any]]:
         query_scope = parameters.get('query_scope', 'remote_only')

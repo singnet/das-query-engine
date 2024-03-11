@@ -1,14 +1,19 @@
 [tool.poetry]
 name = "hyperon-das"
-version = "0.5.0"
+version = "0.5.3"
 description = "Query Engine API for Distributed AtomSpace"
 authors = ["marcocapozzoli <marcocapozzoli90@gmail.com>"]
 readme = "README.md"
 packages = [{include = "hyperon_das"}]
 
+[tool.poetry.urls]
+"Code" = "https://github.com/singnet/das-query-engine"
+"Bug Tracker" = "https://github.com/singnet/das-query-engine/issues"
+"Releases" = "https://github.com/singnet/das-query-engine/releases"
+
 [tool.poetry.dependencies]
 python = "^3.8.5"
-hyperon-das-atomdb = "0.4.0"
+hyperon-das-atomdb = "0.4.1"
 requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]

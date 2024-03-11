@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import exceptions, sessions
 
+from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.logger import logger
 
 
@@ -33,15 +34,27 @@ class FunctionsClient:
                     'error', f'Unknown error with status code {response.status_code}'
                 )
         except exceptions.ConnectionError as e:
-            raise Exception(f"Connection error: {str(e)}")
+            raise ConnectionError(
+                message=f"Connection error for URL: '{self.url}' with payload: '{payload}'",
+                details=str(e),
+            )
         except exceptions.Timeout as e:
-            raise Exception(f"Request timed out: {str(e)}")
+            raise TimeoutError(
+                message=f"Request timed out for URL: '{self.url}' with payload: '{payload}'",
+                details=str(e),
+            )
         except exceptions.HTTPError as e:
             with contextlib.suppress(exceptions.JSONDecodeError):
                 return response.json().get('error')
-            raise Exception(f"HTTP error occurred: {str(e)}")
+            raise HTTPError(
+                message=f"HTTP error occurred for URL: '{self.url}' with payload: '{payload}'",
+                details=str(e),
+            )
         except exceptions.RequestException as e:
-            raise Exception(f"Request exception occurred: {str(e)}")
+            raise RequestError(
+                message=f"Request exception occurred for URL: '{self.url}' with payload: '{payload}'.",
+                details=str(e),
+            )
 
     def get_atom(self, handle: str, **kwargs) -> Union[str, Dict]:
         payload = {

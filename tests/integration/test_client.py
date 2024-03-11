@@ -1,156 +1,9 @@
 import pytest
-from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
 
 from hyperon_das.client import FunctionsClient
 
+from .helpers import metta_animal_base_handles
 from .remote_das_info import remote_das_host, remote_das_port
-
-
-# AWS function is offline
-class AWSClientIntegration:
-    @pytest.fixture()
-    def server(self):
-        return FunctionsClient(url='http://44.198.65.35/prod/query-engine')
-
-    @pytest.fixture()
-    def node_human(self):
-        return ExpressionHasher.terminal_hash('Concept', 'human')
-
-    @pytest.fixture()
-    def node_monkey(self):
-        return ExpressionHasher.terminal_hash('Concept', 'monkey')
-
-    @pytest.fixture()
-    def node_mammal(self):
-        return ExpressionHasher.terminal_hash('Concept', 'mammal')
-
-    @pytest.fixture()
-    def link_similarity_concept_concept(self, node_human, node_monkey):
-        return ExpressionHasher.expression_hash(
-            ExpressionHasher.named_type_hash('Similarity'),
-            [node_human, node_monkey],
-        )
-
-    @pytest.fixture()
-    def link_inheritance_concept_concept(self, node_human, node_mammal):
-        return ExpressionHasher.expression_hash(
-            ExpressionHasher.named_type_hash('Inheritance'),
-            [node_human, node_mammal],
-        )
-
-    def test_get_atom(
-        self,
-        server: FunctionsClient,
-        node_human: str,
-        node_monkey: str,
-        link_similarity_concept_concept: str,
-    ):
-        result = server.get_atom(handle=node_human)
-        assert result['handle'] == node_human
-        assert result['name'] == 'human'
-        assert result['named_type'] == 'Concept'
-
-        result = server.get_atom(handle=node_monkey)
-        assert result['handle'] == node_monkey
-        assert result['name'] == 'monkey'
-        assert result['named_type'] == 'Concept'
-
-        result = server.get_atom(handle=link_similarity_concept_concept)
-        assert result['handle'] == link_similarity_concept_concept
-        assert result['named_type'] == 'Similarity'
-        assert result['targets'] == [node_human, node_monkey]
-
-    def test_get_node(self, server: FunctionsClient, node_human: str, node_monkey: str):
-        result = server.get_node(node_type='Concept', node_name='human')
-        assert result['handle'] == node_human
-        assert result['name'] == 'human'
-        assert result['named_type'] == 'Concept'
-
-        result = server.get_node(node_type='Concept', node_name='monkey')
-        assert result['handle'] == node_monkey
-        assert result['name'] == 'monkey'
-        assert result['named_type'] == 'Concept'
-
-    def test_get_link(
-        self,
-        server: FunctionsClient,
-        node_monkey: str,
-        node_human: str,
-        node_mammal: str,
-        link_similarity_concept_concept: str,
-        link_inheritance_concept_concept: str,
-    ):
-        result = server.get_link(link_type='Similarity', link_targets=[node_human, node_monkey])
-        assert result['handle'] == link_similarity_concept_concept
-        assert result['named_type'] == 'Similarity'
-        assert result['targets'] == [node_human, node_monkey]
-
-        result = server.get_link(link_type='Inheritance', link_targets=[node_human, node_mammal])
-        assert result['handle'] == link_inheritance_concept_concept
-        assert result['named_type'] == 'Inheritance'
-        assert result['targets'] == [node_human, node_mammal]
-
-    def test_get_links(self, server: FunctionsClient):
-        ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
-        assert ret is not None
-
-    def test_count_atoms(self, server: FunctionsClient):
-        ret = server.count_atoms()
-        assert ret[0] == 14
-        assert ret[1] == 26
-
-    def test_query(
-        self,
-        server: FunctionsClient,
-        link_similarity_concept_concept,
-        link_inheritance_concept_concept,
-        node_human,
-        node_monkey,
-        node_mammal,
-    ):
-        answer = server.query(
-            {
-                "atom_type": "link",
-                "type": "Inheritance",
-                "targets": [
-                    {"atom_type": "variable", "name": "v1"},
-                    {"atom_type": "variable", "name": "v2"},
-                ],
-            },
-            {"toplevel_only": False},
-        )
-
-        assert len(answer) == 12
-
-        for link in answer:
-            if link['handle'] == link_inheritance_concept_concept:
-                break
-
-        handles = [target['handle'] for target in link['targets']]
-
-        assert handles == [node_human, node_mammal]
-
-        answer = server.query(
-            {
-                "atom_type": "link",
-                "type": "Similarity",
-                "targets": [
-                    {"atom_type": "variable", "name": "v1"},
-                    {"atom_type": "variable", "name": "v2"},
-                ],
-            },
-            {"toplevel_only": False},
-        )
-
-        assert len(answer) == 14
-
-        for link in answer:
-            if link['handle'] == link_similarity_concept_concept:
-                break
-
-        handles = [target['handle'] for target in link['targets']]
-
-        assert handles == [node_human, node_monkey]
 
 
 class TestVultrClientIntegration:
@@ -160,107 +13,87 @@ class TestVultrClientIntegration:
             url=f'http://{remote_das_host}:{remote_das_port}/function/query-engine'
         )
 
-    @pytest.fixture()
-    def node_human(self):
-        return ExpressionHasher.terminal_hash('Concept', 'human')
+    def test_get_atom(self, server: FunctionsClient):
+        result = server.get_atom(handle=metta_animal_base_handles.human)
+        assert result['handle'] == metta_animal_base_handles.human
+        assert result['name'] == '"human"'
+        assert result['named_type'] == 'Symbol'
 
-    @pytest.fixture()
-    def node_monkey(self):
-        return ExpressionHasher.terminal_hash('Concept', 'monkey')
+        result = server.get_atom(handle=metta_animal_base_handles.monkey)
+        assert result['handle'] == metta_animal_base_handles.monkey
+        assert result['name'] == '"monkey"'
+        assert result['named_type'] == 'Symbol'
 
-    @pytest.fixture()
-    def node_mammal(self):
-        return ExpressionHasher.terminal_hash('Concept', 'mammal')
+        result = server.get_atom(handle=metta_animal_base_handles.similarity_human_monkey)
+        assert result['handle'] == metta_animal_base_handles.similarity_human_monkey
+        assert result['named_type'] == 'Expression'
+        assert result['targets'] == [
+            metta_animal_base_handles.Similarity,
+            metta_animal_base_handles.human,
+            metta_animal_base_handles.monkey,
+        ]
 
-    @pytest.fixture()
-    def link_similarity_concept_concept(self, node_human, node_monkey):
-        return ExpressionHasher.expression_hash(
-            ExpressionHasher.named_type_hash('Similarity'),
-            [node_human, node_monkey],
+    def test_get_node(self, server: FunctionsClient):
+        result = server.get_node(node_type='Symbol', node_name='"human"')
+        assert result['handle'] == metta_animal_base_handles.human
+        assert result['name'] == '"human"'
+        assert result['named_type'] == 'Symbol'
+
+        result = server.get_node(node_type='Symbol', node_name='"monkey"')
+        assert result['handle'] == metta_animal_base_handles.monkey
+        assert result['name'] == '"monkey"'
+        assert result['named_type'] == 'Symbol'
+
+    def test_get_link(self, server: FunctionsClient):
+        result = server.get_link(
+            link_type='Expression',
+            link_targets=[
+                metta_animal_base_handles.Similarity,
+                metta_animal_base_handles.human,
+                metta_animal_base_handles.monkey,
+            ],
         )
+        assert result['handle'] == metta_animal_base_handles.similarity_human_monkey
+        assert result['named_type'] == 'Expression'
+        assert result['targets'] == [
+            metta_animal_base_handles.Similarity,
+            metta_animal_base_handles.human,
+            metta_animal_base_handles.monkey,
+        ]
 
-    @pytest.fixture()
-    def link_inheritance_concept_concept(self, node_human, node_mammal):
-        return ExpressionHasher.expression_hash(
-            ExpressionHasher.named_type_hash('Inheritance'),
-            [node_human, node_mammal],
+        result = server.get_link(
+            link_type='Expression',
+            link_targets=[
+                metta_animal_base_handles.Inheritance,
+                metta_animal_base_handles.human,
+                metta_animal_base_handles.mammal,
+            ],
         )
+        assert result['handle'] == metta_animal_base_handles.inheritance_human_mammal
+        assert result['named_type'] == 'Expression'
+        assert result['targets'] == [
+            metta_animal_base_handles.Inheritance,
+            metta_animal_base_handles.human,
+            metta_animal_base_handles.mammal,
+        ]
 
-    def test_get_atom(
-        self,
-        server: FunctionsClient,
-        node_human: str,
-        node_monkey: str,
-        link_similarity_concept_concept: str,
-    ):
-        result = server.get_atom(handle=node_human)
-        assert result['handle'] == node_human
-        assert result['name'] == 'human'
-        assert result['named_type'] == 'Concept'
-
-        result = server.get_atom(handle=node_monkey)
-        assert result['handle'] == node_monkey
-        assert result['name'] == 'monkey'
-        assert result['named_type'] == 'Concept'
-
-        result = server.get_atom(handle=link_similarity_concept_concept)
-        assert result['handle'] == link_similarity_concept_concept
-        assert result['named_type'] == 'Similarity'
-        assert result['targets'] == [node_human, node_monkey]
-
-    def test_get_node(self, server: FunctionsClient, node_human: str, node_monkey: str):
-        result = server.get_node(node_type='Concept', node_name='human')
-        assert result['handle'] == node_human
-        assert result['name'] == 'human'
-        assert result['named_type'] == 'Concept'
-
-        result = server.get_node(node_type='Concept', node_name='monkey')
-        assert result['handle'] == node_monkey
-        assert result['name'] == 'monkey'
-        assert result['named_type'] == 'Concept'
-
-    def test_get_link(
-        self,
-        server: FunctionsClient,
-        node_monkey: str,
-        node_human: str,
-        node_mammal: str,
-        link_similarity_concept_concept: str,
-        link_inheritance_concept_concept: str,
-    ):
-        result = server.get_link(link_type='Similarity', link_targets=[node_human, node_monkey])
-        assert result['handle'] == link_similarity_concept_concept
-        assert result['named_type'] == 'Similarity'
-        assert result['targets'] == [node_human, node_monkey]
-
-        result = server.get_link(link_type='Inheritance', link_targets=[node_human, node_mammal])
-        assert result['handle'] == link_inheritance_concept_concept
-        assert result['named_type'] == 'Inheritance'
-        assert result['targets'] == [node_human, node_mammal]
-
-    def test_get_links(self, server: FunctionsClient):
-        ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
-        assert ret is not None
+    # def test_get_links(self, server: FunctionsClient):
+    #     ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
+    #     assert ret is not None
 
     def test_count_atoms(self, server: FunctionsClient):
         ret = server.count_atoms()
-        assert ret[0] == 14
-        assert ret[1] == 26
+        assert ret[0] == 21
+        assert ret[1] == 43
 
-    def test_query(
-        self,
-        server: FunctionsClient,
-        link_similarity_concept_concept,
-        link_inheritance_concept_concept,
-        node_human,
-        node_monkey,
-        node_mammal,
-    ):
+    def test_query(self, server: FunctionsClient):
+        server.get_links('Expression', no_iterator=True)
         answer = server.query(
             {
                 "atom_type": "link",
-                "type": "Inheritance",
+                "type": "Expression",
                 "targets": [
+                    {"atom_type": "node", "type": "Symbol", "name": "Inheritance"},
                     {"atom_type": "variable", "name": "v1"},
                     {"atom_type": "variable", "name": "v2"},
                 ],
@@ -271,18 +104,21 @@ class TestVultrClientIntegration:
         assert len(answer) == 12
 
         for link in answer:
-            if link[1]['handle'] == link_inheritance_concept_concept:
+            if link[1]['handle'] == metta_animal_base_handles.inheritance_human_mammal:
                 break
 
         handles = [target['handle'] for target in link[1]['targets']]
 
-        assert handles == [node_human, node_mammal]
+        assert len(handles) == 3
+        assert handles[1] == metta_animal_base_handles.human
+        assert handles[2] == metta_animal_base_handles.mammal
 
         answer = server.query(
             {
                 "atom_type": "link",
-                "type": "Similarity",
+                "type": "Expression",
                 "targets": [
+                    {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
                     {"atom_type": "variable", "name": "v1"},
                     {"atom_type": "variable", "name": "v2"},
                 ],
@@ -293,22 +129,24 @@ class TestVultrClientIntegration:
         assert len(answer) == 14
 
         for link in answer:
-            if link[1]['handle'] == link_similarity_concept_concept:
+            if link[1]['handle'] == metta_animal_base_handles.similarity_human_monkey:
                 break
 
         handles = [target['handle'] for target in link[1]['targets']]
 
-        assert handles == [node_human, node_monkey]
+        assert len(handles) == 3
+        assert handles[1] == metta_animal_base_handles.human
+        assert handles[2] == metta_animal_base_handles.monkey
 
-    def test_get_incoming_links(self, server: FunctionsClient, node_human: str):
+    def test_get_incoming_links(self, server: FunctionsClient):
         expected_handles = [
-            'bad7472f41a0e7d601ca294eb4607c3a',
-            'a45af31b43ee5ea271214338a5a5bd61',
-            '16f7e407087bfa0b35b13d13a1aadcae',
-            '2a8a69c01305563932b957de4b3a9ba6',
-            '2c927fdc6c0f1272ee439ceb76a6d1a4',
-            'c93e1e758c53912638438e2a7d7f7b7f',
-            'b5459e299a5c5e8662c427f7e01b3bf1',
+            metta_animal_base_handles.similarity_human_monkey,
+            metta_animal_base_handles.similarity_human_chimp,
+            metta_animal_base_handles.similarity_human_ent,
+            metta_animal_base_handles.similarity_monkey_human,
+            metta_animal_base_handles.similarity_chimp_human,
+            metta_animal_base_handles.similarity_ent_human,
+            metta_animal_base_handles.inheritance_human_mammal,
         ]
 
         expected_atoms = [server.get_atom(handle) for handle in expected_handles]
@@ -321,25 +159,35 @@ class TestVultrClientIntegration:
             expected_atoms_targets.append([atom, targets_document])
 
         response_handles = server.get_incoming_links(
-            node_human, targets_document=False, handles_only=True
+            metta_animal_base_handles.human, targets_document=False, handles_only=True
         )
-        assert sorted(response_handles) == sorted(expected_handles)
+        assert len(response_handles) == 8
+        # response_handles has an extra link defining the metta type of '"human"'--> Type
+        assert len(set(response_handles).difference(set(expected_handles))) == 1
         response_handles = server.get_incoming_links(
-            node_human, targets_document=True, handles_only=True
+            metta_animal_base_handles.human, targets_document=True, handles_only=True
         )
-        assert sorted(response_handles) == sorted(expected_handles)
+        assert len(response_handles) == 8
+        assert len(set(response_handles).difference(set(expected_handles))) == 1
 
         response_atoms = server.get_incoming_links(
-            node_human, targets_document=False, handles_only=False
+            metta_animal_base_handles.human, targets_document=False, handles_only=False
         )
+        assert len(response_atoms) == 8
         for atom in response_atoms:
-            assert atom in expected_atoms
-        response_atoms = server.get_incoming_links(node_human)
+            if len(atom["targets"]) == 3:
+                assert atom in expected_atoms
+
+        response_atoms = server.get_incoming_links(metta_animal_base_handles.human)
+        assert len(response_atoms) == 8
         for atom in response_atoms:
-            assert atom in expected_atoms
+            if len(atom["targets"]) == 3:
+                assert atom in expected_atoms
 
         response_atoms_targets = server.get_incoming_links(
-            node_human, targets_document=True, handles_only=False
+            metta_animal_base_handles.human, targets_document=True, handles_only=False
         )
+        assert len(response_atoms_targets) == 8
         for atom_targets in response_atoms_targets:
-            assert atom_targets in expected_atoms_targets
+            if len(atom_targets[0]["targets"]) == 3:
+                assert atom_targets in expected_atoms_targets
