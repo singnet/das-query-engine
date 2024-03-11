@@ -1,4 +1,4 @@
-## Publishing Version of DAS AtomDB
+## New Version of DAS AtomDB
 
 1.  Go to the repository at AtomDB repository.
 
