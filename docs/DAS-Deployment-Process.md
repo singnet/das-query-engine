@@ -161,7 +161,7 @@ commit to return to the previous version.
 
 ![Merge Develop Branch into Master](media/img68.jpg)
 
-## Publishing a New Version for DAS Metta Parser
+## New Version for DAS Metta Parser
 
 1.  Go to the repository at the [<u>DAS Metta Parser repository</u>](https://github.com/singnet/das-metta-parser).
 
@@ -189,7 +189,7 @@ Refresh the page and check if a new workflow is running. By clicking on it, you 
 
 It is important to note that this pipeline should generate an image on Docker Hub, following the format **v1.0.0-toolbox**. Make sure that the image is generated correctly and available at [<u>https://hub.docker.com/r/trueagi/das/tags</u>](https://hub.docker.com/r/trueagi/das/tags). After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at [<u>https://github.com/singnet/das-metta-parser/tags</u>](https://github.com/singnet/das-metta-parser/tags).
 
-## Publishing DAS Toolbox
+## New version of DAS Toolbox
 
 1.  Go to the DAS Toolbox repository.
 
