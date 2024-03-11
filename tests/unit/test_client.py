@@ -1,8 +1,11 @@
+import json
 from unittest.mock import patch
 
 import pytest
+from requests import exceptions
 
 from hyperon_das.client import FunctionsClient
+from hyperon_das.exceptions import ConnectionError, RequestError, TimeoutError
 
 
 class TestFunctionsClient:
@@ -166,3 +169,53 @@ class TestFunctionsClient:
         )
 
         assert result == tuple(expected_response)
+
+    def test_send_request_success(self, mock_request):
+        expected_response = {
+            "handle": "af12f10f9ae2002a1607ba0b47ba8407",
+            "composite_type_hash": "d99a604c79ce3c2e76a2f43488d5d4c3",
+            "name": "human",
+            "named_type": "Concept",
+        }
+
+        mock_request.return_value.status_code = 200
+        mock_request.return_value.json.return_value = expected_response
+
+        client = FunctionsClient(url='http://example.com')
+        payload = {"action": "get_atom", "input": {"handle": "123"}}
+        result = client._send_request(payload)
+
+        mock_request.assert_called_with(
+            method='POST',
+            url='http://example.com',
+            data=json.dumps(payload),
+        )
+
+        assert result == expected_response
+
+    def test_send_request_connection_error(self, mock_request):
+        mock_request.side_effect = exceptions.ConnectionError()
+
+        client = FunctionsClient(url='http://example.com')
+        payload = {"action": "get_atom", "input": {"handle": "123"}}
+
+        with pytest.raises(ConnectionError):
+            client._send_request(payload)
+
+    def test_send_request_timeout_error(self, mock_request):
+        mock_request.side_effect = exceptions.Timeout()
+
+        client = FunctionsClient(url='http://example.com')
+        payload = {"action": "get_atom", "input": {"handle": "123"}}
+
+        with pytest.raises(TimeoutError):
+            client._send_request(payload)
+
+    def test_send_request_request_exception(self, mock_request):
+        mock_request.side_effect = exceptions.RequestException()
+
+        client = FunctionsClient(url='http://example.com')
+        payload = {"action": "get_atom", "input": {"handle": "123"}}
+
+        with pytest.raises(RequestError):
+            client._send_request(payload)
