@@ -28,18 +28,10 @@ DAS can be understood as a persistence layer for knowledge bases used in
 OpenCog Hyperon.
 
 
-<div id="over" style="position:absolute; width:100%; height:100%">
-<figure>
-    <img src="media/persistence_layer.jpg"
-         width="400"
-         alt="DAS as a persistence layer for openCog Hyperon">
-    <figcaption>DAS is OpenCog Hyperon's persistence layer.</figcaption>
-</figure>
+<div id="over" style="position:center;">
+<img src="media/persistence_layer.jpg" alt="drawing" width="400"/>
+*DAS is OpenCog Hyperon's persistence layer.*
 </div>
-
-popopoopo
-
-<img src="media/persistence_layer.jpg" alt="drawing" width="600"/>
 
 
 
