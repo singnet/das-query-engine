@@ -1,12 +1,12 @@
 import json
 from abc import ABC, abstractmethod
-from http import HTTPStatus
+from http import HTTPStatus  # noqa: F401
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import sessions
-from requests.exceptions import (
+from requests.exceptions import (  # noqa: F401
     ConnectionError,
     HTTPError,
     JSONDecodeError,
@@ -32,7 +32,7 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer, get_package_version
+from hyperon_das.utils import Assignment, QueryAnswer, get_package_version  # noqa: F401
 
 
 class QueryEngine(ABC):
