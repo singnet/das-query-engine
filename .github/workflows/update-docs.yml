@@ -1,0 +1,32 @@
+name: Update Docs 
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ^3.8.5
+      
+      - name: Check for changes in docs/ and deploy
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q "^docs/"; then
+            echo "Changes detected in docs/"
+            pip install poetry
+            poetry install --only doc
+            mkdocs gh-deploy
+          else
+            echo "No changes detected in docs/"
+          fi
+      
+      - name: Clean up
+        run: rm -rf site/
