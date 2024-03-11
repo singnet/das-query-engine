@@ -17,14 +17,13 @@ DAS can be understood as a persistence layer for knowledge bases used in
 OpenCog Hyperon.
 
 
+<div style="text-align: center;">
 <figure>
     <img src="media/persistence_layer.jpg"
          width="600"
          alt="DAS as a persistence layer for openCog Hyperon">
     <figcaption>DAS is OpenCog Hyperon's persistence layer.</figcaption>
 </figure>
-
-<div style="text-align: center;">
 </div>
 
 popopoopo
