@@ -16,7 +16,7 @@ connectivity, subgraph topology, etc.
 DAS can be understood as a persistence layer for knowledge bases used in
 OpenCog Hyperon.
 
-![DAS is OpenCog Hyperon's persistence layer](media/persistence_layer.jpg style="width:50%")
+![DAS is OpenCog Hyperon's persistence layer](media/persistence_layer.jpg)
 
 
 
