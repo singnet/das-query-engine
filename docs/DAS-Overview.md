@@ -1,3 +1,14 @@
+
+body {
+  margin: 0;
+}
+
+#over img {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
 # Distributed Atomspace
 
 Atomspace is the hypergraph OpenCog Hyperon uses to represent and store
@@ -17,7 +28,7 @@ DAS can be understood as a persistence layer for knowledge bases used in
 OpenCog Hyperon.
 
 
-<div style="display:table-cell; vertical-align:middle; text-align:center">
+<div id="over" style="position:absolute; width:100%; height:100%">
 <figure>
     <img src="media/persistence_layer.jpg"
          width="400"
