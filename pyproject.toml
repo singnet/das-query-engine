@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "hyperon_das"}]
 
 [tool.poetry.urls]
-"Documentation": "https://singnet.github.io/das-query-engine"
+"Documentation" = "https://singnet.github.io/das-query-engine"
 "Code" = "https://github.com/singnet/das-query-engine"
 "Bug Tracker" = "https://github.com/singnet/das-query-engine/issues"
 "Releases" = "https://github.com/singnet/das-query-engine/releases"
