@@ -178,9 +178,13 @@ class TestGetLinks:
         self._check_asserts(das, iterator)
         _db_down()
 
-    @pytest.mark.skip(reason="The load with MeTTa parse is not creating the template keys correctly")
+    @pytest.mark.skip(
+        reason="The load with MeTTa parse is not creating the template keys correctly"
+    )
     def test_get_links_with_remote_das(self, _cleanup):
-        das = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+        das = DistributedAtomSpace(
+            query_engine='remote', host=remote_das_host, port=remote_das_port
+        )
         iterator = das.get_links('Expression')
         self._check_asserts(das, iterator)
 
