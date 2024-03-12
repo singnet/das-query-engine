@@ -8,6 +8,7 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
   - [Installation](#installation)
     - [Using-pip](#using-pip)
     - [Using-Poetry](#using-poetry)
+  - [Pre-Commit Setup](#pre-commit-setup)
   - [Usage](#usage)
     - [Local](#local)
     - [Remote](#remote)
@@ -24,6 +25,7 @@ Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is 
       - [Remote scope synchronized with local Atoms](#remote-scope-synchronized-with-local-atoms)
     - [Traverse](#traverse)
   - [Tests](#tests)
+  - [Release Notes](#release-notes)
 
 ## Installation
 
