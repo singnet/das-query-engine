@@ -57,5 +57,5 @@ Components in the DAs architecture are designed to provide the same data
 manipulation API regardeless of whether it's being used locally or remotelly
 or, in the case of a local DAS, whether DB persistence is being used or not.
 
-<img src="assets/persistence_layer.jpg" width="600"/>
+<img src="assets/components.jpg" width="900"/>
 *DAS components*
