@@ -11,8 +11,6 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  features:
-    - search
     
 watch:
   - hyperon_das
