@@ -1,4 +1,4 @@
-# Distributed Atomspace
+# Distributed Atomspace - Overview
 
 Atomspace is the hypergraph OpenCog Hyperon uses to represent and store
 knowledge, being the source of knowledge for AI agents and the container of any
@@ -39,7 +39,7 @@ but rather a more complex OpenCog Hyperon's component that abstracts not only
 data modeling/access itself but also several other algorithms that are closely
 related to the way AI agents manipulates information.
 
-## DAS components
+## DAS' components
 
 DAS is delivered as a Python library
 [hyperon-das](https://pypi.org/project/hyperon-das/) which can be used in two
@@ -104,3 +104,46 @@ Having this abstraction is important because it allows us to change or to
 extend the actual data storage without affecting the query algorithms (such as
 pattern matching) implemented in traverse and query engines. AtomDB can be
 backended by in-RAM data structures or one or more DBMSs.
+
+## Higher level indexing
+
+DAS uses a DBMS to store atoms. By doing so it uses the indexing capabilities
+of this DBMS to retrieve atoms faster. But in addition to this, DAS also
+creates other custom indexes and store these indexes in another DBMS. The most
+relevant of such indexes is the Pattern Inverted Index.
+
+An inverted index is a data structure which stores a map from contents (words,
+sentences, numbers, etc) to where they can be found in a given data container
+(database, file system etc).
+
+This type of data structure is largely used in document retrieval systems to
+implement efficient search engines. The idea is spending computational time
+when documents are inserted in the document base to index and record the words
+that appear in each document (and possibly the position they happen inside the
+documents). Afterwards this index can be used by the search engine to
+efficiently locate documents that contain a given set of keywords.
+
+The entities in the Opencog Hyperon's context are different from the ones in
+typical document retrieval systems but their roles and the general idea of the
+algorithms are very similar. In OpenCog Hyperon's context, a knowledge base is
+a set of toplevel MeTTa expressions (which may contain one or more
+sub-expressions). When the knowledge base is being loaded, we can create an
+inverted index of patterns in each toplevel expression and use such index later
+to perform pattern matching.
+
+For instance, given as toplevel expression like this one:
+
+```
+(interacts_with (protein ARF5) (protein RL40))
+```
+
+We could add entries like these ones in the Pattern Inverted Index (where `H1`
+is the handle of the above toplevel expression):
+
+```
+(interacts_with * (protein RL40)) -> H1
+(interacts_with (protein ARF5) * ) -> H1
+(interacts_with * *) -> H1
+```
+
+## Pattern matcher
