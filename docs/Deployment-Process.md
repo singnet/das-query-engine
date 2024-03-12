@@ -229,4 +229,3 @@ After the workflow execution, verify if all jobs were successfully completed. Th
 
 ![Verify New Tag](media/img81.jpg)
 
-

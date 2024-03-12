@@ -25,6 +25,7 @@ jobs:
             echo "Changes detected in docs/"
             pip install poetry
             poetry install --only doc
+            poetry shell
             mkdocs gh-deploy
           else
             echo "No changes detected in docs/"
