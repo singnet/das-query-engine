@@ -11,15 +11,18 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-
+  features:
+    - search
+    
 watch:
   - hyperon_das
 
 plugins:
-- mkdocstrings:
-    handlers:
-      python:
-        paths: [hyperon_das]
-        options:
-          show_source: false
-
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [hyperon_das]
+          options:
+            show_source: false
+  - search
+  
