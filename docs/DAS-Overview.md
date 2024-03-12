@@ -76,3 +76,31 @@ server to make the queries in the remote DAS and return a answer which is a
 proper combination of local and remote information. For instance, if there're
 different versions of the same atom in local and remote DAS, the local version
 is returned.
+
+Both engines use the __Cache__ in order to make queries involving a remote DAS
+faster. The DAS' cache is not exactly like a traditional memory or disc cache,
+where data is stored basically in the same way in both, the cache and the
+primary data repository, and queries are answered by searching the data in the
+former and then in the latter. The DAS's cache implements this functionality
+but it also sorts and partitions queries' results in such a way that the caller
+sees the most relevant results first.
+
+All the queries that return more than one atom, return an iterator to the
+results instead of the results themselves. This way only a subset of the
+results is returned in a remote query. When the caller iterates throught this
+iterator, other chunks of results are fetched on demand from the remote DAS
+until all the results have been visited. Before splitting the results in
+chunks, the resulting atoms are sorted by "relevance", which can be a measure
+based in atoms' Short and Long Term Importance (STI and LTI), in a way that the
+most relevant results are iterated first. This is important because most AI
+agents make several queries and visit the results in a combinatorial fashion so
+visiting every single possible combination of results is not practical. Having
+results sorted by relevance allow the agents to constraint the search and
+eventually avoid fetching too many chunks of results from the remote server.
+
+The __AtomDB__ is somehow like a Data Access Object or a database interface
+layer to abstract the calls to the database where atoms are actually stored.
+Having this abstraction is important because it allows us to change or to
+extend the actual data storage without affecting the query algorithms (such as
+pattern matching) implemented in traverse and query engines. AtomDB can be
+backended by in-RAM data structures or one or more DBMSs.
