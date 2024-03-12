@@ -16,8 +16,7 @@ connectivity, subgraph topology, etc.
 DAS can be understood as a persistence layer for knowledge bases used in
 OpenCog Hyperon.
 
-<img src="assets/persistence_layer.pdf" width="400"/>
-*DAS as OpenCog Hyperon's persistence layer*
+<img src="assets/persistence_layer.jpg" width="400"/>
 
 The data manipulation API provides a defined set of operations without exposing
 database details such as data modeling and the DBMS (Database Management
@@ -53,9 +52,27 @@ knowledge base and can, optionally, connect to a remote DAS server, exposing
 its contents to the local program. In this case, the local knowledge base can
 store its contents in RAM or can use a DB backend to persist it.
 
-Components in the DAs architecture are designed to provide the same data
-manipulation API regardeless of whether it's being used locally or remotelly
-or, in the case of a local DAS, whether DB persistence is being used or not.
-
 <img src="assets/components.jpg" width="900"/>
-*DAS components*
+
+Components in the DAs architecture are designed to provide the same[data
+manipulation API](https://singnet.github.io/das-query-engine/api/das/)
+regardeless of whether it's being used locally or remotelly or, in the case of
+a local DAS, whether DB persistence is being used or not.
+
+Part of this API is delagated to __Traverse Engine__, which interacts with the
+Query Engine and the Cache to provide means to the user to traverse the
+Atomspace hypergraph. Operations like finding the links pointing from/to a
+given atom or finding atoms in the surounding neighboorhood are performed by
+this engine, which controls the pre-fetching of the surrounding atoms when a
+remote DAS is being used, in such a way that following links can be done
+quickly.
+
+The __Query Engine__ is where global queries are processed. These are queries
+for specific atoms or sets of atoms that satisfies some criteria, including
+pattern matching. When making a query, the user can specify whether only local
+atoms should be considered or whether atoms in a remote DAS should be searched
+as well. If that's the case, the Query Engine connects to a remote OpenFaaS
+server to make the queries in the remote DAS and return a answer which is a
+proper combination of local and remote information. For instance, if there're
+different versions of the same atom in local and remote DAS, the local version
+is returned.
