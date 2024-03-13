@@ -55,7 +55,9 @@ knowledge base and can, optionally, connect to one or more remote DAS servers,
 exposing their contents to the local program. In this case, the local knowledge
 base can store its contents in RAM or can use a DB backend to persist it.
 
+<p align="center">
 <img src="assets/components.png" width="900"/>
+</p>
 
 Components in the DAs architecture are designed to provide the same[data
 manipulation API](https://singnet.github.io/das-query-engine/api/das/)
@@ -160,7 +162,9 @@ base that satisfies the passed expression.
 
 For instance, suppose we have the following knowledge base in DAS.
 
+<p align="center">
 <img src="assets/pmquery_1.png" width="500"/>
+</p>
 
 We could search for a pattern like:
 
@@ -184,17 +188,23 @@ In this example, "Chimp" and "Monkey" are not a suitable answer to replace `V1`
 and `V2` because there's a possible value for `V3` that satisfies the `AND`
 clause in the pattern, as shown below.
 
+<p align="center">
 <img src="assets/pmquery_2.png" width="500"/>
+</p>
 
 On the other hand, there are other pair of nodes which could be used to match
 `V1` and `V2` whithout matching the `AND` clause, as shown below.
 
+<p align="center">
 <img src="assets/pmquery_3.png" width="500"/>
+</p>
 
 The answer for the query is all the subgraphs that satisfy the pattern. In our
 example, the answer would be as follows.
 
+<p align="center">
 <img src="assets/pmquery_4.png" width="500"/>
+</p>
 
 ## Mapping knowledge bases to nodes and links
 
