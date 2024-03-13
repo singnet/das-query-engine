@@ -126,24 +126,26 @@ efficiently locate documents that contain a given set of keywords.
 The entities in the Opencog Hyperon's context are different from the ones in
 typical document retrieval systems but their roles and the general idea of the
 algorithms are very similar. In OpenCog Hyperon's context, a knowledge base is
-a set of toplevel MeTTa expressions (which may contain one or more
-sub-expressions). When the knowledge base is loaded, we can create an inverted
-index of patterns present in each toplevel expression and use such index later
-to perform pattern matching.
+a set of toplevel links (which may point to nodes or other to other links) When
+the knowledge base is loaded, we can create an inverted index of patterns
+present in each toplevel link and use such index later to perform pattern
+matching.
 
-For instance, given as toplevel expression like this one:
+For instance, given as toplevel link like this one:
 
 ```
-(interacts_with (protein ARF5) (protein RL40))
+Inherits
+  <Concept A>
+  <Concept B>
 ```
 
 We could add entries like these ones in the Pattern Inverted Index (where `H1`
-is the handle of the above toplevel expression):
+is the handle of the toplevel link above):
 
 ```
-(interacts_with * (protein RL40)) -> H1
-(interacts_with (protein ARF5) * ) -> H1
-(interacts_with * *) -> H1
+Inherits * <Concept B> ==> H1
+Inherits <Concept A> * ==> H1
+Inherits * * ==> H1
 ```
 
 ## Pattern Matcher
@@ -190,3 +192,26 @@ The answer for the query is all the subgraphs that satisfy the pattern. In our
 example, the answer would be as follows.
 
 <img src="assets/pmquery_4.png" width="500"/>
+
+## Mapping knowledge bases to nodes and links
+
+Before loading a knowledge base into DAS, you need to define a proper mapping
+to Atomspace nodes and links. DAS doesn't make any assumptions regarding nodes
+or link types, arity etc. When adding nodes and links using DAS' API, one may
+specify atom types freely and the semantic meaning of such atom types are
+totally concerned to the application. DAS don't make any kind of processing
+based in pre-defined types (actually, there are no internally pre-defined atom
+types)
+
+DAS also don't provide a way to read a text or SQL or whatever type of file in
+order to load a knowledge base. There's no DAS-defined file syntax for this.
+If one needs to import a knowledge base, it needs to provide a proper loader
+application to parse the input file(s) and make the proper calls to DAS' API in
+order to add nodes and links.
+
+Surely one of the interesting topics for future/on-going work on DAS is to
+provide loaders (and respective nodes/links mapping) for different types of
+knowledge base formats like SQL, Atomese, etc. We already have such a [loader
+for MeTTa files](https://github.com/singnet/das-metta-parser)
+
+## DAS Server Deployment Architecture
