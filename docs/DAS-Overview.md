@@ -157,7 +157,6 @@ base that satisfies the passed expression.
 
 For instance, suppose we have the following knowledge base in DAS.
 
-<img src="assets/pmquery_1.png" width="500"/>
 
 We could search for a pattern like:
 
