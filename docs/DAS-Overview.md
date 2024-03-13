@@ -157,7 +157,6 @@ base that satisfies the passed expression.
 
 For instance, suppose we have the following knowledge base in DAS.
 
-<img src="assets/pmquery_1.png" width="500"/>
 
 We could search for a pattern like:
 
@@ -181,7 +180,6 @@ In this example, "Chimp" and "Monkey" are not a suitable answer to replace `V1`
 and `V2` because there's a possible value for `V3` that satisfies the `AND`
 clause in the pattern, as shown below.
 
-<img src="assets/pmquery_2.png" width="500"/>
 
 On the other hand, there are other pair of nodes which could be used to match
 `V1` and `V2` whithout matching the `AND` clause, as shown below.
