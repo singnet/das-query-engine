@@ -7,6 +7,7 @@ readme = "README.md"
 packages = [{include = "hyperon_das"}]
 
 [tool.poetry.urls]
+"Documentation" = "https://singnet.github.io/das-query-engine"
 "Code" = "https://github.com/singnet/das-query-engine"
 "Bug Tracker" = "https://github.com/singnet/das-query-engine/issues"
 "Releases" = "https://github.com/singnet/das-query-engine/releases"
@@ -24,6 +25,12 @@ pytest = "^7.4.2"
 pytest-cov = "^4.1.0"
 flake8-pyproject = "^1.2.3"
 pre-commit = "^3.5.0"
+poetry-plugin-export = "^1.6.0"
+
+[tool.poetry.group.doc.dependencies]
+mkdocs-material = "^9.5.13"
+mkdocstrings = "^0.24.1"
+mkdocstrings-python = "^1.8.0"
 
 [tool.isort]
 py_version = 38

@@ -1,0 +1,26 @@
+site_name: Distributed Atomspace
+repo_url: https://github.com/singnet/das-query-engine
+repo_name: singnet/das-query-engine
+edit_uri: tree/master/docs
+
+theme:
+  name: material
+  palette:
+    primary: green
+    accent: light green
+  font:
+    text: Roboto
+    code: Roboto Mono
+    
+watch:
+  - hyperon_das
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [hyperon_das]
+          options:
+            show_source: false
+  - search
+  
