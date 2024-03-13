@@ -16,7 +16,7 @@ connectivity, subgraph topology, etc.
 DAS can be understood as a persistence layer for knowledge bases used in
 OpenCog Hyperon.
 
-<img src="assets/persistence_layer.jpg" width="400"/>
+<img src="assets/persistence_layer.png" width="400"/>
 
 The data manipulation API provides a defined set of operations without exposing
 database details such as data modeling and the DBMS (Database Management
@@ -52,7 +52,7 @@ knowledge base and can, optionally, connect to one or more remote DAS servers,
 exposing their contents to the local program. In this case, the local knowledge
 base can store its contents in RAM or can use a DB backend to persist it.
 
-<img src="assets/components.jpg" width="900"/>
+<img src="assets/components.png" width="900"/>
 
 Components in the DAs architecture are designed to provide the same[data
 manipulation API](https://singnet.github.io/das-query-engine/api/das/)
