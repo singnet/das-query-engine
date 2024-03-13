@@ -149,12 +149,35 @@ is the handle of the above toplevel expression):
 ## Pattern Matcher
 
 DAS' query engine can answer pattern matching queries. These are queries where
-the caller specifies a subgraph with nodes, links and wildcards and the engine
-finds every occurrencies of the subgraph (i.e. the _pattern_) in the knowledge
-base.
+the caller specifies a _pattern_ i.e. a boolean expression of subgraphs with
+nodes, links and wildcards and the engine finds every subgraph in the knowledge
+base that satisfies the passed expression.
 
-For instance, suppose we have the following knowledge base in DAS:
+For instance, suppose we have the following knowledge base in DAS.
 
-<img src="assets/pmquery_1.png" width="600"/>
+<img src="assets/pmquery_1.png" width="400"/>
 
+We could search for a pattern like:
+
+```
+AND
+  Similar(V1, V2)
+  NOT
+    AND
+      IS_A(V1, V3)
+      IS_A(V2, V3)
+```
+
+`V1`, `V2` and `V3` are wildcards or variables. In any candidate subgraph
+answer, the atom replacing `V1`, for instance, should be the same in all the
+links where `V1` appears. In other words, with this pattern we are searching
+for two nodes `V1` and `V2` such that there exist a similarity link between
+them but there's no pair of inheritance links pointing `V1` and `V2` to the
+same node `V3`, no matter the value of `V3`.
+
+In this example, "Chimp" and "Monkey" are not a suitable answer to replace `V1`
+and `V2` because there's a possible value for `V3` that satisfies the `AND`
+clause in the pattern, as shown below.
+
+<img src="assets/pmquery_2.png" width="400"/>
 
