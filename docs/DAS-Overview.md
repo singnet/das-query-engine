@@ -39,7 +39,7 @@ but rather a more complex OpenCog Hyperon's component that abstracts not only
 data modeling/access itself but also several other algorithms that are closely
 related to the way AI agents manipulates information.
 
-## DAS' components
+## DAS' Components
 
 DAS is delivered as a Python library
 [hyperon-das](https://pypi.org/project/hyperon-das/) which can be used in two
@@ -48,9 +48,9 @@ different ways:
 1. To create a DAS server which is supposed to contain a knowledge base and
 provide it to many remote clients (somehow like a DBMS).
 2. To instantiate a DAS in a Python program which can store a smaller local
-knowledge base and can, optionally, connect to a remote DAS server, exposing
-its contents to the local program. In this case, the local knowledge base can
-store its contents in RAM or can use a DB backend to persist it.
+knowledge base and can, optionally, connect to one or more remote DAS servers,
+exposing their contents to the local program. In this case, the local knowledge
+base can store its contents in RAM or can use a DB backend to persist it.
 
 <img src="assets/components.jpg" width="900"/>
 
@@ -70,12 +70,12 @@ quickly.
 The __Query Engine__ is where global queries are processed. These are queries
 for specific atoms or sets of atoms that satisfies some criteria, including
 pattern matching. When making a query, the user can specify whether only local
-atoms should be considered or whether atoms in a remote DAS should be searched
-as well. If that's the case, the Query Engine connects to a remote OpenFaaS
-server to make the queries in the remote DAS and return a answer which is a
+atoms should be considered or whether atoms in remote DASs should be searched
+as well. If that's the case, the Query Engine connects to the remote OpenFaaS
+servers to make the queries in the remote DASs and return a answer which is a
 proper combination of local and remote information. For instance, if there're
-different versions of the same atom in local and remote DAS, the local version
-is returned.
+different versions of the same atom in local and one of the remote DASs, the
+local version is returned.
 
 Both engines use the __Cache__ in order to make queries involving a remote DAS
 faster. The DAS' cache is not exactly like a traditional memory or disc cache,
@@ -105,7 +105,7 @@ extend the actual data storage without affecting the query algorithms (such as
 pattern matching) implemented in traverse and query engines. AtomDB can be
 backended by in-RAM data structures or one or more DBMSs.
 
-## Higher level indexing
+## Higher Level Indexing
 
 DAS uses a DBMS to store atoms. By doing so it uses the indexing capabilities
 of this DBMS to retrieve atoms faster. But in addition to this, DAS also
@@ -127,8 +127,8 @@ The entities in the Opencog Hyperon's context are different from the ones in
 typical document retrieval systems but their roles and the general idea of the
 algorithms are very similar. In OpenCog Hyperon's context, a knowledge base is
 a set of toplevel MeTTa expressions (which may contain one or more
-sub-expressions). When the knowledge base is being loaded, we can create an
-inverted index of patterns in each toplevel expression and use such index later
+sub-expressions). When the knowledge base is loaded, we can create an inverted
+index of patterns present in each toplevel expression and use such index later
 to perform pattern matching.
 
 For instance, given as toplevel expression like this one:
@@ -146,4 +146,15 @@ is the handle of the above toplevel expression):
 (interacts_with * *) -> H1
 ```
 
-## Pattern matcher
+## Pattern Matcher
+
+DAS' query engine can answer pattern matching queries. These are queries where
+the caller specifies a subgraph with nodes, links and wildcards and the engine
+finds every occurrencies of the subgraph (i.e. the _pattern_) in the knowledge
+base.
+
+For instance, suppose we have the following knowledge base in DAS:
+
+<img src="assets/pmquery_1.png" width="600"/>
+
+
