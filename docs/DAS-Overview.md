@@ -59,8 +59,8 @@ base can store its contents in RAM or can use a DB backend to persist it.
 <img src="assets/components.png" width="900"/>
 </p>
 
-Components in the DAs architecture are designed to provide the same[data
-manipulation API](https://singnet.github.io/das-query-engine/api/das/)
+Components in the DAs architecture are designed to provide the same 
+[data manipulation API](https://singnet.github.io/das-query-engine/api/das/)
 regardeless of whether it's being used locally or remotelly or, in the case of
 a local DAS, whether DB persistence is being used or not.
 
@@ -224,8 +224,8 @@ order to add nodes and links.
 
 Surely one of the interesting topics for future/on-going work on DAS is to
 provide loaders (and respective nodes/links mapping) for different types of
-knowledge base formats like SQL, Atomese, etc. We already have such a [loader
-for MeTTa files](https://github.com/singnet/das-metta-parser)
+knowledge base formats like SQL, Atomese, etc. We already have such a
+[loader for MeTTa files](https://github.com/singnet/das-metta-parser).
 
 ## DAS Server Deployment and Architecture
 
@@ -257,4 +257,4 @@ stored in a private Docker hub registry.
 Clients can connect using HTTP, gRPC or an external lambda functions (OpenFaaS
 functions can only connect to OpenFaaS and the same is true for AWS functions).
 
-DAS is versioned and released as a library in [PyPI](https://pypi.org/project/hyperon-das/).
+DAS is versioned and released as a [library in PyPI](https://pypi.org/project/hyperon-das/).
