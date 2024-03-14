@@ -42,7 +42,15 @@ but rather a more complex OpenCog Hyperon's component that abstracts not only
 data modeling/access itself but also several other algorithms that are closely
 related to the way AI agents manipulate information.
 
-## DAS' Components
+## Table of contents
+
+- [DAS Components](#das-components)
+- [Higher Level Indexing](#higher-level-indexing)
+- [Pattern Matcher](#pattern-matcher)
+- [Mapping knowledge bases to nodes and links](#mapping-knowledge-bases-to-nodes-and-links)
+- [DAS Server Deployment and Architecture](#das-server-deployment-and-architecture)
+
+## DAS Components
 
 DAS is delivered as a Python library
 [hyperon-das](https://pypi.org/project/hyperon-das/) which can be used in two
@@ -131,7 +139,7 @@ efficiently locate documents that contain a given set of keywords.
 The entities in the Opencog Hyperon's context are different from the ones in
 typical document retrieval systems but their roles and the general idea of the
 algorithms are very similar. In OpenCog Hyperon's context, a knowledge base is
-a set of toplevel links (which may point to nodes or other to other links). When
+a set of toplevel links (which may point to nodes or to other links). When
 the knowledge base is loaded, we can create an inverted index of patterns
 present in each toplevel link and use such index later to perform pattern
 matching.
@@ -214,7 +222,7 @@ or link types, arity etc. When adding nodes and links using DAS' API, one may
 specify atom types freely and the semantic meaning of such atom types are
 totally concerned with the application. DAS don't make any kind of processing
 based in pre-defined types (actually, there are no internally pre-defined atom
-types)
+types).
 
 DAS also doesn't provide a way to read a text or SQL or whatever type of file in
 order to load a knowledge base. There's no DAS-defined file syntax for this.
