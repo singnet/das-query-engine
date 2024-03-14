@@ -227,8 +227,34 @@ provide loaders (and respective nodes/links mapping) for different types of
 knowledge base formats like SQL, Atomese, etc. We already have such a [loader
 for MeTTa files](https://github.com/singnet/das-metta-parser)
 
-## DAS Server Deployment Architecture
+## DAS Server Deployment and Architecture
+
+DAS server is deployed in a [Lambda Architecture](https://en.wikipedia.org/wiki/Lambda_architecture)
+based either in [OpenFaaS](https://www.openfaas.com/) or [AWS Lambda](https://aws.amazon.com/pm/lambda/).
+We made a comparative study of these two architectures (results are presented in
+this [report](ihttps://docs.google.com/document/d/1kQhM62T3TIb3ECoqBxmqPulMciJq7Vev3-f_Gnhes_s/)
+and decided to prioritize OpenFaaS.
+Although deployment in AWS Lambda is still possible, currently only OpenFaaS is
+supported by our [automated deployment tool](https://github.com/singnet/das-toolbox).
+This architecture is presented in the diagram below.
+
 
 <p align="center">
-<img src="assets/architecture.jpg" width="900"/>
+<img src="assets/architecture.jpg" width="800"/>
 </p>
+
+When deploying in AWS Lambda, [Redis](https://redis.io/) and
+[MongoDB](https://www.mongodb.com/) can be replaced by AWS'
+[DocumentDB](https://aws.amazon.com/pt/documentdb/) and
+[ElastiCache](https://aws.amazon.com/elasticache/redis/) but the overall
+structure is basically the same.
+
+Functions are deployed in servers in the cloud as
+[Docker](https://www.docker.com/) containers, built in our CI/CD pipeline by
+automated [GitHub Actions](https://docs.github.com/en/actions) scripts and
+stored in a private Docker hub registry.
+
+Clients can connect using HTTP, gRPC or an external lambda functions (OpenFaaS
+functions can only connect to OpenFaaS and the same is true for AWS functions).
+
+DAS is versioned and released as a library in [PyPI](https://pypi.org/project/hyperon-das/).
