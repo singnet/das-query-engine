@@ -10,6 +10,7 @@ from hyperon_das.exceptions import (
     InvalidDASParameters,
     InvalidQueryEngine,
 )
+from hyperon_das.index import Index, IndexField, operator
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
@@ -43,6 +44,60 @@ class DistributedAtomSpace:
                 message='The possible values are: `local` or `remote`',
                 details=f'query_engine={query_engine_parameter}',
             )
+
+    @staticmethod
+    def about() -> dict:
+        return {
+            'das': {
+                'name': 'hyperon-das',
+                'version': get_package_version('hyperon_das'),
+                'summary': 'Query Engine API for Distributed AtomSpace',
+            },
+            'atom_db': {
+                'name': 'hyperon-das-atomdb',
+                'version': get_package_version('hyperon_das_atomdb'),
+                'summary': 'Persistence layer for Distributed AtomSpace',
+            },
+        }
+
+    @staticmethod
+    def get_node_handle(node_type: str, node_name: str) -> str:
+        """
+        This method retrieves a handle from the node parameters
+
+        Args:
+            node_type (str): The type of the node being queried.
+            node_name (str): The name of the specific node being queried.
+
+        Returns:
+            str: A handle
+
+        Examples:
+            >>> result = das.get_node_handle(node_type='Concept', node_name='human')
+            >>> print(result)
+            "af12f10f9ae2002a1607ba0b47ba8407"
+        """
+        return AtomDB.node_handle(node_type, node_name)
+
+    @staticmethod
+    def get_link_handle(link_type: str, link_targets: List[str]) -> str:
+        """
+        This method retrieves a handle from the link parameters.
+
+        Args:
+            link_type (str): The type of the link being queried.
+            link_targets (List[str]): A list of target identifiers that the link is associated with.
+
+        Returns:
+           str: A handle
+
+        Examples:
+            >>> result = das.get_link(link_type='Similarity', targets=['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'])
+            >>> print(result)
+            "bad7472f41a0e7d601ca294eb4607c3a"
+
+        """
+        return AtomDB.link_handle(link_type, link_targets)
 
     def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
         """
@@ -314,45 +369,6 @@ class DistributedAtomSpace:
         """This method applies changes made locally to the remote server"""
         self.query_engine.commit()
 
-    @staticmethod
-    def get_node_handle(node_type: str, node_name: str) -> str:
-        """
-        This method retrieves a handle from the node parameters
-
-        Args:
-            node_type (str): The type of the node being queried.
-            node_name (str): The name of the specific node being queried.
-
-        Returns:
-            str: A handle
-
-        Examples:
-            >>> result = das.get_node_handle(node_type='Concept', node_name='human')
-            >>> print(result)
-            "af12f10f9ae2002a1607ba0b47ba8407"
-        """
-        return AtomDB.node_handle(node_type, node_name)
-
-    @staticmethod
-    def get_link_handle(link_type: str, link_targets: List[str]) -> str:
-        """
-        This method retrieves a handle from the link parameters.
-
-        Args:
-            link_type (str): The type of the link being queried.
-            link_targets (List[str]): A list of target identifiers that the link is associated with.
-
-        Returns:
-           str: A handle
-
-        Examples:
-            >>> result = das.get_link(link_type='Similarity', targets=['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'])
-            >>> print(result)
-            "bad7472f41a0e7d601ca294eb4607c3a"
-
-        """
-        return AtomDB.link_handle(link_type, link_targets)
-
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Adds a node to the database.
@@ -499,17 +515,64 @@ class DistributedAtomSpace:
         except AtomDoesNotExist:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
 
-    @staticmethod
-    def about() -> dict:
-        return {
-            'das': {
-                'name': 'hyperon-das',
-                'version': get_package_version('hyperon_das'),
-                'summary': 'Query Engine API for Distributed AtomSpace',
-            },
-            'atom_db': {
-                'name': 'hyperon-das-atomdb',
-                'version': get_package_version('hyperon_das_atomdb'),
-                'summary': 'Persistence layer for Distributed AtomSpace',
-            },
+    def create_index(self, atom_type: str, field: str, conditions: dict = None, **kwargs) -> None:
+        """Create an index for the database"""
+        if conditions is not None:
+            kwargs.update(conditions)
+        elif len(kwargs) != 0:
+            kwargs = operator.DEFAULT(**kwargs)
+        else:
+            kwargs = {'name': field}
+
+        kwargs['collection'] = atom_type
+        collection, index = Index(**kwargs).create()
+        return self.query_engine.create_index(collection, index)
+
+
+if __name__ == '__main__':
+    from tests.integration.helpers import (
+        _db_down,
+        _db_up,
+        load_metta_animals_base,
+        mongo_port,
+        redis_port,
+    )
+
+    _db_up()
+    das = DistributedAtomSpace(
+        query_engine='local',
+        atomdb='redis_mongo',
+        mongo_port=mongo_port,
+        mongo_username='dbadmin',
+        mongo_password='dassecret',
+        redis_port=redis_port,
+        redis_cluster=False,
+        redis_ssl=False,
+    )
+    load_metta_animals_base(das)
+    das.add_link(
+        {
+            'type': 'Similarity',
+            'targets': [
+                {"type": "Symbol", "name": 'Similarity', "is_literal": False},
+                {"type": "Symbol", "name": '"human"', "is_literal": True},
+                {"type": "Symbol", "name": '"dog"', "is_literal": True},
+            ],
+            'score': 30,
         }
+    )
+    das.commit_changes()
+    collection = das.backend.mongo_db['links_n']
+
+    idexes = [i for i in collection.list_indexes()]
+
+    das.create_index(atom_type='node', field='name')
+
+    # das.create_index(atom_type='link', field='type', conditions=operator.EQ(type='Similarity'))
+    das.create_index(atom_type='link', field='type', type='Similarity')
+
+    das.create_index(
+        atom_type='link', field='type', conditions=operator.AND(type='Expression', score=True)
+    )
+
+    _db_down()

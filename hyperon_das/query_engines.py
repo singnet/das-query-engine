@@ -254,6 +254,9 @@ class LocalQueryEngine(QueryEngine):
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]] = None):
         self.local_backend.reindex(pattern_index_templates)
 
+    def create_index(self, collection, index):
+        return self.local_backend.create_index(collection, index)
+
 
 class RemoteQueryEngine(QueryEngine):
     def __init__(self, backend, kwargs):
@@ -398,3 +401,6 @@ class RemoteQueryEngine(QueryEngine):
 
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
         raise NotImplementedError()
+
+    def create_index(self, collection, index):
+        return self.local_query_engine.create_index(collection, index)
