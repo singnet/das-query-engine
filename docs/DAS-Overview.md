@@ -184,7 +184,7 @@ for two nodes `V1` and `V2` such that there exist a similarity link between
 them but there's no pair of inheritance links pointing `V1` and `V2` to the
 same node `V3`, no matter the value of `V3`.
 
-In this example, "Chimp" and "Monkey" are not a suitable answer to replace `V1`
+In this example, `Chimp` and `Human` are not a suitable answer to replace `V1`
 and `V2` because there's a possible value for `V3` that satisfies the `AND`
 clause in the pattern, as shown below.
 
@@ -228,3 +228,7 @@ knowledge base formats like SQL, Atomese, etc. We already have such a [loader
 for MeTTa files](https://github.com/singnet/das-metta-parser)
 
 ## DAS Server Deployment Architecture
+
+<p align="center">
+<img src="assets/pmquery_4.png" width="900"/>
+</p>
