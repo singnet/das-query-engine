@@ -40,7 +40,7 @@ provides a lot of other functionalities:
 This is why DAS is not just a Data Access Object or a database interface layer
 but rather a more complex OpenCog Hyperon's component that abstracts not only
 data modeling/access itself but also several other algorithms that are closely
-related to the way AI agents manipulates information.
+related to the way AI agents manipulate information.
 
 ## DAS' Components
 
@@ -61,13 +61,13 @@ base can store its contents in RAM or can use a DB backend to persist it.
 
 Components in the DAS architecture are designed to provide the same 
 [data manipulation API](https://singnet.github.io/das-query-engine/api/das/)
-regardeless of whether it's being used locally or remotelly or, in the case of
+regardless of whether it's being used locally or remotely or, in the case of
 a local DAS, whether DB persistence is being used or not.
 
-Part of this API is delagated to __Traverse Engine__, which interacts with the
+Part of this API is delegated to __Traverse Engine__, which interacts with the
 Query Engine and the Cache to provide means to the user to traverse the
 Atomspace hypergraph. Operations like finding the links pointing from/to a
-given atom or finding atoms in the surounding neighboorhood are performed by
+given atom or finding atoms in the surrounding neighborhood are performed by
 this engine, which controls the pre-fetching of the surrounding atoms when a
 remote DAS is being used, in such a way that following links can be done
 quickly.
@@ -92,14 +92,14 @@ most relevant results first.
 
 All the queries that return more than one atom, return an iterator to the
 results instead of the results themselves. This way only a subset of the
-results is returned in a remote query. When the caller iterates throught this
+results are returned in a remote query. When the caller iterates through this
 iterator, other chunks of results are fetched on demand from the remote DAS
 until all the results have been visited. Before splitting the results in
 chunks, the resulting atoms are sorted by "relevance", which can be a measure
 based in atoms' Short and Long Term Importance (STI and LTI), in a way that the
 most relevant results are iterated first. This is important because most AI
 agents make several queries and visit the results in a combinatorial fashion so
-visiting every single possible combination of results is not practical. Having
+visiting every single possible combination of results are not practical. Having
 results sorted by relevance allow the agents to constraint the search and
 eventually avoid fetching too many chunks of results from the remote server.
 
@@ -114,7 +114,7 @@ backended by in-RAM data structures or one or more DBMSs.
 
 DAS uses a DBMS to store atoms. By doing so it uses the indexing capabilities
 of this DBMS to retrieve atoms faster. But in addition to this, DAS also
-creates other custom indexes and store these indexes in another DBMS. The most
+creates other custom indexes and stores these indexes in another DBMS. The most
 relevant of such indexes is the Pattern Inverted Index.
 
 An inverted index is a data structure which stores a map from contents (words,
@@ -193,7 +193,7 @@ clause in the pattern, as shown below.
 </p>
 
 On the other hand, there are other pair of nodes which could be used to match
-`V1` and `V2` whithout matching the `AND` clause, as shown below.
+`V1` and `V2` whitout matching the `AND` clause, as shown below.
 
 <p align="center">
 <img src="assets/pmquery_3.png" width="500"/>
@@ -212,11 +212,11 @@ Before loading a knowledge base into DAS, you need to define a proper mapping
 to Atomspace nodes and links. DAS doesn't make any assumptions regarding nodes
 or link types, arity etc. When adding nodes and links using DAS' API, one may
 specify atom types freely and the semantic meaning of such atom types are
-totally concerned to the application. DAS don't make any kind of processing
+totally concerned with the application. DAS don't make any kind of processing
 based in pre-defined types (actually, there are no internally pre-defined atom
 types)
 
-DAS also don't provide a way to read a text or SQL or whatever type of file in
+DAS also doesn't provide a way to read a text or SQL or whatever type of file in
 order to load a knowledge base. There's no DAS-defined file syntax for this.
 If one needs to import a knowledge base, it needs to provide a proper loader
 application to parse the input file(s) and make the proper calls to DAS' API in
