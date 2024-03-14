@@ -59,7 +59,7 @@ base can store its contents in RAM or can use a DB backend to persist it.
 <img src="assets/components.png" width="900"/>
 </p>
 
-Components in the DAs architecture are designed to provide the same 
+Components in the DAS architecture are designed to provide the same 
 [data manipulation API](https://singnet.github.io/das-query-engine/api/das/)
 regardeless of whether it's being used locally or remotelly or, in the case of
 a local DAS, whether DB persistence is being used or not.
@@ -83,12 +83,12 @@ different versions of the same atom in local and one of the remote DASs, the
 local version is returned.
 
 Both engines use the __Cache__ in order to make queries involving a remote DAS
-faster. The DAS' cache is not exactly like a traditional memory or disc cache,
-where data is stored basically in the same way in both, the cache and the
-primary data repository, and queries are answered by searching the data in the
-former and then in the latter. The DAS's cache implements this functionality
-but it also sorts and partitions queries' results in such a way that the caller
-sees the most relevant results first.
+faster. The DAS' cache is not exactly like a traditional cache, where data is
+stored basically in the same way in both, the cache and the primary data
+repository, and queries are answered by searching the data in the former and
+then in the latter. The DAS's cache implements this functionality but it also
+sorts and partitions queries' results in such a way that the caller sees the
+most relevant results first.
 
 All the queries that return more than one atom, return an iterator to the
 results instead of the results themselves. This way only a subset of the
@@ -131,7 +131,7 @@ efficiently locate documents that contain a given set of keywords.
 The entities in the Opencog Hyperon's context are different from the ones in
 typical document retrieval systems but their roles and the general idea of the
 algorithms are very similar. In OpenCog Hyperon's context, a knowledge base is
-a set of toplevel links (which may point to nodes or other to other links) When
+a set of toplevel links (which may point to nodes or other to other links). When
 the knowledge base is loaded, we can create an inverted index of patterns
 present in each toplevel link and use such index later to perform pattern
 matching.
