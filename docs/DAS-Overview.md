@@ -230,5 +230,5 @@ for MeTTa files](https://github.com/singnet/das-metta-parser)
 ## DAS Server Deployment Architecture
 
 <p align="center">
-<img src="assets/pmquery_4.png" width="900"/>
+<img src="assets/architecture.jpg" width="900"/>
 </p>
