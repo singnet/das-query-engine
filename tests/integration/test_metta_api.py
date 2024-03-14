@@ -104,12 +104,16 @@ class TestMettaAPI:
 
         answer = [query_answer for query_answer in das.query(query_3)]
         assert len(answer) == 2
-        handle = answer[0].assignment.mapping["$v2"]
+
+        # Sort the answer list based on the handle
+        answer.sort(key=lambda x: x.assignment.mapping["$v2"])
+
+        handle = answer[1].assignment.mapping["$v2"]
         assert handle == '9f27a331633c8bc3c49435ffabb9110e'
         symbol = das.get_atom(handle)
         assert symbol["type"] == "Symbol"
         assert symbol["name"] == "2"
-        handle = answer[1].assignment.mapping["$v2"]
+        handle = answer[0].assignment.mapping["$v2"]
         assert handle == '233d9a6da7d49d4164d863569e9ab7b6'
         symbol = das.get_atom(handle)
         assert symbol["type"] == "Expression"
@@ -137,8 +141,11 @@ class TestMettaAPI:
         )
 
         answer = [query_answer for query_answer in das.query(query_4)]
-
         assert len(answer) == 2
+
+        # Sort the answer list based on the $v handle
+        answer.sort(key=lambda x: x.assignment.mapping["$v"])
+
         handle = answer[0].assignment.mapping["$v"]
         assert handle == '963d66edfb77236054125e3eb866c8b5'
         symbol = das.get_atom(handle)

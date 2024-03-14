@@ -60,7 +60,7 @@ class DistributedAtomSpace:
         Raises:
             AtomDoesNotExist: If invalid parameter is provided.
 
-        Example:
+        Examples:
             >>> result = das.get_atom(handle="af12f10f9ae2002a1607ba0b47ba8407")
             >>> print(result)
             {
@@ -87,7 +87,7 @@ class DistributedAtomSpace:
         Raises:
             NodeDoesNotExist: If invalid parameters are provided.
 
-        Example:
+        Examples:
             >>> result = das.get_node(
                     node_type='Concept',
                     node_name='human'
@@ -120,7 +120,7 @@ class DistributedAtomSpace:
         Note:
             If the specified link or targets do not exist, the method returns None.
 
-        Example:
+        Examples:
             >>> human_handle = das.get_node_handle('Concept', 'human')
             >>> monkey_handle = das.get_node_handle('Concept', 'monkey')
             >>> result = das.get_link(
@@ -172,7 +172,7 @@ class DistributedAtomSpace:
         Returns:
             Union[List[str], List[Dict]]: A list of dictionaries containing detailed information of the links
 
-        Example:
+        Examples:
             >>> result = das.get_links(
                     link_type='Similarity',
                     target_types=['Concept', 'Concept']
@@ -201,7 +201,6 @@ class DistributedAtomSpace:
 
         Args:
             atom_handle (str): The unique handle of the atom
-            handles_only (bool, optional): If True return only handles. Defaults to False.
 
         Returns:
             List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms
@@ -238,13 +237,12 @@ class DistributedAtomSpace:
             query (Union[List[Dict[str, Any]], Dict[str, Any]]): A pattern described as a link (possibly with nested links)
                 with nodes and variables used to query the knowledge base.
                 If the query is represented as a list of dictionaries, it should be interpreted as a conjunction (AND) of all queries within the list
-            paramaters (Dict[str, Any], optional): query optional parameters
+            parameters (Dict[str, Any], optional): query optional parameters
 
         Returns:
-            QueryAnswerIterator: An iterator of QueryAnswer objects, which have a field
-            'assignment', with a mapping from variables to handles and another field
-            'subgraph', with the resulting subgraph after applying 'assignment' to rewrite
-            the query.
+            QueryAnswerIterator: An iterator of QueryAnswer objects, which have a field 'assignment',
+                with a mapping from variables to handles and another field 'subgraph',
+                with the resulting subgraph after applying 'assignment' to rewrite the query.
 
         Raises:
             UnexpectedQueryFormat: If query resolution lead to an invalid state
@@ -253,7 +251,7 @@ class DistributedAtomSpace:
             - No logical connectors (AND, OR, NOT) are allowed
             - If no match is found for the query, an empty list is returned.
 
-        Example:
+        Examples:
 
             >>> das.add_link({
                 "type": "Expression",
@@ -328,7 +326,7 @@ class DistributedAtomSpace:
         Returns:
             str: A handle
 
-        Example:
+        Examples:
             >>> result = das.get_node_handle(node_type='Concept', node_name='human')
             >>> print(result)
             "af12f10f9ae2002a1607ba0b47ba8407"
@@ -347,7 +345,7 @@ class DistributedAtomSpace:
         Returns:
            str: A handle
 
-        Example:
+        Examples:
             >>> result = das.get_link(link_type='Similarity', targets=['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'])
             >>> print(result)
             "bad7472f41a0e7d601ca294eb4607c3a"
@@ -374,7 +372,7 @@ class DistributedAtomSpace:
         Raises:
             AddNodeException: If the 'type' or 'name' fields are missing in node_params.
 
-        Example:
+        Examples:
             >>> node_params = {
                     'type': 'Reactome',
                     'name': 'Reactome:R-HSA-164843',
@@ -401,7 +399,7 @@ class DistributedAtomSpace:
         Raises:
             AddLinkException: If the 'type' or 'targets' fields are missing in link_params.
 
-        Example:
+        Examples:
             >>> link_params = {
                     'type': 'Evaluation',
                     'targets': [

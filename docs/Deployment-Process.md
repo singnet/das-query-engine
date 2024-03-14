@@ -91,7 +91,7 @@ and [<u>https://pypi.org/project/hyperon-das/#history</u>](https://pypi.org/proj
 
 ## New Version of DAS Serverless Functions
 
-1.  Navigate to the [<u>DAS Serverless Functions repository</u>](https://github.com/singnet/das-servless-functions/).
+1.  Navigate to the [<u>DAS Serverless Functions repository</u>](https://github.com/singnet/das-serverless-functions/).
 
 ![Serverless Functions Repository](media/img43.jpg)
 
@@ -109,7 +109,7 @@ After this change, it is necessary to commit to the master branch to record the 
 
 4.  Verify latest created tag before versioning
 
-It is important to note what the last version created was at [<u>https://github.com/singnet/das-servless-functions/tags</u>](https://github.com/singnet/das-servless-functions/tags) before creating a new version.
+It is important to note what the last version created was at [<u>https://github.com/singnet/das-serverless-functions/tags</u>](https://github.com/singnet/das-serverless-functions/tags) before creating a new version.
 
 5.  Select the "Vultr Build" workflow in Actions and run it manually.
 
@@ -125,7 +125,7 @@ After the workflow execution, refresh the page and check if a new workflow is ru
 
 7.  Verify the new tag at DAS Serverless Functions repository tags and Docker Hub.
 
-It is important to note that this pipeline should generate an img on Docker Hub, following the format **v1.0.0-queryengine**. Make sure that the img is generated correctly and available at [<u>https://hub.docker.com/r/trueagi/das/tags</u>](https://hub.docker.com/r/trueagi/das/tags). After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at [<u>https://github.com/singnet/das-servless-functions/tags</u>](https://github.com/singnet/das-servless-functions/tags).
+It is important to note that this pipeline should generate an img on Docker Hub, following the format **v1.0.0-queryengine**. Make sure that the img is generated correctly and available at [<u>https://hub.docker.com/r/trueagi/das/tags</u>](https://hub.docker.com/r/trueagi/das/tags). After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at [<u>https://github.com/singnet/das-serverless-functions/tags</u>](https://github.com/singnet/das-serverless-functions/tags).
 
 ## Deploying the Built Image to Production and Development Environments
 
