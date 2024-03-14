@@ -240,7 +240,7 @@ knowledge base formats like SQL, Atomese, etc. We already have such a
 DAS server is deployed in a [Lambda Architecture](https://en.wikipedia.org/wiki/Lambda_architecture)
 based either in [OpenFaaS](https://www.openfaas.com/) or [AWS Lambda](https://aws.amazon.com/pm/lambda/).
 We made a comparative study of these two architectures (results are presented in
-this [report](https://docs.google.com/document/d/1kQhM62T3TIb3ECoqBxmqPulMciJq7Vev3-f_Gnhes_s/)
+this [report](https://docs.google.com/document/d/1kQhM62T3TIb3ECoqBxmqPulMciJq7Vev3-f_Gnhes_s/))
 and decided to prioritize OpenFaaS.
 Although deployment in AWS Lambda is still possible, currently only OpenFaaS is
 supported by [our automated deployment tool](https://github.com/singnet/das-toolbox).
