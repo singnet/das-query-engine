@@ -250,8 +250,8 @@ When deploying in AWS Lambda, [Redis](https://redis.io/) and
 structure is basically the same.
 
 Functions are deployed in servers in the cloud as
-[Docker](https://www.docker.com/) containers, built in our CI/CD pipeline by
-automated [GitHub Actions](https://docs.github.com/en/actions) scripts and
+[Docker](https://www.docker.com/) containers, built in [our CI/CD pipeline](Deployment-Process.md)
+by automated [GitHub Actions](https://docs.github.com/en/actions) scripts and
 stored in a private Docker hub registry.
 
 Clients can connect using HTTP, gRPC or an external lambda functions (OpenFaaS
