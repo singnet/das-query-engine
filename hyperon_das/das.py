@@ -10,7 +10,6 @@ from hyperon_das.exceptions import (
     InvalidDASParameters,
     InvalidQueryEngine,
 )
-from hyperon_das.index import Index
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
@@ -543,5 +542,4 @@ class DistributedAtomSpace:
         Returns:
             str: The name of the created index
         """
-        collection, index = Index(atom_type, field, **kwargs).create()
-        return self.query_engine.create_index(collection, index)
+        return self.query_engine.create_index(atom_type, field, **kwargs)

@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 
 from hyperon_das import DistributedAtomSpace
+from hyperon_das.index import Index
 from tests.utils import load_animals_base
 
 from .helpers import _db_down, _db_up, cleanup, load_metta_animals_base, mongo_port, redis_port
@@ -106,7 +107,8 @@ class TestLocalDASRedisMongo:
         )
         das.commit_changes()
 
-        def create_index(collection_name, indexes):
+        def create_index(atom_type, field, **kwargs):
+            collection_name, indexes = Index(atom_type, field, **kwargs).create()
             if collection_name == 'node':
                 collections = [das.backend.mongo_nodes_collection]
             elif collection_name == 'link':
@@ -130,7 +132,7 @@ class TestLocalDASRedisMongo:
 
         # Create the Index
         with mock.patch(
-            'hyperon_das.query_engines.LocalQueryEngine.create_index', side_effect=create_index
+            'hyperon_das.DistributedAtomSpace.create_partial_field_index', side_effect=create_index
         ):
             my_index = das.create_field_index(atom_type='link', field='score', type='Expression')
 
