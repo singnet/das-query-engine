@@ -10,7 +10,7 @@ from hyperon_das.exceptions import (
     InvalidDASParameters,
     InvalidQueryEngine,
 )
-from hyperon_das.index import Index, IndexField, operator
+from hyperon_das.index import Index
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
@@ -515,64 +515,33 @@ class DistributedAtomSpace:
         except AtomDoesNotExist:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
 
-    def create_index(self, atom_type: str, field: str, conditions: dict = None, **kwargs) -> None:
-        """Create an index for the database"""
-        if conditions is not None:
-            kwargs.update(conditions)
-        elif len(kwargs) != 0:
-            kwargs = operator.DEFAULT(**kwargs)
-        else:
-            kwargs = {'name': field}
+    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
+        """Create an index for a field for all Atoms of the specified type
 
-        kwargs['collection'] = atom_type
-        collection, index = Index(**kwargs).create()
+        Args:
+            atom_type (str): Type of the Atom. Could be 'link' or 'node'
+            field (str): field where the index will be created
+            type (str, optional): The type of the Link/Node. Defaults to None.
+
+        Raises:
+            ValueError: If the type of the Atom is not a string
+
+        Returns:
+            str: The name of the created index
+        """
+        if type and not isinstance(type, str):
+            raise ValueError('The type of the Atom must be a string')
+        return self.create_partial_field_index(atom_type, field, type=type)
+
+    def create_partial_field_index(self, atom_type: str, field: str, **kwargs) -> str:
+        """Create an partial index for a field for all Atoms based on conditions specified in kwargs
+
+        Args:
+            atom_type (str): Type of the Atom. Could be 'link' or 'node'
+            field (str): field where the index will be created
+
+        Returns:
+            str: The name of the created index
+        """
+        collection, index = Index(atom_type, field, **kwargs).create()
         return self.query_engine.create_index(collection, index)
-
-
-if __name__ == '__main__':
-    from tests.integration.helpers import (
-        _db_down,
-        _db_up,
-        load_metta_animals_base,
-        mongo_port,
-        redis_port,
-    )
-
-    _db_up()
-    das = DistributedAtomSpace(
-        query_engine='local',
-        atomdb='redis_mongo',
-        mongo_port=mongo_port,
-        mongo_username='dbadmin',
-        mongo_password='dassecret',
-        redis_port=redis_port,
-        redis_cluster=False,
-        redis_ssl=False,
-    )
-    load_metta_animals_base(das)
-    das.add_link(
-        {
-            'type': 'Similarity',
-            'targets': [
-                {"type": "Symbol", "name": 'Similarity', "is_literal": False},
-                {"type": "Symbol", "name": '"human"', "is_literal": True},
-                {"type": "Symbol", "name": '"dog"', "is_literal": True},
-            ],
-            'score': 30,
-        }
-    )
-    das.commit_changes()
-    collection = das.backend.mongo_db['links_n']
-
-    idexes = [i for i in collection.list_indexes()]
-
-    das.create_index(atom_type='node', field='name')
-
-    # das.create_index(atom_type='link', field='type', conditions=operator.EQ(type='Similarity'))
-    das.create_index(atom_type='link', field='type', type='Similarity')
-
-    das.create_index(
-        atom_type='link', field='type', conditions=operator.AND(type='Expression', score=True)
-    )
-
-    _db_down()

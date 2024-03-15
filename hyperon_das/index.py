@@ -1,115 +1,72 @@
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple
+from typing import Optional
 
 
-class RedisMongoDB:
-    def create_mongodb_index(self, collection, indexes):
-        index_list = indexes[0]
-        index_options = indexes[1]
-        collection.create_index(index_list, **index_options)
+class QueryOperators:
+    """This class implements some MongoDB query operators. It is used to construct the query conditions for the indexes."""
 
-    def get_indexes(self, collection_name):
-        collection = self.db[collection_name]
-        return collection.list_indexes()
+    # comparison operators
+    def EQ(self, **kwargs) -> dict:
+        for key, value in kwargs.items():
+            key = 'named_type' if key == 'type' else key
+            break  # only one key-value pair
+        return {key: {"$eq": value}}
+
+    # element operators
+    def EXISTS(self, **kwargs) -> dict:
+        for key, value in kwargs.items():
+            key = 'named_type' if key == 'type' else key
+            break  # only one key-value pair
+        return {key: {"$exists": value}}
+
+    # logical operators - Can be used. Don't delete
+    # def AND(self, **kwargs) -> dict:
+    #     expressions = self._build_expressions(**kwargs)
+    #     return {'$and': expressions}
+
+    # def OR(self, **kwargs):
+    #     expressions = self._build_expressions(**kwargs)
+    #     return {'$or': expressions}
+
+    # def _build_expressions(self, **kwargs) -> list:
+    #     expressions = []
+    #     for key, value in kwargs.items():
+    #         key = 'named_type' if key == 'type' else key
+    #         if isinstance(value, bool):
+    #             expressions.append({key: {"$exists": value}})
+    #         else:
+    #             expressions.append({key: {"$eq": value}})
+    #     return expressions
+
+
+operator = QueryOperators()
 
 
 @dataclass
 class IndexField:
     collection: str
-    name: str = ""
-    options: Optional[dict] = None
+    key: str = ""
     direction: Optional[str] = 'asc'
-
-    # def __post_init__(self):
-    #     if self.direction not in ["asc", "desc"]:
-    #         raise ValueError("direction must be either 'asc' or 'desc'")
-    #     if self.expression is not None:
-    #         if not isinstance(self.expression, tuple):
-    #             raise ValueError("expression must be a tuple")
-    #         if len(self.expression) != 3:
-    #             raise ValueError("expression must be a tuple of length 3")
-    #         if self.expression[1] not in [">", ">=", "<", "<=", "==", "!=", "regex"]:
-    #             raise ValueError(
-    #                 "operator must be one of: '>', '>=', '<', '<=', '==', '!=', 'regex'"
-    #             )
-
-
-class LogicalOperator:
-    def DEFAULT(self, **kwargs) -> dict:
-        name, expressions = self._build_expressions(**kwargs)
-        return {'name': name, 'options': expressions[0]}
-
-    def AND(self, **kwargs) -> dict:
-        name, expressions = self._build_expressions(**kwargs)
-        return {'name': name, 'options': {'$and': expressions}}
-
-    def OR(self, **kwargs):
-        name, expressions = self._build_expressions(**kwargs)
-        return {'name': name, 'options': {'$or': expressions}}
-
-    def _build_expressions(self, **kwargs) -> list:
-        keys = []
-        expressions = []
-        for key, value in kwargs.items():
-            key = 'named_type' if key == 'type' else key
-            if isinstance(value, bool):
-                expressions.append({key: {"$exists": value}})
-            else:
-                expressions.append({key: {"$eq": value}})
-            keys.append(key)
-        return keys[0], expressions
-
-
-operator = LogicalOperator()
+    conditionals: Optional[dict] = None
 
 
 class Index:
-    def __init__(self, **kwargs):
-        self.index = IndexField(**kwargs)
+    def __init__(self, collention: str, key: str, direction: Optional[str] = 'asc', **kwargs):
+        new_kwargs = {'collection': collention, 'key': key, 'direction': direction}
 
-    def create_link_index(self, indexes):
-        """
-        query = {
-            "atom_type": "link",
-            "type": "Expression",
-            "targets": [
-                {"atom_type": "node", "type": "Symbol", "name": "test-1"},
-                {"atom_type": "node", "type": "Symbol", "name": "test-2"},
-                {"atom_type": "node", "type": "Symbol", "name": "test-3"}
-            ],
-            "score": True
-        }
+        for key, value in kwargs.items():
+            if isinstance(value, bool):
+                new_kwargs['conditionals'] = operator.EXISTS(**kwargs)
+            else:
+                new_kwargs['conditionals'] = operator.EQ(**kwargs)
+            break  # only one key-value pair
 
-        return collection.create_index(
-            [('named_type', 1)],
-            **{
-                'partialFilterExpression': {
-                    '$and': [
-                        {'score': {'$exists': True}},
-                        {'named_type': {'$eq': 'Similarity'}},
-                    ]
-                }
-            },
-        )
-        """
-        pass
+        self.index = IndexField(**new_kwargs)
 
     def create(self) -> tuple:
-        index_options = {}
-        if self.index.options is not None:
-            index_options = {"partialFilterExpression": self.index.options}
+        index_conditionals = {"name": f"{self.index.key}_index_{self.index.direction}"}
+        if self.index.conditionals is not None:
+            index_conditionals["partialFilterExpression"] = self.index.conditionals
+        index_list = [(self.index.key, 1 if self.index.direction == "asc" else -1)]
 
-        index_list = [(self.index.name, 1 if self.index.direction == "asc" else -1)]
-
-        return self.index.collection, (index_list, index_options)
-
-    def _operator_map(self, operator):
-        return {
-            ">": "$gt",
-            ">=": "$gte",
-            "<": "$lt",
-            "<=": "$lte",
-            "==": "$eq",
-            "!=": "$ne",
-            "regex": "$regex",
-        }[operator]
+        return self.index.collection, (index_list, index_conditionals)

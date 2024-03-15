@@ -84,7 +84,7 @@ class TestDistributedAtomSpace:
 
         assert exc.value.message == 'Cannot start Traversal. Atom does not exist'
 
-    def test_info(self):
+    def test_about(self):
         das = DistributedAtomSpace()
         assert isinstance(das.about(), dict)
         assert 'das' in das.about()
