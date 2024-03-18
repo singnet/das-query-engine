@@ -23,7 +23,6 @@ from hyperon_das.exceptions import (
     QueryParametersException,
     UnexpectedQueryFormat,
 )
-from hyperon_das.index import Index
 from hyperon_das.logger import logger
 from hyperon_das.utils import Assignment, QueryAnswer
 
@@ -260,8 +259,7 @@ class LocalQueryEngine(QueryEngine):
         self.local_backend.reindex(pattern_index_templates)
 
     def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
-        collection, index = Index(collection=atom_type, key=field, type=type).create()
-        return self.local_backend.create_field_index(collection, index)
+        return self.local_backend.create_field_index(atom_type, field, type)
 
 
 class RemoteQueryEngine(QueryEngine):

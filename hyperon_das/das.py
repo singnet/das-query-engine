@@ -520,7 +520,7 @@ class DistributedAtomSpace:
         Args:
             atom_type (str): Type of the Atom. Could be 'link' or 'node'
             field (str): field where the index will be created
-            type (str, optional): The type of the Link/Node. Defaults to None.
+            type (str, optional): Only atoms of the passed type will be indexed. Defaults to None.
 
         Raises:
             ValueError: If the type of the Atom is not a string
