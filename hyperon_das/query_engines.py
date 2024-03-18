@@ -70,7 +70,7 @@ class QueryEngine(ABC):
         ...  # pragma no cover
 
     @abstractmethod
-    def create_index(self, collection: str, index: tuple) -> str:
+    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
         ...  # pragma no cover
 
 
@@ -259,9 +259,9 @@ class LocalQueryEngine(QueryEngine):
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]] = None):
         self.local_backend.reindex(pattern_index_templates)
 
-    def create_index(self, atom_type: str, field: str, **kwargs) -> str:
-        collection, index = Index(atom_type, field, **kwargs).create()
-        return self.local_backend.create_index(collection, index)
+    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
+        collection, index = Index(collection=atom_type, key=field, type=type).create()
+        return self.local_backend.create_field_index(collection, index)
 
 
 class RemoteQueryEngine(QueryEngine):
@@ -408,5 +408,5 @@ class RemoteQueryEngine(QueryEngine):
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
         raise NotImplementedError()
 
-    def create_index(self, atom_type: str, field: str, **kwargs) -> str:
-        return self.remote_das.create_partial_field_index(atom_type, field, **kwargs)
+    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
+        return self.remote_das.create_field_index(atom_type, field, type)

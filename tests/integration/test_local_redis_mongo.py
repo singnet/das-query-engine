@@ -107,16 +107,21 @@ class TestLocalDASRedisMongo:
         )
         das.commit_changes()
 
-        def create_index(atom_type, field, **kwargs):
-            collection_name, indexes = Index(atom_type, field, **kwargs).create()
-            if collection_name == 'node':
-                collections = [das.backend.mongo_nodes_collection]
-            elif collection_name == 'link':
-                collections = das.backend.mongo_link_collection.values()
-            index_list = indexes[0]
-            index_options = indexes[1]
-            for collection in collections:
-                idx_name = collection.create_index(index_list, **index_options)
+        def create_field_index(atom_type: str, field: str, type: str = None) -> str:
+            collection_name, indexes = Index(atom_type, field, type=type).create()
+
+            idx_name = ""
+
+            collections = das.backend.mongo_link_collection.values()
+
+            index_list, index_options = indexes
+
+            try:
+                for collection in collections:
+                    idx_name = collection.create_index(index_list, **index_options)
+            except Exception:
+                pass
+
             return idx_name
 
         link_collections = list(das.backend.mongo_link_collection.values())
@@ -132,7 +137,8 @@ class TestLocalDASRedisMongo:
 
         # Create the Index
         with mock.patch(
-            'hyperon_das.DistributedAtomSpace.create_partial_field_index', side_effect=create_index
+            'hyperon_das.query_engines.LocalQueryEngine.create_field_index',
+            side_effect=create_field_index,
         ):
             my_index = das.create_field_index(atom_type='link', field='score', type='Expression')
 

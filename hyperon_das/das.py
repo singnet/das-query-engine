@@ -530,16 +530,4 @@ class DistributedAtomSpace:
         """
         if type and not isinstance(type, str):
             raise ValueError('The type of the Atom must be a string')
-        return self.create_partial_field_index(atom_type, field, type=type)
-
-    def create_partial_field_index(self, atom_type: str, field: str, **kwargs) -> str:
-        """Create an partial index for a field for all Atoms based on conditions specified in kwargs
-
-        Args:
-            atom_type (str): Type of the Atom. Could be 'link' or 'node'
-            field (str): field where the index will be created
-
-        Returns:
-            str: The name of the created index
-        """
-        return self.query_engine.create_index(atom_type, field, **kwargs)
+        return self.query_engine.create_field_index(atom_type, field, type=type)

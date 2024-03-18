@@ -2,46 +2,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 
-class QueryOperators:
-    """This class implements some MongoDB query operators. It is used to construct the query conditions for the indexes."""
-
-    # comparison operators
-    def EQ(self, **kwargs) -> dict:
-        for key, value in kwargs.items():
-            key = 'named_type' if key == 'type' else key
-            break  # only one key-value pair
-        return {key: {"$eq": value}}
-
-    # element operators
-    def EXISTS(self, **kwargs) -> dict:
-        for key, value in kwargs.items():
-            key = 'named_type' if key == 'type' else key
-            break  # only one key-value pair
-        return {key: {"$exists": value}}
-
-    # logical operators - Can be used. Don't delete
-    # def AND(self, **kwargs) -> dict:
-    #     expressions = self._build_expressions(**kwargs)
-    #     return {'$and': expressions}
-
-    # def OR(self, **kwargs):
-    #     expressions = self._build_expressions(**kwargs)
-    #     return {'$or': expressions}
-
-    # def _build_expressions(self, **kwargs) -> list:
-    #     expressions = []
-    #     for key, value in kwargs.items():
-    #         key = 'named_type' if key == 'type' else key
-    #         if isinstance(value, bool):
-    #             expressions.append({key: {"$exists": value}})
-    #         else:
-    #             expressions.append({key: {"$eq": value}})
-    #     return expressions
-
-
-operator = QueryOperators()
-
-
 @dataclass
 class IndexField:
     collection: str
@@ -51,14 +11,12 @@ class IndexField:
 
 
 class Index:
-    def __init__(self, collention: str, key: str, direction: Optional[str] = 'asc', **kwargs):
-        new_kwargs = {'collection': collention, 'key': key, 'direction': direction}
+    def __init__(self, collection: str, key: str, direction: Optional[str] = 'asc', **kwargs):
+        new_kwargs = {'collection': collection, 'key': key, 'direction': direction}
 
         for key, value in kwargs.items():
-            if isinstance(value, bool):
-                new_kwargs['conditionals'] = operator.EXISTS(**kwargs)
-            else:
-                new_kwargs['conditionals'] = operator.EQ(**kwargs)
+            key = 'named_type' if key == 'type' else key
+            new_kwargs['conditionals'] = {key: {"$eq": value}}
             break  # only one key-value pair
 
         self.index = IndexField(**new_kwargs)
