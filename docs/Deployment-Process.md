@@ -28,7 +28,7 @@ record the change.
 It is important to note what the last version created was at [<u>https://github.com/singnet/das-atom-db/tags</u>](https://github.com/singnet/das-atom-db/tags) before creating a new version.
 
 5.  Execute PyPI Publishing Workflow
-    Navigate to Actions, select the "Publish to PyPI" workflow, and click on "Run workflow." Choose the master branch, enter the version number in the form that appears (format: v1.0.0 or 1.0.0) ensure that the inserted version matches the one previously added in the **pyproject.toml** file, and click the "Run workflow" button.
+    Navigate to Actions, select the "Publish to PyPI" workflow, and click on "Run workflow." Choose the master branch, enter the version number in the form that appears (format: 1.0.0) ensure that the inserted version matches the one previously added in the **pyproject.toml** file, and click the "Run workflow" button.
 
 ![PyPI Publishing Workflow](assets/img18.jpg)
 
@@ -76,7 +76,7 @@ It is important to note what the last version created was at [<u>https://github.
 
 5.  Execute PyPI Publishing Workflow
 
-Initiate the 'Publish to PyPI' Workflow Manually via the 'Actions' Tab in the Repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format v1.0.0 or 1.0.0, then click 'Run workflow' to proceed.
+Initiate the 'Publish to PyPI' Workflow Manually via the 'Actions' Tab in the Repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format 1.0.0, then click 'Run workflow' to proceed.
 
 ![PyPI Publishing Workflow](assets/img37.jpg)
 
@@ -113,7 +113,7 @@ It is important to note what the last version created was at [<u>https://github.
 
 5.  Select the "Vultr Build" workflow in Actions and run it manually.
 
-Manually trigger the 'Vultr Build' workflow via the 'Actions' tab in the repository. Ensure the master branch is selected, then input the desired version number following the format v1.0.0 or 1.0.0. Next, choose 'das-query-engine' from the dropdown menu, and finally, click 'Run workflow' to proceed.
+Manually trigger the 'Vultr Build' workflow via the 'Actions' tab in the repository. Ensure the master branch is selected, then input the desired version number following the format 1.0.0. Next, choose 'das-query-engine' from the dropdown menu, and finally, click 'Run workflow' to proceed.
 
 ![Vultr Build Workflow](assets/img51.jpg)
 
@@ -125,7 +125,7 @@ After the workflow execution, refresh the page and check if a new workflow is ru
 
 7.  Verify the new tag at DAS Serverless Functions repository tags and Docker Hub.
 
-It is important to note that this pipeline should generate an img on Docker Hub, following the format **v1.0.0-queryengine**. Make sure that the img is generated correctly and available at [<u>https://hub.docker.com/r/trueagi/das/tags</u>](https://hub.docker.com/r/trueagi/das/tags). After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at [<u>https://github.com/singnet/das-serverless-functions/tags</u>](https://github.com/singnet/das-serverless-functions/tags).
+It is important to note that this pipeline should generate an img on Docker Hub, following the format **1.0.0-queryengine**. Make sure that the img is generated correctly and available at [<u>https://hub.docker.com/r/trueagi/das/tags</u>](https://hub.docker.com/r/trueagi/das/tags). After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at [<u>https://github.com/singnet/das-serverless-functions/tags</u>](https://github.com/singnet/das-serverless-functions/tags).
 
 ## Deploying the Built Image to Production and Development Environments
 
@@ -175,7 +175,7 @@ It is important to note what the last version created was at [<u>https://github.
 
 3.  Execute DAS Metta Parser Build Workflow
 
-Initiate the 'DAS Metta Parser Build' Workflow Manually via the 'Actions' Tab in the Repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format v1.0.0 or 1.0.0, then click 'Run workflow' to proceed.
+Initiate the 'DAS Metta Parser Build' Workflow Manually via the 'Actions' Tab in the Repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format 1.0.0, then click 'Run workflow' to proceed.
 
 ![DAS Metta Parser Build Workflow](assets/img91.jpg)
 
@@ -187,7 +187,7 @@ Refresh the page and check if a new workflow is running. By clicking on it, you 
 
 5.  Verify the new tag at DAS Metta Parser repository tags and Docker Hub.
 
-It is important to note that this pipeline should generate an image on Docker Hub, following the format **v1.0.0-toolbox**. Make sure that the image is generated correctly and available at [<u>https://hub.docker.com/r/trueagi/das/tags</u>](https://hub.docker.com/r/trueagi/das/tags). After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at [<u>https://github.com/singnet/das-metta-parser/tags</u>](https://github.com/singnet/das-metta-parser/tags).
+It is important to note that this pipeline should generate an image on Docker Hub, following the format **1.0.0-toolbox**. Make sure that the image is generated correctly and available at [<u>https://hub.docker.com/r/trueagi/das/tags</u>](https://hub.docker.com/r/trueagi/das/tags). After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at [<u>https://github.com/singnet/das-metta-parser/tags</u>](https://github.com/singnet/das-metta-parser/tags).
 
 ## New version of DAS Toolbox
 
@@ -213,7 +213,7 @@ It is important to note what the last version created was at [<u>https://github.
 
 3.  Run the "DAS CLI Build" workflow from Actions.
 
-Manually execute the “DAS CLI Build” workflow through the “Actions” tab in the repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format v1.0.0 or 1.0.0, then click 'Run workflow' to proceed.
+Manually execute the “DAS CLI Build” workflow through the “Actions” tab in the repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format 1.0.0, then click 'Run workflow' to proceed.
 
 ![DAS CLI Build Workflow](assets/img73.jpg)
 
