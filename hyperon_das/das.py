@@ -526,7 +526,10 @@ class DistributedAtomSpace:
             ValueError: If the type of the Atom is not a string
 
         Returns:
-            str: The name of the created index
+            str: The index ID. This ID should be used to make queries that should use the newly created index.
+        
+        Examples:
+            >>> index_id = das.create_field_index('link', 'tag', 'Expression')
         """
         if type and not isinstance(type, str):
             raise ValueError('The type of the Atom must be a string')
