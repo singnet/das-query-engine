@@ -1,10 +1,18 @@
 import json
 from abc import ABC, abstractmethod
+from http import HTTPStatus  # noqa: F401
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import sessions
+from requests.exceptions import (  # noqa: F401
+    ConnectionError,
+    HTTPError,
+    JSONDecodeError,
+    RequestException,
+    Timeout,
+)
 
 from hyperon_das.cache import (
     AndEvaluator,
@@ -24,7 +32,7 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer
+from hyperon_das.utils import Assignment, QueryAnswer, get_package_version  # noqa: F401
 
 
 class QueryEngine(ABC):
@@ -226,7 +234,7 @@ class LocalQueryEngine(QueryEngine):
 
     def query(
         self,
-        query: Dict[str, Any],
+        query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
     ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
         no_iterator = parameters.get("no_iterator", False)
@@ -278,6 +286,46 @@ class RemoteQueryEngine(QueryEngine):
         elif self._is_server_connect(aws_lambda_uri):
             url = aws_lambda_uri
         return url
+
+    # TODO: Use this method when version checking is running on the server
+    # def _is_server_connect(self, url: str) -> bool:
+    #     logger().debug(f'connecting to remote Das {url}')
+    #     das_version = get_package_version('hyperon_das')
+
+    #     try:
+    #         with sessions.Session() as session:
+    #             response = session.request(
+    #                 method='POST',
+    #                 url=url,
+    #                 data=json.dumps(
+    #                     {
+    #                         'action': 'handshake',
+    #                         'input': {
+    #                             'das_version': das_version,
+    #                             'atomdb_version': get_package_version('hyperon_das_atomdb'),
+    #                         },
+    #                     }
+    #                 ),
+    #                 timeout=10,
+    #             )
+    #         if response.status_code == HTTPStatus.CONFLICT:
+    #             try:
+    #                 remote_das_version = response.json().get('das').get('version')
+    #             except JSONDecodeError as e:
+    #                 raise Exception(str(e))
+    #             logger().error(
+    #                 f'Package version conflict error when connecting to remote DAS - Local DAS: `{das_version}` - Remote DAS: `{remote_das_version}`'
+    #             )
+    #             raise Exception(
+    #                 f'The version sent by the local DAS is {das_version}, but the expected version on the server is {remote_das_version}'
+    #             )
+    #         elif response.status_code == HTTPStatus.OK:
+    #             return True
+    #         else:
+    #             response.raise_for_status()
+    #             return False
+    #     except (ConnectionError, Timeout, HTTPError, RequestException):
+    #         return False
 
     def _is_server_connect(self, url: str) -> bool:
         logger().debug(f'connecting to remote Das {url}')
@@ -368,7 +416,7 @@ class RemoteQueryEngine(QueryEngine):
 
     def query(
         self,
-        query: Dict[str, Any],
+        query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
     ) -> List[Dict[str, Any]]:
         query_scope = parameters.get('query_scope', 'remote_only')

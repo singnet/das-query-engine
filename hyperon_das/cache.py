@@ -33,7 +33,7 @@ class QueryAnswerIterator(ABC):
 
     @abstractmethod
     def is_empty(self) -> bool:
-        pass
+        ...  # pragma no cover
 
     def get(self) -> Any:
         if not self.source or self.current_value is None:
@@ -231,21 +231,28 @@ class LocalIncomingLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        link_handle = next(self.iterator)
-        link_document = self.backend.get_atom(link_handle, targets_document=self.targets_document)
-        self.current_value = link_document
+        if not self.is_empty() and self.backend:
+            link_handle = next(self.iterator)
+            link_document = self.backend.get_atom(
+                link_handle, targets_document=self.targets_document
+            )
+            self.current_value = link_document
 
     def get_current_value(self) -> Any:
-        try:
-            return self.backend.get_atom(self.source.get(), targets_document=self.targets_document)
-        except StopIteration:
-            return None
+        if self.backend:
+            try:
+                return self.backend.get_atom(
+                    self.source.get(), targets_document=self.targets_document
+                )
+            except StopIteration:
+                return None
 
     def get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {'handles_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
 
     def get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend.get_incoming_links(self.atom_handle, **kwargs)
+        if self.backend:
+            return self.backend.get_incoming_links(self.atom_handle, **kwargs)
 
 
 class RemoteIncomingLinks(BaseLinksIterator):
@@ -256,16 +263,17 @@ class RemoteIncomingLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        while True:
-            link_document = next(self.iterator)
-            if isinstance(link_document, tuple) or isinstance(link_document, list):
-                handle = link_document[0]['handle']
-            else:
-                handle = link_document['handle']
-            if handle not in self.returned_handles:
-                self.returned_handles.add(handle)
-                self.current_value = link_document
-                break
+        if not self.is_empty():
+            while True:
+                link_document = next(self.iterator)
+                if isinstance(link_document, tuple) or isinstance(link_document, list):
+                    handle = link_document[0]['handle']
+                else:
+                    handle = link_document['handle']
+                if handle not in self.returned_handles:
+                    self.returned_handles.add(handle)
+                    self.current_value = link_document
+                    break
 
     def get_current_value(self) -> Any:
         try:
@@ -281,7 +289,8 @@ class RemoteIncomingLinks(BaseLinksIterator):
         }
 
     def get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend.get_incoming_links(self.atom_handle, **kwargs)
+        if self.backend:
+            return self.backend.get_incoming_links(self.atom_handle, **kwargs)
 
 
 class LocalGetLinks(BaseLinksIterator):
@@ -293,15 +302,17 @@ class LocalGetLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        value = next(self.iterator)
-        self.current_value = self.backend._to_link_dict_list([value])[0]
+        if not self.is_empty() and self.backend:
+            value = next(self.iterator)
+            self.current_value = self.backend._to_link_dict_list([value])[0]
 
     def get_current_value(self) -> Any:
-        try:
-            value = self.source.get()
-            return self.backend._to_link_dict_list([value])[0]
-        except StopIteration:
-            return None
+        if self.backend:
+            try:
+                value = self.source.get()
+                return self.backend._to_link_dict_list([value])[0]
+            except StopIteration:
+                return None
 
     def get_fetch_data_kwargs(self) -> Dict[str, Any]:
         return {
@@ -311,9 +322,10 @@ class LocalGetLinks(BaseLinksIterator):
         }
 
     def get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend._get_related_links(
-            self.link_type, self.target_types, self.link_targets, **kwargs
-        )
+        if self.backend:
+            return self.backend._get_related_links(
+                self.link_type, self.target_types, self.link_targets, **kwargs
+            )
 
 
 class RemoteGetLinks(BaseLinksIterator):
@@ -326,11 +338,12 @@ class RemoteGetLinks(BaseLinksIterator):
         super().__init__(source, **kwargs)
 
     def get_next_value(self) -> None:
-        value = next(self.iterator)
-        handle = value.get('handle')
-        if handle not in self.returned_handles:
-            self.returned_handles.add(handle)
-            self.current_value = value
+        if not self.is_empty():
+            value = next(self.iterator)
+            handle = value.get('handle')
+            if handle not in self.returned_handles:
+                self.returned_handles.add(handle)
+                self.current_value = value
 
     def get_current_value(self) -> Any:
         try:
@@ -346,9 +359,10 @@ class RemoteGetLinks(BaseLinksIterator):
         }
 
     def get_fetch_data(self, **kwargs) -> tuple:
-        return self.backend.get_links(
-            self.link_type, self.target_types, self.link_targets, **kwargs
-        )
+        if self.backend:
+            return self.backend.get_links(
+                self.link_type, self.target_types, self.link_targets, **kwargs
+            )
 
 
 class TraverseLinksIterator(QueryAnswerIterator):
@@ -407,7 +421,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
             if not any(target['named_type'] == self.target_type for target in targets):
                 return False
 
-        if self.custom_filter and callable(self.custom_filter):
+        if self.custom_filter and callable(self.custom_filter) and not self.targets_only:
             ret = self.custom_filter(link)
             if not isinstance(ret, bool):
                 raise TypeError('The function must return a boolean')
@@ -465,13 +479,21 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
 
     def _filter(self, target: Dict[str, Any]) -> bool:
         handle = target['handle']
-        if (
+        if not (
             self.cursor != handle
             and handle not in self.visited_neighbors
             and (self.target_type == target['named_type'] or not self.target_type)
         ):
-            return True
-        return False
+            return False
+
+        if self.source.custom_filter and callable(self.source.custom_filter):
+            ret = self.source.custom_filter(target)
+            if not isinstance(ret, bool):
+                raise TypeError('The function must return a boolean')
+            if ret is False:
+                return False
+
+        return True
 
     def is_empty(self) -> bool:
         return not self.current_value

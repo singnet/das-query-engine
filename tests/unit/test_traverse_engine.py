@@ -2,49 +2,7 @@ import pytest
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 
 from hyperon_das.das import DistributedAtomSpace
-from tests.unit.mock import up_knowledge_base_animals
-
-human = AtomDB.node_handle('Concept', 'human')
-monkey = AtomDB.node_handle('Concept', 'monkey')
-chimp = AtomDB.node_handle('Concept', 'chimp')
-mammal = AtomDB.node_handle('Concept', 'mammal')
-ent = AtomDB.node_handle('Concept', 'ent')
-animal = AtomDB.node_handle('Concept', 'animal')
-reptile = AtomDB.node_handle('Concept', 'reptile')
-dinosaur = AtomDB.node_handle('Concept', 'dinosaur')
-triceratops = AtomDB.node_handle('Concept', 'triceratops')
-rhino = AtomDB.node_handle('Concept', 'rhino')
-earthworm = AtomDB.node_handle('Concept', 'earthworm')
-snake = AtomDB.node_handle('Concept', 'snake')
-vine = AtomDB.node_handle('Concept', 'vine')
-plant = AtomDB.node_handle('Concept', 'plant')
-
-similarity_human_monkey = AtomDB.link_handle('Similarity', [human, monkey])
-similarity_human_chimp = AtomDB.link_handle('Similarity', [human, chimp])
-similarity_chimp_monkey = AtomDB.link_handle('Similarity', [chimp, monkey])
-similarity_snake_earthworm = AtomDB.link_handle('Similarity', [snake, earthworm])
-similarity_rhino_triceratops = AtomDB.link_handle('Similarity', [rhino, triceratops])
-similarity_snake_vine = AtomDB.link_handle('Similarity', [snake, vine])
-similarity_human_ent = AtomDB.link_handle('Similarity', [human, ent])
-inheritance_human_mammal = AtomDB.link_handle('Inheritance', [human, mammal])
-inheritance_monkey_mammal = AtomDB.link_handle('Inheritance', [monkey, mammal])
-inheritance_chimp_mammal = AtomDB.link_handle('Inheritance', [chimp, mammal])
-inheritance_mammal_animal = AtomDB.link_handle('Inheritance', [mammal, animal])
-inheritance_reptile_animal = AtomDB.link_handle('Inheritance', [reptile, animal])
-inheritance_snake_reptile = AtomDB.link_handle('Inheritance', [snake, reptile])
-inheritance_dinosaur_reptile = AtomDB.link_handle('Inheritance', [dinosaur, reptile])
-inheritance_triceratops_dinosaur = AtomDB.link_handle('Inheritance', [triceratops, dinosaur])
-inheritance_earthworm_animal = AtomDB.link_handle('Inheritance', [earthworm, animal])
-inheritance_rhino_mammal = AtomDB.link_handle('Inheritance', [rhino, mammal])
-inheritance_vine_plant = AtomDB.link_handle('Inheritance', [vine, plant])
-inheritance_ent_plant = AtomDB.link_handle('Inheritance', [ent, plant])
-similarity_monkey_human = AtomDB.link_handle('Similarity', [monkey, human])
-similarity_chimp_human = AtomDB.link_handle('Similarity', [chimp, human])
-similarity_monkey_chimp = AtomDB.link_handle('Similarity', [monkey, chimp])
-similarity_earthworm_snake = AtomDB.link_handle('Similarity', [earthworm, snake])
-similarity_triceratops_rhino = AtomDB.link_handle('Similarity', [triceratops, rhino])
-similarity_vine_snake = AtomDB.link_handle('Similarity', [vine, snake])
-similarity_ent_human = AtomDB.link_handle('Similarity', [ent, human])
+from tests.utils import animal_base_handles, load_animals_base
 
 
 def simplify_links(links: list, das: DistributedAtomSpace) -> set:
@@ -68,14 +26,14 @@ class TestTraverseEngine:
     @pytest.fixture
     def das(self):
         das = DistributedAtomSpace()
-        up_knowledge_base_animals(das)
+        load_animals_base(das)
         return das
 
     def test_get(self, das):
-        cursor = das.get_traversal_cursor(human)
+        cursor = das.get_traversal_cursor(animal_base_handles.human)
         current_cursor = cursor.get()
 
-        assert current_cursor['handle'] == human
+        assert current_cursor['handle'] == animal_base_handles.human
         assert current_cursor['name'] == 'human'
         assert current_cursor['named_type'] == 'Concept'
 
@@ -86,7 +44,7 @@ class TestTraverseEngine:
             return simplify_links(links, das)
 
         def _human_links():
-            answers = _build_atom_answer(human)
+            answers = _build_atom_answer(animal_base_handles.human)
             assert len(answers) == 7
             assert answers == {
                 "Similarity : ['human', 'chimp']",
@@ -99,7 +57,7 @@ class TestTraverseEngine:
             }
 
         def _monkey_links():
-            answers = _build_atom_answer(monkey)
+            answers = _build_atom_answer(animal_base_handles.monkey)
             assert len(answers) == 5
             assert answers == {
                 "Inheritance : ['monkey', 'mammal']",
@@ -110,7 +68,7 @@ class TestTraverseEngine:
             }
 
         def _chimp_links():
-            answers = _build_atom_answer(chimp)
+            answers = _build_atom_answer(animal_base_handles.chimp)
             assert len(answers) == 5
             assert answers == {
                 "Inheritance : ['chimp', 'mammal']",
@@ -121,7 +79,7 @@ class TestTraverseEngine:
             }
 
         def _mammal_links():
-            answers = _build_atom_answer(mammal)
+            answers = _build_atom_answer(animal_base_handles.mammal)
             assert len(answers) == 5
             assert answers == {
                 "Inheritance : ['mammal', 'animal']",
@@ -132,7 +90,7 @@ class TestTraverseEngine:
             }
 
         def _ent_links():
-            answers = _build_atom_answer(ent)
+            answers = _build_atom_answer(animal_base_handles.ent)
             assert len(answers) == 3
             assert answers == {
                 "Inheritance : ['ent', 'plant']",
@@ -141,7 +99,7 @@ class TestTraverseEngine:
             }
 
         def _animal_links():
-            answers = _build_atom_answer(animal)
+            answers = _build_atom_answer(animal_base_handles.animal)
             assert len(answers) == 3
             assert answers == {
                 "Inheritance : ['mammal', 'animal']",
@@ -150,7 +108,7 @@ class TestTraverseEngine:
             }
 
         def _reptile_links():
-            answers = _build_atom_answer(reptile)
+            answers = _build_atom_answer(animal_base_handles.reptile)
             assert len(answers) == 3
             assert answers == {
                 "Inheritance : ['dinosaur', 'reptile']",
@@ -159,7 +117,7 @@ class TestTraverseEngine:
             }
 
         def _dinosaur_links():
-            answers = _build_atom_answer(dinosaur)
+            answers = _build_atom_answer(animal_base_handles.dinosaur)
             assert len(answers) == 2
             assert answers == {
                 "Inheritance : ['dinosaur', 'reptile']",
@@ -167,7 +125,7 @@ class TestTraverseEngine:
             }
 
         def _triceratops_links():
-            answers = _build_atom_answer(triceratops)
+            answers = _build_atom_answer(animal_base_handles.triceratops)
             assert len(answers) == 3
             assert answers == {
                 "Similarity : ['rhino', 'triceratops']",
@@ -176,7 +134,7 @@ class TestTraverseEngine:
             }
 
         def _rhino_links():
-            answers = _build_atom_answer(rhino)
+            answers = _build_atom_answer(animal_base_handles.rhino)
             assert len(answers) == 3
             assert answers == {
                 "Similarity : ['rhino', 'triceratops']",
@@ -185,7 +143,7 @@ class TestTraverseEngine:
             }
 
         def _earthworm_links():
-            answers = _build_atom_answer(earthworm)
+            answers = _build_atom_answer(animal_base_handles.earthworm)
             assert len(answers) == 3
             assert answers == {
                 "Similarity : ['snake', 'earthworm']",
@@ -194,7 +152,7 @@ class TestTraverseEngine:
             }
 
         def _snake_links():
-            answers = _build_atom_answer(snake)
+            answers = _build_atom_answer(animal_base_handles.snake)
             assert len(answers) == 5
             assert answers == {
                 "Similarity : ['snake', 'earthworm']",
@@ -205,7 +163,7 @@ class TestTraverseEngine:
             }
 
         def _vine_links():
-            answers = _build_atom_answer(vine)
+            answers = _build_atom_answer(animal_base_handles.vine)
             assert len(answers) == 3
             assert answers == {
                 "Inheritance : ['vine', 'plant']",
@@ -214,87 +172,87 @@ class TestTraverseEngine:
             }
 
         def _plant_links():
-            answers = _build_atom_answer(plant)
+            answers = _build_atom_answer(animal_base_handles.plant)
             assert len(answers) == 2
             assert answers == {"Inheritance : ['vine', 'plant']", "Inheritance : ['ent', 'plant']"}
 
         def _similarity_inheritance_links():
-            answers = _build_atom_answer(similarity_human_monkey)
+            answers = _build_atom_answer(animal_base_handles.similarity_human_monkey)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_human_chimp)
+            answers = _build_atom_answer(animal_base_handles.similarity_human_chimp)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_chimp_monkey)
+            answers = _build_atom_answer(animal_base_handles.similarity_chimp_monkey)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_snake_earthworm)
+            answers = _build_atom_answer(animal_base_handles.similarity_snake_earthworm)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_rhino_triceratops)
+            answers = _build_atom_answer(animal_base_handles.similarity_rhino_triceratops)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_snake_vine)
+            answers = _build_atom_answer(animal_base_handles.similarity_snake_vine)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_human_ent)
+            answers = _build_atom_answer(animal_base_handles.similarity_human_ent)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_human_mammal)
+            answers = _build_atom_answer(animal_base_handles.inheritance_human_mammal)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_monkey_mammal)
+            answers = _build_atom_answer(animal_base_handles.inheritance_monkey_mammal)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_chimp_mammal)
+            answers = _build_atom_answer(animal_base_handles.inheritance_chimp_mammal)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_mammal_animal)
+            answers = _build_atom_answer(animal_base_handles.inheritance_mammal_animal)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_reptile_animal)
+            answers = _build_atom_answer(animal_base_handles.inheritance_reptile_animal)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_snake_reptile)
+            answers = _build_atom_answer(animal_base_handles.inheritance_snake_reptile)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_dinosaur_reptile)
+            answers = _build_atom_answer(animal_base_handles.inheritance_dinosaur_reptile)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_triceratops_dinosaur)
+            answers = _build_atom_answer(animal_base_handles.inheritance_triceratops_dinosaur)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_earthworm_animal)
+            answers = _build_atom_answer(animal_base_handles.inheritance_earthworm_animal)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_rhino_mammal)
+            answers = _build_atom_answer(animal_base_handles.inheritance_rhino_mammal)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_vine_plant)
+            answers = _build_atom_answer(animal_base_handles.inheritance_vine_plant)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(inheritance_ent_plant)
+            answers = _build_atom_answer(animal_base_handles.inheritance_ent_plant)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_monkey_human)
+            answers = _build_atom_answer(animal_base_handles.similarity_monkey_human)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_chimp_human)
+            answers = _build_atom_answer(animal_base_handles.similarity_chimp_human)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_monkey_chimp)
+            answers = _build_atom_answer(animal_base_handles.similarity_monkey_chimp)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_earthworm_snake)
+            answers = _build_atom_answer(animal_base_handles.similarity_earthworm_snake)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_triceratops_rhino)
+            answers = _build_atom_answer(animal_base_handles.similarity_triceratops_rhino)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_vine_snake)
+            answers = _build_atom_answer(animal_base_handles.similarity_vine_snake)
             assert len(answers) == 0
 
-            answers = _build_atom_answer(similarity_ent_human)
+            answers = _build_atom_answer(animal_base_handles.similarity_ent_human)
             assert len(answers) == 0
 
         _human_links()
@@ -320,40 +278,47 @@ class TestTraverseEngine:
             return simplify_links(links, das)
 
         def _human_links():
-            answers = _build_atom_answer(human, link_type='Similarity')
+            answers = _build_atom_answer(animal_base_handles.human, link_type='Similarity')
             assert answers == {
                 "Similarity : ['human', 'chimp']",
                 "Similarity : ['human', 'monkey']",
                 "Similarity : ['human', 'ent']",
-                "Similarity : ['ent', 'human']",
-                "Similarity : ['monkey', 'human']",
-                "Similarity : ['chimp', 'human']",
-            }
-            answers = _build_atom_answer(human, link_type='Similarity', cursor_position=0)
-            assert answers == {
-                "Similarity : ['human', 'chimp']",
-                "Similarity : ['human', 'monkey']",
-                "Similarity : ['human', 'ent']",
-            }
-            answers = _build_atom_answer(human, link_type='Similarity', cursor_position=1)
-            assert answers == {
                 "Similarity : ['ent', 'human']",
                 "Similarity : ['monkey', 'human']",
                 "Similarity : ['chimp', 'human']",
             }
             answers = _build_atom_answer(
-                human, link_type='Similarity', cursor_position=0, target_type='Concept'
+                animal_base_handles.human, link_type='Similarity', cursor_position=0
             )
             assert answers == {
                 "Similarity : ['human', 'chimp']",
                 "Similarity : ['human', 'monkey']",
                 "Similarity : ['human', 'ent']",
             }
-            answers = _build_atom_answer(human, link_type='Fake')
+            answers = _build_atom_answer(
+                animal_base_handles.human, link_type='Similarity', cursor_position=1
+            )
+            assert answers == {
+                "Similarity : ['ent', 'human']",
+                "Similarity : ['monkey', 'human']",
+                "Similarity : ['chimp', 'human']",
+            }
+            answers = _build_atom_answer(
+                animal_base_handles.human,
+                link_type='Similarity',
+                cursor_position=0,
+                target_type='Concept',
+            )
+            assert answers == {
+                "Similarity : ['human', 'chimp']",
+                "Similarity : ['human', 'monkey']",
+                "Similarity : ['human', 'ent']",
+            }
+            answers = _build_atom_answer(animal_base_handles.human, link_type='Fake')
             assert len(answers) == 0
-            answers = _build_atom_answer(human, cursor_position=2)
+            answers = _build_atom_answer(animal_base_handles.human, cursor_position=2)
             assert len(answers) == 0
-            answers = _build_atom_answer(human, target_type='Fake')
+            answers = _build_atom_answer(animal_base_handles.human, target_type='Fake')
             assert len(answers) == 0
 
             das.add_link(
@@ -373,7 +338,7 @@ class TestTraverseEngine:
                 return False
 
             answers = _build_atom_answer(
-                human,
+                animal_base_handles.human,
                 link_type='Similarity',
                 cursor_position=0,
                 target_type='Concept',
@@ -386,11 +351,11 @@ class TestTraverseEngine:
                     return link
 
             with pytest.raises(TypeError) as exc:
-                _build_atom_answer(human, filter=my_second_filter)
+                _build_atom_answer(animal_base_handles.human, filter=my_second_filter)
             assert exc.value.args[0] == 'The function must return a boolean'
 
         def _mammal_links():
-            answers = _build_atom_answer(mammal, link_type='Inheritance')
+            answers = _build_atom_answer(animal_base_handles.mammal, link_type='Inheritance')
             assert answers == {
                 "Inheritance : ['mammal', 'animal']",
                 "Inheritance : ['monkey', 'mammal']",
@@ -398,17 +363,12 @@ class TestTraverseEngine:
                 "Inheritance : ['human', 'mammal']",
                 "Inheritance : ['rhino', 'mammal']",
             }
-            answers = _build_atom_answer(mammal, link_type='Inheritance', cursor_position=0)
-            assert answers == {"Inheritance : ['mammal', 'animal']"}
-            answers = _build_atom_answer(mammal, link_type='Inheritance', cursor_position=1)
-            assert answers == {
-                "Inheritance : ['monkey', 'mammal']",
-                "Inheritance : ['chimp', 'mammal']",
-                "Inheritance : ['human', 'mammal']",
-                "Inheritance : ['rhino', 'mammal']",
-            }
             answers = _build_atom_answer(
-                mammal, link_type='Inheritance', cursor_position=1, target_type='Concept'
+                animal_base_handles.mammal, link_type='Inheritance', cursor_position=0
+            )
+            assert answers == {"Inheritance : ['mammal', 'animal']"}
+            answers = _build_atom_answer(
+                animal_base_handles.mammal, link_type='Inheritance', cursor_position=1
             )
             assert answers == {
                 "Inheritance : ['monkey', 'mammal']",
@@ -416,11 +376,23 @@ class TestTraverseEngine:
                 "Inheritance : ['human', 'mammal']",
                 "Inheritance : ['rhino', 'mammal']",
             }
-            answers = _build_atom_answer(mammal, link_type='Similarity')
+            answers = _build_atom_answer(
+                animal_base_handles.mammal,
+                link_type='Inheritance',
+                cursor_position=1,
+                target_type='Concept',
+            )
+            assert answers == {
+                "Inheritance : ['monkey', 'mammal']",
+                "Inheritance : ['chimp', 'mammal']",
+                "Inheritance : ['human', 'mammal']",
+                "Inheritance : ['rhino', 'mammal']",
+            }
+            answers = _build_atom_answer(animal_base_handles.mammal, link_type='Similarity')
             assert len(answers) == 0
-            answers = _build_atom_answer(mammal, cursor_position=5)
+            answers = _build_atom_answer(animal_base_handles.mammal, cursor_position=5)
             assert len(answers) == 0
-            answers = _build_atom_answer(mammal, target_type='Snet')
+            answers = _build_atom_answer(animal_base_handles.mammal, target_type='Snet')
             assert len(answers) == 0
 
             das.add_link(
@@ -450,7 +422,7 @@ class TestTraverseEngine:
                 return False
 
             answers = _build_atom_answer(
-                mammal,
+                animal_base_handles.mammal,
                 link_type='Inheritance',
                 cursor_position=1,
                 target_type='Fake',
@@ -459,39 +431,53 @@ class TestTraverseEngine:
             assert answers == {"Inheritance : ['fake2', 'mammal']"}
 
         def _snake_links():
-            answers = _build_atom_answer(snake, link_type='Similarity')
+            answers = _build_atom_answer(animal_base_handles.snake, link_type='Similarity')
             assert answers == {
                 "Similarity : ['snake', 'earthworm']",
                 "Similarity : ['earthworm', 'snake']",
                 "Similarity : ['snake', 'vine']",
                 "Similarity : ['vine', 'snake']",
             }
-            answers = _build_atom_answer(snake, link_type='Inheritance', cursor_position=0)
+            answers = _build_atom_answer(
+                animal_base_handles.snake, link_type='Inheritance', cursor_position=0
+            )
             assert answers == {
                 "Inheritance : ['snake', 'reptile']",
             }
-            answers = _build_atom_answer(snake, link_type='Inheritance', cursor_position=1)
+            answers = _build_atom_answer(
+                animal_base_handles.snake, link_type='Inheritance', cursor_position=1
+            )
             assert len(answers) == 0
-            answers = _build_atom_answer(snake, link_type='Similarity', cursor_position=0)
+            answers = _build_atom_answer(
+                animal_base_handles.snake, link_type='Similarity', cursor_position=0
+            )
             assert answers == {
                 "Similarity : ['snake', 'earthworm']",
                 "Similarity : ['snake', 'vine']",
             }
-            answers = _build_atom_answer(snake, link_type='Similarity', cursor_position=1)
+            answers = _build_atom_answer(
+                animal_base_handles.snake, link_type='Similarity', cursor_position=1
+            )
             assert answers == {
                 "Similarity : ['earthworm', 'snake']",
                 "Similarity : ['vine', 'snake']",
             }
             answers = _build_atom_answer(
-                snake, link_type='Inheritance', cursor_position=0, target_type='Concept'
+                animal_base_handles.snake,
+                link_type='Inheritance',
+                cursor_position=0,
+                target_type='Concept',
             )
             assert answers == {"Inheritance : ['snake', 'reptile']"}
-            answers = _build_atom_answer(snake, link_type='Evaluation')
+            answers = _build_atom_answer(animal_base_handles.snake, link_type='Evaluation')
             assert len(answers) == 0
-            answers = _build_atom_answer(snake, cursor_position=5)
+            answers = _build_atom_answer(animal_base_handles.snake, cursor_position=5)
             assert len(answers) == 0
             answers = _build_atom_answer(
-                snake, link_type='Inheritance', cursor_position=0, target_type='Snet'
+                animal_base_handles.snake,
+                link_type='Inheritance',
+                cursor_position=0,
+                target_type='Snet',
             )
             assert len(answers) == 0
 
@@ -522,12 +508,17 @@ class TestTraverseEngine:
                 return False
 
             answers = _build_atom_answer(
-                snake, link_type='Similarity', target_type='Fake', filter=my_filter
+                animal_base_handles.snake,
+                link_type='Similarity',
+                target_type='Fake',
+                filter=my_filter,
             )
             assert answers == {"Similarity : ['snake', 'fake1']"}
 
         def _similarity_human_monkey_links():
-            answers = _build_atom_answer(similarity_human_monkey, link_type='Similarity')
+            answers = _build_atom_answer(
+                animal_base_handles.similarity_human_monkey, link_type='Similarity'
+            )
             assert len(answers) == 0
 
             das.add_link(
@@ -546,7 +537,7 @@ class TestTraverseEngine:
                 }
             )
 
-            cursor = das.get_traversal_cursor(similarity_human_monkey)
+            cursor = das.get_traversal_cursor(animal_base_handles.similarity_human_monkey)
             links = cursor.get_links(link_type='Inheritance')
             answers = [link for link in links]
             assert len(answers) == 1
@@ -563,176 +554,176 @@ class TestTraverseEngine:
             return [item for item in neighbors_iterator]
 
         def _human_neighbors():
-            neighbors = _build_neighbors(human)
-            assert das.get_atom(monkey) in neighbors
-            assert das.get_atom(mammal) in neighbors
-            assert das.get_atom(chimp) in neighbors
-            assert das.get_atom(ent) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.human)
+            assert das.get_atom(animal_base_handles.monkey) in neighbors
+            assert das.get_atom(animal_base_handles.mammal) in neighbors
+            assert das.get_atom(animal_base_handles.chimp) in neighbors
+            assert das.get_atom(animal_base_handles.ent) in neighbors
             assert len(neighbors) == 4
 
         def _monkey_neighbors():
-            neighbors = _build_neighbors(monkey)
-            assert das.get_atom(human) in neighbors
-            assert das.get_atom(mammal) in neighbors
-            assert das.get_atom(chimp) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.monkey)
+            assert das.get_atom(animal_base_handles.human) in neighbors
+            assert das.get_atom(animal_base_handles.mammal) in neighbors
+            assert das.get_atom(animal_base_handles.chimp) in neighbors
             assert len(neighbors) == 3
 
         def _chimp_neighbors():
-            neighbors = _build_neighbors(chimp)
-            assert das.get_atom(human) in neighbors
-            assert das.get_atom(mammal) in neighbors
-            assert das.get_atom(monkey) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.chimp)
+            assert das.get_atom(animal_base_handles.human) in neighbors
+            assert das.get_atom(animal_base_handles.mammal) in neighbors
+            assert das.get_atom(animal_base_handles.monkey) in neighbors
             assert len(neighbors) == 3
 
         def _mammal_neighbors():
-            neighbors = _build_neighbors(mammal)
-            assert das.get_atom(animal) in neighbors
-            assert das.get_atom(monkey) in neighbors
-            assert das.get_atom(chimp) in neighbors
-            assert das.get_atom(human) in neighbors
-            assert das.get_atom(rhino) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.mammal)
+            assert das.get_atom(animal_base_handles.animal) in neighbors
+            assert das.get_atom(animal_base_handles.monkey) in neighbors
+            assert das.get_atom(animal_base_handles.chimp) in neighbors
+            assert das.get_atom(animal_base_handles.human) in neighbors
+            assert das.get_atom(animal_base_handles.rhino) in neighbors
             assert len(neighbors) == 5
 
         def _ent_neighbors():
-            neighbors = _build_neighbors(ent)
-            assert das.get_atom(human) in neighbors
-            assert das.get_atom(plant) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.ent)
+            assert das.get_atom(animal_base_handles.human) in neighbors
+            assert das.get_atom(animal_base_handles.plant) in neighbors
             assert len(neighbors) == 2
 
         def _animal_neighbors():
-            neighbors = _build_neighbors(animal)
-            assert das.get_atom(mammal) in neighbors
-            assert das.get_atom(reptile) in neighbors
-            assert das.get_atom(earthworm) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.animal)
+            assert das.get_atom(animal_base_handles.mammal) in neighbors
+            assert das.get_atom(animal_base_handles.reptile) in neighbors
+            assert das.get_atom(animal_base_handles.earthworm) in neighbors
             assert len(neighbors) == 3
 
         def _reptile_neighbors():
-            neighbors = _build_neighbors(reptile)
-            assert das.get_atom(animal) in neighbors
-            assert das.get_atom(dinosaur) in neighbors
-            assert das.get_atom(snake) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.reptile)
+            assert das.get_atom(animal_base_handles.animal) in neighbors
+            assert das.get_atom(animal_base_handles.dinosaur) in neighbors
+            assert das.get_atom(animal_base_handles.snake) in neighbors
             assert len(neighbors) == 3
 
         def _dinosaur_neighbors():
-            neighbors = _build_neighbors(dinosaur)
-            assert das.get_atom(reptile) in neighbors
-            assert das.get_atom(triceratops) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.dinosaur)
+            assert das.get_atom(animal_base_handles.reptile) in neighbors
+            assert das.get_atom(animal_base_handles.triceratops) in neighbors
             assert len(neighbors) == 2
 
         def _triceratops_neighbors():
-            neighbors = _build_neighbors(triceratops)
-            assert das.get_atom(dinosaur) in neighbors
-            assert das.get_atom(rhino) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.triceratops)
+            assert das.get_atom(animal_base_handles.dinosaur) in neighbors
+            assert das.get_atom(animal_base_handles.rhino) in neighbors
             assert len(neighbors) == 2
 
         def _rhino_neighbors():
-            neighbors = _build_neighbors(rhino)
-            assert das.get_atom(mammal) in neighbors
-            assert das.get_atom(triceratops) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.rhino)
+            assert das.get_atom(animal_base_handles.mammal) in neighbors
+            assert das.get_atom(animal_base_handles.triceratops) in neighbors
             assert len(neighbors) == 2
 
         def _earthworm_neighbors():
-            neighbors = _build_neighbors(earthworm)
-            assert das.get_atom(animal) in neighbors
-            assert das.get_atom(snake) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.earthworm)
+            assert das.get_atom(animal_base_handles.animal) in neighbors
+            assert das.get_atom(animal_base_handles.snake) in neighbors
             assert len(neighbors) == 2
 
         def _snake_neighbors():
-            neighbors = _build_neighbors(snake)
-            assert das.get_atom(earthworm) in neighbors
-            assert das.get_atom(reptile) in neighbors
-            assert das.get_atom(vine) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.snake)
+            assert das.get_atom(animal_base_handles.earthworm) in neighbors
+            assert das.get_atom(animal_base_handles.reptile) in neighbors
+            assert das.get_atom(animal_base_handles.vine) in neighbors
             assert len(neighbors) == 3
 
         def _vine_neighbors():
-            neighbors = _build_neighbors(vine)
-            assert das.get_atom(snake) in neighbors
-            assert das.get_atom(plant) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.vine)
+            assert das.get_atom(animal_base_handles.snake) in neighbors
+            assert das.get_atom(animal_base_handles.plant) in neighbors
             assert len(neighbors) == 2
 
         def _plant_neighbors():
-            neighbors = _build_neighbors(plant)
-            assert das.get_atom(vine) in neighbors
-            assert das.get_atom(ent) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.plant)
+            assert das.get_atom(animal_base_handles.vine) in neighbors
+            assert das.get_atom(animal_base_handles.ent) in neighbors
             assert len(neighbors) == 2
 
         def _similarity_inheritance_neighbors():
-            answers = _build_neighbors(similarity_human_monkey)
+            answers = _build_neighbors(animal_base_handles.similarity_human_monkey)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_human_chimp)
+            answers = _build_neighbors(animal_base_handles.similarity_human_chimp)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_chimp_monkey)
+            answers = _build_neighbors(animal_base_handles.similarity_chimp_monkey)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_snake_earthworm)
+            answers = _build_neighbors(animal_base_handles.similarity_snake_earthworm)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_rhino_triceratops)
+            answers = _build_neighbors(animal_base_handles.similarity_rhino_triceratops)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_snake_vine)
+            answers = _build_neighbors(animal_base_handles.similarity_snake_vine)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_human_ent)
+            answers = _build_neighbors(animal_base_handles.similarity_human_ent)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_human_mammal)
+            answers = _build_neighbors(animal_base_handles.inheritance_human_mammal)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_monkey_mammal)
+            answers = _build_neighbors(animal_base_handles.inheritance_monkey_mammal)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_chimp_mammal)
+            answers = _build_neighbors(animal_base_handles.inheritance_chimp_mammal)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_mammal_animal)
+            answers = _build_neighbors(animal_base_handles.inheritance_mammal_animal)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_reptile_animal)
+            answers = _build_neighbors(animal_base_handles.inheritance_reptile_animal)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_snake_reptile)
+            answers = _build_neighbors(animal_base_handles.inheritance_snake_reptile)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_dinosaur_reptile)
+            answers = _build_neighbors(animal_base_handles.inheritance_dinosaur_reptile)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_triceratops_dinosaur)
+            answers = _build_neighbors(animal_base_handles.inheritance_triceratops_dinosaur)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_earthworm_animal)
+            answers = _build_neighbors(animal_base_handles.inheritance_earthworm_animal)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_rhino_mammal)
+            answers = _build_neighbors(animal_base_handles.inheritance_rhino_mammal)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_vine_plant)
+            answers = _build_neighbors(animal_base_handles.inheritance_vine_plant)
             assert len(answers) == 0
 
-            answers = _build_neighbors(inheritance_ent_plant)
+            answers = _build_neighbors(animal_base_handles.inheritance_ent_plant)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_monkey_human)
+            answers = _build_neighbors(animal_base_handles.similarity_monkey_human)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_chimp_human)
+            answers = _build_neighbors(animal_base_handles.similarity_chimp_human)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_monkey_chimp)
+            answers = _build_neighbors(animal_base_handles.similarity_monkey_chimp)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_earthworm_snake)
+            answers = _build_neighbors(animal_base_handles.similarity_earthworm_snake)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_triceratops_rhino)
+            answers = _build_neighbors(animal_base_handles.similarity_triceratops_rhino)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_vine_snake)
+            answers = _build_neighbors(animal_base_handles.similarity_vine_snake)
             assert len(answers) == 0
 
-            answers = _build_neighbors(similarity_ent_human)
+            answers = _build_neighbors(animal_base_handles.similarity_ent_human)
             assert len(answers) == 0
 
         _human_neighbors()
@@ -761,27 +752,31 @@ class TestTraverseEngine:
             return ret
 
         def _human_neighbors():
-            neighbors = _build_neighbors(human, link_type='Inheritance')
-            assert das.get_atom(mammal) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.human, link_type='Inheritance')
+            assert das.get_atom(animal_base_handles.mammal) in neighbors
             assert len(neighbors) == 1
 
-            neighbors = _build_neighbors(human, link_type='Similarity')
-            assert das.get_atom(monkey) in neighbors
-            assert das.get_atom(chimp) in neighbors
-            assert das.get_atom(ent) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.human, link_type='Similarity')
+            assert das.get_atom(animal_base_handles.monkey) in neighbors
+            assert das.get_atom(animal_base_handles.chimp) in neighbors
+            assert das.get_atom(animal_base_handles.ent) in neighbors
             assert len(neighbors) == 3
 
-            neighbors = _build_neighbors(human, target_type='Concept')
-            assert das.get_atom(mammal) in neighbors
-            assert das.get_atom(monkey) in neighbors
-            assert das.get_atom(chimp) in neighbors
-            assert das.get_atom(ent) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.human, target_type='Concept')
+            assert das.get_atom(animal_base_handles.mammal) in neighbors
+            assert das.get_atom(animal_base_handles.monkey) in neighbors
+            assert das.get_atom(animal_base_handles.chimp) in neighbors
+            assert das.get_atom(animal_base_handles.ent) in neighbors
             assert len(neighbors) == 4
 
-            neighbors = _build_neighbors(human, link_type='Inheritance', target_type='Snet')
+            neighbors = _build_neighbors(
+                animal_base_handles.human, link_type='Inheritance', target_type='Snet'
+            )
             assert len(neighbors) == 0
 
-            neighbors = _build_neighbors(human, link_type='Similarity', target_type='Snet')
+            neighbors = _build_neighbors(
+                animal_base_handles.human, link_type='Similarity', target_type='Snet'
+            )
             assert len(neighbors) == 0
 
             das.add_link(
@@ -789,36 +784,45 @@ class TestTraverseEngine:
                     'type': 'Similarity',
                     'targets': [
                         {'type': 'Concept', 'name': 'human'},
-                        {'type': 'Fake', 'name': 'fake-h'},
+                        {'type': 'Fake', 'name': 'fake-h', 'weight': 0.7},
                     ],
-                    'weight': 0.7,
                 }
             )
             das.add_link(
                 {
                     'type': 'Similarity',
                     'targets': [
-                        {'type': 'Fake', 'name': 'fake-h'},
+                        {'type': 'Fake', 'name': 'fake-h', 'weight': 0.3},
                         {'type': 'Concept', 'name': 'human'},
                     ],
-                    'weight': 0.3,
                 }
             )
             das.add_link(
                 {
                     'type': 'Inheritance',
                     'targets': [
-                        {'type': 'Fake', 'name': 'fake-h2'},
-                        {'type': 'Fake', 'name': 'fake-h3'},
-                        {'type': 'Fake', 'name': 'fake-h4'},
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-h2',
+                            'weight': 0.3,
+                        },
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-h3',
+                            'weight': 0.3,
+                        },
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-h4',
+                            'weight': 1.3,
+                        },
                         {'type': 'Concept', 'name': 'human'},
                     ],
-                    'weight': 0.3,
                 }
             )
 
-            def my_filter(link) -> bool:
-                if 'weight' in link and link['weight'] >= 1:
+            def my_filter(target) -> bool:
+                if 'weight' in target and target['weight'] >= 1:
                     return True
                 return False
 
@@ -827,33 +831,38 @@ class TestTraverseEngine:
             fake_h3 = AtomDB.node_handle('Fake', 'fake-h3')
             fake_h4 = AtomDB.node_handle('Fake', 'fake-h4')
 
-            neighbors = _build_neighbors(human)
-            assert das.get_atom(mammal) in neighbors
-            assert das.get_atom(monkey) in neighbors
-            assert das.get_atom(chimp) in neighbors
-            assert das.get_atom(ent) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.human)
+            assert das.get_atom(animal_base_handles.mammal) in neighbors
+            assert das.get_atom(animal_base_handles.monkey) in neighbors
+            assert das.get_atom(animal_base_handles.chimp) in neighbors
+            assert das.get_atom(animal_base_handles.ent) in neighbors
             assert das.get_atom(fake_h) in neighbors
             assert das.get_atom(fake_h2) in neighbors
             assert das.get_atom(fake_h3) in neighbors
             assert das.get_atom(fake_h4) in neighbors
             assert len(neighbors) == 8
 
-            neighbors = _build_neighbors(human, link_type='Similarity', target_type='Fake')
+            neighbors = _build_neighbors(
+                animal_base_handles.human, link_type='Similarity', target_type='Fake'
+            )
             assert das.get_atom(fake_h) in neighbors
             assert len(neighbors) == 1
 
             neighbors = _build_neighbors(
-                human, link_type='Similarity', target_type='Fake', filter=my_filter
+                animal_base_handles.human,
+                link_type='Inheritance',
+                target_type='Fake',
+                filter=my_filter,
             )
-            assert len(neighbors) == 0
-
-        def _vine_neighbors():
-            neighbors = _build_neighbors(vine, link_type='Similarity')
-            assert das.get_atom(snake) in neighbors
             assert len(neighbors) == 1
 
-            neighbors = _build_neighbors(vine, link_type='Inheritance')
-            assert das.get_atom(plant) in neighbors
+        def _vine_neighbors():
+            neighbors = _build_neighbors(animal_base_handles.vine, link_type='Similarity')
+            assert das.get_atom(animal_base_handles.snake) in neighbors
+            assert len(neighbors) == 1
+
+            neighbors = _build_neighbors(animal_base_handles.vine, link_type='Inheritance')
+            assert das.get_atom(animal_base_handles.plant) in neighbors
             assert len(neighbors) == 1
 
             fake_v1 = AtomDB.node_handle('Fake', 'fake-v1')
@@ -863,10 +872,13 @@ class TestTraverseEngine:
                 {
                     'type': 'Inheritance',
                     'targets': [
-                        {'type': 'Fake', 'name': 'fake-v1'},
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-v1',
+                            'weight': 1,
+                        },
                         {'type': 'Concept', 'name': 'vine'},
                     ],
-                    'weight': 1,
                 }
             )
             das.add_link(
@@ -874,58 +886,74 @@ class TestTraverseEngine:
                     'type': 'Similarity',
                     'targets': [
                         {'type': 'Concept', 'name': 'vine'},
-                        {'type': 'Fake', 'name': 'fake-v2'},
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-v2',
+                            'weight': 0.7,
+                        },
                     ],
-                    'weight': 0.7,
                 }
             )
             das.add_link(
                 {
                     'type': 'Similarity',
                     'targets': [
-                        {'type': 'Fake', 'name': 'fake-v2'},
+                        {
+                            'type': 'Fake',
+                            'name': 'fake-v2',
+                            'weight': 0.3,
+                        },
                         {'type': 'Concept', 'name': 'vine'},
                     ],
-                    'weight': 0.3,
                 }
             )
 
-            neighbors = _build_neighbors(vine, link_type='Inheritance')
-            assert das.get_atom(plant) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.vine, link_type='Inheritance')
+            assert das.get_atom(animal_base_handles.plant) in neighbors
             assert das.get_atom(fake_v1) in neighbors
             assert len(neighbors) == 2
 
-            neighbors = _build_neighbors(vine, link_type='Similarity')
-            assert das.get_atom(snake) in neighbors
+            neighbors = _build_neighbors(animal_base_handles.vine, link_type='Similarity')
+            assert das.get_atom(animal_base_handles.snake) in neighbors
             assert das.get_atom(fake_v2) in neighbors
             assert len(neighbors) == 2
 
-            neighbors = _build_neighbors(vine, link_type='Similarity', target_type='Concept')
-            assert das.get_atom(snake) in neighbors
+            neighbors = _build_neighbors(
+                animal_base_handles.vine, link_type='Similarity', target_type='Concept'
+            )
+            assert das.get_atom(animal_base_handles.snake) in neighbors
             assert len(neighbors) == 1
 
-            neighbors = _build_neighbors(vine, link_type='Inheritance', target_type='Fake')
+            neighbors = _build_neighbors(
+                animal_base_handles.vine, link_type='Inheritance', target_type='Fake'
+            )
             assert das.get_atom(fake_v1) in neighbors
             assert len(neighbors) == 1
 
-            neighbors = _build_neighbors(vine, link_type='Similarity', target_type='Fake')
+            neighbors = _build_neighbors(
+                animal_base_handles.vine, link_type='Similarity', target_type='Fake'
+            )
             assert das.get_atom(fake_v2) in neighbors
             assert len(neighbors) == 1
 
-            def my_filter(link) -> bool:
-                if 'weight' in link and link['weight'] >= 1:
+            def my_filter(target) -> bool:
+                if 'weight' in target and target['weight'] >= 1:
                     return True
                 return False
 
-            neighbors = _build_neighbors(vine, link_type='Similarity', filter=my_filter)
+            neighbors = _build_neighbors(
+                animal_base_handles.vine, link_type='Similarity', filter=my_filter
+            )
             assert len(neighbors) == 0
 
-            neighbors = _build_neighbors(vine, link_type='Inheritance', filter=my_filter)
+            neighbors = _build_neighbors(
+                animal_base_handles.vine, link_type='Inheritance', filter=my_filter
+            )
             assert das.get_atom(fake_v1) in neighbors
             assert len(neighbors) == 1
 
         def _inheritance_dinosaur_reptile():
-            neighbors = _build_neighbors(inheritance_dinosaur_reptile)
+            neighbors = _build_neighbors(animal_base_handles.inheritance_dinosaur_reptile)
             assert len(neighbors) == 0
 
             fake_dr1 = AtomDB.node_handle('Fake', 'fake-dr1')
@@ -980,34 +1008,46 @@ class TestTraverseEngine:
                 }
             )
 
-            neighbors = _build_neighbors(inheritance_dinosaur_reptile)
+            neighbors = _build_neighbors(animal_base_handles.inheritance_dinosaur_reptile)
             assert das.get_atom(fake_dr1) in neighbors
             assert das.get_atom(fake_dr2) in neighbors
             assert len(neighbors) == 2
 
-            neighbors = _build_neighbors(inheritance_dinosaur_reptile, link_type='Similarity')
+            neighbors = _build_neighbors(
+                animal_base_handles.inheritance_dinosaur_reptile, link_type='Similarity'
+            )
             assert das.get_atom(fake_dr2) in neighbors
             assert len(neighbors) == 1
 
-            neighbors = _build_neighbors(inheritance_dinosaur_reptile, link_type='Inheritance')
-            assert das.get_atom(fake_dr1) in neighbors
-            assert len(neighbors) == 1
-
             neighbors = _build_neighbors(
-                inheritance_dinosaur_reptile, link_type='Inheritance', target_type='Fake'
+                animal_base_handles.inheritance_dinosaur_reptile, link_type='Inheritance'
             )
             assert das.get_atom(fake_dr1) in neighbors
             assert len(neighbors) == 1
 
             neighbors = _build_neighbors(
-                inheritance_dinosaur_reptile, link_type='Inheritance', target_type='Concept'
+                animal_base_handles.inheritance_dinosaur_reptile,
+                link_type='Inheritance',
+                target_type='Fake',
+            )
+            assert das.get_atom(fake_dr1) in neighbors
+            assert len(neighbors) == 1
+
+            neighbors = _build_neighbors(
+                animal_base_handles.inheritance_dinosaur_reptile,
+                link_type='Inheritance',
+                target_type='Concept',
             )
             assert len(neighbors) == 0
 
-            neighbors = _build_neighbors(inheritance_dinosaur_reptile, target_type='Concept')
+            neighbors = _build_neighbors(
+                animal_base_handles.inheritance_dinosaur_reptile, target_type='Concept'
+            )
             assert len(neighbors) == 0
 
-            neighbors = _build_neighbors(inheritance_dinosaur_reptile, target_type='Fake')
+            neighbors = _build_neighbors(
+                animal_base_handles.inheritance_dinosaur_reptile, target_type='Fake'
+            )
             assert das.get_atom(fake_dr1) in neighbors
             assert das.get_atom(fake_dr2) in neighbors
             assert len(neighbors) == 2
@@ -1019,7 +1059,7 @@ class TestTraverseEngine:
     @pytest.mark.parametrize("n", range(10))
     def test_follow_link(self, das, n):
         def _mammal():
-            cursor = das.get_traversal_cursor(mammal)
+            cursor = das.get_traversal_cursor(animal_base_handles.mammal)
             assert cursor.get()['name'] == 'mammal'
 
             cursor.follow_link()
@@ -1041,7 +1081,7 @@ class TestTraverseEngine:
                 assert current_cursor in ('mammal', 'triceratops')
 
         def _earthworm():
-            cursor = das.get_traversal_cursor(earthworm)
+            cursor = das.get_traversal_cursor(animal_base_handles.earthworm)
             assert cursor.get()['name'] == 'earthworm'
 
             cursor.follow_link()
@@ -1063,7 +1103,7 @@ class TestTraverseEngine:
     @pytest.mark.parametrize("n", range(10))
     def test_follow_link_with_filters(self, das, n):
         def _mammal():
-            cursor = das.get_traversal_cursor(mammal)
+            cursor = das.get_traversal_cursor(animal_base_handles.mammal)
             assert cursor.get()['name'] == 'mammal'
 
             cursor.follow_link(link_type='Similarity')
@@ -1095,10 +1135,10 @@ class TestTraverseEngine:
         _mammal()
 
     def test_goto(self, das):
-        cursor = das.get_traversal_cursor(human)
+        cursor = das.get_traversal_cursor(animal_base_handles.human)
         cursor.get()['name'] == 'human'
 
-        cursor.goto(ent)
+        cursor.goto(animal_base_handles.ent)
         assert cursor.get()['name'] == 'ent'
 
         with pytest.raises(AtomDoesNotExist):

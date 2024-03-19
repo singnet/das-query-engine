@@ -2,7 +2,7 @@ import time
 from functools import wraps
 from typing import Callable
 
-from hyperon_das.exceptions import ConnectionServerException
+from hyperon_das.exceptions import ConnectionError
 from hyperon_das.logger import logger
 
 
@@ -25,7 +25,7 @@ def retry(attempts: int, timeout_seconds: int):
                         )
                         return response
                 except Exception as e:
-                    raise ConnectionServerException(
+                    raise ConnectionError(
                         message="An error occurs while connecting to the server",
                         details=str(e),
                     )
