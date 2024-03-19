@@ -38,27 +38,27 @@ from hyperon_das.utils import Assignment, QueryAnswer, get_package_version  # no
 class QueryEngine(ABC):
     @abstractmethod
     def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def get_link(self, link_type: str, targets: List[str]) -> Union[Dict[str, Any], None]:
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def get_links(
         self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def get_incoming_links(
         self, atom_handle: str, **kwargs
     ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def query(
@@ -66,15 +66,19 @@ class QueryEngine(ABC):
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = {},
     ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def count_atoms(self) -> Tuple[int, int]:
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
-        ...
+        ...  # pragma no cover
+
+    @abstractmethod
+    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
+        ...  # pragma no cover
 
 
 class LocalQueryEngine(QueryEngine):
@@ -262,6 +266,9 @@ class LocalQueryEngine(QueryEngine):
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]] = None):
         self.local_backend.reindex(pattern_index_templates)
 
+    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
+        return self.local_backend.create_field_index(atom_type, field, type)
+
 
 class RemoteQueryEngine(QueryEngine):
     def __init__(self, backend, kwargs):
@@ -446,3 +453,6 @@ class RemoteQueryEngine(QueryEngine):
 
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
         raise NotImplementedError()
+
+    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
+        return self.remote_das.create_field_index(atom_type, field, type)

@@ -6,7 +6,7 @@ from tests.utils import load_animals_base
 from .helpers import _db_down, _db_up, cleanup, mongo_port, redis_port
 
 
-class TestLocalRedisMongo:
+class TestLocalDASRedisMongo:
     @pytest.fixture(scope="session", autouse=True)
     def _cleanup(self, request):
         return cleanup(request)

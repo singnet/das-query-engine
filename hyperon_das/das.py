@@ -44,6 +44,60 @@ class DistributedAtomSpace:
                 details=f'query_engine={query_engine_parameter}',
             )
 
+    @staticmethod
+    def about() -> dict:
+        return {
+            'das': {
+                'name': 'hyperon-das',
+                'version': get_package_version('hyperon_das'),
+                'summary': 'Query Engine API for Distributed AtomSpace',
+            },
+            'atom_db': {
+                'name': 'hyperon-das-atomdb',
+                'version': get_package_version('hyperon_das_atomdb'),
+                'summary': 'Persistence layer for Distributed AtomSpace',
+            },
+        }
+
+    @staticmethod
+    def get_node_handle(node_type: str, node_name: str) -> str:
+        """
+        This method retrieves a handle from the node parameters
+
+        Args:
+            node_type (str): The type of the node being queried.
+            node_name (str): The name of the specific node being queried.
+
+        Returns:
+            str: A handle
+
+        Examples:
+            >>> result = das.get_node_handle(node_type='Concept', node_name='human')
+            >>> print(result)
+            "af12f10f9ae2002a1607ba0b47ba8407"
+        """
+        return AtomDB.node_handle(node_type, node_name)
+
+    @staticmethod
+    def get_link_handle(link_type: str, link_targets: List[str]) -> str:
+        """
+        This method retrieves a handle from the link parameters.
+
+        Args:
+            link_type (str): The type of the link being queried.
+            link_targets (List[str]): A list of target identifiers that the link is associated with.
+
+        Returns:
+           str: A handle
+
+        Examples:
+            >>> result = das.get_link(link_type='Similarity', targets=['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'])
+            >>> print(result)
+            "bad7472f41a0e7d601ca294eb4607c3a"
+
+        """
+        return AtomDB.link_handle(link_type, link_targets)
+
     def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
         """
         Retrieve information about an Atom using its handle.
@@ -314,45 +368,6 @@ class DistributedAtomSpace:
         """This method applies changes made locally to the remote server"""
         self.query_engine.commit()
 
-    @staticmethod
-    def get_node_handle(node_type: str, node_name: str) -> str:
-        """
-        This method retrieves a handle from the node parameters
-
-        Args:
-            node_type (str): The type of the node being queried.
-            node_name (str): The name of the specific node being queried.
-
-        Returns:
-            str: A handle
-
-        Examples:
-            >>> result = das.get_node_handle(node_type='Concept', node_name='human')
-            >>> print(result)
-            "af12f10f9ae2002a1607ba0b47ba8407"
-        """
-        return AtomDB.node_handle(node_type, node_name)
-
-    @staticmethod
-    def get_link_handle(link_type: str, link_targets: List[str]) -> str:
-        """
-        This method retrieves a handle from the link parameters.
-
-        Args:
-            link_type (str): The type of the link being queried.
-            link_targets (List[str]): A list of target identifiers that the link is associated with.
-
-        Returns:
-           str: A handle
-
-        Examples:
-            >>> result = das.get_link(link_type='Similarity', targets=['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'])
-            >>> print(result)
-            "bad7472f41a0e7d601ca294eb4607c3a"
-
-        """
-        return AtomDB.link_handle(link_type, link_targets)
-
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Adds a node to the database.
@@ -499,17 +514,23 @@ class DistributedAtomSpace:
         except AtomDoesNotExist:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
 
-    @staticmethod
-    def about() -> dict:
-        return {
-            'das': {
-                'name': 'hyperon-das',
-                'version': get_package_version('hyperon_das'),
-                'summary': 'Query Engine API for Distributed AtomSpace',
-            },
-            'atom_db': {
-                'name': 'hyperon-das-atomdb',
-                'version': get_package_version('hyperon_das_atomdb'),
-                'summary': 'Persistence layer for Distributed AtomSpace',
-            },
-        }
+    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
+        """Create an index for a field for all Atoms of the specified type
+
+        Args:
+            atom_type (str): Type of the Atom. Could be 'link' or 'node'
+            field (str): field where the index will be created
+            type (str, optional): Only atoms of the passed type will be indexed. Defaults to None.
+
+        Raises:
+            ValueError: If the type of the Atom is not a string
+
+        Returns:
+            str: The index ID. This ID should be used to make queries that should use the newly created index.
+
+        Examples:
+            >>> index_id = das.create_field_index('link', 'tag', 'Expression')
+        """
+        if type and not isinstance(type, str):
+            raise ValueError('The type of the Atom must be a string')
+        return self.query_engine.create_field_index(atom_type, field, type=type)
