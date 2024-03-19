@@ -527,7 +527,7 @@ class DistributedAtomSpace:
 
         Returns:
             str: The index ID. This ID should be used to make queries that should use the newly created index.
-        
+
         Examples:
             >>> index_id = das.create_field_index('link', 'tag', 'Expression')
         """
