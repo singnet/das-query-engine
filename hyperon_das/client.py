@@ -144,3 +144,14 @@ class FunctionsClient:
             )
             return None, [] if kwargs.get('cursor') is not None else []
         return response
+
+    def create_field_index(self, atom_type: str, field: str, type: str = None):
+        payload = {
+            'action': 'create_field_index',
+            'input': {
+                'atom_type': atom_type,
+                'field': field,
+                'type': type,
+            },
+        }
+        return self._send_request(payload)
