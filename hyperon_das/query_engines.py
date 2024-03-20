@@ -32,7 +32,7 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer, get_package_version  # noqa: F401
+from hyperon_das.utils import Assignment, QueryAnswer, get_package_version, serializer  # noqa: F401
 
 
 class QueryEngine(ABC):
@@ -339,7 +339,7 @@ class RemoteQueryEngine(QueryEngine):
                 response = session.request(
                     method='POST',
                     url=url,
-                    data=json.dumps({"action": "ping", "input": {}}),
+                    data=serializer({"action": "ping", "input": {}}),
                     timeout=10,
                 )
         except Exception:

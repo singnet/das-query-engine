@@ -1,10 +1,10 @@
 import contextlib
-import json
+import pickle
 from typing import Any, Dict, List, Optional, Tuple, Union
-
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import exceptions, sessions
 
+from hyperon_das.utils import serializer, deserializer
 from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.logger import logger
 
@@ -17,15 +17,21 @@ class FunctionsClient:
 
     def _send_request(self, payload) -> Any:
         try:
+            payload_serialized = serializer(payload)
+
             with sessions.Session() as session:
-                response = session.request(method='POST', url=self.url, data=json.dumps(payload))
+                response = session.request(
+                    method='POST',
+                    url=self.url,
+                    data=payload_serialized,
+                )
 
             response.raise_for_status()
 
             try:
-                response_data = response.json()
-            except exceptions.JSONDecodeError as e:
-                raise Exception(f"JSON decode error: {str(e)}")
+                response_data = deserializer(response.content)
+            except pickle.UnpicklingError as e:
+                raise Exception(f"Unpickling error: {str(e)}")
 
             if response.status_code == 200:
                 return response_data
@@ -44,8 +50,8 @@ class FunctionsClient:
                 details=str(e),
             )
         except exceptions.HTTPError as e:
-            with contextlib.suppress(exceptions.JSONDecodeError):
-                return response.json().get('error')
+            with contextlib.suppress(pickle.UnpicklingError):
+                return deserializer(response.content).get('error')
             raise HTTPError(
                 message=f"HTTP error occurred for URL: '{self.url}' with payload: '{payload}'",
                 details=str(e),
