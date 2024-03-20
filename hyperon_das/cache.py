@@ -141,7 +141,9 @@ class LazyQueryEvaluator(ProductIterator):
                     if assignment_failed:
                         continue
                     assignment.freeze()
-                lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
+                lazy_query_answer.append(
+                    QueryAnswer(self._replace_target_handles(answer), assignment)
+                )
             if lazy_query_answer:
                 self.buffered_answer = ListIterator(lazy_query_answer)
                 next_value = self.buffered_answer.__next__()

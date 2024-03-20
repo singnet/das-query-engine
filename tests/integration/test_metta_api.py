@@ -9,10 +9,9 @@ def _check_node(das: DistributedAtomSpace, handle: str, node_type: str, node_nam
     assert symbol["type"] == node_type
     assert symbol["name"] == node_name
 
+
 class TestMettaAPI:
-
     def test_match_nested_expression(self):
-
         def _test_case_1():
             das = DistributedAtomSpace()
 
@@ -108,14 +107,15 @@ class TestMettaAPI:
             assert len(answer) == 2
             for qa in answer:
                 handle = qa.assignment.mapping["$v2"]
-                assert (handle == das.get_node_handle("Symbol", "2") or
-                       handle == das.get_link_handle(
-                           "Expression",
-                           [
-                               das.get_node_handle("Symbol", "Test"),
-                               das.get_node_handle("Symbol", "2"),
-                           ]
-                       ))
+                assert handle == das.get_node_handle(
+                    "Symbol", "2"
+                ) or handle == das.get_link_handle(
+                    "Expression",
+                    [
+                        das.get_node_handle("Symbol", "Test"),
+                        das.get_node_handle("Symbol", "2"),
+                    ],
+                )
                 atom = das.get_atom(handle)
                 if atom["type"] == "Symbol":
                     assert atom["name"] == "2"
@@ -155,12 +155,12 @@ class TestMettaAPI:
                     assert symbol["name"] == "Test"
                     handle = answer[0].assignment.mapping["$x"]
                     assert handle == das.get_link_handle(
-                            "Expression",
-                            [
-                                das.get_node_handle("Symbol", "Test"),
-                                das.get_node_handle("Symbol", "2"),
-                            ]
-                        )
+                        "Expression",
+                        [
+                            das.get_node_handle("Symbol", "Test"),
+                            das.get_node_handle("Symbol", "2"),
+                        ],
+                    )
                     symbol = das.get_atom(handle)
                     assert symbol["type"] == "Expression"
                     symbol1 = das.get_atom(symbol["targets"][0])
@@ -175,12 +175,12 @@ class TestMettaAPI:
                     assert symbol["name"] == "Best"
                     handle = answer[1].assignment.mapping["$x"]
                     assert handle == das.get_link_handle(
-                            "Expression",
-                            [
-                                das.get_node_handle("Symbol", "Test"),
-                                das.get_node_handle("Symbol", "2"),
-                            ]
-                        )
+                        "Expression",
+                        [
+                            das.get_node_handle("Symbol", "Test"),
+                            das.get_node_handle("Symbol", "2"),
+                        ],
+                    )
                     symbol = das.get_atom(handle)
                     assert symbol["type"] == "Expression"
                     symbol1 = das.get_atom(symbol["targets"][0])
@@ -205,16 +205,16 @@ class TestMettaAPI:
                             "targets": [
                                 {"type": "Symbol", "name": "inner_expression"},
                                 {"type": "Symbol", "name": "symbol1"},
-                            ]
+                            ],
                         },
                         {
                             "type": "Expression",
                             "targets": [
                                 {"type": "Symbol", "name": "inner_expression"},
                                 {"type": "Symbol", "name": "symbol2"},
-                            ]
+                            ],
                         },
-                    ]
+                    ],
                 }
             )
 
@@ -229,7 +229,7 @@ class TestMettaAPI:
                         "targets": [
                             {"atom_type": "node", "type": "Symbol", "name": "inner_expression"},
                             {"atom_type": "variable", "name": "$v1"},
-                        ]
+                        ],
                     },
                     {
                         "atom_type": "link",
@@ -237,9 +237,9 @@ class TestMettaAPI:
                         "targets": [
                             {"atom_type": "node", "type": "Symbol", "name": "inner_expression"},
                             {"atom_type": "node", "type": "Symbol", "name": "symbol2"},
-                        ]
+                        ],
                     },
-                ]
+                ],
             }
             answer = [query_answer for query_answer in das.query(query)]
             assert len(answer) == 1
