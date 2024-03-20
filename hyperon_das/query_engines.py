@@ -91,7 +91,6 @@ class LocalQueryEngine(QueryEngine):
         mappings: Set[Assignment] = None,
         parameters: Optional[Dict[str, Any]] = None,
     ) -> QueryAnswerIterator:
-        print(f"qe._recursive_query() - query: {query} mappings: {mappings}")
         if isinstance(query, list):
             sub_expression_results = [
                 self._recursive_query(expression, mappings, parameters) for expression in query
@@ -110,7 +109,6 @@ class LocalQueryEngine(QueryEngine):
             for target in query["targets"]:
                 if target["atom_type"] == "node" or target["atom_type"] == "link":
                     matched = self._recursive_query(target, mappings, parameters)
-                    print(f"qe._recursive_query() returned from recursion - matched: {matched}")
                     if matched:
                         matched_targets.append(matched)
                 elif target["atom_type"] == "variable":
@@ -201,8 +199,13 @@ class LocalQueryEngine(QueryEngine):
     ) -> Union[Iterator, List[str], List[Dict]]:
         if kwargs.get('no_iterator', True):
             answer = self._get_related_links(link_type, target_types, link_targets, **kwargs)
-            if answer and isinstance(answer[0], int):
-                return answer[0], self._to_link_dict_list(answer[1])
+            if not answer:
+                return []
+            if isinstance(answer, tuple):
+                if isinstance(answer[0], int):
+                    return answer[0], self._to_link_dict_list(answer[1])
+                else:
+                    return self._to_link_dict_list(answer[1])
             return self._to_link_dict_list(answer)
         else:
             if kwargs.get('cursor') is None:

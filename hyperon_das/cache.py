@@ -87,7 +87,6 @@ class LazyQueryEvaluator(ProductIterator):
         query_parameters: Optional[Dict[str, Any]],
     ):
         super().__init__(source)
-        print(f"LQI.constructor() - link_type: {link_type} self: {self} query_parameters: {query_parameters}")
         self.link_type = link_type
         self.query_parameters = query_parameters
         self.das = das
@@ -96,7 +95,7 @@ class LazyQueryEvaluator(ProductIterator):
     def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
         targets = []
         for target_handle in link["targets"]:
-            atom = self.das.local_backend.get_atom_as_dict(target_handle)
+            atom = self.das.get_atom(target_handle)
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
@@ -104,50 +103,49 @@ class LazyQueryEvaluator(ProductIterator):
         return link
 
     def __next__(self):
-        #print(f"LQI.next() - self.buffered_answer {'None' if self.buffered_answer is None else 'Not None'}")
-        print(f"LQI.next() - self: {self}")
         if self.buffered_answer:
             try:
                 return self.buffered_answer.__next__()
             except StopIteration:
                 self.buffered_answer = None
-        target_info = super().__next__()
-        print(f"LQI.next() - target_info {target_info}")
-        target_handle = []
-        wildcard_flag = False
-        for query_answer_target in target_info:
-            target = query_answer_target.subgraph
-            if target.get("atom_type", None) == "variable":
-                target_handle.append(WILDCARD)
-                wildcard_flag = True
-            else:
-                target_handle.append(target["handle"])
-        print(f"LQI.next() - target_handle {target_handle}")
-        das_query_answer = self.das.get_links(self.link_type, None, target_handle)
-        print(f"LQI.next() - das_query_answer {das_query_answer}")
-        lazy_query_answer = []
-        for answer in das_query_answer:
-            assignment = None
-            if wildcard_flag:
-                assignment = Assignment()
-                assignment_failed = False
-                for query_answer_target, handle in zip(target_info, answer["targets"]):
-                    target = query_answer_target.subgraph
-                    if target.get("atom_type", None) == "variable":
-                        if not assignment.assign(target["name"], handle):
-                            assignment_failed = True
-                    else:
-                        if not assignment.merge(query_answer_target.assignment):
-                            assignment_failed = True
+        while self.buffered_answer is None:
+            target_info = super().__next__()
+            target_handle = []
+            wildcard_flag = False
+            for query_answer_target in target_info:
+                target = query_answer_target.subgraph
+                if query_answer_target.assignment:
+                    wildcard_flag = True
+                if target.get("atom_type", None) == "variable":
+                    target_handle.append(WILDCARD)
+                    wildcard_flag = True
+                else:
+                    target_handle.append(target["handle"])
+            das_query_answer = self.das.get_links(self.link_type, None, target_handle)
+            lazy_query_answer = []
+            for answer in das_query_answer:
+                assignment = None
+                if wildcard_flag:
+                    assignment = Assignment()
+                    assignment_failed = False
+                    for query_answer_target, handle in zip(target_info, answer["targets"]):
+                        target = query_answer_target.subgraph
+                        if target.get("atom_type", None) == "variable":
+                            if not assignment.assign(target["name"], handle):
+                                assignment_failed = True
+                        else:
+                            if not assignment.merge(query_answer_target.assignment):
+                                assignment_failed = True
+                        if assignment_failed:
+                            break
                     if assignment_failed:
-                        break
-                if assignment_failed:
-                    continue
-                assignment.freeze()
-            lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
-        self.buffered_answer = ListIterator(lazy_query_answer)
-        print(f"LQI.next() - LATE self.buffered_answer {'None' if self.buffered_answer is None else 'Not None'}")
-        return self.buffered_answer.__next__()
+                        continue
+                    assignment.freeze()
+                lazy_query_answer.append(QueryAnswer(self._replace_target_handles(answer), assignment))
+            if lazy_query_answer:
+                self.buffered_answer = ListIterator(lazy_query_answer)
+                next_value = self.buffered_answer.__next__()
+        return next_value
 
 
 class BaseLinksIterator(QueryAnswerIterator, ABC):

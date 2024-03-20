@@ -1,5 +1,7 @@
-from hyperon_das import DistributedAtomSpace
 from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
+
+from hyperon_das import DistributedAtomSpace
+
 
 def _check_node(das: DistributedAtomSpace, handle: str, node_type: str, node_name: str):
     assert handle == ExpressionHasher.terminal_hash(node_type, node_name)
@@ -93,23 +95,14 @@ class TestMettaAPI:
             answer = [query_answer for query_answer in das.query(query_1)]
             assert len(answer) == 1
             handle = answer[0].assignment.mapping["$v1"]
-            assert handle == das.get_node_handle("Symbol", "Test")
-            symbol = das.get_atom(handle)
-            assert symbol["type"] == "Symbol"
-            assert symbol["name"] == "Test"
+            _check_node(das, handle, "Symbol", "Test")
 
             answer = [query_answer for query_answer in das.query(query_2)]
             assert len(answer) == 1
             handle = answer[0].assignment.mapping["v1"]
-            assert handle == das.get_node_handle("Symbol", "Test")
-            symbol = das.get_atom(handle)
-            assert symbol["type"] == "Symbol"
-            assert symbol["name"] == "Test"
+            _check_node(das, handle, "Symbol", "Test")
             handle = answer[0].assignment.mapping["v2"]
-            assert handle == das.get_node_handle("Symbol", "Test")
-            symbol = das.get_atom(handle)
-            assert symbol["type"] == "Symbol"
-            assert symbol["name"] == "Test"
+            _check_node(das, handle, "Symbol", "Test")
 
             answer = [query_answer for query_answer in das.query(query_3)]
             assert len(answer) == 2
@@ -248,13 +241,10 @@ class TestMettaAPI:
                     },
                 ]
             }
-
             answer = [query_answer for query_answer in das.query(query)]
             assert len(answer) == 1
-
             handle = answer[0].assignment.mapping["$v1"]
-            # AQUI: acabei de escrever esse teste. Agora é rodar
             _check_node(das, handle, "Symbol", "symbol1")
 
         _test_case_1()
-        #_test_case_2()
+        _test_case_2()
