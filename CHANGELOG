@@ -1,1 +1,2 @@
 [#180] Fix in the test_metta_api.py integration test
+[#184] Fix bug that prevented DAS from answering nested queries properly
