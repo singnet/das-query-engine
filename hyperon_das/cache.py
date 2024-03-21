@@ -147,7 +147,8 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
     def __init__(self, source: ListIterator, **kwargs) -> None:
         super().__init__(source)
         if not self.source.is_empty():
-            self.backend = kwargs.get('backend')
+            if not hasattr(self, 'backend'):
+                self.backend = kwargs.get('backend')
             self.chunk_size = kwargs.get('chunk_size', 1000)
             self.cursor = kwargs.get('cursor', 0)
             self.buffer_queue = deque()
@@ -356,6 +357,31 @@ class RemoteGetLinks(BaseLinksIterator):
             return self.backend.get_links(
                 self.link_type, self.target_types, self.link_targets, **kwargs
             )
+
+
+class CustomQuery(BaseLinksIterator):
+    def __init__(self, source: ListIterator, **kwargs) -> None:
+        self.index_id = kwargs.pop('index_id', None)
+        self.backend = kwargs.pop('backend', None)
+        self.kwargs = kwargs
+        super().__init__(source, **kwargs)
+
+    def get_next_value(self) -> None:
+        if not self.is_empty():
+            self.current_value = next(self.iterator)
+
+    def get_current_value(self) -> Any:
+        try:
+            return self.source.get()
+        except StopIteration:
+            return None
+
+    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+        return self.kwargs
+
+    def get_fetch_data(self, **kwargs) -> tuple:
+        if self.backend:
+            return self.backend.get_atoms_by_index(self.index_id, **kwargs)
 
 
 class TraverseLinksIterator(QueryAnswerIterator):
