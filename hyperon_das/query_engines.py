@@ -33,40 +33,39 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer, get_package_version  # noqa: F401
+from hyperon_das.utils import Assignment, QueryAnswer, get_package_version, serialize  # noqa: F401
 
 
 class QueryEngine(ABC):
     @abstractmethod
-    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
-        ...  # pragma no cover
+    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]: ...  # pragma no cover
 
     @abstractmethod
-    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
-        ...  # pragma no cover
+    def get_node(
+        self, node_type: str, node_name: str
+    ) -> Union[Dict[str, Any], None]: ...  # pragma no cover
 
     @abstractmethod
-    def get_link(self, link_type: str, targets: List[str]) -> Union[Dict[str, Any], None]:
-        ...  # pragma no cover
+    def get_link(
+        self, link_type: str, targets: List[str]
+    ) -> Union[Dict[str, Any], None]: ...  # pragma no cover
 
     @abstractmethod
     def get_links(
         self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
-    ) -> Union[List[str], List[Dict]]:
-        ...  # pragma no cover
+    ) -> Union[List[str], List[Dict]]: ...  # pragma no cover
 
     @abstractmethod
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
-        ...  # pragma no cover
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]: ...  # pragma no cover
 
     @abstractmethod
     def query(
         self,
         query: Dict[str, Any],
-        parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
+        parameters: Optional[Dict[str, Any]] = {}
+    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, Any]]]]:
         ...  # pragma no cover
 
     @abstractmethod
@@ -74,12 +73,12 @@ class QueryEngine(ABC):
         ...  # pragma no cover
 
     @abstractmethod
-    def count_atoms(self) -> Tuple[int, int]:
-        ...  # pragma no cover
+    def count_atoms(self) -> Tuple[int, int]: ...  # pragma no cover
 
     @abstractmethod
-    def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
-        ...  # pragma no cover
+    def reindex(
+        self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]
+    ): ...  # pragma no cover
 
     @abstractmethod
     def create_field_index(
@@ -368,7 +367,8 @@ class RemoteQueryEngine(QueryEngine):
                 response = session.request(
                     method='POST',
                     url=url,
-                    data=json.dumps({"action": "ping", "input": {}}),
+                    data=serialize({"action": "ping", "input": {}}),
+                    headers={'Content-Type': 'application/octet-stream'},
                     timeout=10,
                 )
         except Exception:

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from importlib import import_module
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
+import pickle
 
 from hyperon_das.exceptions import InvalidAssignment
 
@@ -101,3 +102,11 @@ class QueryAnswer:
 def get_package_version(package_name: str) -> str:
     package_module = import_module(package_name)
     return getattr(package_module, '__version__', None)
+
+
+def serialize(payload: Any) -> bytes:
+    return pickle.dumps(payload)
+
+
+def deserialize(payload: bytes) -> Any:
+    return pickle.loads(payload)
