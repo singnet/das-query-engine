@@ -190,4 +190,4 @@ class TestVultrClientIntegration:
         assert len(response_atoms_targets) == 8
         for atom_targets in response_atoms_targets:
             if len(atom_targets[0]["targets"]) == 3:
-                assert atom_targets in expected_atoms_targets
+                assert list(atom_targets) in expected_atoms_targets
