@@ -318,6 +318,9 @@ class DatabaseMock(AtomDB):
     def delete_atom(self, handle: str, **kwargs) -> None:
         pass
 
+    def create_field_index(self, atom_type: str, field: str, type: Optional[str] = None) -> str:
+        pass
+
 
 class DatabaseAnimals(DatabaseMock):
     def __init__(self):
