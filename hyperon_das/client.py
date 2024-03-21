@@ -1,12 +1,13 @@
 import contextlib
 import pickle
 from typing import Any, Dict, List, Optional, Tuple, Union
+
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import exceptions, sessions
 
-from hyperon_das.utils import serialize, deserialize
 from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.logger import logger
+from hyperon_das.utils import deserialize, serialize
 
 
 class FunctionsClient:
