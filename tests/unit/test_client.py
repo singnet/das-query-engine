@@ -34,6 +34,7 @@ class TestFunctionsClient:
             method='POST',
             url='http://example.com',
             data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
@@ -60,6 +61,7 @@ class TestFunctionsClient:
             method='POST',
             url='http://example.com',
             data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
@@ -102,6 +104,7 @@ class TestFunctionsClient:
             method='POST',
             url='http://example.com',
             data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
@@ -140,6 +143,7 @@ class TestFunctionsClient:
             method='POST',
             url='http://example.com',
             data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
@@ -198,6 +202,7 @@ class TestFunctionsClient:
             method='POST',
             url='http://example.com',
             data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
@@ -216,6 +221,7 @@ class TestFunctionsClient:
             method='POST',
             url='http://example.com',
             data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
@@ -239,6 +245,7 @@ class TestFunctionsClient:
             method='POST',
             url='http://example.com',
             data=serialize(payload),
+            headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response

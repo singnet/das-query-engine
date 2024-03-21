@@ -24,6 +24,7 @@ class FunctionsClient:
                     method='POST',
                     url=self.url,
                     data=payload_serialized,
+                    headers={'Content-Type': 'application/octet-stream'},
                 )
 
             response.raise_for_status()

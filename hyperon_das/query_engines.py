@@ -339,6 +339,7 @@ class RemoteQueryEngine(QueryEngine):
                     method='POST',
                     url=url,
                     data=serialize({"action": "ping", "input": {}}),
+                    headers={'Content-Type': 'application/octet-stream'},
                     timeout=10,
                 )
         except Exception:
