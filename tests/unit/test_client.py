@@ -6,7 +6,7 @@ from requests import exceptions
 
 from hyperon_das.client import FunctionsClient
 from hyperon_das.exceptions import ConnectionError, RequestError, TimeoutError
-from hyperon_das.utils import deserializer, serializer
+from hyperon_das.utils import serialize
 
 
 class TestFunctionsClient:
@@ -25,7 +25,7 @@ class TestFunctionsClient:
         }
 
         mock_request.return_value.status_code = 200
-        mock_request.return_value.content = serializer(expected_response)
+        mock_request.return_value.content = serialize(expected_response)
 
         client = FunctionsClient(url='http://example.com')
         result = client.get_atom(handle='123')
@@ -33,7 +33,7 @@ class TestFunctionsClient:
         mock_request.assert_called_with(
             method='POST',
             url='http://example.com',
-            data=serializer(expected_request_data),
+            data=serialize(expected_request_data),
         )
 
         assert result == expected_response
@@ -51,7 +51,7 @@ class TestFunctionsClient:
         }
 
         mock_request.return_value.status_code = 200
-        mock_request.return_value.content = serializer(expected_response)
+        mock_request.return_value.content = serialize(expected_response)
 
         client = FunctionsClient(url='http://example.com')
         result = client.get_node(node_type='Concept', node_name='human')
@@ -59,7 +59,7 @@ class TestFunctionsClient:
         mock_request.assert_called_with(
             method='POST',
             url='http://example.com',
-            data=serializer(expected_request_data),
+            data=serialize(expected_request_data),
         )
 
         assert result == expected_response
@@ -90,7 +90,7 @@ class TestFunctionsClient:
         }
 
         mock_request.return_value.status_code = 200
-        mock_request.return_value.content = serializer(expected_response)
+        mock_request.return_value.content = serialize(expected_response)
 
         client = FunctionsClient(url='http://example.com')
         result = client.get_link(
@@ -101,7 +101,7 @@ class TestFunctionsClient:
         mock_request.assert_called_with(
             method='POST',
             url='http://example.com',
-            data=serializer(expected_request_data),
+            data=serialize(expected_request_data),
         )
 
         assert result == expected_response
@@ -128,7 +128,7 @@ class TestFunctionsClient:
         ]
 
         mock_request.return_value.status_code = 200
-        mock_request.return_value.content = serializer(expected_response)
+        mock_request.return_value.content = serialize(expected_response)
 
         client = FunctionsClient(url='http://example.com')
         result = client.get_links(
@@ -139,7 +139,7 @@ class TestFunctionsClient:
         mock_request.assert_called_with(
             method='POST',
             url='http://example.com',
-            data=serializer(expected_request_data),
+            data=serialize(expected_request_data),
         )
 
         assert result == expected_response
@@ -180,7 +180,7 @@ class TestFunctionsClient:
         ]
 
         mock_request.return_value.status_code = 200
-        mock_request.return_value.content = serializer(expected_response)
+        mock_request.return_value.content = serialize(expected_response)
 
         client = FunctionsClient(url='http://example.com')
         query = {
@@ -197,7 +197,7 @@ class TestFunctionsClient:
         mock_request.assert_called_with(
             method='POST',
             url='http://example.com',
-            data=serializer(expected_request_data),
+            data=serialize(expected_request_data),
         )
 
         assert result == expected_response
@@ -207,7 +207,7 @@ class TestFunctionsClient:
         expected_response = (14, 26)
 
         mock_request.return_value.status_code = 200
-        mock_request.return_value.content = serializer(expected_response)
+        mock_request.return_value.content = serialize(expected_response)
 
         client = FunctionsClient(url='http://example.com')
         result = client.count_atoms()
@@ -215,7 +215,7 @@ class TestFunctionsClient:
         mock_request.assert_called_once_with(
             method='POST',
             url='http://example.com',
-            data=serializer(expected_request_data),
+            data=serialize(expected_request_data),
         )
 
         assert result == expected_response
@@ -230,7 +230,7 @@ class TestFunctionsClient:
         }
 
         mock_request.return_value.status_code = 200
-        mock_request.return_value.content = serializer(expected_response)
+        mock_request.return_value.content = serialize(expected_response)
 
         client = FunctionsClient(url='http://example.com')
         result = client._send_request(payload)
@@ -238,7 +238,7 @@ class TestFunctionsClient:
         mock_request.assert_called_with(
             method='POST',
             url='http://example.com',
-            data=serializer(payload),
+            data=serialize(payload),
         )
 
         assert result == expected_response

@@ -103,8 +103,10 @@ def get_package_version(package_name: str) -> str:
     package_module = import_module(package_name)
     return getattr(package_module, '__version__', None)
 
-def serializer(payload: Any) -> bytes:
+
+def serialize(payload: Any) -> bytes:
     return pickle.dumps(payload)
 
-def deserializer(payload: bytes) -> Any:
+
+def deserialize(payload: bytes) -> Any:
     return pickle.loads(payload)

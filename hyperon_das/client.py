@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import exceptions, sessions
 
-from hyperon_das.utils import serializer, deserializer
+from hyperon_das.utils import serialize, deserialize
 from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.logger import logger
 
@@ -17,7 +17,7 @@ class FunctionsClient:
 
     def _send_request(self, payload) -> Any:
         try:
-            payload_serialized = serializer(payload)
+            payload_serialized = serialize(payload)
 
             with sessions.Session() as session:
                 response = session.request(
@@ -29,7 +29,7 @@ class FunctionsClient:
             response.raise_for_status()
 
             try:
-                response_data = deserializer(response.content)
+                response_data = deserialize(response.content)
             except pickle.UnpicklingError as e:
                 raise Exception(f"Unpickling error: {str(e)}")
 
@@ -51,7 +51,7 @@ class FunctionsClient:
             )
         except exceptions.HTTPError as e:
             with contextlib.suppress(pickle.UnpicklingError):
-                return deserializer(response.content).get('error')
+                return deserialize(response.content).get('error')
             raise HTTPError(
                 message=f"HTTP error occurred for URL: '{self.url}' with payload: '{payload}'",
                 details=str(e),
