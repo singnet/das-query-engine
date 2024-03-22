@@ -1,12 +1,13 @@
 import contextlib
 import pickle
 from typing import Any, Dict, List, Optional, Tuple, Union
+
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import exceptions, sessions
 
-from hyperon_das.utils import serialize, deserialize
 from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.logger import logger
+from hyperon_das.utils import deserialize, serialize
 
 
 class FunctionsClient:
@@ -152,13 +153,27 @@ class FunctionsClient:
             return None, [] if kwargs.get('cursor') is not None else []
         return response
 
-    def create_field_index(self, atom_type: str, field: str, type: str = None):
+    def create_field_index(
+        self,
+        atom_type: str,
+        field: str,
+        type: Optional[str] = None,
+        composite_type: Optional[List[Any]] = None,
+    ) -> str:
         payload = {
             'action': 'create_field_index',
             'input': {
                 'atom_type': atom_type,
                 'field': field,
                 'type': type,
+                'composite_type': composite_type,
             },
+        }
+        return self._send_request(payload)
+
+    def custom_query(self, index_id: str, **kwargs) -> List[Dict[str, Any]]:
+        payload = {
+            'action': 'custom_query',
+            'input': {'index_id': index_id, 'kwargs': kwargs},
         }
         return self._send_request(payload)

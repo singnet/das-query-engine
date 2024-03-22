@@ -1,4 +1,4 @@
-import json
+import json  # noqa: F401
 from abc import ABC, abstractmethod
 from http import HTTPStatus  # noqa: F401
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
@@ -16,6 +16,7 @@ from requests.exceptions import (  # noqa: F401
 
 from hyperon_das.cache import (
     AndEvaluator,
+    CustomQuery,
     LazyQueryEvaluator,
     ListIterator,
     LocalGetLinks,
@@ -37,47 +38,56 @@ from hyperon_das.utils import Assignment, QueryAnswer, get_package_version, seri
 
 class QueryEngine(ABC):
     @abstractmethod
-    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]: ...  # pragma no cover
+    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
+        ...  # pragma no cover
 
     @abstractmethod
-    def get_node(
-        self, node_type: str, node_name: str
-    ) -> Union[Dict[str, Any], None]: ...  # pragma no cover
+    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
+        ...  # pragma no cover
 
     @abstractmethod
-    def get_link(
-        self, link_type: str, targets: List[str]
-    ) -> Union[Dict[str, Any], None]: ...  # pragma no cover
+    def get_link(self, link_type: str, targets: List[str]) -> Union[Dict[str, Any], None]:
+        ...  # pragma no cover
 
     @abstractmethod
     def get_links(
         self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
-    ) -> Union[List[str], List[Dict]]: ...  # pragma no cover
+    ) -> Union[List[str], List[Dict]]:
+        ...  # pragma no cover
 
     @abstractmethod
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]: ...  # pragma no cover
+    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
+        ...  # pragma no cover
 
     @abstractmethod
     def query(
-        self,
-        query: Dict[str, Any],
-        parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]: ...  # pragma no cover
+        self, query: Dict[str, Any], parameters: Optional[Dict[str, Any]] = {}
+    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, Any]]]]:
+        ...  # pragma no cover
 
     @abstractmethod
-    def count_atoms(self) -> Tuple[int, int]: ...  # pragma no cover
+    def custom_query(self, index_id: str, **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
+        ...  # pragma no cover
 
     @abstractmethod
-    def reindex(
-        self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]
-    ): ...  # pragma no cover
+    def count_atoms(self) -> Tuple[int, int]:
+        ...  # pragma no cover
+
+    @abstractmethod
+    def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
+        ...  # pragma no cover
 
     @abstractmethod
     def create_field_index(
-        self, atom_type: str, field: str, type: str = None
-    ) -> str: ...  # pragma no cover
+        self,
+        atom_type: str,
+        field: str,
+        type: Optional[str] = None,
+        composite_type: Optional[List[Any]] = None,
+    ) -> str:
+        ...  # pragma no cover
 
 
 class LocalQueryEngine(QueryEngine):
@@ -138,14 +148,8 @@ class LocalQueryEngine(QueryEngine):
         flat_handle = isinstance(db_answer[0], str)
         answer = []
         for atom in db_answer:
-            if flat_handle:
-                handle = atom
-                arity = -1
-            else:
-                handle = atom[0]
-                targets = atom[1:]
-                arity = len(targets)
-            answer.append(self.local_backend.get_atom_as_dict(handle, arity))
+            handle = atom if flat_handle else atom[0]
+            answer.append(self.local_backend.get_atom_as_dict(handle))
         return answer
 
     def _get_related_links(
@@ -256,6 +260,18 @@ class LocalQueryEngine(QueryEngine):
         else:
             return query_results
 
+    def custom_query(self, index_id: str, **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
+        if kwargs.pop('no_iterator', True):
+            return self.local_backend.get_atoms_by_index(index_id, **kwargs)
+        else:
+            if kwargs.get('cursor') is None:
+                kwargs['cursor'] = 0
+            cursor, answer = self.local_backend.get_atoms_by_index(index_id, **kwargs)
+            kwargs['backend'] = self.local_backend
+            kwargs['index_id'] = index_id
+            kwargs['cursor'] = cursor
+            return CustomQuery(ListIterator(answer), **kwargs)
+
     def count_atoms(self) -> Tuple[int, int]:
         return self.local_backend.count_atoms()
 
@@ -265,8 +281,14 @@ class LocalQueryEngine(QueryEngine):
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]] = None):
         self.local_backend.reindex(pattern_index_templates)
 
-    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
-        return self.local_backend.create_field_index(atom_type, field, type)
+    def create_field_index(
+        self,
+        atom_type: str,
+        field: str,
+        type: Optional[str] = None,
+        composite_type: Optional[List[Any]] = None,
+    ) -> str:
+        return self.local_backend.create_field_index(atom_type, field, type, composite_type)
 
 
 class RemoteQueryEngine(QueryEngine):
@@ -419,6 +441,17 @@ class RemoteQueryEngine(QueryEngine):
         links.extend(remote_links)
         return RemoteIncomingLinks(ListIterator(links), **kwargs)
 
+    def custom_query(self, index_id: str, **kwargs) -> Iterator:
+        kwargs.pop('no_iterator', None)
+        if kwargs.get('cursor') is None:
+            kwargs['cursor'] = 0
+        cursor, answer = self.remote_das.custom_query(index_id, **kwargs)
+        kwargs['backend'] = self.remote_das
+        kwargs['index_id'] = index_id
+        kwargs['cursor'] = cursor
+        kwargs['is_remote'] = True
+        return CustomQuery(ListIterator(answer), **kwargs)
+
     def query(
         self,
         query: Union[List[Dict[str, Any]], Dict[str, Any]],
@@ -454,5 +487,11 @@ class RemoteQueryEngine(QueryEngine):
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
         raise NotImplementedError()
 
-    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
-        return self.remote_das.create_field_index(atom_type, field, type)
+    def create_field_index(
+        self,
+        atom_type: str,
+        field: str,
+        type: Optional[str] = None,
+        composite_type: Optional[List[Any]] = None,
+    ) -> str:
+        return self.remote_das.create_field_index(atom_type, field, type, composite_type)

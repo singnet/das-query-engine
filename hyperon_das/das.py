@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
@@ -364,6 +364,32 @@ class DistributedAtomSpace:
         """
         return self.query_engine.query(query, parameters)
 
+    def custom_query(self, index_id: str, **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
+        """
+        Perform a custom query on the knowledge base using a custom index id and return an iterator.
+        If no_iterator is set to True, the method returns a list of dict containing detailed atom information
+        (But this way only works with Local Das RedisMongo).
+
+        Args:
+            index_id (str): the custom index id to be used in the query
+
+        Raises:
+            NotImplementedError: If the custom_query method is called for the Local DAS in Ram only
+
+        Returns:
+            Union[Iterator, List[Dict[str, Any]]]: An iterator or list of dict containing detailed atom information
+
+        Examples:
+            >>> das.custom_query(index_id='index_123456789', tag='DAS')
+            >>> das.custom_query(index_id='index_123456789', tag='DAS', no_iterator=True)
+        """
+        if isinstance(self.query_engine, LocalQueryEngine) and isinstance(self.backend, InMemoryDB):
+            raise NotImplementedError(
+                "The custom_query method is not implemented for the Local DAS in Ram only"
+            )
+
+        return self.query_engine.custom_query(index_id, **kwargs)
+
     def commit_changes(self):
         """This method applies changes made locally to the remote server"""
         self.query_engine.commit()
@@ -514,23 +540,38 @@ class DistributedAtomSpace:
         except AtomDoesNotExist:
             raise GetTraversalCursorException(message="Cannot start Traversal. Atom does not exist")
 
-    def create_field_index(self, atom_type: str, field: str, type: str = None) -> str:
+    def create_field_index(
+        self,
+        atom_type: str,
+        field: str,
+        type: Optional[str] = None,
+        composite_type: Optional[List[Any]] = None,
+    ) -> str:
         """Create an index for a field for all Atoms of the specified type
 
         Args:
             atom_type (str): Type of the Atom. Could be 'link' or 'node'
             field (str): field where the index will be created
             type (str, optional): Only atoms of the passed type will be indexed. Defaults to None.
+            composite_type (List[Any], optional): Only Atoms type of the passed composite type will be indexed. Defaults to None.
 
         Raises:
-            ValueError: If the type of the Atom is not a string
+            ValueError: If the type of the Atom is not a string or if both type and composite_type are specified
 
         Returns:
             str: The index ID. This ID should be used to make queries that should use the newly created index.
 
         Examples:
-            >>> index_id = das.create_field_index('link', 'tag', 'Expression')
+            >>> index_id = das.create_field_index('link', 'tag', type='Expression')
+            >>> index_id = das.create_field_index('link', 'tag', composite_type=['Expression', 'Symbol', 'Symbol', ['Expression', 'Symbol', 'Symbol', 'Symbol']])
         """
+
+        if type and composite_type:
+            raise ValueError("Only one of 'type' or 'composite_type' can be specified")
+
         if type and not isinstance(type, str):
             raise ValueError('The type of the Atom must be a string')
-        return self.query_engine.create_field_index(atom_type, field, type=type)
+
+        return self.query_engine.create_field_index(
+            atom_type, field, type=type, composite_type=composite_type
+        )

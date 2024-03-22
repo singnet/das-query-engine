@@ -1,4 +1,4 @@
-import json
+import json  # noqa: F401
 from unittest.mock import patch
 
 import pytest

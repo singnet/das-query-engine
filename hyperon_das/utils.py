@@ -1,7 +1,7 @@
+import pickle
 from dataclasses import dataclass
 from importlib import import_module
 from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
-import pickle
 
 from hyperon_das.exceptions import InvalidAssignment
 

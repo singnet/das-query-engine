@@ -147,7 +147,8 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
     def __init__(self, source: ListIterator, **kwargs) -> None:
         super().__init__(source)
         if not self.source.is_empty():
-            self.backend = kwargs.get('backend')
+            if not hasattr(self, 'backend'):
+                self.backend = kwargs.get('backend')
             self.chunk_size = kwargs.get('chunk_size', 1000)
             self.cursor = kwargs.get('cursor', 0)
             self.buffer_queue = deque()
@@ -161,11 +162,12 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
     def __next__(self) -> Any:
         if self.iterator:
             try:
-                self.get_next_value()
+                return self.get_next_value()
             except StopIteration as e:
+                self.current_value = None
+                self.iterator = None
                 if self.fetch_data_thread.is_alive():
                     self.fetch_data_thread.join()
-                self.iterator = None
                 if self.cursor == 0 and len(self.buffer_queue) == 0:
                     self.current_value = None
                     raise e
@@ -173,7 +175,8 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
                 self.fetch_data_thread = Thread(target=self._fetch_data)
                 if self.cursor != 0:
                     self.fetch_data_thread.start()
-        return self.get()
+                return self.__next__()
+        raise StopIteration
 
     def _fetch_data(self) -> None:
         kwargs = self.get_fetch_data_kwargs()
@@ -201,7 +204,7 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
         return not self.iterator
 
     @abstractmethod
-    def get_next_value(self) -> None:
+    def get_next_value(self) -> Any:
         raise NotImplementedError("Subclasses must implement get_next_value method")
 
     @abstractmethod
@@ -223,13 +226,14 @@ class LocalIncomingLinks(BaseLinksIterator):
         self.targets_document = kwargs.get('targets_document', False)
         super().__init__(source, **kwargs)
 
-    def get_next_value(self) -> None:
+    def get_next_value(self) -> Any:
         if not self.is_empty() and self.backend:
             link_handle = next(self.iterator)
             link_document = self.backend.get_atom(
                 link_handle, targets_document=self.targets_document
             )
             self.current_value = link_document
+        return self.current_value
 
     def get_current_value(self) -> Any:
         if self.backend:
@@ -255,7 +259,7 @@ class RemoteIncomingLinks(BaseLinksIterator):
         self.returned_handles = set()
         super().__init__(source, **kwargs)
 
-    def get_next_value(self) -> None:
+    def get_next_value(self) -> Any:
         if not self.is_empty():
             while True:
                 link_document = next(self.iterator)
@@ -267,6 +271,7 @@ class RemoteIncomingLinks(BaseLinksIterator):
                     self.returned_handles.add(handle)
                     self.current_value = link_document
                     break
+        return self.current_value
 
     def get_current_value(self) -> Any:
         try:
@@ -294,10 +299,11 @@ class LocalGetLinks(BaseLinksIterator):
         self.toplevel_only = kwargs.get('toplevel_only')
         super().__init__(source, **kwargs)
 
-    def get_next_value(self) -> None:
+    def get_next_value(self) -> Any:
         if not self.is_empty() and self.backend:
             value = next(self.iterator)
             self.current_value = self.backend._to_link_dict_list([value])[0]
+        return self.current_value
 
     def get_current_value(self) -> Any:
         if self.backend:
@@ -330,13 +336,14 @@ class RemoteGetLinks(BaseLinksIterator):
         self.returned_handles = set()
         super().__init__(source, **kwargs)
 
-    def get_next_value(self) -> None:
+    def get_next_value(self) -> Any:
         if not self.is_empty():
             value = next(self.iterator)
             handle = value.get('handle')
             if handle not in self.returned_handles:
                 self.returned_handles.add(handle)
                 self.current_value = value
+        return self.current_value
 
     def get_current_value(self) -> Any:
         try:
@@ -356,6 +363,38 @@ class RemoteGetLinks(BaseLinksIterator):
             return self.backend.get_links(
                 self.link_type, self.target_types, self.link_targets, **kwargs
             )
+
+
+class CustomQuery(BaseLinksIterator):
+    def __init__(self, source: ListIterator, **kwargs) -> None:
+        self.index_id = kwargs.pop('index_id', None)
+        self.backend = kwargs.pop('backend', None)
+        self.is_remote = kwargs.pop('is_remote', False)
+        self.kwargs = kwargs
+        super().__init__(source, **kwargs)
+
+    def get_next_value(self) -> Any:
+        if not self.is_empty():
+            self.current_value = next(self.iterator)
+        return self.current_value
+
+    def get_current_value(self) -> Any:
+        try:
+            return self.source.get()
+        except StopIteration:
+            return None
+
+    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+        kwargs = self.kwargs
+        kwargs.update({'cursor': self.cursor, 'chunk_size': self.chunk_size})
+        return kwargs
+
+    def get_fetch_data(self, **kwargs) -> tuple:
+        if self.backend:
+            if self.is_remote:
+                return self.backend.custom_query(self.index_id, **kwargs)
+            else:
+                return self.backend.get_atoms_by_index(self.index_id, **kwargs)
 
 
 class TraverseLinksIterator(QueryAnswerIterator):
