@@ -261,7 +261,7 @@ class LocalQueryEngine(QueryEngine):
             return query_results
 
     def custom_query(self, index_id: str, **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
-        if kwargs.get('no_iterator', False):
+        if kwargs.pop('no_iterator', True):
             return self.local_backend.get_atoms_by_index(index_id, **kwargs)
         else:
             if kwargs.get('cursor') is None:

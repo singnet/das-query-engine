@@ -405,10 +405,12 @@ class TestCustomQuery:
             composite_type=['Expression', 'Symbol', 'Symbol', 'Symbol'],
         )
 
-        node_iterator = das.custom_query(node_index, is_literal=True)
-        link_iterator_type = das.custom_query(link_index_type, is_toplevel=True, chunk_size=10)
+        node_iterator = das.custom_query(node_index, is_literal=True, no_iterator=False)
+        link_iterator_type = das.custom_query(
+            link_index_type, is_toplevel=True, chunk_size=10, no_iterator=False
+        )
         link_iterator_composite_type = das.custom_query(
-            link_index_composite_type, is_toplevel=True, chunk_size=5
+            link_index_composite_type, is_toplevel=True, chunk_size=5, no_iterator=False
         )
 
         nodes = self._check_asserts(das, node_iterator)
