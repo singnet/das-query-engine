@@ -170,3 +170,10 @@ class FunctionsClient:
             },
         }
         return self._send_request(payload)
+
+    def custom_query(self, index_id: str, **kwargs) -> List[Dict[str, Any]]:
+        payload = {
+            'action': 'custom_query',
+            'input': {'index_id': index_id, 'kwargs': kwargs},
+        }
+        return self._send_request(payload)

@@ -1,4 +1,4 @@
-import json
+import json  # noqa: F401
 from abc import ABC, abstractmethod
 from http import HTTPStatus  # noqa: F401
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
@@ -148,14 +148,8 @@ class LocalQueryEngine(QueryEngine):
         flat_handle = isinstance(db_answer[0], str)
         answer = []
         for atom in db_answer:
-            if flat_handle:
-                handle = atom
-                arity = -1
-            else:
-                handle = atom[0]
-                targets = atom[1:]
-                arity = len(targets)
-            answer.append(self.local_backend.get_atom_as_dict(handle, arity))
+            handle = atom if flat_handle else atom[0]
+            answer.append(self.local_backend.get_atom_as_dict(handle))
         return answer
 
     def _get_related_links(
@@ -451,10 +445,11 @@ class RemoteQueryEngine(QueryEngine):
         kwargs.pop('no_iterator', None)
         if kwargs.get('cursor') is None:
             kwargs['cursor'] = 0
-        cursor, answer = self.local_backend.get_atoms_by_index(index_id, **kwargs)
+        cursor, answer = self.remote_das.custom_query(index_id, **kwargs)
         kwargs['backend'] = self.remote_das
         kwargs['index_id'] = index_id
         kwargs['cursor'] = cursor
+        kwargs['is_remote'] = True
         return CustomQuery(ListIterator(answer), **kwargs)
 
     def query(

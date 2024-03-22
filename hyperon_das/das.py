@@ -383,7 +383,7 @@ class DistributedAtomSpace:
             >>> das.custom_query(index_id='index_123456789', tag='DAS')
             >>> das.custom_query(index_id='index_123456789', tag='DAS', no_iterator=True)
         """
-        if isinstance(self.backend, InMemoryDB):
+        if isinstance(self.query_engine, LocalQueryEngine) and isinstance(self.backend, InMemoryDB):
             raise NotImplementedError(
                 "The custom_query method is not implemented for the Local DAS in Ram only"
             )
