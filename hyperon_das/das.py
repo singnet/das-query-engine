@@ -4,7 +4,7 @@ from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.cache import QueryAnswerIterator
+from hyperon_das.cache import CacheManager, QueryAnswerIterator
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
     InvalidDASParameters,
@@ -31,6 +31,8 @@ class DistributedAtomSpace:
                 )
         else:
             raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
+
+        kwargs.update({'cache_manager': CacheManager(self.backend)})
 
         if query_engine_parameter == 'local':
             self.query_engine = LocalQueryEngine(self.backend, kwargs)
@@ -575,3 +577,48 @@ class DistributedAtomSpace:
         return self.query_engine.create_field_index(
             atom_type, field, type=type, composite_type=composite_type
         )
+
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs
+    ) -> bool:
+        is_remote_das = isinstance(self.query_engine, RemoteQueryEngine)
+
+        # if not is_remote_das and not host and not port:
+        #     raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
+
+        return self.query_engine.fetch(host, port,  query, **kwargs)
+
+
+if __name__ == '__main__':
+    remote_das_host = "45.63.85.59"
+    remote_das_port = 8080
+   
+    das1 = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+    responses1 = das1.query(
+        query={
+            "atom_type": "link",
+            "type": "Expression",
+            "targets": [
+                {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
+                {"atom_type": "node", "type": "Symbol", "name": '"human"'},
+                {"atom_type": "variable", "name": "v1"}
+            ]
+        }
+    )
+
+    das2 = DistributedAtomSpace(atomdb='ram', query_engine='local')
+    response2 = das2.fetch(
+        query={
+            "atom_type": "link",
+            "type": "Expression",
+            "targets": [
+                {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
+                {"atom_type": "node", "type": "Symbol", "name": '"human"'},
+                {"atom_type": "variable", "name": "v1"}
+            ]
+        }
+    )

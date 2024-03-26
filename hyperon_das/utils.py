@@ -1,9 +1,21 @@
 import pickle
 from dataclasses import dataclass
+from http import HTTPStatus  # noqa: F401
 from importlib import import_module
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, Union
 
+from requests import sessions
+from requests.exceptions import (  # noqa: F401
+    ConnectionError,
+    HTTPError,
+    JSONDecodeError,
+    RequestException,
+    Timeout,
+)
+
+from hyperon_das.decorators import retry
 from hyperon_das.exceptions import InvalidAssignment
+from hyperon_das.logger import logger
 
 
 class Assignment:
@@ -110,3 +122,63 @@ def serialize(payload: Any) -> bytes:
 
 def deserialize(payload: bytes) -> Any:
     return pickle.loads(payload)
+
+
+@retry(attempts=5, timeout_seconds=120)
+def connect_to_server(host: str, port: int) -> Tuple[int, str]:
+    """Connect to the server and return the status connection and the url server"""
+    port = port or '8081'
+    openfaas_uri = f'http://{host}:{port}/function/query-engine'
+    aws_lambda_uri = f'http://{host}/prod/query-engine'
+
+    for uri in [openfaas_uri, aws_lambda_uri]:
+        status_code, message = check_server_connection(uri)
+        if status_code == HTTPStatus.OK:
+            url = uri
+            break
+
+    return status_code, url
+
+
+def check_server_connection(url: str) -> Tuple[int, str]:
+    logger().debug(f'connecting to remote Das {url}')
+
+    try:
+        das_version = get_package_version('hyperon_das')
+
+        with sessions.Session() as session:
+            payload = {
+                'action': 'handshake',
+                'input': {
+                    'das_version': das_version,
+                    'atomdb_version': get_package_version('hyperon_das_atomdb'),
+                },
+            }
+            response = session.request(
+                method='POST',
+                url=url,
+                data=serialize(payload),
+                headers={'Content-Type': 'application/octet-stream'},
+                timeout=10,
+            )
+        if response.status_code == HTTPStatus.CONFLICT:
+            try:
+                response = deserialize(response.content)
+                remote_das_version = response.get('das').get('version')
+            except JSONDecodeError as e:
+                raise Exception(str(e))
+            logger().error(
+                f'Package version conflict error when connecting to remote DAS - Local DAS: `{das_version}` - Remote DAS: `{remote_das_version}`'
+            )
+            raise Exception(
+                f'The version sent by the local DAS is {das_version}, but the expected version on the server is {remote_das_version}'
+            )
+        if response.status_code == HTTPStatus.OK:
+            message = "Successful connection"
+        else:
+            response.raise_for_status()
+            message = "Unsuccessful connection"
+    except (ConnectionError, Timeout, HTTPError, RequestException) as e:
+        message = str(e)
+
+    return response.status_code, message

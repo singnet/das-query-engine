@@ -2,11 +2,41 @@ from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
 from threading import Semaphore, Thread
-from typing import Any, Dict, List, Optional, Union
-
+from typing import Any, Dict, List, Optional, TypeVar, Union
 from hyperon_das_atomdb import WILDCARD
-
+from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
+from hyperon_das.client import FunctionsClient
 from hyperon_das.utils import Assignment, QueryAnswer
+
+AdapterDBType = TypeVar("AdapterDBType", RedisMongoDB, InMemoryDB)
+
+
+class CacheManager:
+    def __init__(self, cache: AdapterDBType, **kwargs):
+        self.cache = cache
+
+    def fetch(
+        self,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        query: Optional[Union[List[dict], dict]] = None,
+        **kwargs
+    ) -> bool:
+        try:
+            if not (server := kwargs.pop('server', None)):
+                server = FunctionsClient(host, port)
+  
+            documents = server.fetch(query=query, **kwargs)
+            
+            self._populate_cache(documents)
+            
+            return True
+        except Exception as e:
+            return False
+        
+    def _populate_cache(self, documents: List[Dict[str, Any]]) -> None:
+        [self.cache.add_link(document) for document in documents]
+        self.cache.commit()
 
 
 class QueryAnswerIterator(ABC):

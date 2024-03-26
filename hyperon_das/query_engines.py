@@ -1,18 +1,7 @@
-import json  # noqa: F401
 from abc import ABC, abstractmethod
-from http import HTTPStatus  # noqa: F401
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
-
 from hyperon_das_atomdb import WILDCARD
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
-from requests import sessions
-from requests.exceptions import (  # noqa: F401
-    ConnectionError,
-    HTTPError,
-    JSONDecodeError,
-    RequestException,
-    Timeout,
-)
 
 from hyperon_das.cache import (
     AndEvaluator,
@@ -24,16 +13,16 @@ from hyperon_das.cache import (
     QueryAnswerIterator,
     RemoteGetLinks,
     RemoteIncomingLinks,
+    CacheManager
 )
 from hyperon_das.client import FunctionsClient
-from hyperon_das.decorators import retry
 from hyperon_das.exceptions import (
     InvalidDASParameters,
     QueryParametersException,
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer, get_package_version, serialize  # noqa: F401
+from hyperon_das.utils import Assignment, QueryAnswer
 
 
 class QueryEngine(ABC):
@@ -88,10 +77,21 @@ class QueryEngine(ABC):
         composite_type: Optional[List[Any]] = None,
     ) -> str:
         ...  # pragma no cover
+    
+    @abstractmethod        
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs
+    ) -> bool:
+        ...  # pragma no cover
 
 
 class LocalQueryEngine(QueryEngine):
     def __init__(self, backend, kwargs: Optional[dict] = None) -> None:
+        self.cache_manager = kwargs.get('cache_manager')
         self.local_backend = backend
 
     def _error(self, exception: Exception):
@@ -295,85 +295,44 @@ class LocalQueryEngine(QueryEngine):
     ) -> str:
         return self.local_backend.create_field_index(atom_type, field, type, composite_type)
 
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs
+    ) -> bool:
+        if query['atom_type'] == 'node':
+            handle = self.local_backend.get_node_handle(query["type"], query["name"])
+            return self.local_backend.get_atom(handle)
+        elif query['atom_type'] == 'link':
+            matched_targets = []
+            for target in query["targets"]:
+                if target["atom_type"] == "node" or target["atom_type"] == "link":
+                    if matched := self.fetch(target, **kwargs):
+                        matched_targets.append(matched)
+                elif target["atom_type"] == "variable":
+                    matched_targets.append('*')
+                else:
+                    self._error(
+                        UnexpectedQueryFormat(
+                            message="Query processing reached an unexpected state",
+                            details=f'link: {str(query)} link target: {str(query)}',
+                        )
+                    )
+        else:
+            raise ValueError('Invalid atom type')
+
 
 class RemoteQueryEngine(QueryEngine):
     def __init__(self, backend, kwargs):
+        self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
-        host = kwargs.get('host')
-        port = kwargs.get('port')
-        if not host:
+        self.host = kwargs.get('host')
+        self.port = kwargs.get('port')
+        if not self.host:
             raise InvalidDASParameters(message='Send `host` parameter to connect in a remote DAS')
-        url = self._connect_server(host, port)
-        self.remote_das = FunctionsClient(url)
-
-    @retry(attempts=5, timeout_seconds=120)
-    def _connect_server(self, host: str, port: Optional[str] = None):
-        port = port or '8081'
-        openfaas_uri = f'http://{host}:{port}/function/query-engine'
-        aws_lambda_uri = f'http://{host}/prod/query-engine'
-        url = None
-        if self._is_server_connect(openfaas_uri):
-            url = openfaas_uri
-        elif self._is_server_connect(aws_lambda_uri):
-            url = aws_lambda_uri
-        return url
-
-    # TODO: Use this method when version checking is running on the server
-    # def _is_server_connect(self, url: str) -> bool:
-    #     logger().debug(f'connecting to remote Das {url}')
-    #     das_version = get_package_version('hyperon_das')
-
-    #     try:
-    #         with sessions.Session() as session:
-    #             response = session.request(
-    #                 method='POST',
-    #                 url=url,
-    #                 data=json.dumps(
-    #                     {
-    #                         'action': 'handshake',
-    #                         'input': {
-    #                             'das_version': das_version,
-    #                             'atomdb_version': get_package_version('hyperon_das_atomdb'),
-    #                         },
-    #                     }
-    #                 ),
-    #                 timeout=10,
-    #             )
-    #         if response.status_code == HTTPStatus.CONFLICT:
-    #             try:
-    #                 remote_das_version = response.json().get('das').get('version')
-    #             except JSONDecodeError as e:
-    #                 raise Exception(str(e))
-    #             logger().error(
-    #                 f'Package version conflict error when connecting to remote DAS - Local DAS: `{das_version}` - Remote DAS: `{remote_das_version}`'
-    #             )
-    #             raise Exception(
-    #                 f'The version sent by the local DAS is {das_version}, but the expected version on the server is {remote_das_version}'
-    #             )
-    #         elif response.status_code == HTTPStatus.OK:
-    #             return True
-    #         else:
-    #             response.raise_for_status()
-    #             return False
-    #     except (ConnectionError, Timeout, HTTPError, RequestException):
-    #         return False
-
-    def _is_server_connect(self, url: str) -> bool:
-        logger().debug(f'connecting to remote Das {url}')
-        try:
-            with sessions.Session() as session:
-                response = session.request(
-                    method='POST',
-                    url=url,
-                    data=serialize({"action": "ping", "input": {}}),
-                    headers={'Content-Type': 'application/octet-stream'},
-                    timeout=10,
-                )
-        except Exception:
-            return False
-        if response.status_code == 200:
-            return True
-        return False
+        self.remote_das = FunctionsClient(self.host, self.port)
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         try:
@@ -500,3 +459,16 @@ class RemoteQueryEngine(QueryEngine):
         composite_type: Optional[List[Any]] = None,
     ) -> str:
         return self.remote_das.create_field_index(atom_type, field, type, composite_type)
+
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs
+    ) -> bool:
+        if not host and not port:
+            host = self.query_engine.host
+            port = self.query_engine.port
+        
+        return self.cache_manager.fetch(query=query, server=self.remote_das)

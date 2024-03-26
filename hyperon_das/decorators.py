@@ -1,5 +1,6 @@
 import time
 from functools import wraps
+from http import HTTPStatus  # noqa: F401
 from typing import Callable
 
 from hyperon_das.exceptions import ConnectionError
@@ -17,9 +18,9 @@ def retry(attempts: int, timeout_seconds: int):
             while retry_count < attempts and timer_count < timeout_seconds:
                 try:
                     start_time = time.time()
-                    response = function(*args, **kwargs)
+                    status, response = function(*args, **kwargs)
                     end_time = time.time()
-                    if response is not None:
+                    if status == HTTPStatus.OK:
                         logger().debug(
                             f'{retry_count + 1} successful connection attempt at [host={args[1]}]'
                         )

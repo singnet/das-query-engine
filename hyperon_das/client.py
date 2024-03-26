@@ -7,14 +7,18 @@ from requests import exceptions, sessions
 
 from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.logger import logger
-from hyperon_das.utils import deserialize, serialize
+from hyperon_das.utils import connect_to_server, deserialize, serialize
 
 
 class FunctionsClient:
-    def __init__(self, url: str, server_count: int = 0, name: Optional[str] = None):
+    def __init__(self, host: str, port: int, server_count: int = 0, name: Optional[str] = None):
+        if not host:
+            raise ValueError('Host is required')
+
+        self.url = connect_to_server(host, port)
+
         if not name:
             self.name = f'server-{server_count}'
-        self.url = url
 
     def _send_request(self, payload) -> Any:
         try:
@@ -175,5 +179,18 @@ class FunctionsClient:
         payload = {
             'action': 'custom_query',
             'input': {'index_id': index_id, 'kwargs': kwargs},
+        }
+        return self._send_request(payload)
+
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs
+    ) -> bool:
+        payload = {
+            'action': 'fetch',
+            'input': {'query': query, 'host': host, 'port': port, 'kwargs': kwargs},
         }
         return self._send_request(payload)
