@@ -590,7 +590,7 @@ class DistributedAtomSpace:
         # if not is_remote_das and not host and not port:
         #     raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
 
-        return self.query_engine.fetch(host, port,  query, **kwargs)
+        return self.query_engine.fetch(query, host, port, **kwargs)
 
 
 if __name__ == '__main__':
@@ -610,7 +610,18 @@ if __name__ == '__main__':
         }
     )
 
-    das2 = DistributedAtomSpace(atomdb='ram', query_engine='local')
+    das2 = das = DistributedAtomSpace(
+        query_engine='local',
+        atomdb='redis_mongo',
+        mongo_hostname='45.63.85.59',
+        mongo_port=28100,
+        mongo_username='dbadmin',
+        mongo_password='dassecret',
+        redis_hostname='45.63.85.59',
+        redis_port=29100,
+        redis_cluster=False,
+        redis_ssl=False,
+    )
     response2 = das2.fetch(
         query={
             "atom_type": "link",
