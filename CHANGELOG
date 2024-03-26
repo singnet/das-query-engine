@@ -5,3 +5,4 @@
 [#190] Implement custom_query() method in DAS API
 [#184] Fix bug that prevented DAS from answering nested queries properly
 [#202] Fix tests after adding complex typedef expressions
+[BUGFIX] Fix tests to compare dicts using only commom keys
