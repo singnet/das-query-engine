@@ -1,1 +1,8 @@
-
+[#180] Fix in the test_metta_api.py integration test
+[#136] Implement methods in the DAS API to create indexes in the database
+[#BUGFIX] Fix Mock in unit tests
+[#90] OpenFaas is not serializing/deserializing query answers
+[#190] Implement custom_query() method in DAS API
+[#184] Fix bug that prevented DAS from answering nested queries properly
+[#202] Fix tests after adding complex typedef expressions
+[BUGFIX] Fix tests to compare dicts using only commom keys
