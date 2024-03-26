@@ -44,6 +44,7 @@ class TestIncomingLinks:
                 metta_animal_base_handles.similarity_human_ent,
                 metta_animal_base_handles.similarity_ent_human,
                 metta_animal_base_handles.inheritance_human_mammal,
+                metta_animal_base_handles.human_typedef,
                 hasher.expression_hash(
                     hasher.named_type_hash('MettaType'),
                     [
@@ -62,7 +63,7 @@ class TestIncomingLinks:
         assert isinstance(current_value, dict)
         assert iterator.is_empty() is False
         link_handles = sorted([item['handle'] for item in iterator])
-        assert len(link_handles) == 8
+        assert len(link_handles) == 9
         assert link_handles == self._human_incoming_links()
         assert iterator.is_empty() is True
         with pytest.raises(StopIteration):
@@ -136,6 +137,20 @@ class TestGetLinks:
                 metta_animal_base_handles.similarity_triceratops_rhino,
                 metta_animal_base_handles.similarity_vine_snake,
                 metta_animal_base_handles.similarity_ent_human,
+                metta_animal_base_handles.human_typedef,
+                metta_animal_base_handles.monkey_typedef,
+                metta_animal_base_handles.chimp_typedef,
+                metta_animal_base_handles.snake_typedef,
+                metta_animal_base_handles.earthworm_typedef,
+                metta_animal_base_handles.rhino_typedef,
+                metta_animal_base_handles.triceratops_typedef,
+                metta_animal_base_handles.vine_typedef,
+                metta_animal_base_handles.ent_typedef,
+                metta_animal_base_handles.mammal_typedef,
+                metta_animal_base_handles.animal_typedef,
+                metta_animal_base_handles.reptile_typedef,
+                metta_animal_base_handles.dinosaur_typedef,
+                metta_animal_base_handles.plant_typedef,
             ]
         )
 
@@ -147,7 +162,7 @@ class TestGetLinks:
         assert isinstance(current_value, dict)
         assert iterator.is_empty() is False
         link_handles = sorted([item['handle'] for item in iterator])
-        assert len(link_handles) == 26
+        assert len(link_handles) == 40
         assert link_handles == self._expression_links()
         assert iterator.is_empty() is True
         with pytest.raises(StopIteration):
@@ -212,6 +227,7 @@ class TestTraverseLinks:
                 metta_animal_base_handles.similarity_human_ent,
                 metta_animal_base_handles.similarity_ent_human,
                 metta_animal_base_handles.inheritance_human_mammal,
+                metta_animal_base_handles.human_typedef,
             ]
         )
 
@@ -221,7 +237,7 @@ class TestTraverseLinks:
         assert isinstance(current_value, dict)
         assert iterator.is_empty() is False
         link_handles = sorted([item['handle'] for item in iterator])
-        assert len(link_handles) == 7
+        assert len(link_handles) == 8
         assert link_handles == self._human_incoming_links()
         assert iterator.is_empty() is True
         with pytest.raises(StopIteration):
@@ -391,6 +407,20 @@ class TestCustomQuery:
                 metta_animal_base_handles.similarity_triceratops_rhino,
                 metta_animal_base_handles.similarity_vine_snake,
                 metta_animal_base_handles.similarity_ent_human,
+                metta_animal_base_handles.human_typedef,
+                metta_animal_base_handles.monkey_typedef,
+                metta_animal_base_handles.chimp_typedef,
+                metta_animal_base_handles.snake_typedef,
+                metta_animal_base_handles.earthworm_typedef,
+                metta_animal_base_handles.rhino_typedef,
+                metta_animal_base_handles.triceratops_typedef,
+                metta_animal_base_handles.vine_typedef,
+                metta_animal_base_handles.ent_typedef,
+                metta_animal_base_handles.mammal_typedef,
+                metta_animal_base_handles.animal_typedef,
+                metta_animal_base_handles.reptile_typedef,
+                metta_animal_base_handles.dinosaur_typedef,
+                metta_animal_base_handles.plant_typedef,
             ]
         )
 

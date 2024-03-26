@@ -77,10 +77,12 @@ class TestVultrClientIntegration:
             metta_animal_base_handles.mammal,
         ]
 
-    # def test_get_links(self, server: FunctionsClient):
-    #     ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
-    #     assert ret is not None
+    @pytest.mark.skip(reason="Disabled. See: das-query-engine#197")
+    def test_get_links(self, server: FunctionsClient):
+        ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
+        assert ret is not None
 
+    @pytest.mark.skip(reason="Disabled. See: das-atom-db#124")
     def test_count_atoms(self, server: FunctionsClient):
         ret = server.count_atoms()
         assert ret[0] == 21
@@ -147,6 +149,7 @@ class TestVultrClientIntegration:
             metta_animal_base_handles.similarity_chimp_human,
             metta_animal_base_handles.similarity_ent_human,
             metta_animal_base_handles.inheritance_human_mammal,
+            metta_animal_base_handles.human_typedef,
         ]
 
         expected_atoms = [server.get_atom(handle) for handle in expected_handles]
@@ -161,25 +164,28 @@ class TestVultrClientIntegration:
         response_handles = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=True
         )
-        assert len(response_handles) == 8
-        # response_handles has an extra link defining the metta type of '"human"'--> Type
+        assert len(response_handles) == 9
+        # response_handles has an extra link (named_type == MettaType) defining
+        #     the metta type of '"human"'--> Type
+        # response_handles has an extra link (named_type == Expression) defining
+        #     the metta expression (: "human" Type)
         assert len(set(response_handles).difference(set(expected_handles))) == 1
         response_handles = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=True
         )
-        assert len(response_handles) == 8
+        assert len(response_handles) == 9
         assert len(set(response_handles).difference(set(expected_handles))) == 1
 
         response_atoms = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=False
         )
-        assert len(response_atoms) == 8
+        assert len(response_atoms) == 9
         for atom in response_atoms:
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
         response_atoms = server.get_incoming_links(metta_animal_base_handles.human)
-        assert len(response_atoms) == 8
+        assert len(response_atoms) == 9
         for atom in response_atoms:
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
@@ -187,7 +193,7 @@ class TestVultrClientIntegration:
         response_atoms_targets = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=False
         )
-        assert len(response_atoms_targets) == 8
+        assert len(response_atoms_targets) == 9
         for atom_targets in response_atoms_targets:
             if len(atom_targets[0]["targets"]) == 3:
                 assert list(atom_targets) in expected_atoms_targets

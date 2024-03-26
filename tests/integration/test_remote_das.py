@@ -122,6 +122,7 @@ class TestRemoteDistributedAtomSpace:
             metta_animal_base_handles.inheritance_vine_plant,
             metta_animal_base_handles.similarity_snake_vine,
             metta_animal_base_handles.similarity_vine_snake,
+            metta_animal_base_handles.vine_typedef,
         ]
 
         expected_atoms = [remote_das.get_atom(handle) for handle in expected_handles]
@@ -133,6 +134,7 @@ class TestRemoteDistributedAtomSpace:
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
+    @pytest.mark.skip(reason="Disabled. See: das-atom-db#124")
     def test_count_atoms(self, remote_das: DistributedAtomSpace):
         nodes = 21
         links = 43
@@ -258,6 +260,7 @@ class TestRemoteDistributedAtomSpace:
             for handle in [
                 metta_animal_base_handles.inheritance_dinosaur_reptile,
                 metta_animal_base_handles.inheritance_triceratops_dinosaur,
+                metta_animal_base_handles.dinosaur_typedef,
             ]
         ]
 

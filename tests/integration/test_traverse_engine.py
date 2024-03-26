@@ -51,6 +51,7 @@ class TestTraverseEngine:
                 metta_animal_base_handles.similarity_monkey_human,
                 metta_animal_base_handles.similarity_chimp_human,
                 metta_animal_base_handles.inheritance_human_mammal,
+                metta_animal_base_handles.human_typedef,
                 hasher.expression_hash(
                     hasher.named_type_hash('MettaType'),
                     [
@@ -70,6 +71,7 @@ class TestTraverseEngine:
                 metta_animal_base_handles.similarity_human_monkey,
                 metta_animal_base_handles.similarity_human_ent,
                 metta_animal_base_handles.inheritance_human_mammal,
+                metta_animal_base_handles.human_typedef,
             ]
         )
 
@@ -85,6 +87,7 @@ class TestTraverseEngine:
                 metta_animal_base_handles.Concept,
                 metta_animal_base_handles.Similarity,
                 metta_animal_base_handles.Inheritance,
+                metta_animal_base_handles.typedef_mark,
             ]
         )
 
@@ -114,6 +117,7 @@ class TestTraverseEngine:
             metta_animal_base_handles.Concept,
             metta_animal_base_handles.Similarity,
             metta_animal_base_handles.Inheritance,
+            metta_animal_base_handles.typedef_mark,
         ]
         assert traverse.get()['handle'] in expected_neighbors
 
