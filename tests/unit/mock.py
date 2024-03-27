@@ -327,6 +327,9 @@ class DatabaseMock(AtomDB):
     ) -> str:
         pass
 
+    def bulk_insert(self, documents: List[Dict[str, Any]]) -> None:
+        pass
+
 
 class DatabaseAnimals(DatabaseMock):
     def __init__(self):
