@@ -533,8 +533,11 @@ class RemoteQueryEngine(QueryEngine):
         if not host and not port:
             host = self.query_engine.host
             port = self.query_engine.port
-        kwargs['running_on_server'] = True
-        documents = self.cache_manager.fetch_data(
-            query=query, host=host, port=port, server=self.remote_das
+        kwargs.update(
+            {
+                'running_on_server': True,
+                'server': self.remote_das,
+            }
         )
+        documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
         self.cache_manager.bulk_insert(documents)
