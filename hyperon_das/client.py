@@ -188,7 +188,7 @@ class FunctionsClient:
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
-    ) -> bool:
+    ) -> Any:
         payload = {
             'action': 'fetch',
             'input': {'query': query, 'host': host, 'port': port, 'kwargs': kwargs},

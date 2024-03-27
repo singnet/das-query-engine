@@ -10,12 +10,14 @@ from hyperon_das.traverse_engines import TraverseEngine
 from .helpers import metta_animal_base_handles
 from .remote_das_info import remote_das_host, remote_das_port
 
+
 def _check_docs(actual, expected):
     assert len(actual) == len(expected)
     for dict1, dict2 in zip(actual, expected):
         for key in dict2.keys():
             assert dict1[key] == dict2[key]
     return True
+
 
 class TestRemoteDistributedAtomSpace:
     """Integration tests with OpenFaas function on the Vultr server. Using the Animal Knowledge Base"""
@@ -174,77 +176,89 @@ class TestRemoteDistributedAtomSpace:
         for _, link in answer:
             assert link['handle'] in all_inheritance_mammal
             if link['handle'] == metta_animal_base_handles.inheritance_chimp_mammal:
-                assert _check_docs(link['targets'], [
-                    {
-                        'handle': metta_animal_base_handles.Inheritance,
-                        'type': 'Symbol',
-                        'name': "Inheritance",
-                    },
-                    {
-                        'handle': metta_animal_base_handles.chimp,
-                        'type': 'Symbol',
-                        'name': '"chimp"',
-                    },
-                    {
-                        'handle': metta_animal_base_handles.mammal,
-                        'type': 'Symbol',
-                        'name': '"mammal"',
-                    },
-                ])
+                assert _check_docs(
+                    link['targets'],
+                    [
+                        {
+                            'handle': metta_animal_base_handles.Inheritance,
+                            'type': 'Symbol',
+                            'name': "Inheritance",
+                        },
+                        {
+                            'handle': metta_animal_base_handles.chimp,
+                            'type': 'Symbol',
+                            'name': '"chimp"',
+                        },
+                        {
+                            'handle': metta_animal_base_handles.mammal,
+                            'type': 'Symbol',
+                            'name': '"mammal"',
+                        },
+                    ],
+                )
             elif link['handle'] == metta_animal_base_handles.inheritance_human_mammal:
-                assert _check_docs(link['targets'], [
-                    {
-                        'handle': metta_animal_base_handles.Inheritance,
-                        'type': 'Symbol',
-                        'name': "Inheritance",
-                    },
-                    {
-                        'handle': metta_animal_base_handles.human,
-                        'type': 'Symbol',
-                        'name': '"human"',
-                    },
-                    {
-                        'handle': metta_animal_base_handles.mammal,
-                        'type': 'Symbol',
-                        'name': '"mammal"',
-                    },
-                ])
+                assert _check_docs(
+                    link['targets'],
+                    [
+                        {
+                            'handle': metta_animal_base_handles.Inheritance,
+                            'type': 'Symbol',
+                            'name': "Inheritance",
+                        },
+                        {
+                            'handle': metta_animal_base_handles.human,
+                            'type': 'Symbol',
+                            'name': '"human"',
+                        },
+                        {
+                            'handle': metta_animal_base_handles.mammal,
+                            'type': 'Symbol',
+                            'name': '"mammal"',
+                        },
+                    ],
+                )
             elif link['handle'] == metta_animal_base_handles.inheritance_monkey_mammal:
-                assert _check_docs(link['targets'], [
-                    {
-                        'handle': metta_animal_base_handles.Inheritance,
-                        'type': 'Symbol',
-                        'name': "Inheritance",
-                    },
-                    {
-                        'handle': metta_animal_base_handles.monkey,
-                        'type': 'Symbol',
-                        'name': '"monkey"',
-                    },
-                    {
-                        'handle': metta_animal_base_handles.mammal,
-                        'type': 'Symbol',
-                        'name': '"mammal"',
-                    },
-                ])
+                assert _check_docs(
+                    link['targets'],
+                    [
+                        {
+                            'handle': metta_animal_base_handles.Inheritance,
+                            'type': 'Symbol',
+                            'name': "Inheritance",
+                        },
+                        {
+                            'handle': metta_animal_base_handles.monkey,
+                            'type': 'Symbol',
+                            'name': '"monkey"',
+                        },
+                        {
+                            'handle': metta_animal_base_handles.mammal,
+                            'type': 'Symbol',
+                            'name': '"mammal"',
+                        },
+                    ],
+                )
             elif link['handle'] == metta_animal_base_handles.inheritance_rhino_mammal:
-                assert _check_docs(link['targets'], [
-                    {
-                        'handle': metta_animal_base_handles.Inheritance,
-                        'type': 'Symbol',
-                        'name': "Inheritance",
-                    },
-                    {
-                        'handle': metta_animal_base_handles.rhino,
-                        'type': 'Symbol',
-                        'name': '"rhino"',
-                    },
-                    {
-                        'handle': metta_animal_base_handles.mammal,
-                        'type': 'Symbol',
-                        'name': '"mammal"',
-                    },
-                ])
+                assert _check_docs(
+                    link['targets'],
+                    [
+                        {
+                            'handle': metta_animal_base_handles.Inheritance,
+                            'type': 'Symbol',
+                            'name': "Inheritance",
+                        },
+                        {
+                            'handle': metta_animal_base_handles.rhino,
+                            'type': 'Symbol',
+                            'name': '"rhino"',
+                        },
+                        {
+                            'handle': metta_animal_base_handles.mammal,
+                            'type': 'Symbol',
+                            'name': '"mammal"',
+                        },
+                    ],
+                )
 
     def test_get_traversal_cursor(self, remote_das: DistributedAtomSpace):
         cursor = remote_das.get_traversal_cursor(metta_animal_base_handles.human)

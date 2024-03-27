@@ -23,7 +23,7 @@ class CacheManager:
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
-    ) -> bool:
+    ) -> List[Dict[str, Any]]:
         try:
             if not (server := kwargs.pop('server', None)):
                 server = FunctionsClient(host, port)
@@ -32,9 +32,9 @@ class CacheManager:
             # TODO: Map possible errors
             raise e
 
-    def bulk_insert(self) -> None:
-        """Batched INSERT statements in "bulk", not returning rows"""
-        self.cache.insert(self.documents)
+    def bulk_insert(self, documents: Dict[str, Any]) -> None:
+        """insert statements in "bulk", not returning rows"""
+        self.cache.bulk_insert(documents)
 
 
 class QueryAnswerIterator(ABC):

@@ -584,7 +584,7 @@ class DistributedAtomSpace:
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
-    ) -> bool:
+    ) -> Any:
         # is_remote_das = isinstance(self.query_engine, RemoteQueryEngine)
 
         # if not is_remote_das and not host and not port:
