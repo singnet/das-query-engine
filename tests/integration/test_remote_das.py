@@ -313,4 +313,4 @@ class TestRemoteDistributedAtomSpace:
                 ],
             }
         )
-        assert remote_das.backend.count_atoms() == (5, 4)
+        assert remote_das.backend.count_atoms() == (6, 4)

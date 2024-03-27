@@ -104,7 +104,7 @@ class TestLocalDASRedisMongo:
             host=remote_das_host,
             port=remote_das_port,
         )
-        assert das.count_atoms() == (5, 4)
+        assert das.count_atoms() == (6, 4)
         _db_down()
 
 
@@ -126,4 +126,4 @@ class TestLocalDASRamOnly:
             host=remote_das_host,
             port=remote_das_port,
         )
-        assert das.count_atoms() == (5, 4)
+        assert das.count_atoms() == (6, 4)
