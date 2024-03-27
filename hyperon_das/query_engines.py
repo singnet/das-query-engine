@@ -92,7 +92,10 @@ class QueryEngine(ABC):
 
 
 class LocalQueryEngine(QueryEngine):
-    def __init__(self, backend, kwargs: Optional[dict] = {}) -> None:
+    def __init__(
+        self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}
+    ) -> None:
+        self.system_parameters = system_parameters
         self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_backend = backend
 
@@ -369,8 +372,7 @@ class LocalQueryEngine(QueryEngine):
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
-        if not kwargs.get('running_on_server'):  # Local
-            kwargs['running_on_server'] = True
+        if not self.system_parameters.get('running_on_server'):  # Local
             documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
             self.cache_manager.bulk_insert(documents)
         else:
@@ -388,7 +390,8 @@ class LocalQueryEngine(QueryEngine):
 
 
 class RemoteQueryEngine(QueryEngine):
-    def __init__(self, backend, kwargs: Optional[dict] = {}):
+    def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
+        self.system_parameters = system_parameters
         self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
         self.host = kwargs.get('host')
@@ -533,11 +536,6 @@ class RemoteQueryEngine(QueryEngine):
         if not host and not port:
             host = self.query_engine.host
             port = self.query_engine.port
-        kwargs.update(
-            {
-                'running_on_server': True,
-                'server': self.remote_das,
-            }
-        )
+        kwargs.update({'server': self.remote_das})
         documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
         self.cache_manager.bulk_insert(documents)
