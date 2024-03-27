@@ -298,3 +298,19 @@ class TestRemoteDistributedAtomSpace:
 
         cursor.goto(metta_animal_base_handles.human)
         assert cursor.get()['handle'] == metta_animal_base_handles.human
+
+    @pytest.mark.skip(reason="Disable. See: das-serverless-functions#100")
+    def test_fetch_atoms(self, remote_das):
+        assert remote_das.backend.count_atoms() == (0, 0)
+        remote_das.fetch(
+            query={
+                "atom_type": "link",
+                "type": "Expression",
+                "targets": [
+                    {"atom_type": "node", "type": "Symbol", "name": "Inheritance"},
+                    {"atom_type": "variable", "name": "v1"},
+                    {"atom_type": "node", "type": "Symbol", "name": '"mammal"'},
+                ],
+            }
+        )
+        assert remote_das.backend.count_atoms() == (5, 4)

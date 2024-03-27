@@ -585,9 +585,7 @@ class DistributedAtomSpace:
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
-        # is_remote_das = isinstance(self.query_engine, RemoteQueryEngine)
-
-        # if not is_remote_das and not host and not port:
-        #     raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
+        if not kwargs.get('running_on_server') and not host and not port:
+            raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
 
         return self.query_engine.fetch(query, host, port, **kwargs)
