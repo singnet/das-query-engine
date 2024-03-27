@@ -92,7 +92,7 @@ class QueryEngine(ABC):
 
 
 class LocalQueryEngine(QueryEngine):
-    def __init__(self, backend, kwargs: Optional[dict] = None) -> None:
+    def __init__(self, backend, kwargs: Optional[dict] = {}) -> None:
         self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_backend = backend
 
@@ -172,6 +172,73 @@ class LocalQueryEngine(QueryEngine):
             return self.local_backend.get_matched_type(link_type, **kwargs)
         else:
             self._error(ValueError("Invalid parameters"))
+
+    def _process_node(self, query: dict) -> List[dict]:
+        try:
+            handle = self.local_backend.node_handle(query["type"], query["name"])
+            return [self.local_backend.get_atom(handle, no_convert=True)]
+        except AtomDoesNotExist:
+            return []
+
+    def _process_link(self, query: dict) -> List[dict]:
+        target_handles = self._generate_target_handles(query['targets'])
+        matched_links = self.local_backend.get_matched_links(
+            link_type=query["type"], target_handles=target_handles
+        )
+        unique_handles = set()
+        result = []
+
+        for link in matched_links:
+            if isinstance(link, str):  # single link
+                link_handle = link
+                link_targets = target_handles
+            else:
+                link_handle, *link_targets = link
+
+            if link_handle not in unique_handles:
+                unique_handles.add(link_handle)
+                result.append(self.local_backend.get_atom(link_handle, no_convert=True))
+
+            for target in link_targets:
+                atoms = self._handle_to_atoms(target)
+                if isinstance(atoms, list):
+                    for atom in atoms:
+                        if atom['_id'] not in unique_handles:
+                            unique_handles.add(atom['_id'])
+                            result.append(atom)
+                else:
+                    if atoms['_id'] not in unique_handles:
+                        unique_handles.add(atoms['_id'])
+                        result.append(atoms)
+
+        return result
+
+    def _generate_target_handles(self, targets: List[Dict[str, Any]]) -> List[str]:
+        targets_hash = []
+        for target in targets:
+            if target["atom_type"] == "node":
+                handle = self.local_backend.node_handle(target["type"], target["name"])
+            elif target["atom_type"] == "link":
+                handle = self._generate_target_handles(target)
+            elif target["atom_type"] == "variable":
+                handle = WILDCARD
+            targets_hash.append(handle)
+        return targets_hash
+
+    def _handle_to_atoms(self, handle: str) -> Union[List[dict], dict]:
+        try:
+            atom = self.local_backend.get_atom(handle, no_convert=True)
+        except AtomDoesNotExist:
+            return []
+
+        if 'name' in atom:  # node
+            return atom
+        else:  # link
+            answer = [atom]
+            for key, value in atom.items():
+                if re.search(AtomDB.key_pattern, key):
+                    answer.append(self._handle_to_atoms(value))
+            return answer
 
     def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
         try:
@@ -307,74 +374,21 @@ class LocalQueryEngine(QueryEngine):
             documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
             self.cache_manager.bulk_insert(documents)
         else:
+            if 'atom_type' not in query:
+                raise ValueError('Invalid query: missing atom_type')
 
-            def _generate_target_handles(targets: Dict[str, Any]) -> list:
-                targets_hash = []
-                for target in targets:
-                    if target["atom_type"] == "node":
-                        handle = self.local_backend.node_handle(target["type"], target["name"])
-                    elif target["atom_type"] == "link":
-                        handle = self._generate_target_handles(target)
-                    elif target["atom_type"] == "variable":
-                        handle = WILDCARD
-                    targets_hash.append(handle)
-                return targets_hash
+            atom_type = query['atom_type']
 
-            def _handle_to_atoms(handle: str) -> List[dict]:
-                try:
-                    atom = self.local_backend.get_atom(handle, no_convert=True)
-                except AtomDoesNotExist:
-                    return []
-                if 'name' in atom:  # node
-                    return atom
-                else:
-                    answer = [atom]
-                    for key, value in atom.items():
-                        if re.search(AtomDB.key_pattern, key):
-                            answer.append(_handle_to_atoms(value))
-                    return answer
-
-            if query['atom_type'] == 'node':
-                try:
-                    handle = self.local_backend.node_handle(query["type"], query["name"])
-                    return [self.local_backend.get_atom(handle, no_convert=True)]
-                except NodeDoesNotExist:
-                    return []
-            elif query['atom_type'] == 'link':
-                target_handles = _generate_target_handles(query['targets'])
-                matched_links = self.local_backend.get_matched_links(
-                    link_type=query["type"], target_handles=target_handles
-                )
-                _handles = set()
-                answer = []
-                for link in matched_links:
-                    if len(matched_links) > 1:
-                        link_handle = link[0]
-                        link_targets = link[1:]
-                    else:
-                        link_handle = link
-                        link_targets = target_handles
-                    if link_handle not in _handles:
-                        _handles.add(link_handle)
-                        answer.append(self.local_backend.get_atom(link_handle, no_convert=True))
-                    for target in link_targets:
-                        atoms = _handle_to_atoms(target)
-                        if isinstance(atoms, list):
-                            for atom in atoms:
-                                if atom['_id'] not in _handles:
-                                    _handles.add(atom['_id'])
-                                    answer.append(atom)
-                        else:
-                            if atoms['_id'] not in _handles:
-                                _handles.add(atoms['_id'])
-                                answer.append(atoms)
-                return answer
+            if atom_type == 'node':
+                return self._process_node(query)
+            elif atom_type == 'link':
+                return self._process_link(query)
             else:
                 raise ValueError('Invalid atom type')
 
 
 class RemoteQueryEngine(QueryEngine):
-    def __init__(self, backend, kwargs):
+    def __init__(self, backend, kwargs: Optional[dict] = {}):
         self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
         self.host = kwargs.get('host')
