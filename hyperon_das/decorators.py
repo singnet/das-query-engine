@@ -35,9 +35,9 @@ def retry(attempts: int, timeout_seconds: int):
                     time.sleep(waiting_time_seconds)
                     retry_count += 1
                     timer_count += end_time - start_time
-            port = f':{args[2]}' if args[2] else ''
+            port = f':{args[1]}' if len(args) > 1 else ''
             message = (
-                f'Failed to connect to remote Das {args[1]}'
+                f'Failed to connect to remote Das {args[0]}'
                 + port
                 + f' - attempts:{retry_count} - time_attempted: {timer_count}'
             )

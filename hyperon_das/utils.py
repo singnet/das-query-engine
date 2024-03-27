@@ -134,10 +134,9 @@ def connect_to_server(host: str, port: int) -> Tuple[int, str]:
     for uri in [openfaas_uri, aws_lambda_uri]:
         status_code, message = check_server_connection(uri)
         if status_code == HTTPStatus.OK:
-            url = uri
             break
 
-    return status_code, url
+    return status_code, uri
 
 
 def check_server_connection(url: str) -> Tuple[int, str]:
@@ -174,11 +173,9 @@ def check_server_connection(url: str) -> Tuple[int, str]:
                 f'The version sent by the local DAS is {das_version}, but the expected version on the server is {remote_das_version}'
             )
         if response.status_code == HTTPStatus.OK:
-            message = "Successful connection"
+            return response.status_code, "Successful connection"
         else:
+            print(f'Response: {deserialize(response.content)}')
             response.raise_for_status()
-            message = "Unsuccessful connection"
-    except (ConnectionError, Timeout, HTTPError, RequestException) as e:
-        message = str(e)
-
-    return response.status_code, message
+    except (ConnectionError, Timeout, HTTPError, RequestException, Exception) as e:
+        return 400, str(e)
