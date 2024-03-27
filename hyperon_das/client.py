@@ -187,7 +187,7 @@ class FunctionsClient:
         query: Union[List[dict], dict],
         host: Optional[str] = None,
         port: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> bool:
         payload = {
             'action': 'fetch',

@@ -1,10 +1,13 @@
+import re
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
-from hyperon_das_atomdb import WILDCARD
+
+from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
 from hyperon_das.cache import (
     AndEvaluator,
+    CacheManager,
     CustomQuery,
     LazyQueryEvaluator,
     ListIterator,
@@ -13,7 +16,6 @@ from hyperon_das.cache import (
     QueryAnswerIterator,
     RemoteGetLinks,
     RemoteIncomingLinks,
-    CacheManager
 )
 from hyperon_das.client import FunctionsClient
 from hyperon_das.exceptions import (
@@ -77,21 +79,21 @@ class QueryEngine(ABC):
         composite_type: Optional[List[Any]] = None,
     ) -> str:
         ...  # pragma no cover
-    
-    @abstractmethod        
+
+    @abstractmethod
     def fetch(
         self,
         query: Union[List[dict], dict],
         host: Optional[str] = None,
         port: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> bool:
         ...  # pragma no cover
 
 
 class LocalQueryEngine(QueryEngine):
     def __init__(self, backend, kwargs: Optional[dict] = None) -> None:
-        self.cache_manager = kwargs.get('cache_manager')
+        self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_backend = backend
 
     def _error(self, exception: Exception):
@@ -112,9 +114,7 @@ class LocalQueryEngine(QueryEngine):
         elif query["atom_type"] == "node":
             try:
                 atom_handle = self.local_backend.get_node_handle(query["type"], query["name"])
-                return ListIterator(
-                    [QueryAnswer(self.local_backend.get_atom_as_dict(atom_handle), None)]
-                )
+                return ListIterator([QueryAnswer(self.local_backend.get_atom(atom_handle), None)])
             except NodeDoesNotExist:
                 return ListIterator([])
         elif query["atom_type"] == "link":
@@ -149,7 +149,7 @@ class LocalQueryEngine(QueryEngine):
         answer = []
         for atom in db_answer:
             handle = atom if flat_handle else atom[0]
-            answer.append(self.local_backend.get_atom_as_dict(handle))
+            answer.append(self.local_backend.get_atom(handle))
         return answer
 
     def _get_related_links(
@@ -300,28 +300,68 @@ class LocalQueryEngine(QueryEngine):
         query: Union[List[dict], dict],
         host: Optional[str] = None,
         port: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> bool:
-        if query['atom_type'] == 'node':
-            handle = self.local_backend.get_node_handle(query["type"], query["name"])
-            return self.local_backend.get_atom(handle)
-        elif query['atom_type'] == 'link':
-            matched_targets = []
-            for target in query["targets"]:
-                if target["atom_type"] == "node" or target["atom_type"] == "link":
-                    if matched := self.fetch(target, **kwargs):
-                        matched_targets.append(matched)
-                elif target["atom_type"] == "variable":
-                    matched_targets.append('*')
-                else:
-                    self._error(
-                        UnexpectedQueryFormat(
-                            message="Query processing reached an unexpected state",
-                            details=f'link: {str(query)} link target: {str(query)}',
-                        )
-                    )
+        if not kwargs.get('running_on_server'):  # Local
+            kwargs['running_on_server'] = True
+            documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
+            self.cache_manager.bulk_insert(documents)
         else:
-            raise ValueError('Invalid atom type')
+
+            def _generate_target_handles(targets: Dict[str, Any]) -> list:
+                targets_hash = []
+                for target in targets:
+                    if target["atom_type"] == "node":
+                        handle = self.local_backend.node_handle(target["type"], target["name"])
+                    elif target["atom_type"] == "link":
+                        handle = self._build_handles(target)
+                    elif target["atom_type"] == "variable":
+                        handle = '*'
+                    targets_hash.append(handle)
+                return targets_hash
+
+            def _target_to_atoms(target: Dict[str, Any]) -> List[dict]:
+                atom = self.local_backend.get_atom(target, no_convert=True)
+                if 'name' in atom:  # node
+                    return atom
+                else:
+                    answer = [atom]
+                    for key, value in atom.items():
+                        if re.search(AtomDB.key_pattern, key):
+                            answer.append(_target_to_atoms(value))
+                    return answer
+
+            if query['atom_type'] == 'node':
+                handle = self.local_backend.node_handle(query["type"], query["name"])
+                return [self.local_backend.get_atom(handle, no_convert=True)]
+            elif query['atom_type'] == 'link':
+                target_handles = _generate_target_handles(query['targets'])
+                matched_links = self.local_backend.get_matched_links(
+                    link_type=query["type"], target_handles=target_handles
+                )
+                _handles = set()
+                atoms = []
+                for link in matched_links:
+                    link_handle = link[0]
+                    link_targets = link[1]
+                    if link_handle not in _handles:
+                        _handles.add(link_handle)
+                        atoms.append(self.local_backend.get_atom(link_handle, no_convert=True))
+                    for target in link_targets:
+                        resp = _target_to_atoms(target)
+                        if isinstance(resp, list):
+                            for r in resp:
+                                if r['_id'] not in _handles:
+                                    _handles.add(r['_id'])
+                                    atoms.append(r)
+                        else:
+                            if resp['_id'] not in _handles:
+                                _handles.add(resp['_id'])
+                                atoms.append(resp)
+
+                return atoms
+            else:
+                raise ValueError('Invalid atom type')
 
 
 class RemoteQueryEngine(QueryEngine):
@@ -465,10 +505,12 @@ class RemoteQueryEngine(QueryEngine):
         query: Union[List[dict], dict],
         host: Optional[str] = None,
         port: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> bool:
         if not host and not port:
             host = self.query_engine.host
             port = self.query_engine.port
-        
-        return self.cache_manager.fetch(query=query, server=self.remote_das)
+        kwargs['running_on_server'] = True
+        return self.cache_manager.fetch_data(
+            query=query, host=host, port=port, server=self.remote_das
+        )

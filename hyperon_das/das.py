@@ -583,53 +583,11 @@ class DistributedAtomSpace:
         query: Union[List[dict], dict],
         host: Optional[str] = None,
         port: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> bool:
-        is_remote_das = isinstance(self.query_engine, RemoteQueryEngine)
+        # is_remote_das = isinstance(self.query_engine, RemoteQueryEngine)
 
         # if not is_remote_das and not host and not port:
         #     raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
 
         return self.query_engine.fetch(query, host, port, **kwargs)
-
-
-if __name__ == '__main__':
-    remote_das_host = "45.63.85.59"
-    remote_das_port = 8080
-   
-    das1 = DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
-    responses1 = das1.query(
-        query={
-            "atom_type": "link",
-            "type": "Expression",
-            "targets": [
-                {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
-                {"atom_type": "node", "type": "Symbol", "name": '"human"'},
-                {"atom_type": "variable", "name": "v1"}
-            ]
-        }
-    )
-
-    das2 = das = DistributedAtomSpace(
-        query_engine='local',
-        atomdb='redis_mongo',
-        mongo_hostname='45.63.85.59',
-        mongo_port=28100,
-        mongo_username='dbadmin',
-        mongo_password='dassecret',
-        redis_hostname='45.63.85.59',
-        redis_port=29100,
-        redis_cluster=False,
-        redis_ssl=False,
-    )
-    response2 = das2.fetch(
-        query={
-            "atom_type": "link",
-            "type": "Expression",
-            "targets": [
-                {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
-                {"atom_type": "node", "type": "Symbol", "name": '"human"'},
-                {"atom_type": "variable", "name": "v1"}
-            ]
-        }
-    )
