@@ -9,9 +9,7 @@ from .remote_das_info import remote_das_host, remote_das_port
 class TestVultrClientIntegration:
     @pytest.fixture()
     def server(self):
-        return FunctionsClient(
-            url=f'http://{remote_das_host}:{remote_das_port}/function/query-engine'
-        )
+        return FunctionsClient(host=remote_das_host, port=remote_das_port)
 
     def test_get_atom(self, server: FunctionsClient):
         result = server.get_atom(handle=metta_animal_base_handles.human)

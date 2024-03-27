@@ -10,6 +10,7 @@ from hyperon_das.traverse_engines import TraverseEngine
 from .helpers import metta_animal_base_handles
 from .remote_das_info import remote_das_host, remote_das_port
 
+
 def _check_docs(actual, expected):
     assert len(actual) == len(expected)
     for dict1, dict2 in zip(actual, expected):
@@ -17,15 +18,13 @@ def _check_docs(actual, expected):
             assert dict1[key] == dict2[key]
     return True
 
+
 class TestRemoteDistributedAtomSpace:
     """Integration tests with OpenFaas function on the Vultr server. Using the Animal Knowledge Base"""
 
     @pytest.fixture
     def remote_das(self):
-        with mock.patch(
-            'hyperon_das.query_engines.RemoteQueryEngine._connect_server',
-            return_value=f'http://{remote_das_host}:{remote_das_port}/function/query-engine',
-        ):
+        with mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
             return DistributedAtomSpace(
                 query_engine='remote', host=remote_das_host, port=remote_das_port
             )  # vultr
@@ -33,20 +32,19 @@ class TestRemoteDistributedAtomSpace:
     def traversal(self, das: DistributedAtomSpace, handle: str):
         return das.get_traversal_cursor(handle)
 
-    # TODO: uncomment the test after the handshake method in servless-function is working
-    # def test_server_connection(self):
-    #     try:
-    #         das = DistributedAtomSpace(
-    #             query_engine='remote', host=remote_das_host, port=remote_das_port
-    #         )
-    #     except Exception as e:
-    #         pytest.fail(f'Connection with OpenFaaS server fail, Details: {str(e)}')
-    #     if not das.query_engine.remote_das.url:
-    #         pytest.fail('Connection with server fail')
-    #     assert (
-    #         das.query_engine.remote_das.url
-    #         == f'http://{remote_das_host}:{remote_das_port}/function/query-engine'
-    #     )
+    def test_server_connection(self):
+        try:
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
+        except Exception as e:
+            pytest.fail(f'Connection with OpenFaaS server fail, Details: {str(e)}')
+        if not das.query_engine.remote_das.url:
+            pytest.fail('Connection with server fail')
+        assert (
+            das.query_engine.remote_das.url
+            == f'http://{remote_das_host}:{remote_das_port}/function/query-engine'
+        )
 
     def test_get_atom(self, remote_das: DistributedAtomSpace):
         result = remote_das.get_atom(handle=metta_animal_base_handles.human)
@@ -174,77 +172,89 @@ class TestRemoteDistributedAtomSpace:
         for _, link in answer:
             assert link['handle'] in all_inheritance_mammal
             if link['handle'] == metta_animal_base_handles.inheritance_chimp_mammal:
-                assert _check_docs(link['targets'], [
-                    {
-                        'handle': metta_animal_base_handles.Inheritance,
-                        'type': 'Symbol',
-                        'name': "Inheritance",
-                    },
-                    {
-                        'handle': metta_animal_base_handles.chimp,
-                        'type': 'Symbol',
-                        'name': '"chimp"',
-                    },
-                    {
-                        'handle': metta_animal_base_handles.mammal,
-                        'type': 'Symbol',
-                        'name': '"mammal"',
-                    },
-                ])
+                assert _check_docs(
+                    link['targets'],
+                    [
+                        {
+                            'handle': metta_animal_base_handles.Inheritance,
+                            'type': 'Symbol',
+                            'name': "Inheritance",
+                        },
+                        {
+                            'handle': metta_animal_base_handles.chimp,
+                            'type': 'Symbol',
+                            'name': '"chimp"',
+                        },
+                        {
+                            'handle': metta_animal_base_handles.mammal,
+                            'type': 'Symbol',
+                            'name': '"mammal"',
+                        },
+                    ],
+                )
             elif link['handle'] == metta_animal_base_handles.inheritance_human_mammal:
-                assert _check_docs(link['targets'], [
-                    {
-                        'handle': metta_animal_base_handles.Inheritance,
-                        'type': 'Symbol',
-                        'name': "Inheritance",
-                    },
-                    {
-                        'handle': metta_animal_base_handles.human,
-                        'type': 'Symbol',
-                        'name': '"human"',
-                    },
-                    {
-                        'handle': metta_animal_base_handles.mammal,
-                        'type': 'Symbol',
-                        'name': '"mammal"',
-                    },
-                ])
+                assert _check_docs(
+                    link['targets'],
+                    [
+                        {
+                            'handle': metta_animal_base_handles.Inheritance,
+                            'type': 'Symbol',
+                            'name': "Inheritance",
+                        },
+                        {
+                            'handle': metta_animal_base_handles.human,
+                            'type': 'Symbol',
+                            'name': '"human"',
+                        },
+                        {
+                            'handle': metta_animal_base_handles.mammal,
+                            'type': 'Symbol',
+                            'name': '"mammal"',
+                        },
+                    ],
+                )
             elif link['handle'] == metta_animal_base_handles.inheritance_monkey_mammal:
-                assert _check_docs(link['targets'], [
-                    {
-                        'handle': metta_animal_base_handles.Inheritance,
-                        'type': 'Symbol',
-                        'name': "Inheritance",
-                    },
-                    {
-                        'handle': metta_animal_base_handles.monkey,
-                        'type': 'Symbol',
-                        'name': '"monkey"',
-                    },
-                    {
-                        'handle': metta_animal_base_handles.mammal,
-                        'type': 'Symbol',
-                        'name': '"mammal"',
-                    },
-                ])
+                assert _check_docs(
+                    link['targets'],
+                    [
+                        {
+                            'handle': metta_animal_base_handles.Inheritance,
+                            'type': 'Symbol',
+                            'name': "Inheritance",
+                        },
+                        {
+                            'handle': metta_animal_base_handles.monkey,
+                            'type': 'Symbol',
+                            'name': '"monkey"',
+                        },
+                        {
+                            'handle': metta_animal_base_handles.mammal,
+                            'type': 'Symbol',
+                            'name': '"mammal"',
+                        },
+                    ],
+                )
             elif link['handle'] == metta_animal_base_handles.inheritance_rhino_mammal:
-                assert _check_docs(link['targets'], [
-                    {
-                        'handle': metta_animal_base_handles.Inheritance,
-                        'type': 'Symbol',
-                        'name': "Inheritance",
-                    },
-                    {
-                        'handle': metta_animal_base_handles.rhino,
-                        'type': 'Symbol',
-                        'name': '"rhino"',
-                    },
-                    {
-                        'handle': metta_animal_base_handles.mammal,
-                        'type': 'Symbol',
-                        'name': '"mammal"',
-                    },
-                ])
+                assert _check_docs(
+                    link['targets'],
+                    [
+                        {
+                            'handle': metta_animal_base_handles.Inheritance,
+                            'type': 'Symbol',
+                            'name': "Inheritance",
+                        },
+                        {
+                            'handle': metta_animal_base_handles.rhino,
+                            'type': 'Symbol',
+                            'name': '"rhino"',
+                        },
+                        {
+                            'handle': metta_animal_base_handles.mammal,
+                            'type': 'Symbol',
+                            'name': '"mammal"',
+                        },
+                    ],
+                )
 
     def test_get_traversal_cursor(self, remote_das: DistributedAtomSpace):
         cursor = remote_das.get_traversal_cursor(metta_animal_base_handles.human)
@@ -288,3 +298,19 @@ class TestRemoteDistributedAtomSpace:
 
         cursor.goto(metta_animal_base_handles.human)
         assert cursor.get()['handle'] == metta_animal_base_handles.human
+
+    @pytest.mark.skip(reason="Disable. See: das-serverless-functions#100")
+    def test_fetch_atoms(self, remote_das):
+        assert remote_das.backend.count_atoms() == (0, 0)
+        remote_das.fetch(
+            query={
+                "atom_type": "link",
+                "type": "Expression",
+                "targets": [
+                    {"atom_type": "node", "type": "Symbol", "name": "Inheritance"},
+                    {"atom_type": "variable", "name": "v1"},
+                    {"atom_type": "node", "type": "Symbol", "name": '"mammal"'},
+                ],
+            }
+        )
+        assert remote_das.backend.count_atoms() == (6, 4)

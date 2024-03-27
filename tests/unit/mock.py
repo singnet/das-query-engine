@@ -26,9 +26,9 @@ class DistributedAtomSpaceMock(DistributedAtomSpace):
     def __init__(self, query_engine: Optional[str] = 'local', **kwargs) -> None:
         self.backend = DatabaseAnimals()
         if query_engine == 'remote':
-            self.query_engine = RemoteQueryEngine(self.backend, kwargs)
+            self.query_engine = RemoteQueryEngine(self.backend, {}, kwargs)
         else:
-            self.query_engine = LocalQueryEngine(self.backend)
+            self.query_engine = LocalQueryEngine(self.backend, {}, kwargs)
 
 
 class DatabaseMock(AtomDB):
@@ -325,6 +325,9 @@ class DatabaseMock(AtomDB):
         type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
     ) -> str:
+        pass
+
+    def bulk_insert(self, documents: List[Dict[str, Any]]) -> None:
         pass
 
 

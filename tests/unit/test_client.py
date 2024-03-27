@@ -15,7 +15,12 @@ class TestFunctionsClient:
         with patch('requests.sessions.Session.request') as mock_request:
             yield mock_request
 
-    def test_get_atom_success(self, mock_request):
+    @pytest.fixture
+    def client(self):
+        with patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
+            return FunctionsClient(host='0.0.0.0', port=1000)
+
+    def test_get_atom_success(self, mock_request, client):
         expected_request_data = {"action": "get_atom", "input": {"handle": "123"}}
         expected_response = {
             "handle": "af12f10f9ae2002a1607ba0b47ba8407",
@@ -27,19 +32,18 @@ class TestFunctionsClient:
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
 
-        client = FunctionsClient(url='http://example.com')
         result = client.get_atom(handle='123')
 
         mock_request.assert_called_with(
             method='POST',
-            url='http://example.com',
+            url='http://0.0.0.0:1000/function/query-engine',
             data=serialize(expected_request_data),
             headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
 
-    def test_get_node_success(self, mock_request):
+    def test_get_node_success(self, mock_request, client):
         expected_request_data = {
             "action": "get_node",
             "input": {"node_type": "Concept", "node_name": "human"},
@@ -54,19 +58,18 @@ class TestFunctionsClient:
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
 
-        client = FunctionsClient(url='http://example.com')
         result = client.get_node(node_type='Concept', node_name='human')
 
         mock_request.assert_called_with(
             method='POST',
-            url='http://example.com',
+            url='http://0.0.0.0:1000/function/query-engine',
             data=serialize(expected_request_data),
             headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
 
-    def test_get_link_success(self, mock_request):
+    def test_get_link_success(self, mock_request, client):
         expected_request_data = {
             "action": "get_link",
             "input": {
@@ -94,7 +97,6 @@ class TestFunctionsClient:
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
 
-        client = FunctionsClient(url='http://example.com')
         result = client.get_link(
             link_type='Similarity',
             link_targets=['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'],
@@ -102,14 +104,14 @@ class TestFunctionsClient:
 
         mock_request.assert_called_with(
             method='POST',
-            url='http://example.com',
+            url='http://0.0.0.0:1000/function/query-engine',
             data=serialize(expected_request_data),
             headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
 
-    def test_get_links_success(self, mock_request):
+    def test_get_links_success(self, mock_request, client):
         expected_request_data = {
             "action": "get_links",
             "input": {
@@ -133,7 +135,6 @@ class TestFunctionsClient:
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
 
-        client = FunctionsClient(url='http://example.com')
         result = client.get_links(
             link_type='Inheritance',
             link_targets=['4e8e26e3276af8a5c2ac2cc2dc95c6d2', '80aff30094874e75028033a38ce677bb'],
@@ -141,14 +142,14 @@ class TestFunctionsClient:
 
         mock_request.assert_called_with(
             method='POST',
-            url='http://example.com',
+            url='http://0.0.0.0:1000/function/query-engine',
             data=serialize(expected_request_data),
             headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
 
-    def test_query_success(self, mock_request):
+    def test_query_success(self, mock_request, client):
         expected_request_data = {
             "action": "query",
             "input": {
@@ -186,7 +187,6 @@ class TestFunctionsClient:
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
 
-        client = FunctionsClient(url='http://example.com')
         query = {
             "atom_type": "link",
             "type": "Similarity",
@@ -200,33 +200,31 @@ class TestFunctionsClient:
 
         mock_request.assert_called_with(
             method='POST',
-            url='http://example.com',
+            url='http://0.0.0.0:1000/function/query-engine',
             data=serialize(expected_request_data),
             headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
 
-    def test_count_atoms_success(self, mock_request):
+    def test_count_atoms_success(self, mock_request, client):
         expected_request_data = {"action": "count_atoms", "input": {}}
         expected_response = (14, 26)
 
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
-
-        client = FunctionsClient(url='http://example.com')
         result = client.count_atoms()
 
         mock_request.assert_called_once_with(
             method='POST',
-            url='http://example.com',
+            url='http://0.0.0.0:1000/function/query-engine',
             data=serialize(expected_request_data),
             headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
 
-    def test_send_request_success(self, mock_request):
+    def test_send_request_success(self, mock_request, client):
         payload = {"action": "get_atom", "input": {"handle": "123"}}
         expected_response = {
             "handle": "af12f10f9ae2002a1607ba0b47ba8407",
@@ -238,40 +236,36 @@ class TestFunctionsClient:
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
 
-        client = FunctionsClient(url='http://example.com')
         result = client._send_request(payload)
 
         mock_request.assert_called_with(
             method='POST',
-            url='http://example.com',
+            url='http://0.0.0.0:1000/function/query-engine',
             data=serialize(payload),
             headers={'Content-Type': 'application/octet-stream'},
         )
 
         assert result == expected_response
 
-    def test_send_request_connection_error(self, mock_request):
+    def test_send_request_connection_error(self, mock_request, client):
         mock_request.side_effect = exceptions.ConnectionError()
 
-        client = FunctionsClient(url='http://example.com')
         payload = {"action": "get_atom", "input": {"handle": "123"}}
 
         with pytest.raises(ConnectionError):
             client._send_request(payload)
 
-    def test_send_request_timeout_error(self, mock_request):
+    def test_send_request_timeout_error(self, mock_request, client):
         mock_request.side_effect = exceptions.Timeout()
 
-        client = FunctionsClient(url='http://example.com')
         payload = {"action": "get_atom", "input": {"handle": "123"}}
 
         with pytest.raises(TimeoutError):
             client._send_request(payload)
 
-    def test_send_request_request_exception(self, mock_request):
+    def test_send_request_request_exception(self, mock_request, client):
         mock_request.side_effect = exceptions.RequestException()
 
-        client = FunctionsClient(url='http://example.com')
         payload = {"action": "get_atom", "input": {"handle": "123"}}
 
         with pytest.raises(RequestError):
