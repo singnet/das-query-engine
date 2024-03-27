@@ -48,4 +48,4 @@ jobs:
         run: |
           poetry lock --no-update 
           poetry export --with doc -f requirements.txt | pip install -r /dev/stdin
-          mkdocs gh-deploy
+          mkdocs gh-deploy --force

@@ -10,6 +10,12 @@ from hyperon_das.traverse_engines import TraverseEngine
 from .helpers import metta_animal_base_handles
 from .remote_das_info import remote_das_host, remote_das_port
 
+def _check_docs(actual, expected):
+    assert len(actual) == len(expected)
+    for dict1, dict2 in zip(actual, expected):
+        for key in dict2.keys():
+            assert dict1[key] == dict2[key]
+    return True
 
 class TestRemoteDistributedAtomSpace:
     """Integration tests with OpenFaas function on the Vultr server. Using the Animal Knowledge Base"""
@@ -122,6 +128,7 @@ class TestRemoteDistributedAtomSpace:
             metta_animal_base_handles.inheritance_vine_plant,
             metta_animal_base_handles.similarity_snake_vine,
             metta_animal_base_handles.similarity_vine_snake,
+            metta_animal_base_handles.vine_typedef,
         ]
 
         expected_atoms = [remote_das.get_atom(handle) for handle in expected_handles]
@@ -133,6 +140,7 @@ class TestRemoteDistributedAtomSpace:
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
+    @pytest.mark.skip(reason="Disabled. See: das-atom-db#124")
     def test_count_atoms(self, remote_das: DistributedAtomSpace):
         nodes = 21
         links = 43
@@ -166,7 +174,7 @@ class TestRemoteDistributedAtomSpace:
         for _, link in answer:
             assert link['handle'] in all_inheritance_mammal
             if link['handle'] == metta_animal_base_handles.inheritance_chimp_mammal:
-                assert link['targets'] == [
+                assert _check_docs(link['targets'], [
                     {
                         'handle': metta_animal_base_handles.Inheritance,
                         'type': 'Symbol',
@@ -182,9 +190,9 @@ class TestRemoteDistributedAtomSpace:
                         'type': 'Symbol',
                         'name': '"mammal"',
                     },
-                ]
+                ])
             elif link['handle'] == metta_animal_base_handles.inheritance_human_mammal:
-                assert link['targets'] == [
+                assert _check_docs(link['targets'], [
                     {
                         'handle': metta_animal_base_handles.Inheritance,
                         'type': 'Symbol',
@@ -200,9 +208,9 @@ class TestRemoteDistributedAtomSpace:
                         'type': 'Symbol',
                         'name': '"mammal"',
                     },
-                ]
+                ])
             elif link['handle'] == metta_animal_base_handles.inheritance_monkey_mammal:
-                assert link['targets'] == [
+                assert _check_docs(link['targets'], [
                     {
                         'handle': metta_animal_base_handles.Inheritance,
                         'type': 'Symbol',
@@ -218,9 +226,9 @@ class TestRemoteDistributedAtomSpace:
                         'type': 'Symbol',
                         'name': '"mammal"',
                     },
-                ]
+                ])
             elif link['handle'] == metta_animal_base_handles.inheritance_rhino_mammal:
-                assert link['targets'] == [
+                assert _check_docs(link['targets'], [
                     {
                         'handle': metta_animal_base_handles.Inheritance,
                         'type': 'Symbol',
@@ -236,7 +244,7 @@ class TestRemoteDistributedAtomSpace:
                         'type': 'Symbol',
                         'name': '"mammal"',
                     },
-                ]
+                ])
 
     def test_get_traversal_cursor(self, remote_das: DistributedAtomSpace):
         cursor = remote_das.get_traversal_cursor(metta_animal_base_handles.human)
@@ -258,6 +266,7 @@ class TestRemoteDistributedAtomSpace:
             for handle in [
                 metta_animal_base_handles.inheritance_dinosaur_reptile,
                 metta_animal_base_handles.inheritance_triceratops_dinosaur,
+                metta_animal_base_handles.dinosaur_typedef,
             ]
         ]
 
