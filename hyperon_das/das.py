@@ -585,6 +585,35 @@ class DistributedAtomSpace:
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
+        """Fetch data from the remote server using the a query as input and load it locally.
+        If it is a local DAS, the host and port must be sent.
+
+        The input dict is a link, used as a pattern to make the query.
+        Variables can be used as link targets as well as nodes. Nested links are
+        allowed as well.
+
+        Args:
+            query (Union[List[dict], dict]): A pattern described as a link (possibly with nested links)
+                with nodes and variables used to query the knowledge base.
+            host (Optional[str], optional): Address to remote server. Defaults to None.
+            port (Optional[int], optional): Port to remote server. Defaults to None.
+
+        Raises:
+            ValueError: If the 'host' and 'port' parameters are not sent to DAS local
+
+        Examples:
+            >>> query = {
+                    "atom_type": "link",
+                    "type": "Expression",
+                    "targets": [
+                        {"atom_type": "node", "type": "Symbol", "name": "Inheritance"},
+                        {"atom_type": "variable", "name": "v1"},
+                        {"atom_type": "node", "type": "Symbol", "name": '"mammal"'},
+                    ],
+                }
+                das = DistributedAtomSpace()
+                das.fetch(query, host='123.4.5.6', port=8080)
+        """
         if not kwargs.get('running_on_server') and not host and not port:
             raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
 
