@@ -1,21 +1,13 @@
-import json  # noqa: F401
+import re
 from abc import ABC, abstractmethod
-from http import HTTPStatus  # noqa: F401
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
-from hyperon_das_atomdb import WILDCARD
+from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
-from requests import sessions
-from requests.exceptions import (  # noqa: F401
-    ConnectionError,
-    HTTPError,
-    JSONDecodeError,
-    RequestException,
-    Timeout,
-)
 
 from hyperon_das.cache import (
     AndEvaluator,
+    CacheManager,
     CustomQuery,
     LazyQueryEvaluator,
     ListIterator,
@@ -26,14 +18,13 @@ from hyperon_das.cache import (
     RemoteIncomingLinks,
 )
 from hyperon_das.client import FunctionsClient
-from hyperon_das.decorators import retry
 from hyperon_das.exceptions import (
     InvalidDASParameters,
     QueryParametersException,
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer, get_package_version, serialize  # noqa: F401
+from hyperon_das.utils import Assignment, QueryAnswer
 
 
 class QueryEngine(ABC):
@@ -89,9 +80,23 @@ class QueryEngine(ABC):
     ) -> str:
         ...  # pragma no cover
 
+    @abstractmethod
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs,
+    ) -> Any:
+        ...  # pragma no cover
+
 
 class LocalQueryEngine(QueryEngine):
-    def __init__(self, backend, kwargs: Optional[dict] = None) -> None:
+    def __init__(
+        self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}
+    ) -> None:
+        self.system_parameters = system_parameters
+        self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_backend = backend
 
     def _error(self, exception: Exception):
@@ -112,9 +117,7 @@ class LocalQueryEngine(QueryEngine):
         elif query["atom_type"] == "node":
             try:
                 atom_handle = self.local_backend.get_node_handle(query["type"], query["name"])
-                return ListIterator(
-                    [QueryAnswer(self.local_backend.get_atom_as_dict(atom_handle), None)]
-                )
+                return ListIterator([QueryAnswer(self.local_backend.get_atom(atom_handle), None)])
             except NodeDoesNotExist:
                 return ListIterator([])
         elif query["atom_type"] == "link":
@@ -149,7 +152,7 @@ class LocalQueryEngine(QueryEngine):
         answer = []
         for atom in db_answer:
             handle = atom if flat_handle else atom[0]
-            answer.append(self.local_backend.get_atom_as_dict(handle))
+            answer.append(self.local_backend.get_atom(handle))
         return answer
 
     def _get_related_links(
@@ -172,6 +175,73 @@ class LocalQueryEngine(QueryEngine):
             return self.local_backend.get_matched_type(link_type, **kwargs)
         else:
             self._error(ValueError("Invalid parameters"))
+
+    def _process_node(self, query: dict) -> List[dict]:
+        try:
+            handle = self.local_backend.node_handle(query["type"], query["name"])
+            return [self.local_backend.get_atom(handle, no_target_format=True)]
+        except AtomDoesNotExist:
+            return []
+
+    def _process_link(self, query: dict) -> List[dict]:
+        target_handles = self._generate_target_handles(query['targets'])
+        matched_links = self.local_backend.get_matched_links(
+            link_type=query["type"], target_handles=target_handles
+        )
+        unique_handles = set()
+        result = []
+
+        for link in matched_links:
+            if isinstance(link, str):  # single link
+                link_handle = link
+                link_targets = target_handles
+            else:
+                link_handle, *link_targets = link
+
+            if link_handle not in unique_handles:
+                unique_handles.add(link_handle)
+                result.append(self.local_backend.get_atom(link_handle, no_target_format=True))
+
+            for target in link_targets:
+                atoms = self._handle_to_atoms(target)
+                if isinstance(atoms, list):
+                    for atom in atoms:
+                        if atom['_id'] not in unique_handles:
+                            unique_handles.add(atom['_id'])
+                            result.append(atom)
+                else:
+                    if atoms['_id'] not in unique_handles:
+                        unique_handles.add(atoms['_id'])
+                        result.append(atoms)
+
+        return result
+
+    def _generate_target_handles(self, targets: List[Dict[str, Any]]) -> List[str]:
+        targets_hash = []
+        for target in targets:
+            if target["atom_type"] == "node":
+                handle = self.local_backend.node_handle(target["type"], target["name"])
+            elif target["atom_type"] == "link":
+                handle = self._generate_target_handles(target)
+            elif target["atom_type"] == "variable":
+                handle = WILDCARD
+            targets_hash.append(handle)
+        return targets_hash
+
+    def _handle_to_atoms(self, handle: str) -> Union[List[dict], dict]:
+        try:
+            atom = self.local_backend.get_atom(handle, no_target_format=True)
+        except AtomDoesNotExist:
+            return []
+
+        if 'name' in atom:  # node
+            return atom
+        else:  # link
+            answer = [atom]
+            for key, value in atom.items():
+                if re.search(AtomDB.key_pattern, key):
+                    answer.append(self._handle_to_atoms(value))
+            return answer
 
     def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
         try:
@@ -295,85 +365,40 @@ class LocalQueryEngine(QueryEngine):
     ) -> str:
         return self.local_backend.create_field_index(atom_type, field, type, composite_type)
 
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs,
+    ) -> Any:
+        if not self.system_parameters.get('running_on_server'):  # Local
+            documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
+            self.cache_manager.bulk_insert(documents)
+        else:
+            if 'atom_type' not in query:
+                raise ValueError('Invalid query: missing atom_type')
+
+            atom_type = query['atom_type']
+
+            if atom_type == 'node':
+                return self._process_node(query)
+            elif atom_type == 'link':
+                return self._process_link(query)
+            else:
+                raise ValueError('Invalid atom type')
+
 
 class RemoteQueryEngine(QueryEngine):
-    def __init__(self, backend, kwargs):
+    def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
+        self.system_parameters = system_parameters
+        self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
-        host = kwargs.get('host')
-        port = kwargs.get('port')
-        if not host:
+        self.host = kwargs.get('host')
+        self.port = kwargs.get('port')
+        if not self.host:
             raise InvalidDASParameters(message='Send `host` parameter to connect in a remote DAS')
-        url = self._connect_server(host, port)
-        self.remote_das = FunctionsClient(url)
-
-    @retry(attempts=5, timeout_seconds=120)
-    def _connect_server(self, host: str, port: Optional[str] = None):
-        port = port or '8081'
-        openfaas_uri = f'http://{host}:{port}/function/query-engine'
-        aws_lambda_uri = f'http://{host}/prod/query-engine'
-        url = None
-        if self._is_server_connect(openfaas_uri):
-            url = openfaas_uri
-        elif self._is_server_connect(aws_lambda_uri):
-            url = aws_lambda_uri
-        return url
-
-    # TODO: Use this method when version checking is running on the server
-    # def _is_server_connect(self, url: str) -> bool:
-    #     logger().debug(f'connecting to remote Das {url}')
-    #     das_version = get_package_version('hyperon_das')
-
-    #     try:
-    #         with sessions.Session() as session:
-    #             response = session.request(
-    #                 method='POST',
-    #                 url=url,
-    #                 data=json.dumps(
-    #                     {
-    #                         'action': 'handshake',
-    #                         'input': {
-    #                             'das_version': das_version,
-    #                             'atomdb_version': get_package_version('hyperon_das_atomdb'),
-    #                         },
-    #                     }
-    #                 ),
-    #                 timeout=10,
-    #             )
-    #         if response.status_code == HTTPStatus.CONFLICT:
-    #             try:
-    #                 remote_das_version = response.json().get('das').get('version')
-    #             except JSONDecodeError as e:
-    #                 raise Exception(str(e))
-    #             logger().error(
-    #                 f'Package version conflict error when connecting to remote DAS - Local DAS: `{das_version}` - Remote DAS: `{remote_das_version}`'
-    #             )
-    #             raise Exception(
-    #                 f'The version sent by the local DAS is {das_version}, but the expected version on the server is {remote_das_version}'
-    #             )
-    #         elif response.status_code == HTTPStatus.OK:
-    #             return True
-    #         else:
-    #             response.raise_for_status()
-    #             return False
-    #     except (ConnectionError, Timeout, HTTPError, RequestException):
-    #         return False
-
-    def _is_server_connect(self, url: str) -> bool:
-        logger().debug(f'connecting to remote Das {url}')
-        try:
-            with sessions.Session() as session:
-                response = session.request(
-                    method='POST',
-                    url=url,
-                    data=serialize({"action": "ping", "input": {}}),
-                    headers={'Content-Type': 'application/octet-stream'},
-                    timeout=10,
-                )
-        except Exception:
-            return False
-        if response.status_code == 200:
-            return True
-        return False
+        self.remote_das = FunctionsClient(self.host, self.port)
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         try:
@@ -500,3 +525,17 @@ class RemoteQueryEngine(QueryEngine):
         composite_type: Optional[List[Any]] = None,
     ) -> str:
         return self.remote_das.create_field_index(atom_type, field, type, composite_type)
+
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs,
+    ) -> Any:
+        if not host and not port:
+            host = self.query_engine.host
+            port = self.query_engine.port
+        kwargs.update({'server': self.remote_das})
+        documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
+        self.cache_manager.bulk_insert(documents)

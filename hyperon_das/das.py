@@ -4,7 +4,7 @@ from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.cache import QueryAnswerIterator
+from hyperon_das.cache import CacheManager, QueryAnswerIterator
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
     InvalidDASParameters,
@@ -17,32 +17,42 @@ from hyperon_das.utils import Assignment, get_package_version
 
 
 class DistributedAtomSpace:
-    def __init__(self, **kwargs: Optional[Dict[str, Any]]) -> None:
-        atomdb_parameter = kwargs.get('atomdb', 'ram')
-        query_engine_parameter = kwargs.get('query_engine', 'local')
+    def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
+        self.system_parameters = system_parameters
+        self._set_default_system_parameters()
+        atomdb = kwargs.get('atomdb', 'ram')
+        query_engine = kwargs.get('query_engine', 'local')
 
-        if atomdb_parameter == "ram":
+        if atomdb == "ram":
             self.backend = InMemoryDB()
-        elif atomdb_parameter == "redis_mongo":
+        elif atomdb == "redis_mongo":
             self.backend = RedisMongoDB(**kwargs)
-            if query_engine_parameter != "local":
+            if query_engine != "local":
                 raise InvalidDASParameters(
                     message="'redis_mongo' backend requires local query engine ('query_engine=local')"
                 )
         else:
             raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
 
-        if query_engine_parameter == 'local':
-            self.query_engine = LocalQueryEngine(self.backend, kwargs)
+        kwargs.update({'cache_manager': CacheManager(self.backend)})
+
+        if query_engine == 'local':
+            self._das_type = 'local_ram_only' if atomdb == 'ram' else 'local_redis_mongo'
+            self.query_engine = LocalQueryEngine(self.backend, self.system_parameters, kwargs)
             logger().info('Initialized local Das')
-        elif query_engine_parameter == "remote":
-            self.query_engine = RemoteQueryEngine(self.backend, kwargs)
+        elif query_engine == "remote":
+            self._das_type = 'remote'
+            self.query_engine = RemoteQueryEngine(self.backend, self.system_parameters, kwargs)
             logger().info('Initialized remote Das')
         else:
             raise InvalidQueryEngine(
                 message='The possible values are: `local` or `remote`',
-                details=f'query_engine={query_engine_parameter}',
+                details=f'query_engine={query_engine}',
             )
+
+    def _set_default_system_parameters(self) -> None:
+        if not self.system_parameters.get('running_on_server'):
+            self.system_parameters['running_on_server'] = False
 
     @staticmethod
     def about() -> dict:
@@ -575,3 +585,46 @@ class DistributedAtomSpace:
         return self.query_engine.create_field_index(
             atom_type, field, type=type, composite_type=composite_type
         )
+
+    def fetch(
+        self,
+        query: Union[List[dict], dict],
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        **kwargs,
+    ) -> Any:
+        """Fetch data from the remote server using the a query as input and load it locally.
+        If it is a local DAS, the host and port must be sent.
+
+        The input dict is a link, used as a pattern to make the query.
+        Variables can be used as link targets as well as nodes. Nested links are
+        allowed as well.
+
+        Args:
+            query (Union[List[dict], dict]): A pattern described as a link (possibly with nested links)
+                with nodes and variables used to query the knowledge base.
+            host (Optional[str], optional): Address to remote server. Defaults to None.
+            port (Optional[int], optional): Port to remote server. Defaults to None.
+
+        Raises:
+            ValueError: If the 'host' and 'port' parameters are not sent to DAS local
+
+        Examples:
+            >>> query = {
+                    "atom_type": "link",
+                    "type": "Expression",
+                    "targets": [
+                        {"atom_type": "node", "type": "Symbol", "name": "Inheritance"},
+                        {"atom_type": "variable", "name": "v1"},
+                        {"atom_type": "node", "type": "Symbol", "name": '"mammal"'},
+                    ],
+                }
+                das = DistributedAtomSpace()
+                das.fetch(query, host='123.4.5.6', port=8080)
+        """
+
+        if not self.system_parameters.get('running_on_server'):
+            if self._das_type != 'remote' and not host or not port:
+                raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
+
+        return self.query_engine.fetch(query, host, port, **kwargs)

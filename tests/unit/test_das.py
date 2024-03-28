@@ -17,9 +17,7 @@ class TestDistributedAtomSpace:
         assert isinstance(das.backend, InMemoryDB)
         assert isinstance(das.query_engine, LocalQueryEngine)
 
-        with mock.patch(
-            'hyperon_das.das.RemoteQueryEngine._connect_server', return_value='url-test'
-        ):
+        with mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
             das = DistributedAtomSpace(query_engine='remote', host='0.0.0.0', port=1234)
         assert isinstance(das.backend, InMemoryDB)
         assert isinstance(das.query_engine, RemoteQueryEngine)
@@ -41,9 +39,7 @@ class TestDistributedAtomSpace:
         links = das.get_incoming_links('<Concept: human>')
         assert len(links) == 7
 
-        with mock.patch(
-            'hyperon_das.query_engines.RemoteQueryEngine._connect_server', return_value='fake'
-        ):
+        with mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
             das_remote = DistributedAtomSpaceMock('remote', host='test')
 
         with mock.patch(
