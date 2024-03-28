@@ -179,7 +179,7 @@ class LocalQueryEngine(QueryEngine):
     def _process_node(self, query: dict) -> List[dict]:
         try:
             handle = self.local_backend.node_handle(query["type"], query["name"])
-            return [self.local_backend.get_atom(handle, no_convert=True)]
+            return [self.local_backend.get_atom(handle, no_target_format=True)]
         except AtomDoesNotExist:
             return []
 
@@ -200,7 +200,7 @@ class LocalQueryEngine(QueryEngine):
 
             if link_handle not in unique_handles:
                 unique_handles.add(link_handle)
-                result.append(self.local_backend.get_atom(link_handle, no_convert=True))
+                result.append(self.local_backend.get_atom(link_handle, no_target_format=True))
 
             for target in link_targets:
                 atoms = self._handle_to_atoms(target)
@@ -230,7 +230,7 @@ class LocalQueryEngine(QueryEngine):
 
     def _handle_to_atoms(self, handle: str) -> Union[List[dict], dict]:
         try:
-            atom = self.local_backend.get_atom(handle, no_convert=True)
+            atom = self.local_backend.get_atom(handle, no_target_format=True)
         except AtomDoesNotExist:
             return []
 
