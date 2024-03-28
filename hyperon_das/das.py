@@ -624,7 +624,7 @@ class DistributedAtomSpace:
         """
 
         if not self.system_parameters.get('running_on_server'):
-            if self._das_type != 'remote' and not host or not port:
+            if self._das_type != 'remote' and (not host or not port):
                 raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
 
         return self.query_engine.fetch(query, host, port, **kwargs)
