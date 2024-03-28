@@ -77,7 +77,6 @@ class TestLocalDASRedisMongo:
 
         _db_down()
 
-    @pytest.mark.skip(reason="Disable. See: das-serverless-functions#100")
     def test_fetch_atoms(self):
         _db_up()
         das = DistributedAtomSpace(
@@ -109,7 +108,6 @@ class TestLocalDASRedisMongo:
 
 
 class TestLocalDASRamOnly:
-    @pytest.mark.skip(reason="Disable. See: das-serverless-functions#100")
     def test_fetch_atoms_local_das_ram_only(self):
         das = DistributedAtomSpace()
         assert das.count_atoms() == (0, 0)
