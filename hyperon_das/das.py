@@ -18,9 +18,8 @@ from hyperon_das.utils import Assignment, get_package_version
 
 class DistributedAtomSpace:
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
-        if not system_parameters.get('running_on_server'):
-            system_parameters['running_on_server'] = False
         self.system_parameters = system_parameters
+        self._set_default_system_parameters()
         atomdb = kwargs.get('atomdb', 'ram')
         query_engine = kwargs.get('query_engine', 'local')
 
@@ -50,6 +49,10 @@ class DistributedAtomSpace:
                 message='The possible values are: `local` or `remote`',
                 details=f'query_engine={query_engine}',
             )
+
+    def _set_default_system_parameters(self) -> None:
+        if not self.system_parameters.get('running_on_server'):
+            self.system_parameters['running_on_server'] = False
 
     @staticmethod
     def about() -> dict:
