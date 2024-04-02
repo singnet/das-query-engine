@@ -1,7 +1,12 @@
 ---
-name: Testing
+name: Run Unit & Integration tests
 
 on:
+  pull_request:
+    branches:
+      - develop
+      - master
+
   workflow_dispatch:
     inputs:
 
