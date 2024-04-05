@@ -46,7 +46,7 @@ class DistributedAtomSpace:
             logger().info('Started remote DAS')
         else:
             raise InvalidQueryEngine(
-                message='Use either `local` or `remote`',
+                message="Use either 'local' or 'remote'",
                 details=f'query_engine={query_engine}',
             )
 
