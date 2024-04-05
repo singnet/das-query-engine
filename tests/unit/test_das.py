@@ -28,7 +28,7 @@ class TestDistributedAtomSpace:
         with pytest.raises(InvalidQueryEngine) as exc:
             das = DistributedAtomSpace(query_engine='snet')
 
-        assert exc.value.message == 'The possible values are: `local` or `remote`'
+        assert exc.value.message == "Use either 'local' or 'remote'"
         assert exc.value.details == 'query_engine=snet'
 
     def test_get_incoming_links(self):
