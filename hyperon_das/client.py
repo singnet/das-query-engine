@@ -7,13 +7,13 @@ from requests import exceptions, sessions
 
 from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.logger import logger
-from hyperon_das.utils import connect_to_server, deserialize, serialize
+from hyperon_das.utils import connect_to_server, das_error, deserialize, serialize
 
 
 class FunctionsClient:
     def __init__(self, host: str, port: int, server_count: int = 0, name: Optional[str] = None):
-        if not host:
-            raise ValueError('Host is required')
+        if not host or not port:
+            das_error(ValueError("'host' and 'port' are mandatory parameters"))
 
         self.url = connect_to_server(host, port)
 
@@ -37,7 +37,7 @@ class FunctionsClient:
             try:
                 response_data = deserialize(response.content)
             except pickle.UnpicklingError as e:
-                raise Exception(f"Unpickling error: {str(e)}")
+                das_error(Exception(f"Unpickling error: {str(e)}"))
 
             if response.status_code == 200:
                 return response_data
@@ -46,26 +46,34 @@ class FunctionsClient:
                     'error', f'Unknown error with status code {response.status_code}'
                 )
         except exceptions.ConnectionError as e:
-            raise ConnectionError(
-                message=f"Connection error for URL: '{self.url}' with payload: '{payload}'",
-                details=str(e),
+            das_error(
+                ConnectionError(
+                    message=f"Connection error for URL: '{self.url}' with payload: '{payload}'",
+                    details=str(e),
+                )
             )
         except exceptions.Timeout as e:
-            raise TimeoutError(
-                message=f"Request timed out for URL: '{self.url}' with payload: '{payload}'",
-                details=str(e),
+            das_error(
+                TimeoutError(
+                    message=f"Request timed out for URL: '{self.url}' with payload: '{payload}'",
+                    details=str(e),
+                )
             )
         except exceptions.HTTPError as e:
             with contextlib.suppress(pickle.UnpicklingError):
                 return deserialize(response.content).get('error')
-            raise HTTPError(
-                message=f"HTTP error occurred for URL: '{self.url}' with payload: '{payload}'",
-                details=str(e),
+            das_error(
+                HTTPError(
+                    message=f"HTTP error for URL: '{self.url}' with payload: '{payload}'",
+                    details=str(e),
+                )
             )
         except exceptions.RequestException as e:
-            raise RequestError(
-                message=f"Request exception occurred for URL: '{self.url}' with payload: '{payload}'.",
-                details=str(e),
+            das_error(
+                RequestError(
+                    message=f"Request exception for URL: '{self.url}' with payload: '{payload}'.",
+                    details=str(e),
+                )
             )
 
     def get_atom(self, handle: str, **kwargs) -> Union[str, Dict]:
@@ -74,8 +82,8 @@ class FunctionsClient:
             'input': {'handle': handle},
         }
         response = self._send_request(payload)
-        if 'not exist' in response:
-            raise AtomDoesNotExist('error')
+        if 'Nonexistent' in response:
+            das_error(AtomDoesNotExist('error'))
         return response
 
     def get_node(self, node_type: str, node_name: str) -> Union[str, Dict]:
@@ -84,8 +92,8 @@ class FunctionsClient:
             'input': {'node_type': node_type, 'node_name': node_name},
         }
         response = self._send_request(payload)
-        if 'not exist' in response:
-            raise NodeDoesNotExist('error')
+        if 'Nonexistent' in response:
+            das_error(NodeDoesNotExist('error'))
         return response
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
@@ -94,8 +102,8 @@ class FunctionsClient:
             'input': {'link_type': link_type, 'link_targets': link_targets},
         }
         response = self._send_request(payload)
-        if 'not exist' in response:
-            raise LinkDoesNotExist('error')
+        if 'Nonexistent' in response:
+            das_error(LinkDoesNotExist('error'))
         return response
 
     def get_links(
