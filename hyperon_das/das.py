@@ -29,7 +29,7 @@ class DistributedAtomSpace:
             self.backend = RedisMongoDB(**kwargs)
             if query_engine != "local":
                 raise InvalidDASParameters(
-                    message="'redis_mongo' backend requires local query engine ('query_engine=local')"
+                    message="'redis_mongo' AtomDB requires local query engine (i.e. 'query_engine=local')"
                 )
         else:
             raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
@@ -39,14 +39,14 @@ class DistributedAtomSpace:
         if query_engine == 'local':
             self._das_type = 'local_ram_only' if atomdb == 'ram' else 'local_redis_mongo'
             self.query_engine = LocalQueryEngine(self.backend, self.system_parameters, kwargs)
-            logger().info('Initialized local Das')
-        elif query_engine == "remote":
+            logger().info('Started local DAS')
+        elif query_engine == 'remote':
             self._das_type = 'remote'
             self.query_engine = RemoteQueryEngine(self.backend, self.system_parameters, kwargs)
-            logger().info('Initialized remote Das')
+            logger().info('Started remote DAS')
         else:
             raise InvalidQueryEngine(
-                message='The possible values are: `local` or `remote`',
+                message='Use either `local` or `remote`',
                 details=f'query_engine={query_engine}',
             )
 
@@ -72,14 +72,20 @@ class DistributedAtomSpace:
     @staticmethod
     def get_node_handle(node_type: str, node_name: str) -> str:
         """
-        This method retrieves a handle from the node parameters
+        Computes the handle of a node, given its type and name.
+
+        Note that this is a static method which don't actually query the stored atomspace
+        in order to compute the handle. Instead, it just run a MD5 hashing algorithm on
+        the parameters that uniquely identify nodes (i.e. type and name) This means e.g.
+        that two nodes with the same type and the same name are considered to be the exact
+        same entity as they will have the same handle.
 
         Args:
-            node_type (str): The type of the node being queried.
-            node_name (str): The name of the specific node being queried.
+            node_type (str): Node type
+            node_name (str): Node name
 
         Returns:
-            str: A handle
+            str: Node's handle
 
         Examples:
             >>> result = das.get_node_handle(node_type='Concept', node_name='human')
@@ -91,41 +97,47 @@ class DistributedAtomSpace:
     @staticmethod
     def get_link_handle(link_type: str, link_targets: List[str]) -> str:
         """
-        This method retrieves a handle from the link parameters.
+        Computes the handle of a link, given its type and targets' handles.
+
+        Note that this is a static method which don't actually query the stored atomspace
+        in order to compute the handle. Instead, it just run a MD5 hashing algorithm on
+        the parameters that uniquely identify links (i.e. type and list of targets) This
+        means e.g. that two links with the same type and the same targets are considered
+        to be the exact same entity as they will have the same handle.
 
         Args:
-            link_type (str): The type of the link being queried.
-            link_targets (List[str]): A list of target identifiers that the link is associated with.
+            link_type (str): Link type.
+            link_targets (List[str]): List with the target handles.
 
         Returns:
-           str: A handle
+           str: Link's handle.
 
         Examples:
-            >>> result = das.get_link(link_type='Similarity', targets=['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'])
+            >>> human_handle = das.get_node_handle(node_type='Concept', node_name='human')
+            >>> monkey_handle = das.get_node_handle(node_type='Concept', node_name='monkey')
+            >>> result = das.get_link_handle(link_type='Similarity', targets=[human_handle, monkey_handle])
             >>> print(result)
             "bad7472f41a0e7d601ca294eb4607c3a"
 
         """
         return AtomDB.link_handle(link_type, link_targets)
 
-    def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
+    def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         """
-        Retrieve information about an Atom using its handle.
-
-        This method retrieves information about an Atom from the database
-        based on the provided handle.
+        Retrieve an atom given its handle.
 
         Args:
-            handle (str): The unique handle of the atom.
+            handle (str): Atom's handle.
 
         Returns:
-            Union[Dict, None]: A dictionary containing detailed Atom information
+            Dict: A Python dict with all atom data.
 
         Raises:
-            AtomDoesNotExist: If invalid parameter is provided.
+            AtomDoesNotExist: If the corresponding atom doesn't exist.
 
         Examples:
-            >>> result = das.get_atom(handle="af12f10f9ae2002a1607ba0b47ba8407")
+            >>> human_handle = das.get_node_handle(node_type='Concept', node_name='human')
+            >>> result = das.get_atom(human_handle)
             >>> print(result)
             {
                 'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
@@ -136,20 +148,19 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_atom(handle, **kwargs)
 
-    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
+    def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
         """
-        This method retrieves information about a Node from the database
-        based on its type and name.
+        Retrieve a node given its type and name.
 
         Args:
-            node_type (str): The type of the node being queried.
-            node_name (str): The name of the specific node being queried.
+            node_type (str): Node type
+            node_name (str): Node name
 
         Returns:
-            Union[Dict, None]: A dictionary containing detailed node information
+            Dict: A Python dict with all node data.
 
         Raises:
-            NodeDoesNotExist: If invalid parameters are provided.
+            NodeDoesNotExist: If the corresponding node doesn't exist.
 
         Examples:
             >>> result = das.get_node(
@@ -166,23 +177,19 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_node(node_type, node_name)
 
-    def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
+    def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         """
-        This method retrieves information about a link from the database based on
-        type with given targets.
+        Retrieve a link given its type and list of targets.
 
         Args:
-            link_type (str): The type of the link being queried.
-            link_targets (List[str]): A list of target identifiers that the link is associated with.
+            link_type (str): Link type
+            link_targets (List[str]): List of target handles.
 
         Returns:
-            Union[Dict, None]: A dictionary containing detailed link information
+            Dict: A Python dict with all link data.
 
         Raises:
-            LinkDoesNotExist: If invalid parameters are provided.
-
-        Note:
-            If the specified link or targets do not exist, the method returns None.
+            LinkDoesNotExist: If the corresponding link doesn't exist.
 
         Examples:
             >>> human_handle = das.get_node_handle('Concept', 'human')
@@ -208,7 +215,6 @@ class DistributedAtomSpace:
                     '1cdffc6b0b89ff41d68bec237481d1e1'
                 ]
             }
-
         """
         return self.query_engine.get_link(link_type, link_targets)
 
@@ -218,64 +224,102 @@ class DistributedAtomSpace:
         target_types: List[str] = None,
         link_targets: List[str] = None,
         **kwargs,
-    ) -> Union[List[str], List[Dict]]:
+    ) -> Union[Iterator, List[Dict[str, Any]]]:
         """
-        Retrieve information about Links based on specified criteria.
+        Retrieve all links that match the passed search criteria.
 
-        This method retrieves information about links from the database based on the provided criteria.
-        The criteria includes the link type, and can include target types and specific target identifiers.
-        The retrieved links information can be presented in different output formats as specified
-        by the output_format parameter.
+        This method can be used in four different ways.
+
+        1. Retrieve all the links of a given type
+
+            Set link_type to the desired type and set target_types=None and 
+            link_targets=None.
+
+        2. Retrieve all the links of a given type whose targets are of given types.
+
+            Set link_type to the disered type and target_types to a list with the desired
+            types os each target.
+
+        3. Retrieve all the links of a given type whose targets match a given list of
+           handles
+
+            Set link_type to the desired type (or pass link_type='*' to retrieve links
+            of any type) and set link_targets to a list of handles. Any handle in this
+            list can be '*' meaning that any handle in that position of the targets list
+            is a match for the query. Set target_types=None.
 
         Args:
-            link_type (str): The type of links being queried.
-            target_types (List[str], optional): The type(s) of targets being queried. Defaults to None.
-            link_targets (List[str], optional): A list of target identifiers that the links are associated with.
-                Defaults to None.
+            link_type (str): Link type being searched (can be '*' when link_targets is not None).
+            target_types (List[str], optional): Template of target types being searched.
+            link_targets (List[str], optional): Template of targets being searched (handles or '*').
 
         Returns:
-            Union[List[str], List[Dict]]: A list of dictionaries containing detailed information of the links
+            Union[Iterator, List[Dict[str, Any]]]: A list of dictionaries containing detailed
+            information of the links
 
         Examples:
-            >>> result = das.get_links(
-                    link_type='Similarity',
-                    target_types=['Concept', 'Concept']
-                )
-            >>> print(result)
-            [
-                {
-                    'handle': 'a45af31b43ee5ea271214338a5a5bd61',
-                    'type': 'Similarity',
-                    'template': ['Similarity', 'Concept', 'Concept'],
-                    'targets': [...]
-                },
-                {
-                    'handle': '2d7abd27644a9c08a7ca2c8d68338579',
-                    'type': 'Similarity',
-                    'template': ['Similarity', 'Concept', 'Concept'],
-                    'targets': [...]
-                },
+            
+            1. Retrieve all the links of a given type
+
+                >>> links = das.get_links(link_type='Inheritance')
+                >>> for link in links:
+                >>>     print(link['type'], link['targets'])                      
+                Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
+                Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
+                Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
                 ...
-            ]
+
+            2. Retrieve all the links of a given type whose targets are of given types.
+
+                >>> links = das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
+                >>> for link in links:
+                >>>     print(link['type'], link['targets'])   
+                Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
+                Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
+                Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
+                ...
+
+            3. Retrieve all the links of a given type whose targets match a given list of
+               handles
+
+                >>> snake = das.get_node_handle('Concept', 'snake')
+                >>> links = das.get_links(link_type='Similarity', link_targets=[snake, '*'])
+                >>> for link in links:
+                >>>     print(link['type'], link['targets']) 
+                Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'b94941d8cd1c0ee4ad3dd3dcab52b964']
+                Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'bb34ce95f161a6b37ff54b3d4c817857']
         """
         return self.query_engine.get_links(link_type, target_types, link_targets, **kwargs)
 
     def get_incoming_links(self, atom_handle: str, **kwargs) -> List[Union[Dict[str, Any], str]]:
-        """Retrieve all links pointing to Atom
+        """
+        Retrieve all links which has the passed handle as one of its targets.
 
         Args:
-            atom_handle (str): The unique handle of the atom
+            atom_handle (str): Atom's handle
 
         Returns:
             List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms
             or a list of strings containing the atom handles
+
+        Examples:
+            >>> rhino = das.get_node_handle('Concept', 'rhino')
+            >>> links = das.get_incoming_links(rhino)
+            >>> for link in links:
+            >>>     print(link['type'], link['targets'])
+            Similarity ['d03e59654221c1e8fcda404fd5c8d6cb', '99d18c702e813b07260baf577c60c455']
+            Similarity ['99d18c702e813b07260baf577c60c455', 'd03e59654221c1e8fcda404fd5c8d6cb']
+            Inheritance ['99d18c702e813b07260baf577c60c455', 'bdfe4e7a431f73386f37c6448afe5840']
         """
         return self.query_engine.get_incoming_links(atom_handle, **kwargs)
 
     def count_atoms(self) -> Tuple[int, int]:
         """
-        This method is useful for returning the count of atoms in the database.
-        It's also useful for ensuring that the knowledge base load went off without problems.
+        Count nodes and links in DAS.
+
+        In the case of remote DAS, count the total number of nodes and links stored locally and
+        remotelly. If there are more than one instance of the same atom (local and remote), it's
+        counted only once.
 
         Returns:
             Tuple[int, int]: (node_count, link_count)
@@ -291,16 +335,17 @@ class DistributedAtomSpace:
         Perform a query on the knowledge base using a dict as input and return an
         iterator of QueryAnswer objects. Each such object carries the resulting mapping
         of variables in the query and the corresponding subgraph which is the result
-        of ap[plying such mapping to rewrite the query.
+        of applying such mapping to rewrite the query.
 
         The input dict is a link, used as a pattern to make the query.
         Variables can be used as link targets as well as nodes. Nested links are
         allowed as well.
 
         Args:
-            query (Union[List[Dict[str, Any]], Dict[str, Any]]): A pattern described as a link (possibly with nested links)
-                with nodes and variables used to query the knowledge base.
-                If the query is represented as a list of dictionaries, it should be interpreted as a conjunction (AND) of all queries within the list
+            query (Union[List[Dict[str, Any]], Dict[str, Any]]): A pattern described as a
+                link (possibly with nested links) with nodes and variables used to query
+                the knowledge base. If the query is represented as a list of dictionaries,
+                it is interpreted as a conjunction (AND) of all queries within the list.
             parameters (Dict[str, Any], optional): query optional parameters
 
         Returns:
@@ -312,7 +357,7 @@ class DistributedAtomSpace:
             UnexpectedQueryFormat: If query resolution lead to an invalid state
 
         Notes:
-            - No logical connectors (AND, OR, NOT) are allowed
+            - Logical connectors OR and NOT are not implemented yet.
             - If no match is found for the query, an empty list is returned.
 
         Examples:
@@ -376,52 +421,82 @@ class DistributedAtomSpace:
 
     def custom_query(self, index_id: str, **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
         """
-        Perform a custom query on the knowledge base using a custom index id and return an iterator.
-        If no_iterator is set to True, the method returns a list of dict containing detailed atom information
-        (But this way only works with Local Das RedisMongo).
+        Perform a query using a previously created custom index.
+
+        Actual query parameters can be passed as kwargs according to the type of the previously
+        created filter.
 
         Args:
-            index_id (str): the custom index id to be used in the query
+            index_id (str): custom index id to be used in the query.
 
         Raises:
-            NotImplementedError: If the custom_query method is called for the Local DAS in Ram only
+            NotImplementedError: If called from Local DAS in RAM only.
 
         Returns:
-            Union[Iterator, List[Dict[str, Any]]]: An iterator or list of dict containing detailed atom information
+            Union[Iterator, List[Dict[str, Any]]]: An iterator or list of dict containing atom data.
 
         Examples:
-            >>> das.custom_query(index_id='index_123456789', tag='DAS')
-            >>> das.custom_query(index_id='index_123456789', tag='DAS', no_iterator=True)
+            >>> das.custom_query(index_id='index_123', tag='DAS')
+            >>> das.custom_query(index_id='index_123', tag='DAS', no_iterator=True)
         """
         if isinstance(self.query_engine, LocalQueryEngine) and isinstance(self.backend, InMemoryDB):
             raise NotImplementedError(
-                "The custom_query method is not implemented for the Local DAS in Ram only"
+                "custom_query() is not implemented for Local DAS in RAM only"
             )
 
         return self.query_engine.custom_query(index_id, **kwargs)
 
     def commit_changes(self):
-        """This method applies changes made locally to the remote server"""
+        """
+        Commit changes (atom addition/deletion/change) to the databases or to
+        the remote DAS Server, depending on the type of DAS being used.
+
+        The behavior of this method depends on the type of DAS being used.
+
+        1. When called in a DAS instantiated with query_engine=remote
+
+            This is called a "Remote DAS" in the documentation. Remote DAS is
+            connected to a remote DAS Server which is used to make queries,
+            traversing, etc but it also keeps a local Atomspace in RAM which is
+            used as a cache. Atom changes are made initially in this local cache.
+            When commit_changes() is called in this type of DAS, these changes are
+            propagated to the remote DAS Server.
+
+        2. When called in a DAS instantiated with query_engine=local and
+           atomdb='ram'.
+
+            No effect.
+
+        3. When called in a DAS instantiated with query_engine=local and
+           atomdb='redis_mongo'
+
+            The AtomDB keeps buffers of changes which are not actually written in the
+            DBs until commit_changes() is called (or until that buffers size reach a
+            threshold).
+        """
         self.query_engine.commit()
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Adds a node to the database.
+        Adds a node to DAS.
 
-        This method allows you to add a node to the database
-        with the specified node parameters. A node must have 'type' and
-        'name' fields in the node_params dictionary.
+        A node is represented by a Python dict which may contain any number of keys associated to
+        values of any type (including lists, sets, nested dicts, etc) , which are all
+        recorded with the node, but must contain at least the keys "type" and "name"
+        mapping to strings which define the node uniquely, i.e. two nodes with the same
+        "type" and "name" are considered to be the same entity.
 
         Args:
-            node_params (Dict[str, Any]): A dictionary containing node parameters. It should have the following keys:
-                - 'type': The type of the node.
-                - 'name': The name of the node.
+            node_params (Dict[str, Any]): A dictionary with node data. The following keys are mandatory:
+                - 'type': Node type
+                - 'name': Node name
 
         Returns:
-            Dict[str, Any]: The information about the added node, including its unique key and other details.
+            Dict[str, Any]: The information about the added node, including its unique handle and
+            other fields used internally in DAS.
 
         Raises:
-            AddNodeException: If the 'type' or 'name' fields are missing in node_params.
+            AddNodeException: If 'type' or 'name' fields are missing or invalid somehow.
 
         Examples:
             >>> node_params = {
@@ -434,21 +509,27 @@ class DistributedAtomSpace:
 
     def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Adds a link to the database.
+        Adds a link to DAS.
 
-        This method allows to add a link to the database with the specified link parameters.
-        A link must have a 'type' and 'targets' field in the link_params dictionary.
+        A link is represented by a Python dict which may contain any number of keys associated to
+        values of any type (including lists, sets, nested dicts, etc) , which are all
+        recorded with the link, but must contain at least the keys "type" and "targets".
+        "type" shpould map to a string and "targets" to a list of Python dict, each of them being
+        itself a representation of either a node or a nested link. "type" and "targets" define the
+        link uniquely, i.e. two links with the same "type" and "targets" are considered to be the
+        same entity.
 
         Args:
-            link_params (Dict[str, Any]): A dictionary containing link parameters. It should have the following keys:
+            link_params (Dict[str, Any]): A dictionary with link data. The following keys are mandatory:
                 - 'type': The type of the link.
                 - 'targets': A list of target elements.
 
         Returns:
-            Dict[str, Any]: The information about the added link, including its unique key and other details.
+            Dict[str, Any]: The information about the added link, including its unique handle and
+            other fields used internally in DAS.
 
         Raises:
-            AddLinkException: If the 'type' or 'targets' fields are missing in link_params.
+            AddLinkException: If the 'type' or 'targets' fields are missing or invalid somehow.
 
         Examples:
             >>> link_params = {
@@ -529,21 +610,33 @@ class DistributedAtomSpace:
         return self.query_engine.reindex(pattern_index_templates)
 
     def clear(self) -> None:
-        """Clear all data"""
+        """
+        Delete all atoms and custom indexes.
+        """
         self.backend.clear_database()
         logger().debug('The database has been cleaned.')
 
     def get_traversal_cursor(self, handle: str, **kwargs) -> TraverseEngine:
-        """Create an instance of the TraverseEngine
+        """
+        Create and return a TraverseEngine, an object that can be used to traverse the
+        atomspace hypergraph.
+
+        A TraverseEngine is like a cusor which points to an atom in the hypergraph and
+        can be used to probe for links and neighboring atoms and then move on by
+        following links. It's functioning is closely tied to the cache system in order
+        to optimize the order in which atoms are presented to the caller when probing
+        the neighborhood and to use cache's "atom paging" capabilities to minimize
+        latency when used in remote DAS.
 
         Args:
-            handle (str): atom handle
+            handle (str): Atom's handle
 
         Raises:
-            GetTraversalCursorException: If Atom does not exist
+            GetTraversalCursorException: If passed handle is invalid, somehow (e.g. if
+            the corresponding atom doesn't exist).
 
         Returns:
-            TraverseEngine: The object that allows traversal of the hypergraph
+            TraverseEngine: The object that allows traversal of the hypergraph.
         """
         try:
             return TraverseEngine(handle, das=self, **kwargs)
@@ -557,30 +650,37 @@ class DistributedAtomSpace:
         type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
     ) -> str:
-        """Create an index for a field for all Atoms of the specified type
+        """
+        Create a custom index on the passed field of all atoms of the passed type.
+
+        Remote DAS allow creation of custom indexes based on custom fields in
+        nodes or links. These indexes can be used to make subsequent custom queries.
 
         Args:
-            atom_type (str): Type of the Atom. Could be 'link' or 'node'
-            field (str): field where the index will be created
-            type (str, optional): Only atoms of the passed type will be indexed. Defaults to None.
-            composite_type (List[Any], optional): Only Atoms type of the passed composite type will be indexed. Defaults to None.
+            atom_type (str): Either 'link' or 'node', if the index is to be created for
+                links or nodes.
+            field (str): field where the index will be created upon
+            type (str, optional): Only atoms of the passed type will be indexed. Defaults
+                to None, meaning that atom type doesn't matter.
+            composite_type (List[Any], optional): Only Atoms type of the passed composite
+                type will be indexed. Defaults to None.
 
         Raises:
-            ValueError: If the type of the Atom is not a string or if both type and composite_type are specified
+            ValueError: If parameters are invalid somehow.
 
         Returns:
-            str: The index ID. This ID should be used to make queries that should use the newly created index.
+            str: The index ID. This ID should be used to make subsequent queries using this
+                newly created index.
 
         Examples:
             >>> index_id = das.create_field_index('link', 'tag', type='Expression')
             >>> index_id = das.create_field_index('link', 'tag', composite_type=['Expression', 'Symbol', 'Symbol', ['Expression', 'Symbol', 'Symbol', 'Symbol']])
         """
-
         if type and composite_type:
-            raise ValueError("Only one of 'type' or 'composite_type' can be specified")
+            raise ValueError("'type' and 'composite_type' can't be specified simultaneously")
 
         if type and not isinstance(type, str):
-            raise ValueError('The type of the Atom must be a string')
+            raise ValueError("'atom_type' should be str")
 
         return self.query_engine.create_field_index(
             atom_type, field, type=type, composite_type=composite_type
@@ -593,10 +693,19 @@ class DistributedAtomSpace:
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
-        """Fetch data from the remote server using the a query as input and load it locally.
-        If it is a local DAS, the host and port must be sent.
+        """
+        Fetch, from a DAS Server,  all links that match the passed query.
 
-        The input dict is a link, used as a pattern to make the query.
+        Instead of adding atoms by calling add_node() and add_link() directly,
+        it's possible to fetch all or part of the contents from a DAS server using the
+        method fetch(). This method doesn't create a lasting connection with the DAS
+        server, it will just fetch the atoms once and close the connection so any
+        subsequent changes or queries will not be propagated to the server in any way.
+        After fetching the atoms, all queries will be made locally. It's possible to
+        call fetch() multiple times fetching from the same DAS Server or from different
+        ones.
+
+        The input query is a link, used as a pattern to make the query.
         Variables can be used as link targets as well as nodes. Nested links are
         allowed as well.
 
@@ -607,7 +716,7 @@ class DistributedAtomSpace:
             port (Optional[int], optional): Port to remote server. Defaults to None.
 
         Raises:
-            ValueError: If the 'host' and 'port' parameters are not sent to DAS local
+            ValueError: If parameters ar somehow invalid.
 
         Examples:
             >>> query = {
@@ -625,6 +734,6 @@ class DistributedAtomSpace:
 
         if not self.system_parameters.get('running_on_server'):
             if self._das_type != 'remote' and (not host or not port):
-                raise ValueError("The 'host' and 'port' parameters must be sent to DAS local")
+                raise ValueError("'host' and 'port' are mandatory parameters to local DAS")
 
         return self.query_engine.fetch(query, host, port, **kwargs)
