@@ -232,7 +232,7 @@ class DistributedAtomSpace:
 
         1. Retrieve all the links of a given type
 
-            Set link_type to the desired type and set target_types=None and 
+            Set link_type to the desired type and set target_types=None and
             link_targets=None.
 
         2. Retrieve all the links of a given type whose targets are of given types.
@@ -258,12 +258,12 @@ class DistributedAtomSpace:
             information of the links
 
         Examples:
-            
+
             1. Retrieve all the links of a given type
 
                 >>> links = das.get_links(link_type='Inheritance')
                 >>> for link in links:
-                >>>     print(link['type'], link['targets'])                      
+                >>>     print(link['type'], link['targets'])
                 Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
                 Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
                 Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
@@ -273,7 +273,7 @@ class DistributedAtomSpace:
 
                 >>> links = das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
                 >>> for link in links:
-                >>>     print(link['type'], link['targets'])   
+                >>>     print(link['type'], link['targets'])
                 Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
                 Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
                 Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
@@ -285,7 +285,7 @@ class DistributedAtomSpace:
                 >>> snake = das.get_node_handle('Concept', 'snake')
                 >>> links = das.get_links(link_type='Similarity', link_targets=[snake, '*'])
                 >>> for link in links:
-                >>>     print(link['type'], link['targets']) 
+                >>>     print(link['type'], link['targets'])
                 Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'b94941d8cd1c0ee4ad3dd3dcab52b964']
                 Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'bb34ce95f161a6b37ff54b3d4c817857']
         """
@@ -440,9 +440,7 @@ class DistributedAtomSpace:
             >>> das.custom_query(index_id='index_123', tag='DAS', no_iterator=True)
         """
         if isinstance(self.query_engine, LocalQueryEngine) and isinstance(self.backend, InMemoryDB):
-            raise NotImplementedError(
-                "custom_query() is not implemented for Local DAS in RAM only"
-            )
+            raise NotImplementedError("custom_query() is not implemented for Local DAS in RAM only")
 
         return self.query_engine.custom_query(index_id, **kwargs)
 
