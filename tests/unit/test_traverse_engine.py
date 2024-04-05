@@ -352,7 +352,7 @@ class TestTraverseEngine:
 
             with pytest.raises(TypeError) as exc:
                 _build_atom_answer(animal_base_handles.human, filter=my_second_filter)
-            assert exc.value.args[0] == 'The function must return a boolean'
+            assert exc.value.args[0] == 'Filter must return bool'
 
         def _mammal_links():
             answers = _build_atom_answer(animal_base_handles.mammal, link_type='Inheritance')

@@ -18,6 +18,11 @@ from hyperon_das.exceptions import InvalidAssignment
 from hyperon_das.logger import logger
 
 
+def das_error(exception: Exception):
+    logger().error(str(exception))
+    raise exception
+
+
 class Assignment:
     @staticmethod
     def compose(components: List["Assignment"]) -> Optional["Assignment"]:

@@ -491,7 +491,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
         if self.custom_filter and callable(self.custom_filter) and not self.targets_only:
             ret = self.custom_filter(link)
             if not isinstance(ret, bool):
-                raise TypeError('The function must return a boolean')
+                raise TypeError('Filter must return bool')
             if ret is False:
                 return False
 
@@ -556,7 +556,7 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
         if self.source.custom_filter and callable(self.source.custom_filter):
             ret = self.source.custom_filter(target)
             if not isinstance(ret, bool):
-                raise TypeError('The function must return a boolean')
+                raise TypeError('Filter must return bool')
             if ret is False:
                 return False
 

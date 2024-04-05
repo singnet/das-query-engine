@@ -24,7 +24,7 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
-from hyperon_das.utils import Assignment, QueryAnswer
+from hyperon_das.utils import Assignment, QueryAnswer, das_error
 
 
 class QueryEngine(ABC):
@@ -99,10 +99,6 @@ class LocalQueryEngine(QueryEngine):
         self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_backend = backend
 
-    def _error(self, exception: Exception):
-        logger().error(str(exception))
-        raise exception
-
     def _recursive_query(
         self,
         query: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -130,7 +126,7 @@ class LocalQueryEngine(QueryEngine):
                 elif target["atom_type"] == "variable":
                     matched_targets.append(ListIterator([QueryAnswer(target, None)]))
                 else:
-                    self._error(
+                    das_error(
                         UnexpectedQueryFormat(
                             message="Query processing reached an unexpected state",
                             details=f'link: {str(query)} link target: {str(query)}',
@@ -138,7 +134,7 @@ class LocalQueryEngine(QueryEngine):
                     )
             return LazyQueryEvaluator(query["type"], matched_targets, self, parameters)
         else:
-            self._error(
+            das_error(
                 UnexpectedQueryFormat(
                     message="Query processing reached an unexpected state",
                     details=f'query: {str(query)}',
@@ -174,7 +170,11 @@ class LocalQueryEngine(QueryEngine):
         elif link_type != WILDCARD:
             return self.local_backend.get_matched_type(link_type, **kwargs)
         else:
-            self._error(ValueError("Invalid parameters"))
+            das_error(
+                ValueError(
+                    f"Invalid parameters. link_type = {link_type} target_types = {target_types} link_targets = {link_targets}"
+                )
+            )
 
     def _process_node(self, query: dict) -> List[dict]:
         try:
@@ -246,16 +246,16 @@ class LocalQueryEngine(QueryEngine):
     def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
         try:
             return self.local_backend.get_atom(handle, **kwargs)
-        except AtomDoesNotExist as e:
-            raise e
+        except AtomDoesNotExist as exception:
+            das_error(exception)
 
     def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
         try:
             node_handle = self.local_backend.node_handle(node_type, node_name)
             return self.local_backend.get_atom(node_handle)
         except AtomDoesNotExist:
-            raise NodeDoesNotExist(
-                message='This node does not exist', details=f'{node_type}:{node_name}'
+            das_error(
+                NodeDoesNotExist(message="Nonexistent node.", details=f'{node_type}:{node_name}')
             )
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
@@ -263,8 +263,8 @@ class LocalQueryEngine(QueryEngine):
             link_handle = self.local_backend.link_handle(link_type, link_targets)
             return self.local_backend.get_atom(link_handle)
         except AtomDoesNotExist:
-            raise LinkDoesNotExist(
-                message='This link does not exist', details=f'{link_type}:{link_targets}'
+            das_error(
+                LinkDoesNotExist(message='Nonexistent link', details=f'{link_type}:{link_targets}')
             )
 
     def get_links(
@@ -377,7 +377,7 @@ class LocalQueryEngine(QueryEngine):
             self.cache_manager.bulk_insert(documents)
         else:
             if 'atom_type' not in query:
-                raise ValueError('Invalid query: missing atom_type')
+                das_error(ValueError('Invalid query: missing atom_type'))
 
             atom_type = query['atom_type']
 
@@ -386,7 +386,9 @@ class LocalQueryEngine(QueryEngine):
             elif atom_type == 'link':
                 return self._process_link(query)
             else:
-                raise ValueError('Invalid atom type')
+                das_error(
+                    ValueError("Invalid atom type: {atom_type}. Use 'node' or 'link' instead.")
+                )
 
 
 class RemoteQueryEngine(QueryEngine):
@@ -396,8 +398,8 @@ class RemoteQueryEngine(QueryEngine):
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
-        if not self.host:
-            raise InvalidDASParameters(message='Send `host` parameter to connect in a remote DAS')
+        if not self.host or not self.port:
+            das_error(InvalidDASParameters(message="'host' and 'port' are mandatory parameters"))
         self.remote_das = FunctionsClient(self.host, self.port)
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
@@ -406,10 +408,8 @@ class RemoteQueryEngine(QueryEngine):
         except AtomDoesNotExist:
             try:
                 atom = self.remote_das.get_atom(handle, **kwargs)
-            except AtomDoesNotExist:
-                raise AtomDoesNotExist(
-                    message='This atom does not exist', details=f'handle:{handle}'
-                )
+            except AtomDoesNotExist as exception:
+                das_error(exception)
         return atom
 
     def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
@@ -418,10 +418,8 @@ class RemoteQueryEngine(QueryEngine):
         except NodeDoesNotExist:
             try:
                 node = self.remote_das.get_node(node_type, node_name)
-            except NodeDoesNotExist:
-                raise NodeDoesNotExist(
-                    message='This node does not exist', details=f'{node_type}:{node_name}'
-                )
+            except NodeDoesNotExist as exception:
+                das_error(exception)
         return node
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
@@ -430,10 +428,8 @@ class RemoteQueryEngine(QueryEngine):
         except LinkDoesNotExist:
             try:
                 link = self.remote_das.get_link(link_type, link_targets)
-            except LinkDoesNotExist:
-                raise LinkDoesNotExist(
-                    message='This link does not exist', details=f'{link_type}:{link_targets}'
-                )
+            except LinkDoesNotExist as exception:
+                das_error(exception)
         return link
 
     def get_links(
@@ -498,11 +494,16 @@ class RemoteQueryEngine(QueryEngine):
         elif query_scope == 'local_only':
             answer = self.local_query_engine.query(query, parameters)
         elif query_scope == 'local_and_remote':
-            # This type is not available yet
-            raise QueryParametersException
+            das_error(
+                QueryParametersException(
+                    message=f"Invalid value for parameter 'query_scope': '{query_scope}'. This type of query scope is not implemented yet"
+                )
+            )
         else:
-            raise QueryParametersException(
-                message=f'Invalid value for parameter "query_scope": "{query_scope}"'
+            das_error(
+                QueryParametersException(
+                    message=f'Invalid value for "query_scope": "{query_scope}"'
+                )
             )
         return answer
 
@@ -515,7 +516,7 @@ class RemoteQueryEngine(QueryEngine):
         return self.remote_das.commit_changes()
 
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
-        raise NotImplementedError()
+        das_error(NotImplementedError())
 
     def create_field_index(
         self,

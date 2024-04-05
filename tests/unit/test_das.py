@@ -40,7 +40,7 @@ class TestDistributedAtomSpace:
         assert len(links) == 7
 
         with mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
-            das_remote = DistributedAtomSpaceMock('remote', host='test')
+            das_remote = DistributedAtomSpaceMock('remote', host='test', port=8080)
 
         with mock.patch(
             'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=(0, [])
