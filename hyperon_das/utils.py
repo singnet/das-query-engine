@@ -179,7 +179,7 @@ def check_server_connection(url: str) -> Tuple[int, str]:
                 f"Package version conflict error when connecting to remote DAS. Local DAS: 'das: {das_version} - atom_db: {atom_db_version}' -- Remote DAS: 'das: {remote_das_version} - atom_db: {remote_atomdb_version}'"
             )
             raise Exception(
-                f"The version sent by the local DAS is 'das: {das_version} and atom_db: {atom_db_version}', but the expected version on the server is 'das: {remote_das_version} and atom_db: {remote_atomdb_version}'"
+                f"Local DAS version 'das: {das_version} and atom_db: {atom_db_version}', DAS server is expecting 'das: {remote_das_version} and atom_db: {remote_atomdb_version}'"
             )
         if response.status_code == HTTPStatus.OK:
             return response.status_code, "Successful connection"
@@ -188,7 +188,7 @@ def check_server_connection(url: str) -> Tuple[int, str]:
                 error_msg = deserialize(response.content).get('error')
                 response.raise_for_status()
             except pickle.UnpicklingError:
-                raise Exception("A problem occured unpickling an object")
+                raise Exception("Error unpickling objects in peer's response")
     except (ConnectionError, Timeout, HTTPError, RequestException) as e:
         msg = f"{error_msg} - {str(e)}" if error_msg else str(e)
         return 400, msg
