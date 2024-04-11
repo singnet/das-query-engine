@@ -154,7 +154,7 @@ class TestRemoteDistributedAtomSpace:
             metta_animal_base_handles.inheritance_rhino_mammal,
         ]
 
-        answer = remote_das.query(
+        response = remote_das.query(
             {
                 "atom_type": "link",
                 "type": "Expression",
@@ -163,13 +163,15 @@ class TestRemoteDistributedAtomSpace:
                     {"atom_type": "variable", "name": "v1"},
                     {"atom_type": "node", "type": "Symbol", "name": '"mammal"'},
                 ],
-            },
-            {'no_iterator': True},
+            }
         )
 
-        assert len(answer) == 4
+        answers = [i for i in response]
 
-        for _, link in answer:
+        assert len(answers) == 4
+
+        for answer in answers:
+            _, link = answer.serialize()
             assert link['handle'] in all_inheritance_mammal
             if link['handle'] == metta_animal_base_handles.inheritance_chimp_mammal:
                 assert _check_docs(

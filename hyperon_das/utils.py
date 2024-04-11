@@ -115,6 +115,13 @@ class QueryAnswer:
     subgraph: Optional[Dict] = None
     assignment: Optional[Assignment] = None
 
+    def serialize(self) -> tuple:
+        return tuple([self.assignment, self.subgraph])
+
+    @classmethod
+    def deserialize(cls, data: tuple) -> 'QueryAnswer':
+        return cls(subgraph=data[1], assignment=data[0])
+
 
 def get_package_version(package_name: str) -> str:
     package_module = import_module(package_name)
