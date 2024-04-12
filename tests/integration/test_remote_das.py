@@ -146,6 +146,7 @@ class TestRemoteDistributedAtomSpace:
         assert response[0] == nodes
         assert response[1] == links
 
+    @pytest.mark.skip(reason="Disabled. See: das-query-engine#235")
     def test_query(self, remote_das: DistributedAtomSpace):
         all_inheritance_mammal = [
             metta_animal_base_handles.inheritance_chimp_mammal,
@@ -154,7 +155,7 @@ class TestRemoteDistributedAtomSpace:
             metta_animal_base_handles.inheritance_rhino_mammal,
         ]
 
-        answer = remote_das.query(
+        query_answer = remote_das.query(
             {
                 "atom_type": "link",
                 "type": "Expression",
@@ -166,6 +167,8 @@ class TestRemoteDistributedAtomSpace:
             },
             {'no_iterator': True},
         )
+
+        answer = tuple([item.assignment, item.subgraph] for item in query_answer)
 
         assert len(answer) == 4
 
