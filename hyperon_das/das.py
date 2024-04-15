@@ -686,13 +686,15 @@ class DistributedAtomSpace:
 
     def fetch(
         self,
-        query: Union[List[dict], dict],
+        query: Optional[Union[List[dict], dict]] = None,
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
         """
-        Fetch, from a DAS Server,  all links that match the passed query.
+        Fetch, from a DAS Server, all atoms that match the passed query.
+
+        If Any query is passed, all atoms are fetched.
 
         Instead of adding atoms by calling add_node() and add_link() directly,
         it's possible to fetch all or part of the contents from a DAS server using the
@@ -708,8 +710,8 @@ class DistributedAtomSpace:
         allowed as well.
 
         Args:
-            query (Union[List[dict], dict]): A pattern described as a link (possibly with nested links)
-                with nodes and variables used to query the knowledge base.
+            query (Optional[Union[List[dict], dict]]): A pattern described as a link (possibly with nested links)
+                with nodes and variables used to query the knowledge base. Defaults to None
             host (Optional[str], optional): Address to remote server. Defaults to None.
             port (Optional[int], optional): Port to remote server. Defaults to None.
 

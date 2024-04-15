@@ -367,7 +367,7 @@ class LocalQueryEngine(QueryEngine):
 
     def fetch(
         self,
-        query: Union[List[dict], dict],
+        query: Optional[Union[List[dict], dict]] = None,
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
@@ -376,19 +376,25 @@ class LocalQueryEngine(QueryEngine):
             documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
             self.cache_manager.bulk_insert(documents)
         else:
-            if 'atom_type' not in query:
-                das_error(ValueError('Invalid query: missing atom_type'))
-
-            atom_type = query['atom_type']
-
-            if atom_type == 'node':
-                return self._process_node(query)
-            elif atom_type == 'link':
-                return self._process_link(query)
+            if query is None:
+                try:
+                    return self.local_backend.retrieve_all_documents()
+                except Exception as e:
+                    das_error(e)
             else:
-                das_error(
-                    ValueError("Invalid atom type: {atom_type}. Use 'node' or 'link' instead.")
-                )
+                if 'atom_type' not in query:
+                    das_error(ValueError('Invalid query: missing atom_type'))
+
+                atom_type = query['atom_type']
+
+                if atom_type == 'node':
+                    return self._process_node(query)
+                elif atom_type == 'link':
+                    return self._process_link(query)
+                else:
+                    das_error(
+                        ValueError("Invalid atom type: {atom_type}. Use 'node' or 'link' instead.")
+                    )
 
 
 class RemoteQueryEngine(QueryEngine):
