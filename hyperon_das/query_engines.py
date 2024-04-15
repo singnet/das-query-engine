@@ -55,7 +55,7 @@ class QueryEngine(ABC):
     @abstractmethod
     def query(
         self, query: Dict[str, Any], parameters: Optional[Dict[str, Any]] = {}
-    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, Any]]]]:
+    ) -> Union[Iterator, List[QueryAnswer]]:
         ...  # pragma no cover
 
     @abstractmethod
@@ -316,7 +316,7 @@ class LocalQueryEngine(QueryEngine):
         self,
         query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
+    ) -> Union[Iterator, List[QueryAnswer]]:
         no_iterator = parameters.get("no_iterator", False)
         if no_iterator:
             logger().debug(
@@ -327,9 +327,7 @@ class LocalQueryEngine(QueryEngine):
             )
         query_results = self._recursive_query(query, parameters)
         if no_iterator:
-            answer = []
-            for result in query_results:
-                answer.append(tuple([result.assignment, result.subgraph]))
+            answer = [result for result in query_results]
             logger().debug(f"query: {query} result: {str(answer)}")
             return answer
         else:
@@ -488,15 +486,13 @@ class RemoteQueryEngine(QueryEngine):
         self,
         query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> List[Dict[str, Any]]:
+    ) -> Union[Iterator, List[QueryAnswer]]:
         query_scope = parameters.get('query_scope', 'remote_only')
         if query_scope == 'remote_only' or query_scope == 'synchronous_update':
             if query_scope == 'synchronous_update':
                 self.commit()
-            previous_value = parameters.get('no_iterator', False)
             parameters['no_iterator'] = True
             answer = self.remote_das.query(query, parameters)
-            parameters['no_iterator'] = previous_value
         elif query_scope == 'local_only':
             answer = self.local_query_engine.query(query, parameters)
         elif query_scope == 'local_and_remote':

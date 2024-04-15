@@ -309,7 +309,7 @@ class TestQueries:
         }
         answer = das.query(q1, query_params)
         assert len(answer) == 1
-        assert answer[0][1]["handle"] == "dbcf1c7b610a5adea335bf08f6509978"
+        assert answer[0].subgraph["handle"] == "dbcf1c7b610a5adea335bf08f6509978"
 
     def test_conjunction(self):
         das = DistributedAtomSpace()
@@ -332,8 +332,9 @@ class TestQueries:
             ],
         }
         query_answer = das.query([exp1, exp2], query_params)
+        answer = [tuple([item.assignment, item.subgraph]) for item in query_answer]
         _check_query_answer(
-            query_answer,
+            answer,
             [
                 [
                     'c93e1e758c53912638438e2a7d7f7b7f',
