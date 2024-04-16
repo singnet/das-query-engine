@@ -4,7 +4,8 @@ from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.cache import CacheManager, QueryAnswerIterator
+from hyperon_das.cache.cache_manager import CacheManager
+from hyperon_das.cache.iterators import QueryAnswerIterator
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
     InvalidDASParameters,

@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from hyperon_das.cache import (
+from hyperon_das.cache.iterators import (
     BaseLinksIterator,
     ListIterator,
     LocalGetLinks,
