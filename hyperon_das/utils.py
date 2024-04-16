@@ -148,7 +148,7 @@ def connect_to_server(host: str, port: int) -> Tuple[int, str]:
 
 def check_server_connection(url: str) -> Tuple[int, str]:
     logger().debug(f'connecting to remote Das {url}')
-
+    error_msg = None
     try:
         das_version = get_package_version('hyperon_das')
         atom_db_version = get_package_version('hyperon_das_atomdb')

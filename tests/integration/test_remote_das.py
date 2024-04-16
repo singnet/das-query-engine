@@ -316,3 +316,9 @@ class TestRemoteDistributedAtomSpace:
             }
         )
         assert remote_das.backend.count_atoms() == (6, 4)
+
+    @pytest.mark.skip(reason="Disabled. See: das-query-engine#214")
+    def test_fetch_all_data(self, remote_das):
+        assert remote_das.backend.count_atoms() == (0, 0)
+        remote_das.fetch()
+        assert remote_das.backend.count_atoms() == (23, 60)

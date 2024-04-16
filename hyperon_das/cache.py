@@ -19,7 +19,7 @@ class CacheManager:
 
     def fetch_data(
         self,
-        query: Union[List[dict], dict],
+        query: Optional[Union[List[dict], dict]] = None,
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
