@@ -4,7 +4,6 @@ from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.cache.cache_manager import CacheManager
 from hyperon_das.cache.iterators import QueryAnswerIterator
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
@@ -34,8 +33,6 @@ class DistributedAtomSpace:
                 )
         else:
             raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
-
-        kwargs.update({'cache_manager': CacheManager(self.backend)})
 
         if query_engine == 'local':
             self._das_type = 'local_ram_only' if atomdb == 'ram' else 'local_redis_mongo'

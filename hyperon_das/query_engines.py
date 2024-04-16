@@ -5,7 +5,6 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
-from hyperon_das.cache.cache_manager import CacheManager
 from hyperon_das.cache.iterators import (
     AndEvaluator,
     CustomQuery,
@@ -96,7 +95,6 @@ class LocalQueryEngine(QueryEngine):
         self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}
     ) -> None:
         self.system_parameters = system_parameters
-        self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_backend = backend
 
     def _recursive_query(
@@ -401,7 +399,6 @@ class LocalQueryEngine(QueryEngine):
 class RemoteQueryEngine(QueryEngine):
     def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
         self.system_parameters = system_parameters
-        self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
