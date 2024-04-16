@@ -690,11 +690,10 @@ class DistributedAtomSpace:
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
-    ) -> Any:
+    ) -> Union[None, List[dict]]:
         """
-        Fetch, from a DAS Server, all atoms that match the passed query.
-
-        If Any query is passed, all atoms are fetched.
+        Fetch, from a DAS Server, all atoms that match the passed query or
+        all atoms in the server if None is passed as query.
 
         Instead of adding atoms by calling add_node() and add_link() directly,
         it's possible to fetch all or part of the contents from a DAS server using the
@@ -717,6 +716,10 @@ class DistributedAtomSpace:
 
         Raises:
             ValueError: If parameters ar somehow invalid.
+
+        Returns:
+            Union[None, List[dict]]: Returns None.
+            If runing on the server returns a list of dictionaries containing detailed information of the atoms.
 
         Examples:
             >>> query = {

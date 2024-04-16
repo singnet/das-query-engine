@@ -330,7 +330,7 @@ class DatabaseMock(AtomDB):
     def bulk_insert(self, documents: List[Dict[str, Any]]) -> None:
         pass
 
-    def retrieve_all_documents(self) -> List[Dict[str, Any]]:
+    def retrieve_all_atoms(self) -> List[Dict[str, Any]]:
         pass
 
 

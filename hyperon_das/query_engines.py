@@ -376,7 +376,7 @@ class LocalQueryEngine(QueryEngine):
         else:
             if query is None:
                 try:
-                    return self.local_backend.retrieve_all_documents()
+                    return self.local_backend.retrieve_all_atoms()
                 except Exception as e:
                     das_error(e)
             else:
