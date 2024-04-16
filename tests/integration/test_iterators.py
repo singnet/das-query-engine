@@ -4,7 +4,7 @@ import pytest
 from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
 
 from hyperon_das import DistributedAtomSpace
-from hyperon_das.cache import (
+from hyperon_das.cache.iterators import (
     CustomQuery,
     LocalGetLinks,
     LocalIncomingLinks,

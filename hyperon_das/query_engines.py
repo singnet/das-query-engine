@@ -5,9 +5,9 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
-from hyperon_das.cache import (
+from hyperon_das.cache.cache_manager import CacheManager
+from hyperon_das.cache.iterators import (
     AndEvaluator,
-    CacheManager,
     CustomQuery,
     LazyQueryEvaluator,
     ListIterator,

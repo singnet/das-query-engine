@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 from hyperon_das_atomdb import AtomDoesNotExist
 
-from hyperon_das.cache import QueryAnswerIterator, TraverseLinksIterator, TraverseNeighborsIterator
+from hyperon_das.cache.iterators import QueryAnswerIterator, TraverseLinksIterator, TraverseNeighborsIterator
 
 if TYPE_CHECKING:  # pragma no cover
     from hyperon_das.das import DistributedAtomSpace
