@@ -8,8 +8,8 @@ AdapterDBType = TypeVar("AdapterDBType", RedisMongoDB, InMemoryDB)
 
 
 class CacheManager:
-    def __init__(self, cache: AdapterDBType, **kwargs):
-        self.cache = cache
+    def __init__(self, backend: AdapterDBType, **kwargs):
+        self.backend = backend
 
     def fetch_data(
         self,
@@ -28,4 +28,4 @@ class CacheManager:
 
     def bulk_insert(self, documents: Dict[str, Any]) -> None:
         """insert statements in "bulk", not returning rows"""
-        self.cache.bulk_insert(documents)
+        self.backend.bulk_insert(documents)

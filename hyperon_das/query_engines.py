@@ -371,8 +371,11 @@ class LocalQueryEngine(QueryEngine):
         **kwargs,
     ) -> Any:
         if not self.system_parameters.get('running_on_server'):  # Local
-            documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
-            self.cache_manager.bulk_insert(documents)
+            if host is not None: # host and port check have already been done upstream
+                server = FunctionsClient(host, port)
+            else:
+                server = self.local_backend
+            return server.fetch(query=query, **kwargs)
         else:
             if query is None:
                 try:
@@ -536,9 +539,8 @@ class RemoteQueryEngine(QueryEngine):
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
-        if not host and not port:
-            host = self.host
-            port = self.port
-        kwargs.update({'server': self.remote_das})
-        documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
-        self.cache_manager.bulk_insert(documents)
+        if host is not None: # host and port check have already been done upstream
+            server = FunctionsClient(host, port)
+        else:
+            server = self.remote_das
+        return server.fetch(query=query, **kwargs)

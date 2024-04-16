@@ -740,4 +740,6 @@ class DistributedAtomSpace:
             if self._das_type != 'remote' and (not host or not port):
                 raise ValueError("'host' and 'port' are mandatory parameters to local DAS")
 
-        return self.query_engine.fetch(query, host, port, **kwargs)
+        documents = self.query_engine.fetch(query, host, port, **kwargs)
+        self.backend.bulk_insert(documents)
+        return documents
