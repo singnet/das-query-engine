@@ -369,7 +369,7 @@ class LocalQueryEngine(QueryEngine):
         **kwargs,
     ) -> Any:
         if not self.system_parameters.get('running_on_server'):  # Local
-            if host is not None:  # host and port check have already been done upstream
+            if host is not None and port is not None:
                 server = FunctionsClient(host, port)
             else:
                 server = self.local_backend
@@ -536,7 +536,7 @@ class RemoteQueryEngine(QueryEngine):
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
-        if host is not None:  # host and port check have already been done upstream
+        if host is not None and port is not None:
             server = FunctionsClient(host, port)
         else:
             server = self.remote_das
