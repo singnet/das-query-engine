@@ -5,7 +5,6 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
-from hyperon_das.cache.cache_manager import CacheManager
 from hyperon_das.cache.iterators import (
     AndEvaluator,
     CustomQuery,
@@ -96,7 +95,6 @@ class LocalQueryEngine(QueryEngine):
         self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}
     ) -> None:
         self.system_parameters = system_parameters
-        self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_backend = backend
 
     def _recursive_query(
@@ -371,8 +369,11 @@ class LocalQueryEngine(QueryEngine):
         **kwargs,
     ) -> Any:
         if not self.system_parameters.get('running_on_server'):  # Local
-            documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
-            self.cache_manager.bulk_insert(documents)
+            if host is not None and port is not None:
+                server = FunctionsClient(host, port)
+            else:
+                server = self.local_backend
+            return server.fetch(query=query, **kwargs)
         else:
             if query is None:
                 try:
@@ -398,7 +399,6 @@ class LocalQueryEngine(QueryEngine):
 class RemoteQueryEngine(QueryEngine):
     def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
         self.system_parameters = system_parameters
-        self.cache_manager: CacheManager = kwargs.get('cache_manager')
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
@@ -536,9 +536,8 @@ class RemoteQueryEngine(QueryEngine):
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
-        if not host and not port:
-            host = self.host
-            port = self.port
-        kwargs.update({'server': self.remote_das})
-        documents = self.cache_manager.fetch_data(query=query, host=host, port=port, **kwargs)
-        self.cache_manager.bulk_insert(documents)
+        if host is not None and port is not None:
+            server = FunctionsClient(host, port)
+        else:
+            server = self.remote_das
+        return server.fetch(query=query, **kwargs)
