@@ -80,11 +80,10 @@ class TestVultrClientIntegration:
         ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
         assert ret is not None
 
-    @pytest.mark.skip(reason="Disabled. See: das-atom-db#124")
     def test_count_atoms(self, server: FunctionsClient):
         ret = server.count_atoms()
-        assert ret[0] == 21
-        assert ret[1] == 43
+        assert ret[0] == 23
+        assert ret[1] == 60
 
     def test_query(self, server: FunctionsClient):
         server.get_links('Expression', no_iterator=True)

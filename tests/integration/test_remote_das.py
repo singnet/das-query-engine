@@ -138,15 +138,12 @@ class TestRemoteDistributedAtomSpace:
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
-    @pytest.mark.skip(reason="Disabled. See: das-atom-db#124")
     def test_count_atoms(self, remote_das: DistributedAtomSpace):
-        nodes = 21
-        links = 43
         response = remote_das.count_atoms()
-        assert response[0] == nodes
-        assert response[1] == links
+        assert response[0] == 23
+        assert response[1] == 60
 
-    @pytest.mark.skip(reason="Disabled. See: das-query-engine#235")
+    @pytest.mark.skip(reason="Disabled. A new version needs to be uploaded to the server")
     def test_query(self, remote_das: DistributedAtomSpace):
         all_inheritance_mammal = [
             metta_animal_base_handles.inheritance_chimp_mammal,
@@ -317,7 +314,7 @@ class TestRemoteDistributedAtomSpace:
         )
         assert remote_das.backend.count_atoms() == (6, 4)
 
-    @pytest.mark.skip(reason="Disabled. See: das-query-engine#214")
+    @pytest.mark.skip(reason="Disabled. A new version needs to be uploaded to the server")
     def test_fetch_all_data(self, remote_das):
         assert remote_das.backend.count_atoms() == (0, 0)
         remote_das.fetch()
