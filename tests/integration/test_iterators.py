@@ -197,11 +197,9 @@ class TestGetLinks:
         self._check_asserts(das, iterator)
         _db_down()
 
-    @pytest.mark.skip(reason="Disabled. See: das-query-engine#197")
+    @pytest.mark.skip(reason="Disabled. A new version needs to be uploaded to the server")
     def test_get_links_with_remote_das(self, _cleanup):
-        das = DistributedAtomSpace(
-            query_engine='remote', host=remote_das_host, port=remote_das_port
-        )
+        das = DistributedAtomSpace(query_engine='remote', host='127.0.0.1', port=8080)
         iterator = das.get_links('Expression')
         self._check_asserts(das, iterator)
 

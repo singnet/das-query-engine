@@ -93,33 +93,51 @@ class TestRemoteDistributedAtomSpace:
         with pytest.raises(LinkDoesNotExist):
             remote_das.get_link(link_type='Fake', link_targets=['fake1', 'fake2'])
 
-    # TODO: Fix this test
-    # def test_get_links(self, remote_das: DistributedAtomSpace):
-    #     all_inheritance = [
-    #         metta_animal_base_handles.inheritance_human_mammal,
-    #         metta_animal_base_handles.inheritance_monkey_mammal,
-    #         metta_animal_base_handles.inheritance_chimp_mammal,
-    #         metta_animal_base_handles.inheritance_mammal_animal,
-    #         metta_animal_base_handles.inheritance_reptile_animal,
-    #         metta_animal_base_handles.inheritance_snake_reptile,
-    #         metta_animal_base_handles.inheritance_dinosaur_reptile,
-    #         metta_animal_base_handles.inheritance_triceratops_dinosaur,
-    #         metta_animal_base_handles.inheritance_earthworm_animal,
-    #         metta_animal_base_handles.inheritance_rhino_mammal,
-    #         metta_animal_base_handles.inheritance_vine_plant,
-    #         metta_animal_base_handles.inheritance_ent_plant,
-    #     ]
+    @pytest.mark.skip(reason="Disabled. A new version needs to be uploaded to the server")
+    def test_get_links(self, remote_das: DistributedAtomSpace):
+        all_inheritance = [
+            metta_animal_base_handles.inheritance_human_mammal,
+            metta_animal_base_handles.inheritance_monkey_mammal,
+            metta_animal_base_handles.inheritance_chimp_mammal,
+            metta_animal_base_handles.inheritance_mammal_animal,
+            metta_animal_base_handles.inheritance_reptile_animal,
+            metta_animal_base_handles.inheritance_snake_reptile,
+            metta_animal_base_handles.inheritance_dinosaur_reptile,
+            metta_animal_base_handles.inheritance_triceratops_dinosaur,
+            metta_animal_base_handles.inheritance_earthworm_animal,
+            metta_animal_base_handles.inheritance_rhino_mammal,
+            metta_animal_base_handles.inheritance_vine_plant,
+            metta_animal_base_handles.inheritance_ent_plant,
+            metta_animal_base_handles.inheritance_typedef,
+        ]
 
-    #     links = remote_das.get_links(link_type='Inheritance')
-    #     assert len(links) == 12
-    #     assert set([link['handle'] for link in links]) == set(all_inheritance)
+        links = remote_das.get_links(link_type='Expression')
+        inheritance_links = []
+        for link in links:
+            if metta_animal_base_handles.Inheritance in link['targets']:
+                inheritance_links.append(link['handle'])
+        assert len(inheritance_links) == 13
+        assert sorted(inheritance_links) == sorted(all_inheritance)
 
-    #     links = remote_das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
-    #     assert len(links) == 12
-    #     assert set([link['handle'] for link in links]) == set(all_inheritance)
+        links = remote_das.get_links(
+            link_type='Expression', target_types=['Symbol', 'Symbol', 'Symbol']
+        )
+        inheritance_links = []
+        for link in links:
+            if metta_animal_base_handles.Inheritance in link['targets']:
+                inheritance_links.append(link['handle'])
+        assert len(inheritance_links) == 13
+        assert sorted(inheritance_links) == sorted(all_inheritance)
 
-    #     links = remote_das.get_links(link_type='Inheritance', link_targets=[earthworm, animal])
-    #     assert links[0]['handle'] == inheritance_earthworm_animal
+        link = remote_das.get_links(
+            link_type='Expression',
+            link_targets=[
+                metta_animal_base_handles.Inheritance,
+                metta_animal_base_handles.earthworm,
+                metta_animal_base_handles.animal,
+            ],
+        )
+        assert next(link)['handle'] == metta_animal_base_handles.inheritance_earthworm_animal
 
     def test_get_incoming_links(self, remote_das: DistributedAtomSpace):
         expected_handles = [

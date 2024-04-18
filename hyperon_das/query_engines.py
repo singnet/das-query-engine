@@ -166,7 +166,7 @@ class LocalQueryEngine(QueryEngine):
             except LinkDoesNotExist:
                 return None, [] if kwargs.get('cursor') is not None else []
         elif link_type != WILDCARD:
-            return self.local_backend.get_matched_type(link_type, **kwargs)
+            return self.local_backend.get_all_links(link_type, **kwargs)
         else:
             das_error(
                 ValueError(
