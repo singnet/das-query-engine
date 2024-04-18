@@ -93,7 +93,6 @@ class TestRemoteDistributedAtomSpace:
         with pytest.raises(LinkDoesNotExist):
             remote_das.get_link(link_type='Fake', link_targets=['fake1', 'fake2'])
 
-    @pytest.mark.skip(reason="Disabled. A new version needs to be uploaded to the server")
     def test_get_links(self, remote_das: DistributedAtomSpace):
         all_inheritance = [
             metta_animal_base_handles.inheritance_human_mammal,
@@ -161,7 +160,6 @@ class TestRemoteDistributedAtomSpace:
         assert response[0] == 23
         assert response[1] == 60
 
-    @pytest.mark.skip(reason="Disabled. A new version needs to be uploaded to the server")
     def test_query(self, remote_das: DistributedAtomSpace):
         all_inheritance_mammal = [
             metta_animal_base_handles.inheritance_chimp_mammal,
@@ -332,7 +330,6 @@ class TestRemoteDistributedAtomSpace:
         )
         assert remote_das.backend.count_atoms() == (6, 4)
 
-    @pytest.mark.skip(reason="Disabled. A new version needs to be uploaded to the server")
     def test_fetch_all_data(self, remote_das):
         assert remote_das.backend.count_atoms() == (0, 0)
         remote_das.fetch()

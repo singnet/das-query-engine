@@ -75,12 +75,11 @@ class TestVultrClientIntegration:
             metta_animal_base_handles.mammal,
         ]
 
-    @pytest.mark.skip(reason="Disabled. A new version needs to be uploaded to the server")
     def test_get_links(self, server: FunctionsClient):
         links1 = server.get_links(
             link_type='Expression', target_types=['Symbol', 'Symbol', 'Symbol']
         )
-        links2 = server.get_links(link_type='Expression')
+        _, links2 = server.get_links(link_type='Expression')
         assert len(links1) == 43
         assert len(links2) == 43
 
@@ -107,10 +106,10 @@ class TestVultrClientIntegration:
         assert len(answer) == 12
 
         for link in answer:
-            if link[1]['handle'] == metta_animal_base_handles.inheritance_human_mammal:
+            if link.subgraph['handle'] == metta_animal_base_handles.inheritance_human_mammal:
                 break
 
-        handles = [target['handle'] for target in link[1]['targets']]
+        handles = [target['handle'] for target in link.subgraph['targets']]
 
         assert len(handles) == 3
         assert handles[1] == metta_animal_base_handles.human
@@ -132,10 +131,10 @@ class TestVultrClientIntegration:
         assert len(answer) == 14
 
         for link in answer:
-            if link[1]['handle'] == metta_animal_base_handles.similarity_human_monkey:
+            if link.subgraph['handle'] == metta_animal_base_handles.similarity_human_monkey:
                 break
 
-        handles = [target['handle'] for target in link[1]['targets']]
+        handles = [target['handle'] for target in link.subgraph['targets']]
 
         assert len(handles) == 3
         assert handles[1] == metta_animal_base_handles.human
