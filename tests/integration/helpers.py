@@ -105,6 +105,9 @@ def load_metta_animals_base(das: DistributedAtomSpace) -> None:
     das.add_node({"type": "Symbol", "name": '"ent"', "is_literal": True})
     das.add_node({"type": "Symbol", "name": '"animal"', "is_literal": True})
     das.add_node({"type": "Symbol", "name": '"plant"', "is_literal": True})
+    das.add_node({"type": "Symbol", "name": '"plant"', "is_literal": True})
+    das.add_node({"type": "Symbol", "name": ':', "is_literal": False})
+    das.add_node({"type": "Symbol", "name": '<:', "is_literal": False})
 
     das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
     das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"monkey"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
@@ -120,6 +123,9 @@ def load_metta_animals_base(das: DistributedAtomSpace) -> None:
     das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"ent"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
     das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"animal"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
     das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"plant"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
+    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
+    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": 'Concept', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
+    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
 
     das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": '"monkey"', "is_literal": True}]})
     das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": '"chimp"', "is_literal": True}]})
@@ -189,6 +195,7 @@ class MettaAnimalBaseHandlesCollection:
     vine = AtomDB.node_handle('Symbol', '"vine"')
     plant = AtomDB.node_handle('Symbol', '"plant"')
     typedef_mark = AtomDB.node_handle('Symbol', ':')
+    typedef2_mark = AtomDB.node_handle('Symbol', '<:')
 
     human_typedef = AtomDB.link_handle('Expression', [typedef_mark, human, Concept])
     monkey_typedef = AtomDB.link_handle('Expression', [typedef_mark, monkey, Concept])
@@ -204,6 +211,9 @@ class MettaAnimalBaseHandlesCollection:
     reptile_typedef = AtomDB.link_handle('Expression', [typedef_mark, reptile, Concept])
     dinosaur_typedef = AtomDB.link_handle('Expression', [typedef_mark, dinosaur, Concept])
     plant_typedef = AtomDB.link_handle('Expression', [typedef_mark, plant, Concept])
+    similarity_typedef = AtomDB.link_handle('Expression', [typedef_mark, Similarity, Type])
+    inheritance_typedef = AtomDB.link_handle('Expression', [typedef_mark, Inheritance, Type])
+    concept_typedef = AtomDB.link_handle('Expression', [typedef_mark, Concept, Type])
 
     similarity_human_monkey = AtomDB.link_handle('Expression', [Similarity, human, monkey])
     similarity_human_chimp = AtomDB.link_handle('Expression', [Similarity, human, chimp])
