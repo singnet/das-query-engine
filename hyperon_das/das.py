@@ -16,9 +16,6 @@ from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
 from hyperon_das.utils import Assignment, get_package_version
 
-from hyperon_das.random_names import RandomNames
-
-
 class DistributedAtomSpace:
 
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
