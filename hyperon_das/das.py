@@ -5,6 +5,7 @@ from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.cache.iterators import QueryAnswerIterator
+from hyperon_das.context import Context
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
     InvalidDASParameters,
@@ -51,6 +52,15 @@ class DistributedAtomSpace:
     def _set_default_system_parameters(self) -> None:
         if not self.system_parameters.get('running_on_server'):
             self.system_parameters['running_on_server'] = False
+
+    def _create_context(
+        self,
+        name: Optional[str] = None,
+        query: Optional[Union[List[dict], dict]] = None,
+    ) -> Context:
+        return Context(
+            "not implemented", self.get_node_handle(Context.CONTEXT_NODE_TYPE, "not implemented")
+        )
 
     @staticmethod
     def about() -> dict:
@@ -740,3 +750,13 @@ class DistributedAtomSpace:
         documents = self.query_engine.fetch(query, host, port, **kwargs)
         self.backend.bulk_insert(documents)
         return documents
+
+    def create_context(
+        self,
+        name: Optional[str] = None,
+        query: Optional[Union[List[dict], dict]] = None,
+    ) -> Context:
+        if self.system_parameters.get('running_on_server'):
+            return self._create_context(name, query)
+        else:
+            return self.query_engine.create_context(name, query)

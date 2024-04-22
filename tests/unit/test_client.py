@@ -69,6 +69,30 @@ class TestFunctionsClient:
 
         assert result == expected_response
 
+    def test_create_context_success(self, mock_request, client):
+        expected_request_data = {
+            "action": "create_context",
+            "input": {"name": "n", "query": "q"},
+        }
+        expected_response = {
+            "name": "n",
+            "handle": "h",
+        }
+
+        mock_request.return_value.status_code = 200
+        mock_request.return_value.content = serialize(expected_response)
+
+        result = client.create_context(query='q', name='n')
+
+        mock_request.assert_called_with(
+            method='POST',
+            url='http://0.0.0.0:1000/function/query-engine',
+            data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
+        )
+
+        assert result == expected_response
+
     def test_get_link_success(self, mock_request, client):
         expected_request_data = {
             "action": "get_link",

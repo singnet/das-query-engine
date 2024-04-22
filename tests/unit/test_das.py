@@ -87,3 +87,8 @@ class TestDistributedAtomSpace:
         assert 'atom_db' in das.about()
         assert {'name', 'version', 'summary'} == set(das.about().get('das').keys())
         assert {'name', 'version', 'summary'} == set(das.about().get('atom_db').keys())
+
+    def test_create_context(self):
+        das = DistributedAtomSpace()
+        with pytest.raises(NotImplementedError):
+            das.create_context("blah", "h")

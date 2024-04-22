@@ -17,6 +17,7 @@ from hyperon_das.cache.iterators import (
     RemoteIncomingLinks,
 )
 from hyperon_das.client import FunctionsClient
+from hyperon_das.context import Context
 from hyperon_das.exceptions import (
     InvalidDASParameters,
     QueryParametersException,
@@ -87,6 +88,14 @@ class QueryEngine(ABC):
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
+        ...  # pragma no cover
+
+    @abstractmethod
+    def create_context(
+        self,
+        name: str,
+        query: Union[List[dict], dict],
+    ) -> Context:
         ...  # pragma no cover
 
 
@@ -395,6 +404,13 @@ class LocalQueryEngine(QueryEngine):
                         ValueError("Invalid atom type: {atom_type}. Use 'node' or 'link' instead.")
                     )
 
+    def create_context(
+        self,
+        name: str,
+        query: Union[List[dict], dict],
+    ) -> Context:
+        das_error(NotImplementedError("Contexts are not implemented for non-server local DAS"))
+
 
 class RemoteQueryEngine(QueryEngine):
     def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
@@ -541,3 +557,10 @@ class RemoteQueryEngine(QueryEngine):
         else:
             server = self.remote_das
         return server.fetch(query=query, **kwargs)
+
+    def create_context(
+        self,
+        name: str,
+        query: Union[List[dict], dict],
+    ) -> Context:
+        return self.remote_das.create_context(name, query)
