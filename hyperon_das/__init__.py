@@ -1,5 +1,5 @@
-from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.context import Context
+from hyperon_das.das import DistributedAtomSpace
 
 __all__ = ['DistributedAtomSpace', 'Context']
 

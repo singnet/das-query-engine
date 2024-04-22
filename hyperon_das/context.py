@@ -1,9 +1,7 @@
-from typing import Optional
 from hyperon_das.utils import das_error
 
 
 class Context:
-
     CONTEXT_NODE_TYPE = "Context"
 
     def __init__(self, name: str, handle: str):

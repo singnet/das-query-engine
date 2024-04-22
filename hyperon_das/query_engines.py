@@ -409,9 +409,7 @@ class LocalQueryEngine(QueryEngine):
         name: str,
         query: Union[List[dict], dict],
     ) -> Context:
-        das_error(
-            NotImplementedError("Contexts are not implemented for non-server local DAS")
-        )
+        das_error(NotImplementedError("Contexts are not implemented for non-server local DAS"))
 
 
 class RemoteQueryEngine(QueryEngine):

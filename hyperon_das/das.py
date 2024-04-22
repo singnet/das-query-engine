@@ -16,8 +16,8 @@ from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
 from hyperon_das.utils import Assignment, get_package_version
 
-class DistributedAtomSpace:
 
+class DistributedAtomSpace:
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
         self.system_parameters = system_parameters
         self._set_default_system_parameters()
@@ -58,7 +58,9 @@ class DistributedAtomSpace:
         name: Optional[str] = None,
         query: Optional[Union[List[dict], dict]] = None,
     ) -> Context:
-        return Context("not implemented", get_node_handle(Context.CONTEXT_NODE_TYPE, "not implemented"))
+        return Context(
+            "not implemented", self.get_node_handle(Context.CONTEXT_NODE_TYPE, "not implemented")
+        )
 
     @staticmethod
     def about() -> dict:
@@ -754,7 +756,6 @@ class DistributedAtomSpace:
         name: Optional[str] = None,
         query: Optional[Union[List[dict], dict]] = None,
     ) -> Context:
-
         if self.system_parameters.get('running_on_server'):
             return self._create_context(name, query)
         else:
