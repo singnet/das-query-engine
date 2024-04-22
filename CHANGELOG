@@ -3,3 +3,4 @@
 [#210] Improve message error when connecting to the server
 [#214] Improve fetch() method to optionally fetch all the atoms
 [#241] Fix tests
+[#213] Add TraverseEngine to API documentation

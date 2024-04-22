@@ -5,9 +5,6 @@ edit_uri: tree/master/docs
 
 theme:
   name: material
-  palette:
-    primary: green
-    accent: light green
   font:
     text: Roboto
     code: Roboto Mono

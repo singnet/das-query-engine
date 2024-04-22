@@ -614,7 +614,7 @@ class DistributedAtomSpace:
 
     def get_traversal_cursor(self, handle: str, **kwargs) -> TraverseEngine:
         """
-        Create and return a TraverseEngine, an object that can be used to traverse the
+        Create and return a [Traverse Engine](/api/Traverse Engine), an object that can be used to traverse the
         atomspace hypergraph.
 
         A TraverseEngine is like a cusor which points to an atom in the hypergraph and
