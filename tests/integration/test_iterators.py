@@ -151,6 +151,9 @@ class TestGetLinks:
                 metta_animal_base_handles.reptile_typedef,
                 metta_animal_base_handles.dinosaur_typedef,
                 metta_animal_base_handles.plant_typedef,
+                metta_animal_base_handles.similarity_typedef,
+                metta_animal_base_handles.inheritance_typedef,
+                metta_animal_base_handles.concept_typedef,
             ]
         )
 
@@ -162,7 +165,7 @@ class TestGetLinks:
         assert isinstance(current_value, dict)
         assert iterator.is_empty() is False
         link_handles = sorted([item['handle'] for item in iterator])
-        assert len(link_handles) == 40
+        assert len(link_handles) == 43
         assert link_handles == self._expression_links()
         assert iterator.is_empty() is True
         with pytest.raises(StopIteration):
@@ -194,7 +197,6 @@ class TestGetLinks:
         self._check_asserts(das, iterator)
         _db_down()
 
-    @pytest.mark.skip(reason="Disabled. See: das-query-engine#197")
     def test_get_links_with_remote_das(self, _cleanup):
         das = DistributedAtomSpace(
             query_engine='remote', host=remote_das_host, port=remote_das_port
@@ -421,6 +423,9 @@ class TestCustomQuery:
                 metta_animal_base_handles.reptile_typedef,
                 metta_animal_base_handles.dinosaur_typedef,
                 metta_animal_base_handles.plant_typedef,
+                metta_animal_base_handles.similarity_typedef,
+                metta_animal_base_handles.inheritance_typedef,
+                metta_animal_base_handles.concept_typedef,
             ]
         )
 
@@ -447,9 +452,9 @@ class TestCustomQuery:
         links_type = self._check_asserts(das, link_iterator_type)
         links_composite_type = self._check_asserts(das, link_iterator_composite_type)
 
-        assert nodes == self._all_nodes()
-        assert links_type == self._all_links()
-        assert links_composite_type == self._all_links()
+        assert sorted(nodes) == self._all_nodes()
+        assert sorted(links_type) == self._all_links()
+        assert sorted(links_composite_type) == self._all_links()
 
     def _check_asserts(self, das: DistributedAtomSpace, iterator: CustomQuery):
         current_value = iterator.get()
@@ -481,7 +486,6 @@ class TestCustomQuery:
         self._asserts(das)
         _db_down()
 
-    @pytest.mark.skip(reason="Not implemented in Server yet")
     def test_custom_query_with_remote_das(self):
         das = DistributedAtomSpace(
             query_engine='remote', host=remote_das_host, port=remote_das_port

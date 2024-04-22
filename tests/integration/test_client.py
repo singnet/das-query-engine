@@ -75,16 +75,18 @@ class TestVultrClientIntegration:
             metta_animal_base_handles.mammal,
         ]
 
-    @pytest.mark.skip(reason="Disabled. See: das-query-engine#197")
     def test_get_links(self, server: FunctionsClient):
-        ret = server.get_links(link_type='Inheritance', target_types=['Verbatim', 'Verbatim'])
-        assert ret is not None
+        links1 = server.get_links(
+            link_type='Expression', target_types=['Symbol', 'Symbol', 'Symbol']
+        )
+        _, links2 = server.get_links(link_type='Expression')
+        assert len(links1) == 43
+        assert len(links2) == 43
 
-    @pytest.mark.skip(reason="Disabled. See: das-atom-db#124")
     def test_count_atoms(self, server: FunctionsClient):
         ret = server.count_atoms()
-        assert ret[0] == 21
-        assert ret[1] == 43
+        assert ret[0] == 23
+        assert ret[1] == 60
 
     def test_query(self, server: FunctionsClient):
         server.get_links('Expression', no_iterator=True)
@@ -104,10 +106,10 @@ class TestVultrClientIntegration:
         assert len(answer) == 12
 
         for link in answer:
-            if link[1]['handle'] == metta_animal_base_handles.inheritance_human_mammal:
+            if link.subgraph['handle'] == metta_animal_base_handles.inheritance_human_mammal:
                 break
 
-        handles = [target['handle'] for target in link[1]['targets']]
+        handles = [target['handle'] for target in link.subgraph['targets']]
 
         assert len(handles) == 3
         assert handles[1] == metta_animal_base_handles.human
@@ -129,10 +131,10 @@ class TestVultrClientIntegration:
         assert len(answer) == 14
 
         for link in answer:
-            if link[1]['handle'] == metta_animal_base_handles.similarity_human_monkey:
+            if link.subgraph['handle'] == metta_animal_base_handles.similarity_human_monkey:
                 break
 
-        handles = [target['handle'] for target in link[1]['targets']]
+        handles = [target['handle'] for target in link.subgraph['targets']]
 
         assert len(handles) == 3
         assert handles[1] == metta_animal_base_handles.human

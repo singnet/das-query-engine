@@ -2,3 +2,4 @@
 [#223] Updates in docstrings and logging messages
 [#210] Improve message error when connecting to the server
 [#214] Improve fetch() method to optionally fetch all the atoms
+[#241] Fix tests

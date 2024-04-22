@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 
@@ -228,6 +228,9 @@ class DatabaseMock(AtomDB):
 
     def get_all_nodes(self, node_type: str, names: bool = False) -> List[str]:
         return self.all_nodes if node_type == 'Concept' else []
+
+    def get_all_links(self, link_type: str, **kwargs) -> Union[List[str], Tuple[int, List[str]]]:
+        pass
 
     def get_matched_type_template(
         self,
