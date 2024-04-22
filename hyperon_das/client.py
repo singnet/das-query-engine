@@ -202,3 +202,14 @@ class FunctionsClient:
             'input': {'query': query, 'host': host, 'port': port, 'kwargs': kwargs},
         }
         return self._send_request(payload)
+
+    def create_context(
+        self,
+        name: str,
+        query: Union[List[dict], dict],
+    ) -> Any:
+        payload = {
+            'action': 'create_context',
+            'input': {'name': name, 'query': query},
+        }
+        return self._send_request(payload)
