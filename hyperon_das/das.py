@@ -13,7 +13,7 @@ from hyperon_das.exceptions import (
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
-from hyperon_das.utils import Assignment, QueryAnswer, get_package_version
+from hyperon_das.utils import QueryAnswer, get_package_version
 
 
 class DistributedAtomSpace:
