@@ -4,7 +4,6 @@ from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.cache.iterators import QueryAnswerIterator
 from hyperon_das.context import Context
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
@@ -14,7 +13,7 @@ from hyperon_das.exceptions import (
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
-from hyperon_das.utils import Assignment, get_package_version
+from hyperon_das.utils import Assignment, QueryAnswer, get_package_version
 
 
 class DistributedAtomSpace:
@@ -338,7 +337,7 @@ class DistributedAtomSpace:
         self,
         query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
+    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         """
         Perform a query on the knowledge base using a dict as input and return an
         iterator of QueryAnswer objects. Each such object carries the resulting mapping
@@ -357,7 +356,7 @@ class DistributedAtomSpace:
             parameters (Dict[str, Any], optional): query optional parameters
 
         Returns:
-            QueryAnswerIterator: An iterator of QueryAnswer objects, which have a field 'assignment',
+            Iterator[QueryAnswer]: An iterator of QueryAnswer objects, which have a field 'assignment',
                 with a mapping from variables to handles and another field 'subgraph',
                 with the resulting subgraph after applying 'assignment' to rewrite the query.
 
@@ -452,7 +451,7 @@ class DistributedAtomSpace:
 
         return self.query_engine.custom_query(index_id, **kwargs)
 
-    def commit_changes(self):
+    def commit_changes(self, **kwargs):
         """
         Commit changes (atom addition/deletion/change) to the databases or to
         the remote DAS Server, depending on the type of DAS being used.
@@ -480,7 +479,7 @@ class DistributedAtomSpace:
             DBs until commit_changes() is called (or until that buffers size reach a
             threshold).
         """
-        self.query_engine.commit()
+        self.query_engine.commit(**kwargs)
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         """

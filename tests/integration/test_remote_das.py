@@ -334,3 +334,12 @@ class TestRemoteDistributedAtomSpace:
         assert remote_das.backend.count_atoms() == (0, 0)
         remote_das.fetch()
         assert remote_das.backend.count_atoms() == (23, 60)
+
+    @pytest.mark.skip(reason="Disable. it's necessary to upload a new version to the server")
+    def test_commit_changes(self, remote_das: DistributedAtomSpace):
+        node = remote_das.get_atom(handle=metta_animal_base_handles.human)
+        assert hasattr(node, 'test_key') is False
+        remote_das.add_node({'type': 'Symbol', 'name': '"human"', 'test_key': 'test_value'})
+        remote_das.commit_changes()
+        node = remote_das.get_atom(handle=metta_animal_base_handles.human)
+        assert node['test_key'] == 'test_value'

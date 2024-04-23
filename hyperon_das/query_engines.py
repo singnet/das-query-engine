@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
+from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
 from hyperon_das.cache.iterators import (
@@ -55,7 +56,7 @@ class QueryEngine(ABC):
     @abstractmethod
     def query(
         self, query: Dict[str, Any], parameters: Optional[Dict[str, Any]] = {}
-    ) -> Union[Iterator, List[QueryAnswer]]:
+    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         ...  # pragma no cover
 
     @abstractmethod
@@ -96,6 +97,10 @@ class QueryEngine(ABC):
         name: str,
         query: Union[List[dict], dict],
     ) -> Context:
+        ...  # pragma no cover
+
+    @abstractmethod
+    def commit(self, **kwargs) -> None:
         ...  # pragma no cover
 
 
@@ -250,6 +255,14 @@ class LocalQueryEngine(QueryEngine):
                     answer.append(self._handle_to_atoms(value))
             return answer
 
+    def has_buffer(self) -> bool:
+        if isinstance(self.local_backend, InMemoryDB):
+            atoms = self.local_backend.db.node
+            atoms.update(self.local_backend.db.link)
+            self.buffer = list(atoms.values())
+            return bool(atoms)
+        return False
+
     def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
         try:
             return self.local_backend.get_atom(handle, **kwargs)
@@ -323,7 +336,7 @@ class LocalQueryEngine(QueryEngine):
         self,
         query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[Iterator, List[QueryAnswer]]:
+    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         no_iterator = parameters.get("no_iterator", False)
         if no_iterator:
             logger().debug(
@@ -355,7 +368,9 @@ class LocalQueryEngine(QueryEngine):
     def count_atoms(self) -> Tuple[int, int]:
         return self.local_backend.count_atoms()
 
-    def commit(self):
+    def commit(self, **kwargs) -> None:
+        if kwargs.get('buffer'):
+            self.local_backend.commit(buffer=kwargs['buffer'])
         self.local_backend.commit()
 
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]] = None):
@@ -502,7 +517,7 @@ class RemoteQueryEngine(QueryEngine):
         self,
         query: Union[List[Dict[str, Any]], Dict[str, Any]],
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[Iterator, List[QueryAnswer]]:
+    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         query_scope = parameters.get('query_scope', 'remote_only')
         if query_scope == 'remote_only' or query_scope == 'synchronous_update':
             if query_scope == 'synchronous_update':
@@ -530,7 +545,9 @@ class RemoteQueryEngine(QueryEngine):
         remote_answer = self.remote_das.count_atoms()
         return tuple([x + y for x, y in zip(local_answer, remote_answer)])
 
-    def commit(self):
+    def commit(self, **kwargs) -> None:
+        if self.local_query_engine.has_buffer():
+            return self.remote_das.commit_changes(buffer=self.local_query_engine.buffer)
         return self.remote_das.commit_changes()
 
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
