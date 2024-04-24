@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Optional, Tuple, TypeAlias, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
@@ -343,7 +343,7 @@ class DistributedAtomSpace:
         self,
         query: Query,
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[Iterator, List[QueryAnswer]]:
+    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         """
         Perform a query on the knowledge base using a dict as input and return an
         iterator of QueryAnswer objects. Each such object carries the resulting mapping
@@ -362,7 +362,7 @@ class DistributedAtomSpace:
             parameters (Dict[str, Any], optional): query optional parameters
 
         Returns:
-            QueryAnswerIterator: An iterator of QueryAnswer objects, which have a field 'assignment',
+            Iterator[QueryAnswer]: An iterator of QueryAnswer objects, which have a field 'assignment',
                 with a mapping from variables to handles and another field 'subgraph',
                 with the resulting subgraph after applying 'assignment' to rewrite the query.
 
@@ -457,7 +457,7 @@ class DistributedAtomSpace:
 
         return self.query_engine.custom_query(index_id, **kwargs)
 
-    def commit_changes(self):
+    def commit_changes(self, **kwargs):
         """
         Commit changes (atom addition/deletion/change) to the databases or to
         the remote DAS Server, depending on the type of DAS being used.
@@ -485,7 +485,7 @@ class DistributedAtomSpace:
             DBs until commit_changes() is called (or until that buffers size reach a
             threshold).
         """
-        self.query_engine.commit()
+        self.query_engine.commit(**kwargs)
 
     def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -629,7 +629,7 @@ class DistributedAtomSpace:
 
     def get_traversal_cursor(self, handle: str, **kwargs) -> TraverseEngine:
         """
-        Create and return a TraverseEngine, an object that can be used to traverse the
+        Create and return a [Traverse Engine](/api/Traverse Engine), an object that can be used to traverse the
         atomspace hypergraph.
 
         A TraverseEngine is like a cusor which points to an atom in the hypergraph and

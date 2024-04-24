@@ -143,10 +143,10 @@ class FunctionsClient:
         }
         return self._send_request(payload)
 
-    def commit_changes(self) -> Tuple[int, int]:
+    def commit_changes(self, **kwargs) -> Tuple[int, int]:
         payload = {
             'action': 'commit_changes',
-            'input': {},
+            'input': {'kwargs': kwargs},
         }
         return self._send_request(payload)
 
