@@ -15,19 +15,16 @@ class CacheController:
         self.disabled = kwargs.get('cache_disabled', True)
         if self.disabled:
             return
-        self.attention_broker_url = f'{ATTENTION_BROKER_HOSTNAME}:{ATTENTION_BROKER_PORT}'
-        logger().info(f'Pinging AttentionBroker at {self.attention_broker_url}')
-        answer = self._ping_attention_broker()
-        logger().info(answer.msg)
+        #self.attention_broker_url = f'{ATTENTION_BROKER_HOSTNAME}:{ATTENTION_BROKER_PORT}'
+        #logger().info(f'Pinging AttentionBroker at {self.attention_broker_url}')
+        #answer = self._ping_attention_broker()
+        #logger().info(answer.msg)
 
-    def _ping_attention_broker(self) -> str:
-        with grpc.insecure_channel(self.attention_broker_url) as channel:
-            stub = ab_grpc.AttentionBrokerStub(channel)
-            return stub.ping(common.Empty())
+    #def _ping_attention_broker(self) -> str:
+    #    with grpc.insecure_channel(self.attention_broker_url) as channel:
+    #        stub = ab_grpc.AttentionBrokerStub(channel)
+    #        return stub.ping(common.Empty())
 
     def add_context(context: Context):
         if self.disabled:
             return
-        pass
-        
-
