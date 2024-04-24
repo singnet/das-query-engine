@@ -1,7 +1,7 @@
 import grpc
 import hyperon_das.grpc.attention_broker_pb2 as attention_broker
 import hyperon_das.grpc.attention_broker_pb2_grpc as ab_grpc
-import common_pb2 as common
+import hyperon_das.grpc.common_pb2 as common
 
 from hyperon_das.context import Context
 from hyperon_das.logger import logger
