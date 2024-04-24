@@ -4,7 +4,10 @@ version = "0.7.9"
 description = "Query Engine API for Distributed AtomSpace"
 authors = ["marcocapozzoli <marcocapozzoli90@gmail.com>"]
 readme = "README.md"
-packages = [{include = "hyperon_das"}]
+packages = [
+    {include = "hyperon_das"},
+    {include = "grpc"},
+]
 
 [tool.poetry.urls]
 "Documentation" = "https://singnet.github.io/das-query-engine"
@@ -52,3 +55,7 @@ extend-ignore = ["E501"]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+packages = [
+    { package = "my_module", from = "src" }
+]
