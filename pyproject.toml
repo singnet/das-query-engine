@@ -6,7 +6,6 @@ authors = ["marcocapozzoli <marcocapozzoli90@gmail.com>"]
 readme = "README.md"
 packages = [
     {include = "hyperon_das"},
-    {include = "grpc"},
 ]
 
 [tool.poetry.urls]
@@ -58,7 +57,3 @@ extend-ignore = ["E501"]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-packages = [
-    { package = "my_module", from = "src" }
-]
