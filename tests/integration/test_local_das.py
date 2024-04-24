@@ -12,7 +12,7 @@ class TestLocalDASRedisMongo:
     def _cleanup(self, request):
         return cleanup(request)
 
-    def _test_queries(self):
+    def test_queries(self):
         _db_up()
         das = DistributedAtomSpace(
             query_engine='local',

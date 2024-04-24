@@ -1,10 +1,11 @@
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, TypeAlias, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.cache.iterators import QueryAnswerIterator
+from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.context import Context
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
@@ -14,8 +15,8 @@ from hyperon_das.exceptions import (
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
-from hyperon_das.utils import Assignment, get_package_version
-
+from hyperon_das.utils import Assignment, get_package_version, QueryAnswer
+from hyperon_das.type_alias import Query
 
 class DistributedAtomSpace:
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
@@ -49,6 +50,8 @@ class DistributedAtomSpace:
                 details=f'query_engine={query_engine}',
             )
 
+        self.cache_controller = CacheController(**kwargs)
+
     def _set_default_system_parameters(self) -> None:
         if not self.system_parameters.get('running_on_server'):
             self.system_parameters['running_on_server'] = False
@@ -58,9 +61,11 @@ class DistributedAtomSpace:
         name: Optional[str] = None,
         query: Optional[Union[List[dict], dict]] = None,
     ) -> Context:
-        return Context(
-            "not implemented", self.get_node_handle(Context.CONTEXT_NODE_TYPE, "not implemented")
-        )
+        context_node = self.add_node({'type': Context.CONTEXT_NODE_TYPE, 'name': name})
+        query_answer = self.query(query, {'no_iterator': True})
+        context = Context(context_node, query, query_answer)
+        self.cache_controller.add_context(context)
+        return context
 
     @staticmethod
     def about() -> dict:
@@ -336,9 +341,9 @@ class DistributedAtomSpace:
 
     def query(
         self,
-        query: Union[List[Dict[str, Any]], Dict[str, Any]],
+        query: Query,
         parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[QueryAnswerIterator, List[Tuple[Assignment, Dict[str, str]]]]:
+    ) -> Union[Iterator, List[QueryAnswer]]:
         """
         Perform a query on the knowledge base using a dict as input and return an
         iterator of QueryAnswer objects. Each such object carries the resulting mapping
