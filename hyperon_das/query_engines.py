@@ -114,7 +114,7 @@ class LocalQueryEngine(QueryEngine):
 
     def _recursive_query(
         self,
-        query: Query
+        query: Query,
         mappings: Set[Assignment] = None,
         parameters: Optional[Dict[str, Any]] = None,
     ) -> QueryAnswerIterator:

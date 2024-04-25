@@ -72,7 +72,7 @@ class TestFunctionsClient:
     def test_create_context_success(self, mock_request, client):
         expected_request_data = {
             "action": "create_context",
-            "input": {"name": "n", "query": "q"},
+            "input": {"name": "n", "queries": []},
         }
         expected_response = {
             "name": "n",
@@ -82,7 +82,7 @@ class TestFunctionsClient:
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
 
-        result = client.create_context(query='q', name='n')
+        result = client.create_context(name='n', queries=[])
 
         mock_request.assert_called_with(
             method='POST',
