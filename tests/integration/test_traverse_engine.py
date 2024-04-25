@@ -92,11 +92,12 @@ class TestTraverseEngine:
         )
 
         # Get neighbors with filters
-        def is_literal(atom: dict) -> bool:
-            return atom['is_literal'] is True
+        class IsLiteral:
+            def filter(self, atom: dict, apply='targets') -> bool:
+                return atom['is_literal'] is True
 
         neighbors = traverse.get_neighbors(
-            link_type='Expression', cursor_position=2, target_type='Symbol', filter=is_literal
+            link_type='Expression', cursor_position=2, target_type='Symbol', filters=IsLiteral
         )
         neighbors_handles = sorted([neighbor['handle'] for neighbor in neighbors])
         assert neighbors_handles == sorted(
@@ -122,12 +123,13 @@ class TestTraverseEngine:
         assert traverse.get()['handle'] in expected_neighbors
 
         # Follow link with filters
-        def is_ent(atom: dict) -> bool:
-            return atom['name'] == '"ent"'
+        class IsEnt:
+            def filter(self, atom: dict, apply='targets') -> bool:
+                return atom['name'] == '"ent"'
 
         traverse.goto(metta_animal_base_handles.human)
         traverse.follow_link(
-            link_type='Expression', cursor_position=2, target_type='Symbol', filter=is_ent
+            link_type='Expression', cursor_position=2, target_type='Symbol', filters=IsEnt
         )
         assert traverse.get()['name'] == '"ent"'
 

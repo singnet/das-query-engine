@@ -282,10 +282,11 @@ class TestRemoteDistributedAtomSpace:
         cursor: TraverseEngine = self.traversal(remote_das, metta_animal_base_handles.dinosaur)
         assert cursor.get()['handle'] == metta_animal_base_handles.dinosaur
 
-        def is_expression_link(link):
-            return True if link['type'] == 'Expression' else False
+        class IsExpressionLink:
+            def filter(self, link):
+                return True if link['type'] == 'Expression' else False
 
-        links_iter = cursor.get_links(filter=is_expression_link)
+        links_iter = cursor.get_links(filters=IsExpressionLink)
 
         expected_links = [
             remote_das.get_atom(handle)
@@ -303,13 +304,14 @@ class TestRemoteDistributedAtomSpace:
                 count -= 1
         assert count == 0
 
-        def is_literal(atom: dict):
-            return True if atom['is_literal'] is True else False
+        class IsLiteral:
+            def filter(self, atom: dict, apply='targets'):
+                return True if atom['is_literal'] is True else False
 
-        neighbors_iter = cursor.get_neighbors(cursor_position=1, filter=is_literal)
+        neighbors_iter = cursor.get_neighbors(cursor_position=1, filters=IsLiteral)
         assert neighbors_iter.get()['handle'] == metta_animal_base_handles.reptile
 
-        atom = cursor.follow_link(cursor_position=2, filter=is_literal)
+        atom = cursor.follow_link(cursor_position=2, filters=IsLiteral)
         assert atom['handle'] == metta_animal_base_handles.triceratops
 
         cursor.goto(metta_animal_base_handles.human)
@@ -335,7 +337,7 @@ class TestRemoteDistributedAtomSpace:
         remote_das.fetch()
         assert remote_das.backend.count_atoms() == (23, 60)
 
-    @pytest.mark.skip(reason="Disable. it's necessary to upload a new version to the server")
+    @pytest.mark.xfail(reason="It's necessary to upload a new version to the server")
     def test_commit_changes(self, remote_das: DistributedAtomSpace):
         node = remote_das.get_atom(handle=metta_animal_base_handles.human)
         assert hasattr(node, 'test_key') is False

@@ -552,10 +552,11 @@ class TestTraverseLinksIterator:
         assert iterator.is_empty() is True
 
     def test_custom_filter(self, incoming_links):
-        def custom_filter(link):
-            return link['named_type'] == 'Type3'
+        class CustomFilter:
+            def filter(self, link):
+                return link['named_type'] == 'Type3'
 
-        iterator = TraverseLinksIterator(incoming_links, filter=custom_filter)
+        iterator = TraverseLinksIterator(incoming_links, filters=CustomFilter)
 
         assert iterator.is_empty() is False
         assert next(iterator) == {
