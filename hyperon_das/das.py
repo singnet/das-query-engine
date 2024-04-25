@@ -758,10 +758,10 @@ class DistributedAtomSpace:
 
     def create_context(
         self,
-        name: Optional[str] = None,
-        query: Optional[Union[List[dict], dict]] = None,
+        name: str,
+        queries: Optional[List[Query]] = None,
     ) -> Context:
         if self.system_parameters.get('running_on_server'):
-            return self._create_context(name, query)
+            return self._create_context(name, queries)
         else:
-            return self.query_engine.create_context(name, query)
+            return self.query_engine.create_context(name, queries)

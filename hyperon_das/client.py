@@ -206,10 +206,10 @@ class FunctionsClient:
     def create_context(
         self,
         name: str,
-        query: Union[List[dict], dict],
+        queries: Optional[List[Query]]
     ) -> Any:
         payload = {
             'action': 'create_context',
-            'input': {'name': name, 'query': query},
+            'input': {'name': name, 'queries': queries},
         }
         return self._send_request(payload)
