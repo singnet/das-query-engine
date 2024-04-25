@@ -61,13 +61,15 @@ class FunctionsClient:
             )
         except exceptions.HTTPError as e:
             with contextlib.suppress(pickle.UnpicklingError):
-                return deserialize(response.content).get('error')
-            das_error(
-                HTTPError(
-                    message=f"HTTP error for URL: '{self.url}' with payload: '{payload}'",
-                    details=str(e),
+                message = deserialize(response.content).get('error')
+
+                das_error(
+                    HTTPError(
+                        message="Please, check if your request payload is correctly formatted.",
+                        details=str(message),
+                    )
                 )
-            )
+
         except exceptions.RequestException as e:
             das_error(
                 RequestError(
