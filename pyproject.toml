@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hyperon-das"
-version = "0.7.10"
+version = "0.7.11"
 description = "Query Engine API for Distributed AtomSpace"
 authors = ["marcocapozzoli <marcocapozzoli90@gmail.com>"]
 readme = "README.md"
@@ -16,7 +16,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8.5"
-hyperon-das-atomdb = "0.6.10"
+hyperon-das-atomdb = "0.6.11"
 requests = "^2.31.0"
 grpcio = "^1.62.2"
 google = "^3.0.0"
