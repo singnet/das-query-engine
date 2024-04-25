@@ -1,0 +1,8 @@
+syntax = "proto3";
+import "common.proto";
+package das;
+
+service AttentionBroker {
+    rpc ping (Empty) returns (Ack) {}
+    rpc shutdown (Empty) returns (Empty) {}
+}

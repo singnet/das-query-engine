@@ -91,4 +91,4 @@ class TestDistributedAtomSpace:
     def test_create_context(self):
         das = DistributedAtomSpace()
         with pytest.raises(NotImplementedError):
-            das.create_context("blah", "h")
+            das.create_context("blah", {})
