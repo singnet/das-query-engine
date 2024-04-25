@@ -96,7 +96,7 @@ class QueryEngine(ABC):
     def create_context(
         self,
         name: str,
-        query: Query
+        queries: Optional[List[Query]]
     ) -> Context:
         ...  # pragma no cover
 
