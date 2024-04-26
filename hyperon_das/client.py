@@ -66,7 +66,8 @@ class FunctionsClient:
                 das_error(
                     HTTPError(
                         message="Please, check if your request payload is correctly formatted.",
-                        details=str(message),
+                        details=message,
+                        status_code=e.response.status_code,
                     )
                 )
 
@@ -132,11 +133,17 @@ class FunctionsClient:
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        payload = {
-            'action': 'query',
-            'input': {'query': query, 'parameters': parameters},
-        }
-        return self._send_request(payload)
+        try:
+            payload = {
+                'action': 'query',
+                'input': {'query': query, 'parameters': parameters},
+            }
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 400:
+                raise HTTPError(
+                    "Your query couldn't be processed due to an invalid format. Review the way the query is written and try again."
+                ) from None
 
     def count_atoms(self) -> Tuple[int, int]:
         payload = {
