@@ -338,7 +338,7 @@ class TestRemoteDistributedAtomSpace:
     def test_create_context(self, remote_das):
         context_name = 'my context'
         context = remote_das.create_context(context_name)
-        #assert context.name == context_name
+        assert context.name == context_name
 
     @pytest.mark.skip(reason="Disable. it's necessary to upload a new version to the server")
     def test_commit_changes(self, remote_das: DistributedAtomSpace):

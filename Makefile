@@ -5,7 +5,7 @@ black:
 	@black ./hyperon_das ./tests --line-length 100 -t py37 --skip-string-normalization
 
 flake8:
-	@flake8 ./hyperon_das ./tests --show-source --extend-ignore E501
+	@flake8 ./hyperon_das ./tests --show-source --extend-ignore E501 --exclude ./hyperon_das/grpc/
 
 lint: isort black flake8
 

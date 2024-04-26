@@ -1,32 +1,34 @@
-import pytest
 import time
-import grpc
 from concurrent import futures
-import hyperon_das.grpc.common_pb2 as common
-import hyperon_das.grpc.attention_broker_pb2 as attention_broker
+
+import grpc
+import pytest
+
 import hyperon_das.grpc.attention_broker_pb2_grpc as ab_grpc
+import hyperon_das.grpc.common_pb2 as common
 from hyperon_das.cache.attention_broker_gateway import AttentionBrokerGateway
 
 HOST = 'localhost'
 PORT = 27000
-SYSTEM_PARAMETERS = {
-    'attention_broker_hostname': HOST, 
-    'attention_broker_port': PORT
-}
+SYSTEM_PARAMETERS = {'attention_broker_hostname': HOST, 'attention_broker_port': PORT}
 
 RECEIVED = None
 
+
 class AttentionBrokerMock(ab_grpc.AttentionBrokerServicer):
     def ping(self, request, context):
-        return common.Ack(error=0, msg='OK') 
+        return common.Ack(error=0, msg='OK')
+
     def correlate(self, request, context):
         global RECEIVED
         RECEIVED = request.handle_list
         return common.Ack(error=0, msg='OK')
+
     def stimulate(self, request, context):
         global RECEIVED
         RECEIVED = request.handle_count
         return common.Ack(error=0, msg='OK')
+
 
 def server_up():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -35,12 +37,13 @@ def server_up():
     server.start()
     return server
 
+
 def server_down(server):
     server.stop(1)
     time.sleep(1)
 
-class TestAttentionBrokerGateway:
 
+class TestAttentionBrokerGateway:
     def test_creation(self):
         with pytest.raises(ValueError):
             AttentionBrokerGateway({})
@@ -70,7 +73,7 @@ class TestAttentionBrokerGateway:
         assert len(RECEIVED) == len(message)
         for key in RECEIVED:
             assert RECEIVED[key] == message[key]
-        
+
     def test_correlate(self):
         grpc_server = server_up()
         gateway = AttentionBrokerGateway(SYSTEM_PARAMETERS)
@@ -93,3 +96,4 @@ class TestAttentionBrokerGateway:
         self._check_stimulate(gateway, [('h1', 1)])
         self._check_stimulate(gateway, [('h1', 1), ('h2', 1)])
         self._check_stimulate(gateway, [('h1', 1), ('h2', 2)])
+        server_down(grpc_server)

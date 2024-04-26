@@ -112,7 +112,6 @@ class Assignment:
 
 @dataclass
 class QueryAnswer:
-
     subgraph: Optional[Dict] = None
     assignment: Optional[Assignment] = None
 

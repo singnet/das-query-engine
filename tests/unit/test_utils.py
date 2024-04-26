@@ -141,8 +141,8 @@ class TestAssignment:
         assert not a2.__eq__(a3)
         assert a3.__eq__(a4)
 
-class TestQueryAnswer:
 
+class TestQueryAnswer:
     def _check_handle_set(self, atom, handles, count):
         assert len(handles) == len(count)
         query_answer = QueryAnswer(atom, None)
@@ -153,47 +153,56 @@ class TestQueryAnswer:
             assert handle_count[handles[cursor]] == count[cursor]
 
     def test_get_handle_stats(self):
-
         self._check_handle_set(None, set([]), [])
 
-        self._check_handle_set({
-            'handle': 'h1'
-        }, ['h1'], [1])
+        self._check_handle_set({'handle': 'h1'}, ['h1'], [1])
 
-        self._check_handle_set({
-            'handle': 'h1',
-            'targets': [
-                {'handle': 'h2'},
-                {'handle': 'h3'},
-            ]
-        }, ['h1', 'h2', 'h3'], [1, 1, 1])
+        self._check_handle_set(
+            {
+                'handle': 'h1',
+                'targets': [
+                    {'handle': 'h2'},
+                    {'handle': 'h3'},
+                ],
+            },
+            ['h1', 'h2', 'h3'],
+            [1, 1, 1],
+        )
 
-        self._check_handle_set({
-            'handle': 'h1',
-            'targets': [
-                {'handle': 'h2'},
-                {'handle': 'h1'},
-            ]
-        }, ['h1', 'h2'], [2, 1])
+        self._check_handle_set(
+            {
+                'handle': 'h1',
+                'targets': [
+                    {'handle': 'h2'},
+                    {'handle': 'h1'},
+                ],
+            },
+            ['h1', 'h2'],
+            [2, 1],
+        )
 
-        self._check_handle_set({
-            'handle': 'h1',
-            'targets': [
-                {'handle': 'h2'},
-                {
-                    'handle': 'h2',
-                    'targets': [
-                        {'handle': 'h4'},
-                        {'handle': 'h1'},
-                    ]
-                },
-                {
-                    'handle': 'h5',
-                    'targets': [
-                        {'handle': 'h1'},
-                        {'handle': 'h6'},
-                    ]
-                },
-                {'handle': 'h3'},
-            ]
-        }, ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'], [3, 2, 1, 1, 1, 1])
+        self._check_handle_set(
+            {
+                'handle': 'h1',
+                'targets': [
+                    {'handle': 'h2'},
+                    {
+                        'handle': 'h2',
+                        'targets': [
+                            {'handle': 'h4'},
+                            {'handle': 'h1'},
+                        ],
+                    },
+                    {
+                        'handle': 'h5',
+                        'targets': [
+                            {'handle': 'h1'},
+                            {'handle': 'h6'},
+                        ],
+                    },
+                    {'handle': 'h3'},
+                ],
+            },
+            ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+            [3, 2, 1, 1, 1, 1],
+        )

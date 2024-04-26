@@ -1,5 +1,6 @@
 from typing import Union
 
+
 class BaseException(Exception):
     """
     Base class to exceptions
@@ -36,7 +37,6 @@ class HTTPError(BaseException):
     def __init__(self, message: str, details: str = "", status_code: Union[int, None] = None):
         super().__init__(message, details)
         self.status_code = status_code
-
 
 
 class RequestError(BaseException):

@@ -6,8 +6,8 @@ from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotEx
 from requests import exceptions, sessions
 
 from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
-from hyperon_das.type_alias import Query
 from hyperon_das.logger import logger
+from hyperon_das.type_alias import Query
 from hyperon_das.utils import connect_to_server, das_error, deserialize, serialize
 
 
@@ -215,11 +215,7 @@ class FunctionsClient:
         }
         return self._send_request(payload)
 
-    def create_context(
-        self,
-        name: str,
-        queries: Optional[List[Query]]
-    ) -> Any:
+    def create_context(self, name: str, queries: Optional[List[Query]]) -> Any:
         payload = {
             'action': 'create_context',
             'input': {'name': name, 'queries': queries},

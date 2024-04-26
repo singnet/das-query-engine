@@ -1,10 +1,11 @@
 from typing import List
+
 from hyperon_das.cache.attention_broker_gateway import AttentionBrokerGateway
 from hyperon_das.context import Context
 from hyperon_das.utils import QueryAnswer
 
-class CacheController:
 
+class CacheController:
     def __init__(self, system_parameters):
         self.system_parameters = system_parameters
         if self.enabled():

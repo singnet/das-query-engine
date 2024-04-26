@@ -1,13 +1,12 @@
 import json  # noqa: F401
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from requests import exceptions
 
 from hyperon_das.client import FunctionsClient
-from hyperon_das.exceptions import ConnectionError, RequestError, TimeoutError, HTTPError
+from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.utils import serialize
-from unittest.mock import MagicMock
 
 
 class TestFunctionsClient:

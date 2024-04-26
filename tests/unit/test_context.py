@@ -1,5 +1,3 @@
-import pytest
-
 from hyperon_das.context import Context
 
 

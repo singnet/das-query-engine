@@ -2,7 +2,6 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
-from hyperon_das.type_alias import Query
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
@@ -26,6 +25,7 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
+from hyperon_das.type_alias import Query
 from hyperon_das.utils import Assignment, QueryAnswer, das_error
 
 
@@ -93,11 +93,7 @@ class QueryEngine(ABC):
         ...  # pragma no cover
 
     @abstractmethod
-    def create_context(
-        self,
-        name: str,
-        queries: Optional[List[Query]]
-    ) -> Context:
+    def create_context(self, name: str, queries: Optional[List[Query]]) -> Context:
         ...  # pragma no cover
 
     @abstractmethod

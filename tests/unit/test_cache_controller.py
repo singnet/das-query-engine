@@ -1,28 +1,32 @@
-import pytest
 from typing import Set
-from hyperon_das.cache.cache_controller import CacheController
-from hyperon_das.cache.attention_broker_gateway import AttentionBrokerGateway
-from hyperon_das.utils import QueryAnswer
-from hyperon_das.context import Context
 
+import pytest
+
+from hyperon_das.cache.attention_broker_gateway import AttentionBrokerGateway
+from hyperon_das.cache.cache_controller import CacheController
+from hyperon_das.context import Context
+from hyperon_das.utils import QueryAnswer
 
 SYSTEM_PARAMETERS = {
     'attention_broker_hostname': None,
     'attention_broker_port': None,
-    'cache_enabled': False
+    'cache_enabled': False,
 }
+
 
 class AttentionBrokerGatewayMock(AttentionBrokerGateway):
     def __init__(self):
         self.handle_set_list = []
         pass
+
     def correlate(self, handle_set: Set[str]) -> str:
         self.handle_set_list.append(handle_set)
+
     def stimulate(self, handle_count: Set[str]) -> str:
         self.handle_count = handle_count
 
-class TestCacheController:
 
+class TestCacheController:
     def _build_controller(self):
         params = SYSTEM_PARAMETERS.copy()
         controller = CacheController(params)
@@ -33,7 +37,7 @@ class TestCacheController:
     def test_creation(self):
         # Relevant to test dependency on AttentionBrokerGateway
         controller = CacheController({})
-        assert not controller.enabled() # assert default == False
+        assert not controller.enabled()  # assert default == False
         with pytest.raises(ValueError):
             controller = CacheController({'cache_enabled': True})
         controller = CacheController({'cache_enabled': False})
@@ -41,14 +45,12 @@ class TestCacheController:
 
     def test_add_context(self):
         controller = self._build_controller()
-        query_answer_1 = QueryAnswer({'handle': 'h1'}, None)
-        query_answer_1 = QueryAnswer({'handle': 'h2'}, None)
         context = Context(
             {'name': 'blah', 'handle': 'h1'},
             [
                 [QueryAnswer({'handle': 'h1'}, None), QueryAnswer({'handle': 'h2'}, None)],
                 [QueryAnswer({'handle': 'h1'}, None), QueryAnswer({'handle': 'h3'}, None)],
-            ]
+            ],
         )
         controller.add_context(context)
         broker = controller.attention_broker
@@ -65,37 +67,41 @@ class TestCacheController:
     def test_regard_query_answer(self):
         controller = self._build_controller()
 
-        query_answer_1 = QueryAnswer({
-            'handle': 'h7'
-        }, None)
-        query_answer_2 = QueryAnswer({
-            'handle': 'h1',
-            'targets': [
-                {'handle': 'h8'},
-                {'handle': 'h9'},
-            ]
-        }, None)
-        query_answer_3 = QueryAnswer({
-            'handle': 'h1',
-            'targets': [
-                {'handle': 'h2'},
-                {
-                    'handle': 'h2',
-                    'targets': [
-                        {'handle': 'h4'},
-                        {'handle': 'h1'},
-                    ]
-                },
-                {
-                    'handle': 'h5',
-                    'targets': [
-                        {'handle': 'h1'},
-                        {'handle': 'h6'},
-                    ]
-                },
-                {'handle': 'h3'},
-            ]
-        }, None)
+        query_answer_1 = QueryAnswer({'handle': 'h7'}, None)
+        query_answer_2 = QueryAnswer(
+            {
+                'handle': 'h1',
+                'targets': [
+                    {'handle': 'h8'},
+                    {'handle': 'h9'},
+                ],
+            },
+            None,
+        )
+        query_answer_3 = QueryAnswer(
+            {
+                'handle': 'h1',
+                'targets': [
+                    {'handle': 'h2'},
+                    {
+                        'handle': 'h2',
+                        'targets': [
+                            {'handle': 'h4'},
+                            {'handle': 'h1'},
+                        ],
+                    },
+                    {
+                        'handle': 'h5',
+                        'targets': [
+                            {'handle': 'h1'},
+                            {'handle': 'h6'},
+                        ],
+                    },
+                    {'handle': 'h3'},
+                ],
+            },
+            None,
+        )
 
         controller.regard_query_answer([query_answer_1, query_answer_2, query_answer_3])
         broker = controller.attention_broker
