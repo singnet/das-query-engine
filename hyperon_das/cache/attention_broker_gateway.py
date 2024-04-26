@@ -45,9 +45,6 @@ class AttentionBrokerGateway:
             return response.msg
         return None
 
-    # AQUI Fazer o decorator para safe call. Ou nao. Fazer ele no
-    # decorators.py? Ou Fazer um esquema mais amplo de logar e explodir em
-    # qualquer excecao nao tratada.
     def correlate(self, handle_set: Set[str]) -> str:
         if handle_set is None:
             das_error(
