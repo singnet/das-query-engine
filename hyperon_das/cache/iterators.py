@@ -1,4 +1,3 @@
-import contextlib
 from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
@@ -414,9 +413,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
         self.link_type = kwargs.get('link_type')
         self.cursor_position = kwargs.get('cursor_position')
         self.target_type = kwargs.get('target_type')
-        self.custom_filters = kwargs.get('filters', [])
-        if self.custom_filters and not isinstance(self.custom_filters, list):
-            self.custom_filters = [self.custom_filters]
+        self.custom_filter = kwargs.get('filter')
         if not self.source.is_empty():
             self.iterator = self.source
             self.current_value = self._find_first_valid_element()
@@ -432,7 +429,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
                 not self.link_type
                 and self.cursor_position is None
                 and not self.target_type
-                and not self.custom_filters
+                and not self.custom_filter
             ) or self._filter(link, targets):
                 self.current_value = targets if self.targets_only else link
                 break
@@ -463,28 +460,33 @@ class TraverseLinksIterator(QueryAnswerIterator):
             if not any(target['named_type'] == self.target_type for target in targets):
                 return False
 
-        deep_link = link.copy()
-        deep_link['targets'] = targets
-        return self._apply_custom_filters(link)
+        if self.custom_filter:
+            deep_link = link.copy()
+            deep_link['targets'] = targets
+            if self._apply_custom_filter(deep_link) is False:
+                return False
 
-    def _apply_custom_filters(self, atom: Dict[str, Any]) -> bool:
+        return True
+
+    def _apply_custom_filter(self, atom: Dict[str, Any], F=None) -> bool:
         from hyperon_das.traverse_engines import MetaCustomFilter
 
-        for custom_filter in self.custom_filters:
-            try:
-                assert issubclass(
-                    custom_filter, MetaCustomFilter
-                ), f"The '{custom_filter.__name__}' class must implement the 'filter(self, atom: dict) -> bool: ...' method"
-            except TypeError:
-                raise Exception(
-                    f"The '{custom_filter.__name__}' must be a class that implement the 'filter(self, atom: dict) -> bool: ...' method"
-                )
-            with contextlib.suppress(
-                [KeyError, TypeError, Exception]
-            ):  # If there is an error, the filter is not applicable
-                if not custom_filter().filter(atom):
-                    return False
-        return True
+        custom_filter = F if F else self.custom_filter
+
+        try:
+            assert issubclass(
+                custom_filter, MetaCustomFilter
+            ), f"The '{custom_filter.__name__}' class must implement the 'filter(self, atom: dict) -> bool: ...' method"
+        except TypeError:
+            raise Exception(
+                f"The '{custom_filter.__name__}' must be a class that implement the 'filter(self, atom: dict) -> bool: ...' method"
+            )
+
+        try:
+            if not custom_filter().filter(atom):
+                return False
+        except Exception as e:
+            raise Exception(f"Error while applying the custom filter: {e}")
 
     def is_empty(self) -> bool:
         return not self.current_value
@@ -497,9 +499,7 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
         self.cursor = self.source.cursor
         self.target_type = self.source.target_type
         self.visited_neighbors = []
-        self.custom_filters = kwargs.get('filters', [])
-        if self.custom_filters and not isinstance(self.custom_filters, list):
-            self.custom_filters = [self.custom_filters]
+        self.custom_filter = kwargs.get('filter')
         if not self.source.is_empty():
             self.iterator = source
             self.current_value = self._find_first_valid_element()
@@ -545,15 +545,10 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
         ):
             return False
 
-        return self._apply_custom_filters(target)
+        if self.custom_filter:
+            if self.source._apply_custom_filter(target, F=self.custom_filter) is False:
+                return False
 
-    def _apply_custom_filters(self, atom: Dict[str, Any]) -> bool:
-        for custom_filter in self.custom_filters:
-            with contextlib.suppress(
-                [KeyError, TypeError, Exception]
-            ):  # If there is an error, the filter is not applicable
-                if not custom_filter().filter(atom):
-                    return False
         return True
 
     def is_empty(self) -> bool:

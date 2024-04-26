@@ -286,7 +286,7 @@ class TestRemoteDistributedAtomSpace:
             def filter(self, link):
                 return True if link['type'] == 'Expression' else False
 
-        links_iter = cursor.get_links(filters=IsExpressionLink)
+        links_iter = cursor.get_links(filter=IsExpressionLink)
 
         expected_links = [
             remote_das.get_atom(handle)
@@ -305,13 +305,13 @@ class TestRemoteDistributedAtomSpace:
         assert count == 0
 
         class IsLiteral:
-            def filter(self, atom: dict, apply='targets'):
+            def filter(self, atom: dict):
                 return True if atom['is_literal'] is True else False
 
-        neighbors_iter = cursor.get_neighbors(cursor_position=1, filters=IsLiteral)
+        neighbors_iter = cursor.get_neighbors(cursor_position=1, filter=IsLiteral)
         assert neighbors_iter.get()['handle'] == metta_animal_base_handles.reptile
 
-        atom = cursor.follow_link(cursor_position=2, filters=IsLiteral)
+        atom = cursor.follow_link(cursor_position=2, filter=IsLiteral)
         assert atom['handle'] == metta_animal_base_handles.triceratops
 
         cursor.goto(metta_animal_base_handles.human)
@@ -340,7 +340,7 @@ class TestRemoteDistributedAtomSpace:
     def test_create_context(self, remote_das):
         context_name = 'my context'
         context = remote_das.create_context(context_name)
-        #assert context.name == context_name
+        # assert context.name == context_name
 
     @pytest.mark.xfail(reason="It's necessary to upload a new version to the server")
     def test_commit_changes(self, remote_das: DistributedAtomSpace):

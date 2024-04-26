@@ -252,7 +252,7 @@ class TestTraverseLinks:
         das = DistributedAtomSpace()
         load_metta_animals_base(das)
         traverse = das.get_traversal_cursor(human_handle)
-        iterator = traverse.get_links(filters=self.IsExpressionAtom)
+        iterator = traverse.get_links(filter=self.IsExpressionAtom)
         self._check_asserts(das, iterator)
 
     def test_traverse_links_with_das_redis_mongo(self, human_handle, _cleanup):
@@ -270,7 +270,7 @@ class TestTraverseLinks:
         load_metta_animals_base(das)
         das.commit_changes()
         traverse = das.get_traversal_cursor(human_handle)
-        iterator = traverse.get_links(filters=self.IsExpressionAtom)
+        iterator = traverse.get_links(filter=self.IsExpressionAtom)
         self._check_asserts(das, iterator)
         _db_down()
 
@@ -279,7 +279,7 @@ class TestTraverseLinks:
             query_engine='remote', host=remote_das_host, port=remote_das_port
         )
         traverse = das.get_traversal_cursor(human_handle)
-        iterator = traverse.get_links(filters=self.IsExpressionAtom)
+        iterator = traverse.get_links(filter=self.IsExpressionAtom)
         self._check_asserts(das, iterator)
 
 
@@ -303,7 +303,7 @@ class TestTraverseNeighbors:
         )
 
     class IsLiteralAtom:
-        def filter(self, atom: dict, apply='targets') -> bool:
+        def filter(self, atom: dict) -> bool:
             if atom['is_literal'] is False:
                 return False
             return True
@@ -326,7 +326,7 @@ class TestTraverseNeighbors:
         das = DistributedAtomSpace()
         load_metta_animals_base(das)
         traverse = das.get_traversal_cursor(human_handle)
-        iterator = traverse.get_neighbors(filters=self.IsLiteralAtom)
+        iterator = traverse.get_neighbors(filter=(None, self.IsLiteralAtom))
         self._check_asserts(das, iterator)
 
     def test_traverse_neighbors_with_das_redis_mongo(self, human_handle, _cleanup):
@@ -344,7 +344,7 @@ class TestTraverseNeighbors:
         load_metta_animals_base(das)
         das.commit_changes()
         traverse = das.get_traversal_cursor(human_handle)
-        iterator = traverse.get_neighbors(filters=self.IsLiteralAtom)
+        iterator = traverse.get_neighbors(filter=(None, self.IsLiteralAtom))
         self._check_asserts(das, iterator)
         _db_down()
 
@@ -353,7 +353,7 @@ class TestTraverseNeighbors:
             query_engine='remote', host=remote_das_host, port=remote_das_port
         )
         traverse = das.get_traversal_cursor(human_handle)
-        iterator = traverse.get_neighbors(filters=self.IsLiteralAtom)
+        iterator = traverse.get_neighbors(filter=(None, self.IsLiteralAtom))
         self._check_asserts(das, iterator)
 
 
