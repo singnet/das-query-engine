@@ -7,3 +7,11 @@ message Ack {
     bool error = 1;
     string msg = 2;
 }
+
+message HandleList {
+    repeated string handle_list = 1;
+}
+
+message HandleCount {
+    map<string, uint32> handle_count = 1;
+}

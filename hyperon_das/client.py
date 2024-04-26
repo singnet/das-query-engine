@@ -7,6 +7,7 @@ from requests import exceptions, sessions
 
 from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.logger import logger
+from hyperon_das.type_alias import Query
 from hyperon_das.utils import connect_to_server, das_error, deserialize, serialize
 
 
@@ -61,13 +62,16 @@ class FunctionsClient:
             )
         except exceptions.HTTPError as e:
             with contextlib.suppress(pickle.UnpicklingError):
-                return deserialize(response.content).get('error')
-            das_error(
-                HTTPError(
-                    message=f"HTTP error for URL: '{self.url}' with payload: '{payload}'",
-                    details=str(e),
+                message = deserialize(response.content).get('error')
+
+                das_error(
+                    HTTPError(
+                        message="Please, check if your request payload is correctly formatted.",
+                        details=message,
+                        status_code=e.response.status_code,
+                    )
                 )
-            )
+
         except exceptions.RequestException as e:
             das_error(
                 RequestError(
@@ -130,11 +134,19 @@ class FunctionsClient:
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        payload = {
-            'action': 'query',
-            'input': {'query': query, 'parameters': parameters},
-        }
-        return self._send_request(payload)
+        try:
+            payload = {
+                'action': 'query',
+                'input': {'query': query, 'parameters': parameters},
+            }
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 400:
+                raise HTTPError(
+                    "Your query couldn't be processed due to an invalid format. Review the way the query is written and try again."
+                ) from None
+
+            raise e
 
     def count_atoms(self) -> Tuple[int, int]:
         payload = {
@@ -203,13 +215,9 @@ class FunctionsClient:
         }
         return self._send_request(payload)
 
-    def create_context(
-        self,
-        name: str,
-        query: Union[List[dict], dict],
-    ) -> Any:
+    def create_context(self, name: str, queries: Optional[List[Query]]) -> Any:
         payload = {
             'action': 'create_context',
-            'input': {'name': name, 'query': query},
+            'input': {'name': name, 'queries': queries},
         }
         return self._send_request(payload)

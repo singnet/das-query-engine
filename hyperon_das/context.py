@@ -1,19 +1,12 @@
 from typing import Any, List
 
-from hyperon_das.utils import das_error, QueryAnswer
-from hyperon_das.type_alias import Query
+from hyperon_das.utils import QueryAnswer
 
 
 class Context:
     CONTEXT_NODE_TYPE = "Context"
 
-    def __init__(
-        self,
-        context_node: dict[str, Any],
-        query: Query,
-        query_answer: List[QueryAnswer]):
-
+    def __init__(self, context_node: dict[str, Any], query_answers: List[List[QueryAnswer]]):
         self.name = context_node['name']
         self.handle = context_node['handle']
-        self.query = query
-        self.query_answer = query_answer
+        self.query_answers = query_answers

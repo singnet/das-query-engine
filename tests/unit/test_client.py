@@ -1,11 +1,11 @@
 import json  # noqa: F401
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from requests import exceptions
 
 from hyperon_das.client import FunctionsClient
-from hyperon_das.exceptions import ConnectionError, RequestError, TimeoutError
+from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
 from hyperon_das.utils import serialize
 
 
@@ -72,7 +72,7 @@ class TestFunctionsClient:
     def test_create_context_success(self, mock_request, client):
         expected_request_data = {
             "action": "create_context",
-            "input": {"name": "n", "query": "q"},
+            "input": {"name": "n", "queries": []},
         }
         expected_response = {
             "name": "n",
@@ -82,7 +82,7 @@ class TestFunctionsClient:
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
 
-        result = client.create_context(query='q', name='n')
+        result = client.create_context(name='n', queries=[])
 
         mock_request.assert_called_with(
             method='POST',
@@ -230,6 +230,72 @@ class TestFunctionsClient:
         )
 
         assert result == expected_response
+
+    @pytest.mark.parametrize(
+        "query",
+        [
+            (
+                {
+                    "query": {
+                        "atom_type": "link",
+                        "targets": [
+                            {'atom_type': 'variable', 'name': 'v1'},
+                            {'atom_type': 'node', 'type': 'Symbol', 'name': '"earthworm"'},
+                            {'atom_type': 'variable', 'name': 'v2'},
+                        ],
+                    },
+                    "parameters": [],
+                }
+            ),
+            (
+                {
+                    "query": {"atom_type": "link", 'type': 'Expression'},
+                    "parameters": [],
+                }
+            ),
+            (
+                {
+                    "query": {
+                        "atom_type": "node",
+                        'type': 'Expression',
+                        "targets": [
+                            {'atom_type': 'variable', 'name': 'v1'},
+                            {'atom_type': 'node', 'type': 'Symbol', 'name': '"earthworm"'},
+                            {'atom_type': 'variable', 'name': 'v2'},
+                        ],
+                    },
+                    "parameters": [],
+                }
+            ),
+            (),
+        ],
+    )
+    def test_query_malformed(self, query, mock_request, client):
+        expected_request_data = {
+            "action": "query",
+            "input": {
+                "query": query,
+                "parameters": [],
+            },
+        }
+
+        mock_response = MagicMock()
+        mock_response.status_code = 400
+
+        mock_request.return_value.content = serialize({})
+        mock_request.return_value.raise_for_status.side_effect = exceptions.HTTPError(
+            response=mock_response,
+        )
+
+        with pytest.raises(HTTPError):
+            client.query(query, parameters=[])
+
+        mock_request.assert_called_with(
+            method='POST',
+            url='http://0.0.0.0:1000/function/query-engine',
+            data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
+        )
 
     def test_count_atoms_success(self, mock_request, client):
         expected_request_data = {"action": "count_atoms", "input": {}}

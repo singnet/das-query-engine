@@ -115,6 +115,34 @@ class QueryAnswer:
     subgraph: Optional[Dict] = None
     assignment: Optional[Assignment] = None
 
+    def _recursive_get_handle_set(self, atom, handle_set):
+        handle_set.add(atom['handle'])
+        targets = atom.get('targets', None)
+        if targets is not None:
+            for target_atom in targets:
+                self._recursive_get_handle_set(target_atom, handle_set)
+
+    def _recursive_get_handle_count(self, atom, handle_count):
+        key = atom['handle']
+        total = handle_count.get(key, 0) + 1
+        handle_count[key] = total
+        targets = atom.get('targets', None)
+        if targets is not None:
+            for target_atom in targets:
+                self._recursive_get_handle_count(target_atom, handle_count)
+
+    def get_handle_set(self):
+        handle_set = set()
+        if self.subgraph is not None:
+            self._recursive_get_handle_set(self.subgraph, handle_set)
+        return handle_set
+
+    def get_handle_count(self):
+        handle_count = {}
+        if self.subgraph is not None:
+            self._recursive_get_handle_count(self.subgraph, handle_count)
+        return handle_count
+
 
 def get_package_version(package_name: str) -> str:
     package_module = import_module(package_name)

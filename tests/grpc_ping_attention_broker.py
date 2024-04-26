@@ -1,7 +1,6 @@
-import grpc
-import attention_broker_pb2 as attention_broker
-import common_pb2 as common
 import attention_broker_pb2_grpc as ab_grpc
+import common_pb2 as common
+import grpc
 
 
 def run():
@@ -9,6 +8,7 @@ def run():
         stub = ab_grpc.AttentionBrokerStub(channel)
         response = stub.ping(common.Empty())
     print(response.msg)
+
 
 if __name__ == "__main__":
     run()

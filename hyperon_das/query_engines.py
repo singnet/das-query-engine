@@ -25,6 +25,7 @@ from hyperon_das.exceptions import (
     UnexpectedQueryFormat,
 )
 from hyperon_das.logger import logger
+from hyperon_das.type_alias import Query
 from hyperon_das.utils import Assignment, QueryAnswer, das_error
 
 
@@ -55,7 +56,7 @@ class QueryEngine(ABC):
 
     @abstractmethod
     def query(
-        self, query: Dict[str, Any], parameters: Optional[Dict[str, Any]] = {}
+        self, query: Query, parameters: Optional[Dict[str, Any]] = {}
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         ...  # pragma no cover
 
@@ -84,7 +85,7 @@ class QueryEngine(ABC):
     @abstractmethod
     def fetch(
         self,
-        query: Union[List[dict], dict],
+        query: Query,
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
@@ -92,11 +93,7 @@ class QueryEngine(ABC):
         ...  # pragma no cover
 
     @abstractmethod
-    def create_context(
-        self,
-        name: str,
-        query: Union[List[dict], dict],
-    ) -> Context:
+    def create_context(self, name: str, queries: Optional[List[Query]]) -> Context:
         ...  # pragma no cover
 
     @abstractmethod
@@ -113,7 +110,7 @@ class LocalQueryEngine(QueryEngine):
 
     def _recursive_query(
         self,
-        query: Union[Dict[str, Any], List[Dict[str, Any]]],
+        query: Query,
         mappings: Set[Assignment] = None,
         parameters: Optional[Dict[str, Any]] = None,
     ) -> QueryAnswerIterator:
@@ -334,7 +331,7 @@ class LocalQueryEngine(QueryEngine):
 
     def query(
         self,
-        query: Union[List[Dict[str, Any]], Dict[str, Any]],
+        query: Query,
         parameters: Optional[Dict[str, Any]] = {},
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         no_iterator = parameters.get("no_iterator", False)
@@ -387,7 +384,7 @@ class LocalQueryEngine(QueryEngine):
 
     def fetch(
         self,
-        query: Optional[Union[List[dict], dict]] = None,
+        query: Query,
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
@@ -422,7 +419,7 @@ class LocalQueryEngine(QueryEngine):
     def create_context(
         self,
         name: str,
-        query: Union[List[dict], dict],
+        queries: Optional[List[Query]] = None,
     ) -> Context:
         das_error(NotImplementedError("Contexts are not implemented for non-server local DAS"))
 
@@ -515,7 +512,7 @@ class RemoteQueryEngine(QueryEngine):
 
     def query(
         self,
-        query: Union[List[Dict[str, Any]], Dict[str, Any]],
+        query: Query,
         parameters: Optional[Dict[str, Any]] = {},
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         query_scope = parameters.get('query_scope', 'remote_only')
@@ -564,7 +561,7 @@ class RemoteQueryEngine(QueryEngine):
 
     def fetch(
         self,
-        query: Union[List[dict], dict],
+        query: Query,
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
@@ -578,6 +575,6 @@ class RemoteQueryEngine(QueryEngine):
     def create_context(
         self,
         name: str,
-        query: Union[List[dict], dict],
+        queries: Optional[List[Query]] = None,
     ) -> Context:
-        return self.remote_das.create_context(name, query)
+        return self.remote_das.create_context(name, queries)

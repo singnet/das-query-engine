@@ -4,7 +4,6 @@ from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.cache.iterators import QueryAnswerIterator
 from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.context import Context
 from hyperon_das.exceptions import (
@@ -15,8 +14,9 @@ from hyperon_das.exceptions import (
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
-from hyperon_das.utils import Assignment, get_package_version, QueryAnswer
 from hyperon_das.type_alias import Query
+from hyperon_das.utils import QueryAnswer, get_package_version
+
 
 class DistributedAtomSpace:
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
@@ -50,20 +50,28 @@ class DistributedAtomSpace:
                 details=f'query_engine={query_engine}',
             )
 
-        self.cache_controller = CacheController(**kwargs)
+        self.cache_controller = CacheController(self.system_parameters)
 
     def _set_default_system_parameters(self) -> None:
+        # Internals
         if not self.system_parameters.get('running_on_server'):
             self.system_parameters['running_on_server'] = False
+        # Attention Broker
+        if not self.system_parameters.get('cache_enabled'):
+            self.system_parameters['cache_enabled'] = False
+        if not self.system_parameters.get('attention_broker_hostname'):
+            self.system_parameters['attention_broker_hostname'] = "localhost"
+        if not self.system_parameters.get('attention_broker_port'):
+            self.system_parameters['attention_broker_port'] = 27000
 
     def _create_context(
         self,
-        name: Optional[str] = None,
-        query: Optional[Union[List[dict], dict]] = None,
+        name: str,
+        queries: Optional[List[Query]] = None,
     ) -> Context:
         context_node = self.add_node({'type': Context.CONTEXT_NODE_TYPE, 'name': name})
-        query_answer = self.query(query, {'no_iterator': True})
-        context = Context(context_node, query, query_answer)
+        query_answer = [self.query(query, {'no_iterator': True}) for query in queries]
+        context = Context(context_node, query_answer)
         self.cache_controller.add_context(context)
         return context
 
@@ -758,10 +766,10 @@ class DistributedAtomSpace:
 
     def create_context(
         self,
-        name: Optional[str] = None,
-        query: Optional[Union[List[dict], dict]] = None,
+        name: str,
+        queries: Optional[List[Query]] = None,
     ) -> Context:
         if self.system_parameters.get('running_on_server'):
-            return self._create_context(name, query)
+            return self._create_context(name, queries)
         else:
-            return self.query_engine.create_context(name, query)
+            return self.query_engine.create_context(name, queries)
