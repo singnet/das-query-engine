@@ -145,6 +145,8 @@ class FunctionsClient:
                     "Your query couldn't be processed due to an invalid format. Review the way the query is written and try again."
                 ) from None
 
+            raise e
+
     def count_atoms(self) -> Tuple[int, int]:
         payload = {
             'action': 'count_atoms',
