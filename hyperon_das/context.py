@@ -10,10 +10,8 @@ class Context:
     def __init__(
         self,
         context_node: dict[str, Any],
-        query: Query,
-        query_answer: List[QueryAnswer]):
+        query_answers: List[List[QueryAnswer]]):
 
         self.name = context_node['name']
         self.handle = context_node['handle']
-        self.query = query
-        self.query_answer = query_answer
+        self.query_answers = query_answers

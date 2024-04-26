@@ -4,5 +4,6 @@ package das;
 
 service AttentionBroker {
     rpc ping (Empty) returns (Ack) {}
-    rpc shutdown (Empty) returns (Empty) {}
+    rpc stimulate (HandleCount) returns (Ack) {}
+    rpc correlate (HandleList) returns (Ack) {}
 }

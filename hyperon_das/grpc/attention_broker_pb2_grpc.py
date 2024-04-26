@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import hyperon_das.grpc.common_pb2 as common__pb2
+import common_pb2 as common__pb2
 
 
 class AttentionBrokerStub(object):
@@ -19,10 +19,15 @@ class AttentionBrokerStub(object):
                 request_serializer=common__pb2.Empty.SerializeToString,
                 response_deserializer=common__pb2.Ack.FromString,
                 )
-        self.shutdown = channel.unary_unary(
-                '/das.AttentionBroker/shutdown',
-                request_serializer=common__pb2.Empty.SerializeToString,
-                response_deserializer=common__pb2.Empty.FromString,
+        self.stimulate = channel.unary_unary(
+                '/das.AttentionBroker/stimulate',
+                request_serializer=common__pb2.HandleCount.SerializeToString,
+                response_deserializer=common__pb2.Ack.FromString,
+                )
+        self.correlate = channel.unary_unary(
+                '/das.AttentionBroker/correlate',
+                request_serializer=common__pb2.HandleList.SerializeToString,
+                response_deserializer=common__pb2.Ack.FromString,
                 )
 
 
@@ -35,7 +40,13 @@ class AttentionBrokerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def shutdown(self, request, context):
+    def stimulate(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def correlate(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -49,10 +60,15 @@ def add_AttentionBrokerServicer_to_server(servicer, server):
                     request_deserializer=common__pb2.Empty.FromString,
                     response_serializer=common__pb2.Ack.SerializeToString,
             ),
-            'shutdown': grpc.unary_unary_rpc_method_handler(
-                    servicer.shutdown,
-                    request_deserializer=common__pb2.Empty.FromString,
-                    response_serializer=common__pb2.Empty.SerializeToString,
+            'stimulate': grpc.unary_unary_rpc_method_handler(
+                    servicer.stimulate,
+                    request_deserializer=common__pb2.HandleCount.FromString,
+                    response_serializer=common__pb2.Ack.SerializeToString,
+            ),
+            'correlate': grpc.unary_unary_rpc_method_handler(
+                    servicer.correlate,
+                    request_deserializer=common__pb2.HandleList.FromString,
+                    response_serializer=common__pb2.Ack.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -82,7 +98,7 @@ class AttentionBroker(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def shutdown(request,
+    def stimulate(request,
             target,
             options=(),
             channel_credentials=None,
@@ -92,8 +108,25 @@ class AttentionBroker(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/das.AttentionBroker/shutdown',
-            common__pb2.Empty.SerializeToString,
-            common__pb2.Empty.FromString,
+        return grpc.experimental.unary_unary(request, target, '/das.AttentionBroker/stimulate',
+            common__pb2.HandleCount.SerializeToString,
+            common__pb2.Ack.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def correlate(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/das.AttentionBroker/correlate',
+            common__pb2.HandleList.SerializeToString,
+            common__pb2.Ack.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
