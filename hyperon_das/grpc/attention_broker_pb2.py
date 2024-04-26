@@ -12,7 +12,7 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
-import common_pb2 as common__pb2
+import hyperon_das.grpc.common_pb2 as common__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16\x61ttention_broker.proto\x12\x03\x64\x61s\x1a\x0c\x63ommon.proto2\x86\x01\n\x0f\x41ttentionBroker\x12\x1e\n\x04ping\x12\n.das.Empty\x1a\x08.das.Ack\"\x00\x12)\n\tstimulate\x12\x10.das.HandleCount\x1a\x08.das.Ack\"\x00\x12(\n\tcorrelate\x12\x0f.das.HandleList\x1a\x08.das.Ack\"\x00\x62\x06proto3')

@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import common_pb2 as common__pb2
+import hyperon_das.grpc.common_pb2 as common__pb2
 
 
 class AttentionBrokerStub(object):
