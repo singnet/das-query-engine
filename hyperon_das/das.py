@@ -4,7 +4,6 @@ from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.cache.iterators import QueryAnswerIterator
 from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.context import Context
 from hyperon_das.exceptions import (
@@ -15,8 +14,9 @@ from hyperon_das.exceptions import (
 from hyperon_das.logger import logger
 from hyperon_das.query_engines import LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
-from hyperon_das.utils import Assignment, get_package_version, QueryAnswer
 from hyperon_das.type_alias import Query
+from hyperon_das.utils import QueryAnswer, get_package_version
+
 
 class DistributedAtomSpace:
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:

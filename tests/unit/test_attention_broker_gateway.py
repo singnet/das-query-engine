@@ -1,8 +1,9 @@
 import pytest
+
 from hyperon_das.cache.attention_broker_gateway import AttentionBrokerGateway
 
-class TestAttentionBrokerGateway:
 
+class TestAttentionBrokerGateway:
     def test_creation(self):
         with pytest.raises(ValueError):
             AttentionBrokerGateway({})

@@ -1,13 +1,14 @@
-import grpc
-from typing import Dict, Any, Set, Optional
-from hyperon_das.utils import das_error
-from hyperon_das.logger import logger
+from typing import Any, Dict, Optional, Set
 
-from hyperon_das.grpc.attention_broker_pb2_grpc import AttentionBrokerStub
+import grpc
+
 import hyperon_das.grpc.common_pb2 as grpc_types
+from hyperon_das.grpc.attention_broker_pb2_grpc import AttentionBrokerStub
+from hyperon_das.logger import logger
+from hyperon_das.utils import das_error
+
 
 class AttentionBrokerGateway:
-
     def __init__(self, system_parameters: Dict[str, Any]):
         self.server_hostname = system_parameters.get("attention_broker_hostname")
         self.server_port = system_parameters.get("attention_broker_port")
@@ -31,12 +32,10 @@ class AttentionBrokerGateway:
 
     def stimulate(self, handle_count: Set[str]) -> Optional[str]:
         if handle_count is None:
-            das_error(
-                ValueError(
-                    f'Invalid handle_count {handle_count}'
-                )
-            )
-        logger().info(f'Requesting AttentionBroker at {self.server_url} to stimulate {len(handle_count)} atoms')
+            das_error(ValueError(f'Invalid handle_count {handle_count}'))
+        logger().info(
+            f'Requesting AttentionBroker at {self.server_url} to stimulate {len(handle_count)} atoms'
+        )
         message = grpc_types.HandleCount(handle_count=handle_count)
         with grpc.insecure_channel(self.server_url) as channel:
             stub = AttentionBrokerStub(channel)
@@ -47,12 +46,10 @@ class AttentionBrokerGateway:
 
     def correlate(self, handle_set: Set[str]) -> Optional[str]:
         if handle_set is None:
-            das_error(
-                ValueError(
-                    f'Invalid handle_set {handle_set}'
-                )
-            )
-        logger().info(f'Requesting AttentionBroker at {self.server_url} to correlate {len(handle_set)} atoms')
+            das_error(ValueError(f'Invalid handle_set {handle_set}'))
+        logger().info(
+            f'Requesting AttentionBroker at {self.server_url} to correlate {len(handle_set)} atoms'
+        )
         message = grpc_types.HandleList(handle_list=handle_set)
         with grpc.insecure_channel(self.server_url) as channel:
             stub = AttentionBrokerStub(channel)

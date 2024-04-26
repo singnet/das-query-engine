@@ -1,8 +1,8 @@
 from concurrent import futures
 
-import grpc
 import echo_pb2
 import echo_pb2_grpc
+import grpc
 
 
 class Echo(echo_pb2_grpc.EchoServicer):
@@ -18,6 +18,7 @@ def serve():
     server.start()
     print("Server started, listening on " + port)
     server.wait_for_termination()
+
 
 if __name__ == "__main__":
     serve()

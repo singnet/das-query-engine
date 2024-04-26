@@ -1,6 +1,6 @@
-import grpc
 import echo_pb2
 import echo_pb2_grpc
+import grpc
 
 
 def run():
@@ -8,6 +8,7 @@ def run():
         stub = echo_pb2_grpc.EchoStub(channel)
         response = stub.echo(echo_pb2.EchoRequest(msg="blah"))
     print("Greeter client received: " + response.msg)
+
 
 if __name__ == "__main__":
     run()
