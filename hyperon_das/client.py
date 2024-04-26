@@ -61,13 +61,16 @@ class FunctionsClient:
             )
         except exceptions.HTTPError as e:
             with contextlib.suppress(pickle.UnpicklingError):
-                return deserialize(response.content).get('error')
-            das_error(
-                HTTPError(
-                    message=f"HTTP error for URL: '{self.url}' with payload: '{payload}'",
-                    details=str(e),
+                message = deserialize(response.content).get('error')
+
+                das_error(
+                    HTTPError(
+                        message="Please, check if your request payload is correctly formatted.",
+                        details=message,
+                        status_code=e.response.status_code,
+                    )
                 )
-            )
+
         except exceptions.RequestException as e:
             das_error(
                 RequestError(
@@ -130,11 +133,19 @@ class FunctionsClient:
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        payload = {
-            'action': 'query',
-            'input': {'query': query, 'parameters': parameters},
-        }
-        return self._send_request(payload)
+        try:
+            payload = {
+                'action': 'query',
+                'input': {'query': query, 'parameters': parameters},
+            }
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 400:
+                raise HTTPError(
+                    "Your query couldn't be processed due to an invalid format. Review the way the query is written and try again."
+                ) from None
+
+            raise e
 
     def count_atoms(self) -> Tuple[int, int]:
         payload = {
