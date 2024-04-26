@@ -1,5 +1,5 @@
 import grpc
-from typing import Dict, Any, Set
+from typing import Dict, Any, Set, Optional
 from hyperon_das.utils import das_error
 from hyperon_das.logger import logger
 
@@ -20,7 +20,7 @@ class AttentionBrokerGateway:
         self.server_url = f'{self.server_hostname}:{self.server_port}'
         self.ping()
 
-    def ping(self) -> str:
+    def ping(self) -> Optional[str]:
         logger().info(f'Pinging AttentionBroker at {self.server_url}')
         with grpc.insecure_channel(self.server_url) as channel:
             stub = AttentionBrokerStub(channel)
@@ -29,7 +29,7 @@ class AttentionBrokerGateway:
             return response.msg
         return None
 
-    def stimulate(self, handle_count: Set[str]) -> str:
+    def stimulate(self, handle_count: Set[str]) -> Optional[str]:
         if handle_count is None:
             das_error(
                 ValueError(
@@ -45,7 +45,7 @@ class AttentionBrokerGateway:
             return response.msg
         return None
 
-    def correlate(self, handle_set: Set[str]) -> str:
+    def correlate(self, handle_set: Set[str]) -> Optional[str]:
         if handle_set is None:
             das_error(
                 ValueError(
