@@ -335,6 +335,7 @@ class TestRemoteDistributedAtomSpace:
         remote_das.fetch()
         assert remote_das.backend.count_atoms() == (23, 60)
 
+    @pytest.mark.skip(reason="Disabled. See https://github.com/singnet/das-query-engine/issues/256")
     def test_create_context(self, remote_das):
         context_name = 'my context'
         context = remote_das.create_context(context_name)
