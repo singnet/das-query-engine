@@ -282,7 +282,7 @@ class TestRemoteDistributedAtomSpace:
         cursor: TraverseEngine = self.traversal(remote_das, metta_animal_base_handles.dinosaur)
         assert cursor.get()['handle'] == metta_animal_base_handles.dinosaur
 
-        def is_expression_link(self, link):
+        def is_expression_link(link):
             return True if link['type'] == 'Expression' else False
 
         links_iter = cursor.get_links(filter=is_expression_link)
@@ -303,7 +303,7 @@ class TestRemoteDistributedAtomSpace:
                 count -= 1
         assert count == 0
 
-        def is_literal(self, atom: dict):
+        def is_literal(atom: dict):
             return True if atom['is_literal'] is True else False
 
         neighbors_iter = cursor.get_neighbors(cursor_position=1, filter=is_literal)
