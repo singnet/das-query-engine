@@ -282,11 +282,10 @@ class TestRemoteDistributedAtomSpace:
         cursor: TraverseEngine = self.traversal(remote_das, metta_animal_base_handles.dinosaur)
         assert cursor.get()['handle'] == metta_animal_base_handles.dinosaur
 
-        class IsExpressionLink:
-            def filter(self, link):
-                return True if link['type'] == 'Expression' else False
+        def is_expression_link(self, link):
+            return True if link['type'] == 'Expression' else False
 
-        links_iter = cursor.get_links(filter=IsExpressionLink)
+        links_iter = cursor.get_links(filter=is_expression_link)
 
         expected_links = [
             remote_das.get_atom(handle)
@@ -304,14 +303,13 @@ class TestRemoteDistributedAtomSpace:
                 count -= 1
         assert count == 0
 
-        class IsLiteral:
-            def filter(self, atom: dict):
-                return True if atom['is_literal'] is True else False
+        def is_literal(self, atom: dict):
+            return True if atom['is_literal'] is True else False
 
-        neighbors_iter = cursor.get_neighbors(cursor_position=1, filter=IsLiteral)
+        neighbors_iter = cursor.get_neighbors(cursor_position=1, filter=is_literal)
         assert neighbors_iter.get()['handle'] == metta_animal_base_handles.reptile
 
-        atom = cursor.follow_link(cursor_position=2, filter=IsLiteral)
+        atom = cursor.follow_link(cursor_position=2, filter=is_literal)
         assert atom['handle'] == metta_animal_base_handles.triceratops
 
         cursor.goto(metta_animal_base_handles.human)

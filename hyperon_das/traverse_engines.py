@@ -1,4 +1,3 @@
-import abc
 from typing import TYPE_CHECKING, Any, Dict, Iterator
 
 from hyperon_das_atomdb import AtomDoesNotExist
@@ -7,19 +6,6 @@ from hyperon_das.cache.iterators import TraverseLinksIterator, TraverseNeighbors
 
 if TYPE_CHECKING:  # pragma no cover
     from hyperon_das.das import DistributedAtomSpace
-
-
-class MetaCustomFilter(metaclass=abc.ABCMeta):
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        return hasattr(subclass, 'filter') and callable(subclass.filter) or NotImplemented
-
-    @abc.abstractmethod
-    def filter(self, atom: Dict[str, Any]) -> bool:
-        """
-        Returns True if the atom should be kept, False otherwise.
-        """
-        ...  # pragma no cover
 
 
 class TraverseEngine:
@@ -49,7 +35,7 @@ class TraverseEngine:
         1. **link_type=XXX**: Filters to only contain links whose named_type == XXX.
         2. **cursor_position=N**: Filters the response so that only links with the current cursor at the position `n` of their target are returned.
         3. **target_type=XXX**: Filters to only contain links whose at least one of the targets has named_type == XXX.
-        4. **filter=F**: F is a class that must implement a filter() method used to filter the results after applying all other filters. filter() should expect a dict (the atom document) and return True if and only if this atom should be kept.
+        4. **filter=F**: F is a function that is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept.
 
         Returns:
             Iterator: An iterator that contains the links that match the criteria.
@@ -84,18 +70,18 @@ class TraverseEngine:
         1. **link_type=XXX**: Filters to only contain links whose named_type == XXX.
         2. **cursor_position=N**: Filters the response so that only links with the current cursor at the position `n` of their target are returned.
         3. **target_type=XXX**: Filters to only contain links whose at least one of the targets has named_type == XXX.
-        4. **filter=F**: F is a class or a tuple of classes that must implement a filter() method. That is used to filter the results after applying all other filters. filter() should expect a dict (the atom document) and return True if and only if this atom should be kept.
+        4. **filter=F**: F is a function or a tuple of functions That is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept.
                     
             Possible use cases to filter parameter:
             
-            a. traverse.get_neighbors(..., filter=CustomFilter)
-                -> The CustomFilter will be applied to Links
-            b. traverse.get_neighbors(..., filter=(CustomFilter1, CustomFilter2))
-                -> The CustomFilter1 will be applied to Links and CustomFilter2 will be applied to Targets
-            c. traverse.get_neighbors(..., filter=(None, CustomFilter2))
-                -> The CustomFilter2 will only be applied to Targets. This way there is no filter to Links
-            d. traverse.get_neighbors(..., filter=(Customfilter1, None))
-                -> The Customfilter1 will be applied to Links. This case is equal case `a`
+            a. traverse.get_neighbors(..., filter=custom_filter)
+                -> The custom_filter will be applied to Links
+            b. traverse.get_neighbors(..., filter=(custom_filter1, custom_filter2))
+                -> The custom_filter1 will be applied to Links and custom_filter2 will be applied to Targets
+            c. traverse.get_neighbors(..., filter=(None, custom_filter2))
+                -> The custom_filter2 will only be applied to Targets. This way there is no filter to Links
+            d. traverse.get_neighbors(..., filter=(custom_filter1, None))
+                -> The custom_filter1 will be applied to Links. This case is equal case `a`
 
         Returns:
             Iterator: An iterator that contains the neighbors that match the criteria.
@@ -105,7 +91,7 @@ class TraverseEngine:
                     link_type='Ex',
                     cursor_position=2,
                     target_type='Sy',
-                    filter=(LinkFilter1, TargetFilter2)
+                    filter=(link_filter, target_filter)
                 )
             >>> next(neighbors)
         """        
@@ -131,18 +117,18 @@ class TraverseEngine:
         1. **link_type=XXX**: Filters to only contain links whose named_type == XXX.
         2. **cursor_position=N**: Filters the response so that only links with the current cursor at the position `n` of their target are returned.
         3. **target_type=XXX**: Filters to only contain links whose at least one of the targets has named_type == XXX.
-        4. **filter=F**: F is a class or a tuple of classes that must implement a filter() method. That is used to filter the results after applying all other filters. filter() should expect a dict (the atom document) and return True if and only if this atom should be kept.
+        4. **filter=F**: F is a function or a tuple of functions That is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept.
                     
             Possible use cases to filter parameter:
             
-            a. traverse.get_neighbors(..., filter=CustomFilter)
-                -> The CustomFilter will be applied to Links
-            b. traverse.get_neighbors(..., filter=(CustomFilter1, CustomFilter2))
-                -> The CustomFilter1 will be applied to Links and CustomFilter2 will be applied to Targets
-            c. traverse.get_neighbors(..., filter=(None, CustomFilter2))
-                -> The CustomFilter2 will only be applied to Targets. This way there is no filter to Links
-            d. traverse.get_neighbors(..., filter=(Customfilter1, None))
-                -> The Customfilter1 will be applied to Links. This case is equal case `a`
+            a. traverse.get_neighbors(..., filter=custom_filter)
+                -> The custom_filter will be applied to Links
+            b. traverse.get_neighbors(..., filter=(custom_filter1, custom_filter2))
+                -> The custom_filter1 will be applied to Links and custom_filter2 will be applied to Targets
+            c. traverse.get_neighbors(..., filter=(None, custom_filter2))
+                -> The custom_filter2 will only be applied to Targets. This way there is no filter to Links
+            d. traverse.get_neighbors(..., filter=(custom_filter1, None))
+                -> The custom_filter1 will be applied to Links. This case is equal case `a`
 
         Returns:
             Dict[str, Any]: The current cursor. A Python dict with all atom data.

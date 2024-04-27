@@ -332,18 +332,17 @@ class TestTraverseEngine:
                 }
             )
 
-            class MyFilter:
-                def filter(self, link) -> bool:
-                    if 'weight' in link:
-                        return True
-                    return False
+            def my_filter(link) -> bool:
+                if 'weight' in link:
+                    return True
+                return False
 
             answers = _build_atom_answer(
                 animal_base_handles.human,
                 link_type='Similarity',
                 cursor_position=0,
                 target_type='Concept',
-                filter=MyFilter,
+                filter=my_filter,
             )
             assert answers == {"Similarity : ['human', 'snet']"}
 
@@ -409,18 +408,17 @@ class TestTraverseEngine:
                 }
             )
 
-            class MyFilter:
-                def filter(self, link) -> bool:
-                    if 'weight' in link and link['weight'] >= 0.5:
-                        return True
-                    return False
+            def my_filter(link) -> bool:
+                if 'weight' in link and link['weight'] >= 0.5:
+                    return True
+                return False
 
             answers = _build_atom_answer(
                 animal_base_handles.mammal,
                 link_type='Inheritance',
                 cursor_position=1,
                 target_type='Fake',
-                filter=MyFilter,
+                filter=my_filter,
             )
             assert answers == {"Inheritance : ['fake2', 'mammal']"}
 
@@ -496,17 +494,16 @@ class TestTraverseEngine:
                 }
             )
 
-            class MyFilter:
-                def filter(self, link) -> bool:
-                    if 'weight' in link and link['weight'] >= 0.5:
-                        return True
-                    return False
+            def my_filter(link) -> bool:
+                if 'weight' in link and link['weight'] >= 0.5:
+                    return True
+                return False
 
             answers = _build_atom_answer(
                 animal_base_handles.snake,
                 link_type='Similarity',
                 target_type='Fake',
-                filter=MyFilter,
+                filter=my_filter,
             )
             assert answers == {"Similarity : ['snake', 'fake1']"}
 
@@ -816,11 +813,10 @@ class TestTraverseEngine:
                 }
             )
 
-            class MyFilter:
-                def filter(self, target) -> bool:
-                    if 'weight' in target and target['weight'] >= 1:
-                        return True
-                    return False
+            def my_filter(target) -> bool:
+                if 'weight' in target and target['weight'] >= 1:
+                    return True
+                return False
 
             fake_h = AtomDB.node_handle('Fake', 'fake-h')
             fake_h2 = AtomDB.node_handle('Fake', 'fake-h2')
@@ -848,7 +844,7 @@ class TestTraverseEngine:
                 animal_base_handles.human,
                 link_type='Inheritance',
                 target_type='Fake',
-                filter=(None, MyFilter),
+                filter=(None, my_filter),
             )
             assert len(neighbors) == 1
 
@@ -932,19 +928,18 @@ class TestTraverseEngine:
             assert das.get_atom(fake_v2) in neighbors
             assert len(neighbors) == 1
 
-            class MyFilter:
-                def filter(self, target) -> bool:
-                    if 'weight' in target and target['weight'] >= 1:
-                        return True
-                    return False
+            def my_filter(target) -> bool:
+                if 'weight' in target and target['weight'] >= 1:
+                    return True
+                return False
 
             neighbors = _build_neighbors(
-                animal_base_handles.vine, link_type='Similarity', filter=(None, MyFilter)
+                animal_base_handles.vine, link_type='Similarity', filter=(None, my_filter)
             )
             assert len(neighbors) == 0
 
             neighbors = _build_neighbors(
-                animal_base_handles.vine, link_type='Inheritance', filter=(None, MyFilter)
+                animal_base_handles.vine, link_type='Inheritance', filter=(None, my_filter)
             )
             assert das.get_atom(fake_v1) in neighbors
             assert len(neighbors) == 1

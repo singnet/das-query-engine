@@ -469,21 +469,12 @@ class TraverseLinksIterator(QueryAnswerIterator):
         return True
 
     def _apply_custom_filter(self, atom: Dict[str, Any], F=None) -> bool:
-        from hyperon_das.traverse_engines import MetaCustomFilter
-
         custom_filter = F if F else self.custom_filter
 
-        try:
-            assert issubclass(
-                custom_filter, MetaCustomFilter
-            ), f"The '{custom_filter.__name__}' class must implement the 'filter(self, atom: dict) -> bool: ...' method"
-        except TypeError:
-            raise Exception(
-                f"The '{custom_filter.__name__}' must be a class that implement the 'filter(self, atom: dict) -> bool: ...' method"
-            )
+        assert callable(custom_filter), "The custom_filter must be a function with this signature 'def func(atom: dict) -> bool: ...'"
 
         try:
-            if not custom_filter().filter(atom):
+            if not custom_filter(atom):
                 return False
         except Exception as e:
             raise Exception(f"Error while applying the custom filter: {e}")
