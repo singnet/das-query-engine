@@ -8,5 +8,5 @@ class Context:
 
     def __init__(self, context_node: dict[str, Any], query_answers: List[List[QueryAnswer]]):
         self.name = context_node['name']
-        self.handle = context_node['handle']
+        self.handle = context_node['_id']
         self.query_answers = query_answers
