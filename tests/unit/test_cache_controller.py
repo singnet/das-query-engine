@@ -46,7 +46,7 @@ class TestCacheController:
     def test_add_context(self):
         controller = self._build_controller()
         context = Context(
-            {'name': 'blah', 'handle': 'h1'},
+            {'name': 'blah', '_id': 'h1'},
             [
                 [QueryAnswer({'handle': 'h1'}, None), QueryAnswer({'handle': 'h2'}, None)],
                 [QueryAnswer({'handle': 'h1'}, None), QueryAnswer({'handle': 'h3'}, None)],
