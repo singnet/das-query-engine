@@ -5,3 +5,4 @@
 [#241] Fix tests
 [#213] Add TraverseEngine to API documentation
 [#114] Persist new atoms in remote server
+[#216] Changed design for custom filters in TraverseEngine

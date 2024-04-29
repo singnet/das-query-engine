@@ -346,14 +346,6 @@ class TestTraverseEngine:
             )
             assert answers == {"Similarity : ['human', 'snet']"}
 
-            def my_second_filter(link):
-                if 'weight' in link and link['weight'] >= 0.5:
-                    return link
-
-            with pytest.raises(TypeError) as exc:
-                _build_atom_answer(animal_base_handles.human, filter=my_second_filter)
-            assert exc.value.args[0] == 'Filter must return bool'
-
         def _mammal_links():
             answers = _build_atom_answer(animal_base_handles.mammal, link_type='Inheritance')
             assert answers == {
@@ -852,7 +844,7 @@ class TestTraverseEngine:
                 animal_base_handles.human,
                 link_type='Inheritance',
                 target_type='Fake',
-                filter=my_filter,
+                filter=(None, my_filter),
             )
             assert len(neighbors) == 1
 
@@ -942,12 +934,12 @@ class TestTraverseEngine:
                 return False
 
             neighbors = _build_neighbors(
-                animal_base_handles.vine, link_type='Similarity', filter=my_filter
+                animal_base_handles.vine, link_type='Similarity', filter=(None, my_filter)
             )
             assert len(neighbors) == 0
 
             neighbors = _build_neighbors(
-                animal_base_handles.vine, link_type='Inheritance', filter=my_filter
+                animal_base_handles.vine, link_type='Inheritance', filter=(None, my_filter)
             )
             assert das.get_atom(fake_v1) in neighbors
             assert len(neighbors) == 1

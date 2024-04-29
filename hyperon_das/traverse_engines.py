@@ -35,8 +35,7 @@ class TraverseEngine:
         1. **link_type=XXX**: Filters to only contain links whose named_type == XXX.
         2. **cursor_position=N**: Filters the response so that only links with the current cursor at the position `n` of their target are returned.
         3. **target_type=XXX**: Filters to only contain links whose at least one of the targets has named_type == XXX.
-        4. **filter=F**: F is a function used to filter results after every other filters have been applied.
-            F should expect a dict (the atom document) and return True if and only if this atom should be kept.
+        4. **filter=F**: F is a function that is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept.
 
         Returns:
             Iterator: An iterator that contains the links that match the criteria.
@@ -71,8 +70,18 @@ class TraverseEngine:
         1. **link_type=XXX**: Filters to only contain links whose named_type == XXX.
         2. **cursor_position=N**: Filters the response so that only links with the current cursor at the position `n` of their target are returned.
         3. **target_type=XXX**: Filters to only contain links whose at least one of the targets has named_type == XXX.
-        4. **filter=F**: F is a function used to filter results after every other filters have been applied.
-            F should expect a dict (the atom document) and return True if and only if this atom should be kept.
+        4. **filter=F**: F is a function or a tuple of functions That is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept.
+                    
+            Possible use cases to filter parameter:
+            
+            a. traverse.get_neighbors(..., filter=custom_filter)
+                -> The custom_filter will be applied to Links
+            b. traverse.get_neighbors(..., filter=(custom_filter1, custom_filter2))
+                -> The custom_filter1 will be applied to Links and custom_filter2 will be applied to Targets
+            c. traverse.get_neighbors(..., filter=(None, custom_filter2))
+                -> The custom_filter2 will only be applied to Targets. This way there is no filter to Links
+            d. traverse.get_neighbors(..., filter=(custom_filter1, None))
+                -> The custom_filter1 will be applied to Links. This case is equal case `a`
 
         Returns:
             Iterator: An iterator that contains the neighbors that match the criteria.
@@ -82,11 +91,23 @@ class TraverseEngine:
                     link_type='Ex',
                     cursor_position=2,
                     target_type='Sy',
+                    filter=(link_filter, target_filter)
                 )
             >>> next(neighbors)
-        """
+        """        
+        custom_filter = kwargs.pop('filter', None)
+        filter_link = filter_target = None
+
+        if isinstance(custom_filter, tuple):
+            filter_link, filter_target = custom_filter
+        else:
+            filter_link = custom_filter
+
+        if filter_link is not None:
+            kwargs['filter'] = filter_link
+
         filtered_links = self.get_links(targets_only=True, **kwargs)
-        return TraverseNeighborsIterator(source=filtered_links)
+        return TraverseNeighborsIterator(source=filtered_links, filter=filter_target)
 
     def follow_link(self, **kwargs) -> Dict[str, Any]:
         """Update the current cursor by following the first of the neighbors that points to the current cursor.
@@ -96,8 +117,18 @@ class TraverseEngine:
         1. **link_type=XXX**: Filters to only contain links whose named_type == XXX.
         2. **cursor_position=N**: Filters the response so that only links with the current cursor at the position `n` of their target are returned.
         3. **target_type=XXX**: Filters to only contain links whose at least one of the targets has named_type == XXX.
-        4. **filter=F**: F is a function used to filter results after every other filters have been applied.
-            F should expect a dict (the atom document) and return True if and only if this atom should be kept.
+        4. **filter=F**: F is a function or a tuple of functions That is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept.
+                    
+            Possible use cases to filter parameter:
+            
+            a. traverse.get_neighbors(..., filter=custom_filter)
+                -> The custom_filter will be applied to Links
+            b. traverse.get_neighbors(..., filter=(custom_filter1, custom_filter2))
+                -> The custom_filter1 will be applied to Links and custom_filter2 will be applied to Targets
+            c. traverse.get_neighbors(..., filter=(None, custom_filter2))
+                -> The custom_filter2 will only be applied to Targets. This way there is no filter to Links
+            d. traverse.get_neighbors(..., filter=(custom_filter1, None))
+                -> The custom_filter1 will be applied to Links. This case is equal case `a`
 
         Returns:
             Dict[str, Any]: The current cursor. A Python dict with all atom data.

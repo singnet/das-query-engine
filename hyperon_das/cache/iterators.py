@@ -408,12 +408,12 @@ class TraverseLinksIterator(QueryAnswerIterator):
     def __init__(self, source: Union[LocalIncomingLinks, RemoteIncomingLinks], **kwargs) -> None:
         super().__init__(source)
         self.cursor = kwargs.get('cursor')
+        self.targets_only = kwargs.get('targets_only', False)
+        self.buffer = None
         self.link_type = kwargs.get('link_type')
         self.cursor_position = kwargs.get('cursor_position')
         self.target_type = kwargs.get('target_type')
         self.custom_filter = kwargs.get('filter')
-        self.targets_only = kwargs.get('targets_only', False)
-        self.buffer = None
         if not self.source.is_empty():
             self.iterator = self.source
             self.current_value = self._find_first_valid_element()
@@ -460,14 +460,24 @@ class TraverseLinksIterator(QueryAnswerIterator):
             if not any(target['named_type'] == self.target_type for target in targets):
                 return False
 
-        if self.custom_filter and callable(self.custom_filter) and not self.targets_only:
-            ret = self.custom_filter(link)
-            if not isinstance(ret, bool):
-                raise TypeError('Filter must return bool')
-            if ret is False:
+        if self.custom_filter:
+            deep_link = link.copy()
+            deep_link['targets'] = targets
+            if self._apply_custom_filter(deep_link) is False:
                 return False
 
         return True
+
+    def _apply_custom_filter(self, atom: Dict[str, Any], F=None) -> bool:
+        custom_filter = F if F else self.custom_filter
+
+        assert callable(custom_filter), "The custom_filter must be a function with this signature 'def func(atom: dict) -> bool: ...'"
+
+        try:
+            if not custom_filter(atom):
+                return False
+        except Exception as e:
+            raise Exception(f"Error while applying the custom filter: {e}")
 
     def is_empty(self) -> bool:
         return not self.current_value
@@ -480,6 +490,7 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
         self.cursor = self.source.cursor
         self.target_type = self.source.target_type
         self.visited_neighbors = []
+        self.custom_filter = kwargs.get('filter')
         if not self.source.is_empty():
             self.iterator = source
             self.current_value = self._find_first_valid_element()
@@ -525,11 +536,8 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
         ):
             return False
 
-        if self.source.custom_filter and callable(self.source.custom_filter):
-            ret = self.source.custom_filter(target)
-            if not isinstance(ret, bool):
-                raise TypeError('Filter must return bool')
-            if ret is False:
+        if self.custom_filter:
+            if self.source._apply_custom_filter(target, F=self.custom_filter) is False:
                 return False
 
         return True
