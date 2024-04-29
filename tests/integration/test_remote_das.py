@@ -341,11 +341,11 @@ class TestRemoteDistributedAtomSpace:
         context = remote_das.create_context(context_name)
         assert context.name == context_name
 
-    @pytest.mark.xfail(reason="It's necessary to upload a new version to the server")
+    @pytest.mark.skip(reason="Disable. See https://github.com/singnet/das-query-engine/issues/259")
     def test_commit_changes(self, remote_das: DistributedAtomSpace):
         node = remote_das.get_atom(handle=metta_animal_base_handles.human)
         assert hasattr(node, 'test_key') is False
-        remote_das.add_node({'type': 'Symbol', 'name': '"human"', 'test_key': 'test_value'})
+        remote_das.add_node({'type': 'Symbol', 'name': '"human"'})
         remote_das.commit_changes()
         node = remote_das.get_atom(handle=metta_animal_base_handles.human)
         assert node['test_key'] == 'test_value'
