@@ -67,7 +67,7 @@ class DistributedAtomSpace:
     def _create_context(
         self,
         name: str,
-        queries: Optional[List[Query]] = None,
+        queries: Optional[List[Query]] = [],
     ) -> Context:
         context_node = self.add_node({'type': Context.CONTEXT_NODE_TYPE, 'name': name})
         query_answer = [self.query(query, {'no_iterator': True}) for query in queries]
@@ -767,7 +767,7 @@ class DistributedAtomSpace:
     def create_context(
         self,
         name: str,
-        queries: Optional[List[Query]] = None,
+        queries: Optional[List[Query]] = [],
     ) -> Context:
         if self.system_parameters.get('running_on_server'):
             return self._create_context(name, queries)
