@@ -12,6 +12,10 @@ theme:
 watch:
   - hyperon_das
 
+markdown_extensions:
+  - attr_list
+  - md_in_html
+
 plugins:
   - mkdocstrings:
       handlers:
