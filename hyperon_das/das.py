@@ -21,38 +21,14 @@ from hyperon_das.utils import QueryAnswer, get_package_version
 class DistributedAtomSpace:
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
         self.system_parameters = system_parameters
-        self._set_default_system_parameters()
-        atomdb = kwargs.get('atomdb', 'ram')
-        query_engine = kwargs.get('query_engine', 'local')
-
-        if atomdb == "ram":
-            self.backend = InMemoryDB()
-        elif atomdb == "redis_mongo":
-            self.backend = RedisMongoDB(**kwargs)
-            if query_engine != "local":
-                raise InvalidDASParameters(
-                    message="'redis_mongo' AtomDB requires local query engine (i.e. 'query_engine=local')"
-                )
-        else:
-            raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
-
-        if query_engine == 'local':
-            self._das_type = 'local_ram_only' if atomdb == 'ram' else 'local_redis_mongo'
-            self.query_engine = LocalQueryEngine(self.backend, self.system_parameters, kwargs)
-            logger().info('Started local DAS')
-        elif query_engine == 'remote':
-            self._das_type = 'remote'
-            self.query_engine = RemoteQueryEngine(self.backend, self.system_parameters, kwargs)
-            logger().info('Started remote DAS')
-        else:
-            raise InvalidQueryEngine(
-                message="Use either 'local' or 'remote'",
-                details=f'query_engine={query_engine}',
-            )
-
+        self.atomdb = kwargs.get('atomdb', 'ram')
+        self.query_engine = kwargs.get('query_engine', 'local')
+        self.__set_default_system_parameters()
+        self.__set_backend(**kwargs)
+        self.__set_query_engine(**kwargs)
         self.cache_controller = CacheController(self.system_parameters)
 
-    def _set_default_system_parameters(self) -> None:
+    def __set_default_system_parameters(self) -> None:
         # Internals
         if not self.system_parameters.get('running_on_server'):
             self.system_parameters['running_on_server'] = False
@@ -60,9 +36,36 @@ class DistributedAtomSpace:
         if not self.system_parameters.get('cache_enabled'):
             self.system_parameters['cache_enabled'] = False
         if not self.system_parameters.get('attention_broker_hostname'):
-            self.system_parameters['attention_broker_hostname'] = "localhost"
+            self.system_parameters['attention_broker_hostname'] = 'localhost'
         if not self.system_parameters.get('attention_broker_port'):
             self.system_parameters['attention_broker_port'] = 27000
+
+    def __set_backend(self, **kwargs) -> None:
+        if self.atomdb == "ram":
+            self.backend = InMemoryDB()
+        elif self.atomdb == "redis_mongo":
+            self.backend = RedisMongoDB(**kwargs)
+            if self.query_engine != "local":
+                raise InvalidDASParameters(
+                    message="'redis_mongo' AtomDB requires local query engine (i.e. 'query_engine=local')"
+                )
+        else:
+            raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
+
+    def __set_query_engine(self, **kwargs) -> None:
+        if self.query_engine == 'local':
+            self._das_type = 'local_ram_only' if self.atomdb == 'ram' else 'local_redis_mongo'
+            self.query_engine = LocalQueryEngine(self.backend, self.system_parameters, kwargs)
+            logger().info('Started local DAS')
+        elif self.query_engine == 'remote':
+            self._das_type = 'remote'
+            self.query_engine = RemoteQueryEngine(self.backend, self.system_parameters, kwargs)
+            logger().info('Started remote DAS')
+        else:
+            raise InvalidQueryEngine(
+                message="Use either 'local' or 'remote'",
+                details=f'query_engine={self.query_engine}',
+            )
 
     def _create_context(
         self,
