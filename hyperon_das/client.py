@@ -12,14 +12,11 @@ from hyperon_das.utils import connect_to_server, das_error, deserialize, seriali
 
 
 class FunctionsClient:
-    def __init__(self, host: str, port: int, server_count: int = 0, name: Optional[str] = None):
-        if not host or not port:
+    def __init__(self, host: str, port: int, name: Optional[str] = None) -> None:
+        if not host and not port:
             das_error(ValueError("'host' and 'port' are mandatory parameters"))
-
+        self.name = name if name else f'client_{host}:{port}'
         self.url = connect_to_server(host, port)
-
-        if not name:
-            self.name = f'server-{server_count}'
 
     def _send_request(self, payload) -> Any:
         try:
@@ -62,8 +59,7 @@ class FunctionsClient:
             )
         except exceptions.HTTPError as e:
             with contextlib.suppress(pickle.UnpicklingError):
-                message = deserialize(response.content).get('error')
-
+                message = deserialize(response.content)
                 das_error(
                     HTTPError(
                         message="Please, check if your request payload is correctly formatted.",
@@ -71,7 +67,6 @@ class FunctionsClient:
                         status_code=e.response.status_code,
                     )
                 )
-
         except exceptions.RequestException as e:
             das_error(
                 RequestError(
@@ -85,30 +80,39 @@ class FunctionsClient:
             'action': 'get_atom',
             'input': {'handle': handle},
         }
-        response = self._send_request(payload)
-        if 'Nonexistent' in response:
-            das_error(AtomDoesNotExist('error'))
-        return response
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 404:
+                raise AtomDoesNotExist(message='Atom Nonexistent')
+            else:
+                raise e
 
     def get_node(self, node_type: str, node_name: str) -> Union[str, Dict]:
         payload = {
             'action': 'get_node',
             'input': {'node_type': node_type, 'node_name': node_name},
         }
-        response = self._send_request(payload)
-        if 'Nonexistent' in response:
-            das_error(NodeDoesNotExist('error'))
-        return response
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 404:
+                raise NodeDoesNotExist(message='Node Nonexistent')
+            else:
+                raise e
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         payload = {
             'action': 'get_link',
             'input': {'link_type': link_type, 'link_targets': link_targets},
         }
-        response = self._send_request(payload)
-        if 'Nonexistent' in response:
-            das_error(LinkDoesNotExist('error'))
-        return response
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 404:
+                raise LinkDoesNotExist(message='Link Nonexistent')
+            else:
+                raise e
 
     def get_links(
         self,
@@ -126,8 +130,15 @@ class FunctionsClient:
 
         if link_targets:
             payload['input']['link_targets'] = link_targets
-
-        return self._send_request(payload)
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 404:
+                raise AtomDoesNotExist(message='Atom Nonexistent')
+            elif e.status_code == 400:
+                raise ValueError(str(e))
+            else:
+                raise e
 
     def query(
         self,
@@ -142,10 +153,9 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 400:
-                raise HTTPError(
-                    "Your query couldn't be processed due to an invalid format. Review the way the query is written and try again."
-                ) from None
-
+                raise ValueError("Your query couldn't be processed due to an invalid format. Review the way the query is written and try again.", str(e))
+            elif e.status_code == 404:
+                raise Exception("Your query couldn't be processed because Atom nonexistent", str(e))
             raise e
 
     def count_atoms(self) -> Tuple[int, int]:
@@ -160,7 +170,13 @@ class FunctionsClient:
             'action': 'commit_changes',
             'input': {'kwargs': kwargs},
         }
-        return self._send_request(payload)
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 403:
+                raise ValueError(str(e))
+            else:
+                raise e
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
@@ -168,14 +184,12 @@ class FunctionsClient:
         payload = {
             'action': 'get_incoming_links',
             'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
-        }
-        response = self._send_request(payload)
-        if response and 'error' in response:
-            logger().debug(
-                f'Error during `get_incoming_links` request on remote Das: {response["error"]}'
-            )
+        }        
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            logger().debug(f'Error during `get_incoming_links` request on remote Das: {str(e)}')
             return None, [] if kwargs.get('cursor') is not None else []
-        return response
 
     def create_field_index(
         self,
@@ -193,14 +207,23 @@ class FunctionsClient:
                 'composite_type': composite_type,
             },
         }
-        return self._send_request(payload)
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 400:
+                raise ValueError(str(e))
+            else:
+                raise e
 
     def custom_query(self, index_id: str, **kwargs) -> List[Dict[str, Any]]:
         payload = {
             'action': 'custom_query',
             'input': {'index_id': index_id, 'kwargs': kwargs},
         }
-        return self._send_request(payload)
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            raise e
 
     def fetch(
         self,
@@ -213,11 +236,22 @@ class FunctionsClient:
             'action': 'fetch',
             'input': {'query': query, 'host': host, 'port': port, 'kwargs': kwargs},
         }
-        return self._send_request(payload)
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            raise e
 
     def create_context(self, name: str, queries: Optional[List[Query]]) -> Any:
         payload = {
             'action': 'create_context',
             'input': {'name': name, 'queries': queries},
         }
-        return self._send_request(payload)
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 404:
+                raise AtomDoesNotExist('Atom nonexistent')
+            elif e.status_code == 400:
+                raise ValueError(str(e))
+            else:
+                raise e

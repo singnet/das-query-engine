@@ -287,7 +287,7 @@ class TestFunctionsClient:
             response=mock_response,
         )
 
-        with pytest.raises(HTTPError):
+        with pytest.raises(ValueError):
             client.query(query, parameters=[])
 
         mock_request.assert_called_with(
