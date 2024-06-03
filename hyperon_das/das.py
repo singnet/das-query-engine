@@ -23,12 +23,12 @@ class DistributedAtomSpace:
         self.system_parameters = system_parameters
         self.atomdb = kwargs.get('atomdb', 'ram')
         self.query_engine = kwargs.get('query_engine', 'local')
-        self.__set_default_system_parameters()
-        self.__set_backend(**kwargs)
-        self.__set_query_engine(**kwargs)
+        self._set_default_system_parameters()
+        self._set_backend(**kwargs)
+        self._set_query_engine(**kwargs)
         self.cache_controller = CacheController(self.system_parameters)
 
-    def __set_default_system_parameters(self) -> None:
+    def _set_default_system_parameters(self) -> None:
         # Internals
         if not self.system_parameters.get('running_on_server'):
             self.system_parameters['running_on_server'] = False
@@ -40,7 +40,7 @@ class DistributedAtomSpace:
         if not self.system_parameters.get('attention_broker_port'):
             self.system_parameters['attention_broker_port'] = 27000
 
-    def __set_backend(self, **kwargs) -> None:
+    def _set_backend(self, **kwargs) -> None:
         if self.atomdb == "ram":
             self.backend = InMemoryDB()
         elif self.atomdb == "redis_mongo":
@@ -52,7 +52,7 @@ class DistributedAtomSpace:
         else:
             raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
 
-    def __set_query_engine(self, **kwargs) -> None:
+    def _set_query_engine(self, **kwargs) -> None:
         if self.query_engine == 'local':
             self._das_type = 'local_ram_only' if self.atomdb == 'ram' else 'local_redis_mongo'
             self.query_engine = LocalQueryEngine(self.backend, self.system_parameters, kwargs)

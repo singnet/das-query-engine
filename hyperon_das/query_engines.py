@@ -428,7 +428,7 @@ class RemoteQueryEngine(QueryEngine):
     def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
         self.system_parameters = system_parameters
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
-        self.__mode = kwargs.get('mode', 'r')
+        self.__mode = kwargs.get('mode', 'read-only')
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
         if not self.host or not self.port:
@@ -548,14 +548,14 @@ class RemoteQueryEngine(QueryEngine):
         return tuple([x + y for x, y in zip(local_answer, remote_answer)])
 
     def commit(self, **kwargs) -> None:
-        if self.__mode == 'w':
+        if self.__mode == 'read-write':
             if self.local_query_engine.has_buffer():
                 return self.remote_das.commit_changes(buffer=self.local_query_engine.buffer)
             return self.remote_das.commit_changes()
-        elif self.__mode == 'r':
+        elif self.__mode == 'read-only':
             das_error(PermissionError("Commit can't be executed in read mode"))
         else:
-            das_error(ValueError("Invalid mode: '{self.__mode}'. Use 'r' to read or 'w' to write."))
+            das_error(ValueError("Invalid mode: '{self.__mode}'. Use 'read-only' or 'read-write'"))
 
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
         das_error(NotImplementedError())

@@ -71,9 +71,9 @@ class TraverseEngine:
         2. **cursor_position=N**: Filters the response so that only links with the current cursor at the position `n` of their target are returned.
         3. **target_type=XXX**: Filters to only contain links whose at least one of the targets has named_type == XXX.
         4. **filter=F**: F is a function or a tuple of functions That is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept.
-                    
+
             Possible use cases to filter parameter:
-            
+
             a. traverse.get_neighbors(..., filter=custom_filter)
                 -> The custom_filter will be applied to Links
             b. traverse.get_neighbors(..., filter=(custom_filter1, custom_filter2))
@@ -94,7 +94,7 @@ class TraverseEngine:
                     filter=(link_filter, target_filter)
                 )
             >>> next(neighbors)
-        """        
+        """
         custom_filter = kwargs.pop('filter', None)
         filter_link = filter_target = None
 
@@ -118,9 +118,9 @@ class TraverseEngine:
         2. **cursor_position=N**: Filters the response so that only links with the current cursor at the position `n` of their target are returned.
         3. **target_type=XXX**: Filters to only contain links whose at least one of the targets has named_type == XXX.
         4. **filter=F**: F is a function or a tuple of functions That is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept.
-                    
+
             Possible use cases to filter parameter:
-            
+
             a. traverse.get_neighbors(..., filter=custom_filter)
                 -> The custom_filter will be applied to Links
             b. traverse.get_neighbors(..., filter=(custom_filter1, custom_filter2))

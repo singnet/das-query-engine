@@ -471,7 +471,9 @@ class TraverseLinksIterator(QueryAnswerIterator):
     def _apply_custom_filter(self, atom: Dict[str, Any], F=None) -> bool:
         custom_filter = F if F else self.custom_filter
 
-        assert callable(custom_filter), "The custom_filter must be a function with this signature 'def func(atom: dict) -> bool: ...'"
+        assert callable(
+            custom_filter
+        ), "The custom_filter must be a function with this signature 'def func(atom: dict) -> bool: ...'"
 
         try:
             if not custom_filter(atom):
