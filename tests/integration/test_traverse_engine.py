@@ -96,7 +96,10 @@ class TestTraverseEngine:
             return atom['is_literal'] is True
 
         neighbors = traverse.get_neighbors(
-            link_type='Expression', cursor_position=2, target_type='Symbol', filter=(None, is_literal)
+            link_type='Expression',
+            cursor_position=2,
+            target_type='Symbol',
+            filter=(None, is_literal),
         )
         neighbors_handles = sorted([neighbor['handle'] for neighbor in neighbors])
         assert neighbors_handles == sorted(
@@ -130,32 +133,34 @@ class TestTraverseEngine:
             link_type='Expression', cursor_position=2, target_type='Symbol', filter=(None, is_ent)
         )
         assert traverse.get()['name'] == '"ent"'
-    
-        # Get neighbors with filter as Tuple        
+
+        # Get neighbors with filter as Tuple
         traverse = das.get_traversal_cursor(handle=metta_animal_base_handles.human)
-        
+
         def is_expression_link(atom):
             return atom['named_type'] == 'Expression'
-        
+
         def is_mammal(atom):
             return atom['name'] == '"mammal"'
-            
+
         neighbors = traverse.get_neighbors(filter=(is_expression_link, is_mammal))
         assert [i['handle'] for i in neighbors] == [metta_animal_base_handles.mammal]
         neighbors = traverse.get_neighbors(filter=(None, is_mammal))
         assert [i['handle'] for i in neighbors] == [metta_animal_base_handles.mammal]
         neighbors = traverse.get_neighbors(filter=(is_expression_link, None))
         handles = sorted([i['handle'] for i in neighbors])
-        assert handles == sorted([
-            metta_animal_base_handles.chimp,
-            metta_animal_base_handles.monkey,
-            metta_animal_base_handles.ent,
-            metta_animal_base_handles.mammal,
-            metta_animal_base_handles.Concept,
-            metta_animal_base_handles.Similarity,
-            metta_animal_base_handles.Inheritance,
-            metta_animal_base_handles.typedef_mark,
-        ])
+        assert handles == sorted(
+            [
+                metta_animal_base_handles.chimp,
+                metta_animal_base_handles.monkey,
+                metta_animal_base_handles.ent,
+                metta_animal_base_handles.mammal,
+                metta_animal_base_handles.Concept,
+                metta_animal_base_handles.Similarity,
+                metta_animal_base_handles.Inheritance,
+                metta_animal_base_handles.typedef_mark,
+            ]
+        )
         neighbors = traverse.get_neighbors(filter=is_expression_link)
         assert sorted([i['handle'] for i in neighbors]) == sorted(
             [

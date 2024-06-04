@@ -349,3 +349,20 @@ class TestRemoteDistributedAtomSpace:
         remote_das.commit_changes()
         node = remote_das.get_atom(handle=metta_animal_base_handles.human)
         assert node['test_key'] == 'test_value'
+
+    def test_commit_changes_method_with_mode_parameter(self):
+        das = DistributedAtomSpace(
+            mode='w', query_engine='remote', host=remote_das_host, port=remote_das_port
+        )
+
+        with pytest.raises(PermissionError):
+            das = DistributedAtomSpace(
+                query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
+            das.commit_changes()
+
+        with pytest.raises(ValueError):
+            das = DistributedAtomSpace(
+                mode='blah', query_engine='remote', host=remote_das_host, port=remote_das_port
+            )
+            das.commit_changes()
