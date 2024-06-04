@@ -1,31 +1,29 @@
 # Hyperon DAS
 
-Hi! This package is a query engine API for Distributed AtomSpace (DAS). When is possible execute queries using **[Pattern Matcher](https://wiki.opencog.org/w/The_Pattern_Matcher)**
+A data manipulation API for Distributed Atomspace (DAS). It allows queries with pattern matching capabilities and traversal of the Atomspace hypergraph.
 
 ## Table of Contents
 - [Hyperon DAS](#hyperon-das)
   - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
   - [Installation](#installation)
     - [Using-pip](#using-pip)
     - [Using-Poetry](#using-poetry)
-  - [Pre-Commit Setup](#pre-commit-setup)
   - [Usage](#usage)
-    - [Local](#local)
-    - [Remote](#remote)
-    - [Server](#server)
+    - [Local DAS](#local-das)
+    - [Remote DAS](#remote-das)
+    - [Server DAS](#server-das)
   - [TraverseEngine](#traverseengine)
     - [Creating a TraverseEngine object](#creating-a-traverseengine-object)
     - [Traversal Methods](#traversal-methods)
     - [Parameters for Traversal Methods](#parameters-for-traversal-methods)
   - [Examples](#examples)
-    - [Local DAS](#local-das)
-    - [Remote DAS](#remote-das)
-      - [Local Scope](#local-scope)
-      - [Remote scope](#remote-scope)
-      - [Remote scope synchronized with local Atoms](#remote-scope-synchronized-with-local-atoms)
-    - [Traverse](#traverse)
   - [Tests](#tests)
   - [Release Notes](#release-notes)
+
+## Overview
+
+For more details about the Distributed Atomspace and its components, you can see it on this page: [DAS Overview](https://singnet.github.io/das/das-overview)
 
 ## Installation
 
@@ -73,19 +71,11 @@ If you prefer to manage your Python projects with [Poetry](https://python-poetry
 
 Now you can run the project within the Poetry virtual environment.
 
-## Pre-Commit Setup
-
-Before pushing your changes, it's recommended to set up pre-commit to run automated tests locally. Run the following command (needs to be done once):
-
-```bash
-pre-commit install
-```
-
 ## Usage
 
-You can instantiate DAS in three different ways. see below:
+You can instantiate DAS in three different ways:
 
-### Local
+### Local DAS
 This is a local instance of DAS with default settings.
 
 ```python
@@ -94,9 +84,9 @@ from hyperon_das import DistributedAtomSpace
 das = DistributedAtomSpace()
 ```
 
-### Remote
+### Remote DAS
 
-To create a remote DAS, you need to specify the 'query_engine' parameter as 'remote' and pass the machine, 'host' and 'port' parameters. See below how to do this:
+You need to specify the 'query_engine' parameter as 'remote' and pass 'host' and 'port' of the:
 
 ```python
 from hyperon_das import DistributedAtomSpace
@@ -104,8 +94,8 @@ from hyperon_das import DistributedAtomSpace
 das = DistributedAtomSpace(query_engine='remote', host='0.0.0.0', port=1234)
 ```
 
-### Server
-To create a DAS server, you will need to specify the 'atomdb' parameter as 'redis_mongo' and pass the database parameters. The databases supported in this release are Redis and MongoDB. Therefore, the minimum expected parameters are:
+### Server DAS
+You'll need to specify the 'atomdb' parameter as 'redis_mongo' and pass the database parameters. The databases supported in this release are Redis and MongoDB. Therefore, the minimum expected parameters are:
 
 - mongo_hostname
 - mongo_port
@@ -138,14 +128,11 @@ das = DistributedAtomSpace(
 
 ## TraverseEngine
 
-Introducing TraverseEngine! This API functionality can process some requests related to hypergraph traversal. In other words, it allows a given Atom to travel to it's neighborhood through adjacent Links.
+Introducing TraverseEngine! This API functionality can process some requests related to hypergraph traversal. In other words, it allows a given Atom to travel to it's neighborhood through adjacent links.
 
 ### Creating a TraverseEngine object
 
 To create a TraverseEngine object, use the `get_traversal_cursor` method, which expects a handle as a starting point for the traversal.
-
-Optionally, you can provide kwargs parameters: 
-    - `handles_only` is a bool and dafaults is False. If True, `get` methods in TraverseEngine return handles only.
 
 Example:
 
@@ -154,7 +141,7 @@ from hyperon_das import DistributedAtomSpace
 
 das = DistributedAtomSpace()
 
-traverse_engine = das.get_traversal_cursor(handle='12345', handles_only=True)
+traverse_engine = das.get_traversal_cursor(handle='12345')
 ```
 
 ### Traversal Methods
@@ -172,284 +159,36 @@ The TraverseEngine provides some methods for graph traversal:
 Various parameters can be passed to the traversal methods to filter the results. For example:
 
 1. **link_type=XXX**: Filters to contain only links whose named_type == XXX.
-2. **cursor_position=N**: filters the response so that only links with the current cursor at the nth position of their target are returned. (only available in the `get_links` method)
-3. **target_type=XXX**: Filters to contain only links whose at least one of the targets has named_type == XXX.
-4. **unique_path=FLAG**: if FLAG is True, raise an exception if there's more then one possible neighbor to select after applying all filters. (only available in the `follow_link` method)
-5. **filter=F**: F is a function used to filter results after every other filters have been applied. F should expect a dict (the atom document) and return True if and only if this atom should be kept. (only available when the TraverseEngine object is created by passing the `handles_only=False` parameter)
+2. **cursor_position=N**: Filters the response so that only links with the current cursor at the nth position of their target are returned.
+3. **target_type=XXX**:  Filters to only contain links whose at least one of the targets has named_type == XXX.
+4. **filter=F**: F is a function or a tuple of functions That is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept. It's possible to apply custom filters to both Links and Neighbors. See bellow:                 
+
+Possible use cases to filter parameter:
+
+    a. traverse.get_neighbors(..., filter=custom_filter)
+        -> The custom_filter will be applied to Links
+    b. traverse.get_neighbors(..., filter=(custom_filter1, custom_filter2))
+        -> The custom_filter1 will be applied to Links and custom_filter2 will be applied Targets
+    c. traverse.get_neighbors(..., filter=(None, custom_filter2))
+        -> The custom_filter2 will only be applied to Targets. This way there is no filter to Links
+    d. traverse.get_neighbors(..., filter=(custom_filter1, None))
+        -> The custom_filter1 will be applied to Links. This case is equal case `a`
 
 ## Examples
 
-### Local DAS
+For the examples using the API, see the [User's Guide](https://singnet.github.io/das/das-users-guide) 
 
-This way it is only possible to make queries in your local memory with the Atoms that you placed in the DAS. See bellow:
-
-```python
-from hyperon_das import DistributedAtomSpace
-
-das = DistributedAtomSpace()
-
-das.count_atoms() # (0, 0)
-
-das.add_link({
-    'type': 'Inheritance',
-    'targets': [
-        {'type': 'Concept', 'name': 'human'},
-        {'type': 'Concept', 'name': 'mammal'}
-    ],
-})
-
-das.add_link({
-    'type': 'Inheritance',
-    'targets': [
-        {'type': 'Concept', 'name': 'monkey'},
-        {'type': 'Concept', 'name': 'mammal'}
-    ]
-})
-
-das.count_atoms() # (3, 2)
-
-query = {
-    'atom_type': 'link',
-    'type': 'Inheritance',
-    'targets': [
-        {'atom_type': 'variable', 'name': 'v1'},
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
-    ]
-}
-
-query_params = {
-    "toplevel_only": False
-}
-
-resp = das.query(query, query_params)
-
-print(resp)
-```
-```bash
-[
-    {
-        "handle": "c93e1e758c53912638438e2a7d7f7b7f",
-        "type": "Inheritance",
-        "template": ["Inheritance", "Concept", "Concept"],
-        "targets": [
-            {
-                "handle": "af12f10f9ae2002a1607ba0b47ba8407",
-                "type": "Concept",
-                "name": "human",
-            },
-            {
-                "handle": "bdfe4e7a431f73386f37c6448afe5840",
-                "type": "Concept",
-                "name": "mammal",
-            },
-        ],
-    },
-    {
-        "handle": "f31dfe97db782e8cec26de18dddf8965",
-        "type": "Inheritance",
-        "template": ["Inheritance", "Concept", "Concept"],
-        "targets": [
-            {
-                "handle": "1cdffc6b0b89ff41d68bec237481d1e1",
-                "type": "Concept",
-                "name": "monkey",
-            },
-            {
-                "handle": "bdfe4e7a431f73386f37c6448afe5840",
-                "type": "Concept",
-                "name": "mammal",
-            },
-        ],
-    },
-]
-```
-
-### Remote DAS
-
-This way it'ss possible to make queries in your local memory and on the remote machine that you need to pass during the creation of DAS instance. See below:
-
-```python
-from hyperon_das import DistributedAtomSpace
-
-das = DistributedAtomSpace(query_engine='remote', host='192.32.11.45', port=9000)
-```
-
-In the query method is possible pass query_scope parameter with four available values. This specifying whether you want to make the query local, remote, local and remote or synchronize and remote. If you don't pass the default is "remote_only"
-
-1. "local_only"
-- Only local query 
-2. "remote_only"
-- Only remote query
-3. "local_and_remote"
-- This type is not available yet. So, this will raise an exception
-4. "synchronous_update"
-- Before make query it will commit your local changes and then make the remote query
-
-
-#### Local Scope
-
-```python
-query = {
-    'atom_type': 'link',
-    'type': 'Inheritance',
-    'targets': [
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'humana'},
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammala'},
-    ]
-}
-
-query_params = {
-    "toplevel_only": False,
-    "query_scope": "local_only"
-}
-
-resp = das.query(query, query_params)
-print(resp)
-```
-```bash
-[]
-```
-
-#### Remote scope
-
-```python
-query = {
-    'atom_type': 'link',
-    'type': 'Inheritance',
-    'targets': [
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'human'},
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
-    ]
-}
-
-query_params = {
-    "toplevel_only": False
-}
-
-resp = das.query(query, query_params)
-
-print(resp)
-```
-```bash
-[
-    {
-        "handle": "c93e1e758c53912638438e2a7d7f7b7f",
-        "type": "Inheritance",
-        "template": ["Inheritance", "Concept", "Concept"],
-        "targets": [
-            {
-                "handle": "af12f10f9ae2002a1607ba0b47ba8407",
-                "type": "Concept",
-                "name": "human",
-            },
-            {
-                "handle": "bdfe4e7a431f73386f37c6448afe5840",
-                "type": "Concept",
-                "name": "mammal",
-            },
-        ],
-    }
-]
-```
-
-#### Remote scope synchronized with local Atoms
-
-```python
-
-# Add a local Link
-das.add_link({
-    'type': 'Inheritance',
-    'targets': [
-        {'type': 'Concept', 'name': 'monkey'},
-        {'type': 'Concept', 'name': 'mammal'}
-    ]
-})
-
-query = {
-    'atom_type': 'link',
-    'type': 'Inheritance',
-    'targets': [
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'human'},
-        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
-    ]
-}
-
-query_params = {
-    "toplevel_only": False,
-    "query_scope": "synchronous_update"
-}
-
-resp = das.query(query, query_params)
-
-print(resp)
-```
-```bash
-[
-    {
-        "handle": "c93e1e758c53912638438e2a7d7f7b7f",
-        "type": "Inheritance",
-        "template": ["Inheritance", "Concept", "Concept"],
-        "targets": [
-            {
-                "handle": "af12f10f9ae2002a1607ba0b47ba8407",
-                "type": "Concept",
-                "name": "human",
-            },
-            {
-                "handle": "bdfe4e7a431f73386f37c6448afe5840",
-                "type": "Concept",
-                "name": "mammal",
-            },
-        ],
-    },
-    {
-        "handle": "f31dfe97db782e8cec26de18dddf8965",
-        "type": "Inheritance",
-        "template": ["Inheritance", "Concept", "Concept"],
-        "targets": [
-            {
-                "handle": "1cdffc6b0b89ff41d68bec237481d1e1",
-                "type": "Concept",
-                "name": "monkey",
-            },
-            {
-                "handle": "bdfe4e7a431f73386f37c6448afe5840",
-                "type": "Concept",
-                "name": "mammal",
-            },
-        ],
-    },
-]
-```
-
-### Traverse
-
-```python
-from hyperon_das import DistributedAtomSpace
-
-das = DistributedAtomSpace(query_engine='remote', host='192.32.11.45', port=9000)
-
-traverse = das.get_traversal_cursor(handle='12345', handles_only=True)
-
-
-current_cursor = traverse.get()
-
-links = traverse.get_links(link_type='Similarity', cursor_position=0, target_type='Concept')
-
-neighbors = traverse.get_neighbors(link_type='Inheritance', target_type='Concept')
-
-traverse.follow_link(link_type='Similarity', unique_path=True)
-
-traverse.goto(handle='9990')
-
-```
 
 ## Tests
 
-You can run the command below to run the unit tests
+In the main project directory, you can run the command below to run the unit and integration tests
 
 ```bash
-make test-unit
+make unit-tests
+```
+
+```bash
+make integration-tests
 ```
 
 ## Release Notes
