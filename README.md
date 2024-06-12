@@ -5,25 +5,22 @@ A data manipulation API for Distributed Atomspace (DAS). It allows queries with 
 ## Table of Contents
 - [Hyperon DAS](#hyperon-das)
   - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
+  - [References and Guides](#references-and-guides)
   - [Installation](#installation)
     - [Using-pip](#using-pip)
     - [Using-Poetry](#using-poetry)
-  - [Usage](#usage)
-    - [Local DAS](#local-das)
-    - [Remote DAS](#remote-das)
-    - [Server DAS](#server-das)
   - [TraverseEngine](#traverseengine)
     - [Creating a TraverseEngine object](#creating-a-traverseengine-object)
     - [Traversal Methods](#traversal-methods)
     - [Parameters for Traversal Methods](#parameters-for-traversal-methods)
-  - [Examples](#examples)
   - [Tests](#tests)
-  - [Release Notes](#release-notes)
 
-## Overview
+## References and Guides
 
-For more details about the Distributed Atomspace and its components, you can see it on this page: [DAS Overview](https://singnet.github.io/das/das-overview)
+- Details about the Distributed Atomspace and its components: [DAS Overview](https://singnet.github.io/das/das-overview)
+- PYPI Library package: [hyperon-das](https://pypi.org/project/hyperon-das/)
+- Examples using the API: [User's Guide](https://singnet.github.io/das/das-users-guide) 
+- Release notes: [DAS Query Engine Releases](https://github.com/singnet/das-query-engine/releases)
 
 ## Installation
 
@@ -70,61 +67,6 @@ If you prefer to manage your Python projects with [Poetry](https://python-poetry
     ``` 
 
 Now you can run the project within the Poetry virtual environment.
-
-## Usage
-
-You can instantiate DAS in three different ways:
-
-### Local DAS
-This is a local instance of DAS with default settings.
-
-```python
-from hyperon_das import DistributedAtomSpace
-
-das = DistributedAtomSpace()
-```
-
-### Remote DAS
-
-You need to specify the 'query_engine' parameter as 'remote' and pass 'host' and 'port' of the:
-
-```python
-from hyperon_das import DistributedAtomSpace
-
-das = DistributedAtomSpace(query_engine='remote', host='0.0.0.0', port=1234)
-```
-
-### Server DAS
-You'll need to specify the 'atomdb' parameter as 'redis_mongo' and pass the database parameters. The databases supported in this release are Redis and MongoDB. Therefore, the minimum expected parameters are:
-
-- mongo_hostname
-- mongo_port
-- mongo_username
-- mongo_password
-- redis_hostname
-- redis_port
-
-but it is possible to pass other configuration parameters:
-
-- mongo_tls_ca_file
-- redis_username
-- redis_password
-- redis_cluster
-- redis_ssl
-
-```python
-from hyperon_das import DistributedAtomSpace
-
-das = DistributedAtomSpace(
-    atomdb='redis_mongo',
-    mongo_hostname='127.0.0.2',
-    mongo_port=27017,
-    mongo_username='mongo',
-    mongo_password='mongo',
-    redis_hostname='127.0.0.1',
-    redis_port=6379
-)
-```
 
 ## TraverseEngine
 
@@ -174,23 +116,64 @@ Possible use cases to filter parameter:
     d. traverse.get_neighbors(..., filter=(custom_filter1, None))
         -> The custom_filter1 will be applied to Links. This case is equal case `a`
 
-## Examples
-
-For the examples using the API, see the [User's Guide](https://singnet.github.io/das/das-users-guide) 
-
-
 ## Tests
 
-In the main project directory, you can run the command below to run the unit and integration tests
+In the main project directory, you can run the command below to run the unit tests
 
 ```bash
 make unit-tests
 ```
 
+You can do the same to run integration tests
+
 ```bash
 make integration-tests
 ```
 
-## Release Notes
+The integration tests use a remote testing server hosted on Vultr, at the address `45.63.85.59`, port `8080`. The loaded knowledge base is the animal base, which contains the Nodes and Links listed below:
 
-[DAS Query Engine Releases](https://github.com/singnet/das-query-engine/releases)
+```text
+(: Similarity Type)
+(: Concept Type)
+(: Inheritance Type)
+(: "human" Concept)
+(: "monkey" Concept)
+(: "chimp" Concept)
+(: "snake" Concept)
+(: "earthworm" Concept)
+(: "rhino" Concept)
+(: "triceratops" Concept)
+(: "vine" Concept)
+(: "ent" Concept)
+(: "mammal" Concept)
+(: "animal" Concept)
+(: "reptile" Concept)
+(: "dinosaur" Concept)
+(: "plant" Concept)
+(Similarity "human" "monkey")
+(Similarity "human" "chimp")
+(Similarity "chimp" "monkey")
+(Similarity "snake" "earthworm")
+(Similarity "rhino" "triceratops")
+(Similarity "snake" "vine")
+(Similarity "human" "ent")
+(Inheritance "human" "mammal")
+(Inheritance "monkey" "mammal")
+(Inheritance "chimp" "mammal")
+(Inheritance "mammal" "animal")
+(Inheritance "reptile" "animal")
+(Inheritance "snake" "reptile")
+(Inheritance "dinosaur" "reptile")
+(Inheritance "triceratops" "dinosaur")
+(Inheritance "earthworm" "animal")
+(Inheritance "rhino" "mammal")
+(Inheritance "vine" "plant")
+(Inheritance "ent" "plant")
+(Similarity "monkey" "human")
+(Similarity "chimp" "human")
+(Similarity "monkey" "chimp")
+(Similarity "earthworm" "snake")
+(Similarity "triceratops" "rhino")
+(Similarity "vine" "snake")
+(Similarity "ent" "human")
+```
