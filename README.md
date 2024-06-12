@@ -2,19 +2,6 @@
 
 A data manipulation API for Distributed Atomspace (DAS). It allows queries with pattern matching capabilities and traversal of the Atomspace hypergraph.
 
-## Table of Contents
-- [Hyperon DAS](#hyperon-das)
-  - [Table of Contents](#table-of-contents)
-  - [References and Guides](#references-and-guides)
-  - [Installation](#installation)
-    - [Using-pip](#using-pip)
-    - [Using-Poetry](#using-poetry)
-  - [TraverseEngine](#traverseengine)
-    - [Creating a TraverseEngine object](#creating-a-traverseengine-object)
-    - [Traversal Methods](#traversal-methods)
-    - [Parameters for Traversal Methods](#parameters-for-traversal-methods)
-  - [Tests](#tests)
-
 ## References and Guides
 
 - Details about the Distributed Atomspace and its components: [DAS Overview](https://singnet.github.io/das/das-overview)
