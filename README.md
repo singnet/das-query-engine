@@ -55,54 +55,6 @@ If you prefer to manage your Python projects with [Poetry](https://python-poetry
 
 Now you can run the project within the Poetry virtual environment.
 
-## TraverseEngine
-
-Introducing TraverseEngine! This API functionality can process some requests related to hypergraph traversal. In other words, it allows a given Atom to travel to it's neighborhood through adjacent links.
-
-### Creating a TraverseEngine object
-
-To create a TraverseEngine object, use the `get_traversal_cursor` method, which expects a handle as a starting point for the traversal.
-
-Example:
-
-```python
-from hyperon_das import DistributedAtomSpace
-
-das = DistributedAtomSpace()
-
-traverse_engine = das.get_traversal_cursor(handle='12345')
-```
-
-### Traversal Methods
-
-The TraverseEngine provides some methods for graph traversal:
-
-1. **get()**: Return the current cursor.
-2. **get_links(kwargs)**: Return any links having current cursor as one of its targets, i.e. any links pointing to cursor.
-3. **get_neighbors(kwargs)**: Returns the set formed by all targets of all links that point to the current cursor. In other words, the set of “neighbors” of the current cursor.
-4. **follow_link(kwargs)**: Updates the current cursor by following a link and selecting one of its targets, randomly.
-5. **goto(handle)**: Reset the current cursor to the passed handle.
-
-### Parameters for Traversal Methods
-
-Various parameters can be passed to the traversal methods to filter the results. For example:
-
-1. **link_type=XXX**: Filters to contain only links whose named_type == XXX.
-2. **cursor_position=N**: Filters the response so that only links with the current cursor at the nth position of their target are returned.
-3. **target_type=XXX**:  Filters to only contain links whose at least one of the targets has named_type == XXX.
-4. **filter=F**: F is a function or a tuple of functions That is used to filter the results after applying all other filters. F should expect a dict (the atom document) and return True if and only if this atom should be kept. It's possible to apply custom filters to both Links and Neighbors. See bellow:                 
-
-Possible use cases to filter parameter:
-
-    a. traverse.get_neighbors(..., filter=custom_filter)
-        -> The custom_filter will be applied to Links
-    b. traverse.get_neighbors(..., filter=(custom_filter1, custom_filter2))
-        -> The custom_filter1 will be applied to Links and custom_filter2 will be applied Targets
-    c. traverse.get_neighbors(..., filter=(None, custom_filter2))
-        -> The custom_filter2 will only be applied to Targets. This way there is no filter to Links
-    d. traverse.get_neighbors(..., filter=(custom_filter1, None))
-        -> The custom_filter1 will be applied to Links. This case is equal case `a`
-
 ## Tests
 
 In the main project directory, you can run the command below to run the unit tests
