@@ -20,6 +20,29 @@ from hyperon_das.utils import QueryAnswer, get_package_version
 
 class DistributedAtomSpace:
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
+        """Creates a new DAS object
+
+        Args:
+            system_parameters (Dict[str, Any], optional): Sets the system parameters. 
+                Defaults to {'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost', 'attention_broker_port': 27000}.
+
+        Keyword Args:
+            atomdb (str, optional): AtomDB type suported values are 'ram' and 'redis_mongo'. Defaults to 'ram'
+            query_engine (str, optional): Set the type of connection for the query engine, values are 'remote' or 'local'. Defaults to 'local'
+            host (str, optional): Sets the host for the remote query engine, it's mandatory when the query_engine is equal to 'remote'.
+            port (str, optional): Sets the port for the remote query engine, it's mandatory when the query_engine is equal to 'remote'.
+            mongo_hostname (str, optional): MongoDB hostname. Defailts to 'localhost'
+            mongo_port (int, optional): MongoDB port. Defailts to 27017
+            mongo_username (str, optional): Username used for authentication in the MongoDB database. Defailts to 'mongo'
+            mongo_password (str, optional): Password used for authentication in the MongoDB database. Defailts to 'mongo'
+            mongo_tls_ca_file (Any, optional): Full path to the TLS certificate.
+            redis_hostname (str, optional): Redis hostname. Defailts to 'localhost'
+            redis_port (int, optional): Redis port. Defailts to 6379
+            redis_username (str, optional): Username used for authentication in the Redis database.
+            redis_password (str, optional): Password used for authentication in the Redis database.
+            redis_cluster (bool, optional): Indicates whether Redis is confiured in cluster mode. Defailts to True
+            redis_ssl (bool, optional): Set refis to encrypt the connection. Defailts to True
+        """        
         self.system_parameters = system_parameters
         self.atomdb = kwargs.get('atomdb', 'ram')
         self.query_engine = kwargs.get('query_engine', 'local')
@@ -153,6 +176,11 @@ class DistributedAtomSpace:
         Args:
             handle (str): Atom's handle.
 
+        Keyword Args:
+            no_target_format (bool, optional): Set this parameter to True to get MongoDB's default output. Defaults to False.
+            targets_document (bool, optional): Set this parameter to True to return a tuple containing the document as first element
+                and the targets as second element. Defaults to False.
+
         Returns:
             Dict: A Python dict with all atom data.
 
@@ -276,6 +304,13 @@ class DistributedAtomSpace:
             link_type (str): Link type being searched (can be '*' when link_targets is not None).
             target_types (List[str], optional): Template of target types being searched.
             link_targets (List[str], optional): Template of targets being searched (handles or '*').
+        
+        Keyword Args:   
+            no_iterator (bool, optional): Set to False to return an interator. Defaults to True.
+            cursor (Any, optional): Start point to get the links.
+            chunk_size (int, optional): Chunk size. Defaults to 1000.
+            top_level_only (bool optional): Set to True to filter top level links. Defaults to False
+
 
         Returns:
             Union[Iterator, List[Dict[str, Any]]]: A list of dictionaries containing detailed
@@ -321,6 +356,11 @@ class DistributedAtomSpace:
 
         Args:
             atom_handle (str): Atom's handle
+            no_iterator (bool, optional): Set to False to return an interator. Defaults to True.
+            cursor (Any, optional): Start point to get the links.
+            handles_only (bool, optional): Returns a list of links handles
+            kwargs (additional keyworkds arguments, optional): Aditional arguments to get_atom method as no_target_format
+            and targets_document.
 
         Returns:
             List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms
@@ -452,6 +492,11 @@ class DistributedAtomSpace:
 
         Args:
             index_id (str): custom index id to be used in the query.
+            
+        Keyword Args:    
+            no_iterator (bool, optional): Set to False to return an interator. Defaults to True.
+            cursor (Any, optional): Start point to get the links.
+            chunk_size (int, optional): Chunk size. Defaults to 1000.
 
         Raises:
             NotImplementedError: If called from Local DAS in RAM only.
