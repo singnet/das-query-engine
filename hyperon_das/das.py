@@ -43,9 +43,9 @@ class DistributedAtomSpace:
             mongo_password (str, optional): Password used for authentication in the MongoDB database. Defaults to 'mongo'.
             mongo_tls_ca_file (Any, optional): Full system path to the TLS certificate.
             redis_hostname (str, optional): Redis hostname, the local or remote query engine can connect to a remote server or run locally. Defaults to 'localhost'
-            redis_port (int, optional): Redis port. Defaults to 6379.
-            redis_username (str, optional): Username used for authentication in the Redis database, no credentials are needed when running locally.
-            redis_password (str, optional): Password used for authentication in the Redis database, no credentials are needed when running locally..
+            redis_port (int, optional): Redis port, set this arg if the port is not the standard. Defaults to 6379.
+            redis_username (str, optional): Username used for authentication in the Redis database, no credentials (username/password) are needed when running locally.
+            redis_password (str, optional): Password used for authentication in the Redis database.
             redis_cluster (bool, optional): Indicates whether Redis is configured in cluster mode. Defaults to True.
             redis_ssl (bool, optional): Set Redis to encrypt the connection. Defaults to True.
         """        
