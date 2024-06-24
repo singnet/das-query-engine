@@ -20,7 +20,13 @@ from hyperon_das.utils import QueryAnswer, get_package_version
 
 class DistributedAtomSpace:
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
-        """Creates a new DAS object
+        """
+        Creates a new DAS object.
+        A DAS client can run locally or locally and remote, connecting to remote DASs instances to query remote atoms,
+        if there're different versions of the same atom in local and one of the remote DASs, the local version is returned.
+        When running along a remote DAS a host and port is mandatory, by default local instances of the DBs are created,
+        remote instances can be configured using kwargs options.
+
 
         Args:
             system_parameters (Dict[str, Any], optional): Sets the system parameters. 
@@ -177,7 +183,9 @@ class DistributedAtomSpace:
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         """
-        Retrieve an atom given its handle.
+        Retrieve an atom given its handle, handles for atoms can be created by using the function 'get_node_handle'
+        A handle is MD5 hash of a node in the graph.
+
 
         Args:
             handle (str): Atom's handle.
@@ -238,6 +246,7 @@ class DistributedAtomSpace:
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         """
         Retrieve a link given its type and list of targets.
+        Targets are hashes of the nodes these hashes or handles can be created using the function 'get_node_handle'.
 
         Args:
             link_type (str): Link type
@@ -313,8 +322,7 @@ class DistributedAtomSpace:
         
         Keyword Args:   
             no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any]. Defaults to True.
-            cursor (int, optional): Start point to get the links, points to an atom it can be used to return links and neighbors like a pagination in the hypergraph.
-                Defaults to 0.
+            cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             chunk_size (int, optional): Chunk size. Defaults to 1000.
             top_level_only (bool optional): Set to True to filter top level links. Defaults to False.
 
@@ -368,8 +376,7 @@ class DistributedAtomSpace:
             no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any]. 
                 If the query_engine is set to 'local' it always return an iterator. 
                 Defaults to True.
-            cursor (int, optional): Start point to get the links, points to an atom it can be used to return links and neighbors like a pagination in the hypergraph.
-                Defaults to 0.
+            cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             handles_only (bool, optional): Returns a list of links handles
             
         Returns:
@@ -505,8 +512,7 @@ class DistributedAtomSpace:
             
         Keyword Args:    
             no_iterator (bool, optional): Set to False to return an iterator. Defaults to True.
-            cursor (Any, optional): Start point to get the links, points to an atom it can be used to return links and neighbors like a pagination in the hypergraph.
-                Defaults to 0.
+            cursor (Any, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             chunk_size (int, optional): Chunk size. Defaults to 1000.
 
         Raises:
