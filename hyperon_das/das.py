@@ -321,7 +321,9 @@ class DistributedAtomSpace:
             link_targets (List[str], optional): Template of targets being searched (handles or '*').
         
         Keyword Args:   
-            no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any]. Defaults to True.
+            no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any]. \
+                If the query_engine is set to 'local' it always return an iterator. 
+                Defaults to True.
             cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             chunk_size (int, optional): Chunk size. Defaults to 1000.
             top_level_only (bool optional): Set to True to filter top level links. Defaults to False.
@@ -374,7 +376,7 @@ class DistributedAtomSpace:
         
         Keyword Args:   
             no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any]. 
-                If the query_engine is set to 'local' it always return an iterator. 
+                If the query_engine is set to 'remote' it always return an iterator. 
                 Defaults to True.
             cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             handles_only (bool, optional): Returns a list of links handles.
@@ -511,7 +513,9 @@ class DistributedAtomSpace:
             index_id (str): custom index id to be used in the query.
             
         Keyword Args:    
-            no_iterator (bool, optional): Set to False to return an iterator. Defaults to True.
+            no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any].
+                If the query_engine is set to 'remote' it always return an iterator. 
+                Defaults to True.
             cursor (Any, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             chunk_size (int, optional): Chunk size. Defaults to 1000.
 
