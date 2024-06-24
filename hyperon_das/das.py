@@ -183,7 +183,7 @@ class DistributedAtomSpace:
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         """
-        Retrieve an atom given its handle, handles for atoms can be created by using the function 'get_node_handle'
+        Retrieve an atom given its handle, handles for atoms can be created by using the function 'get_node_handle'.
         A handle is MD5 hash of a node in the graph.
 
 
@@ -377,7 +377,7 @@ class DistributedAtomSpace:
                 If the query_engine is set to 'local' it always return an iterator. 
                 Defaults to True.
             cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
-            handles_only (bool, optional): Returns a list of links handles
+            handles_only (bool, optional): Returns a list of links handles.
             
         Returns:
             List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms

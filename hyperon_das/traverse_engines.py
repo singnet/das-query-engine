@@ -31,11 +31,11 @@ class TraverseEngine:
         """Returns all links that have the current cursor as one of their targets, that is, any links that point to the cursor.
 
         Keyword Args:
-            link_type (str, optional): Filter links if named_type matches with this parameter
-            cursor_position (int, optional): Sets the position of the cursor, return the links after this position
-            target_type (str, optional):  Filter links if one of the targets matches with this parameter
+            link_type (str, optional): Filter links if named_type matches with this parameter.
+            cursor_position (int, optional): Sets the position of the cursor, return the links after this position.
+            target_type (str, optional):  Filter links if one of the targets matches with this parameter.
             filter (Callable[[Dict], bool], optional): Function used to filter the results after applying all other filters.
-            chunk_size (int, optional): Chunk size. Defaults to 500
+            chunk_size (int, optional): Chunk size. Defaults to 500.
 
         Returns:
             Iterator: An iterator that contains the links that match the criteria.
@@ -75,10 +75,10 @@ class TraverseEngine:
                 -> The custom_filter1 will be applied to Links. This case is equal case `a`
 
         Keyword Args:
-            link_type (str, optional): Filter links if named_type matches with this parameter
-            cursor_position (int, optional): Sets the position of the cursor, return the links after this position
-            target_type (str, optional):  Filter links if one of the targets matches with this parameter
-            filter (tuple(Callable[[Dict], bool], Callable[[Dict], bool]), optional): Tuple containing filter function for links at pos 0 
+            link_type (str, optional): Filter links if named_type matches with this parameter.
+            cursor_position (int, optional): Sets the position of the cursor, return the links after this position.
+            target_type (str, optional):  Filter links if one of the targets matches with this parameter.
+            filter (tuple(Callable[[Dict], bool], Callable[[Dict], bool]), optional): Tuple containing filter function for links at pos 0
                 and filter function for targets at pos 1. Used to filter the results after applying all other filters.
 
         Returns:
@@ -120,9 +120,9 @@ class TraverseEngine:
                 -> The custom_filter1 will be applied to Links. This case is equal case `a`
 
         Keyword Args:
-            link_type (str, optional): Filter links if named_type matches with this parameter
-            cursor_position (int, optional): Sets the position of the cursor, return the links after this position
-            target_type (str, optional):  Filter links if one of the targets matches with this parameter
+            link_type (str, optional): Filter links if named_type matches with this parameter.
+            cursor_position (int, optional): Sets the position of the cursor, return the links after this position.
+            target_type (str, optional):  Filter links if one of the targets matches with this parameter.
             filter (tuple(Callable[[Dict], bool], Callable[[Dict], bool]), optional): Tuple containing filter function for links at pos 0
                 and filter function for targets at pos 1. Used to filter the results after applying all other filters.
 
@@ -138,10 +138,10 @@ class TraverseEngine:
         """Reset current cursor to the passed handle.
 
         Args:
-            handle (str): The handle of the atom to go to
+            handle (str): The handle of the atom to go to.
 
         Raises:
-            AtomDoesNotExist: If the corresponding atom doesn't exist
+            AtomDoesNotExist: If the corresponding atom doesn't exist.
 
         Returns:
             Dict[str, Any]: The current cursor. A Python dict with all atom data.
