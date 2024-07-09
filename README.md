@@ -63,12 +63,6 @@ In the main project directory, you can run the command below to run the unit tes
 make unit-tests
 ```
 
-Likewise, to run performance tests
-
-```bash
-make performance-tests
-```
-
 You can do the same to run integration tests
 
 ```bash
