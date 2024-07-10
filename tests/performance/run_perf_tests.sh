@@ -42,8 +42,6 @@ echo "Check the log file for more details: ${das_log_file}"
 
 echo "-----"
 
-echo "1" >> ${builtin_log_file}
-
 echo "Comparing performance test results..."
 if diff \
     <(sed 's/, /\n/g' ${builtin_log_file} | tr -d '[]()' | sort | xargs echo) \
