@@ -42,19 +42,19 @@ echo "Check the log file for more details: ${das_log_file}"
 
 echo "-----"
 
-echo -n "Comparing performance test results... "
+echo -n "Comparing tests outputs... "
 if diff \
     <(sed 's/, /\n/g' ${builtin_log_file} | tr -d '[]()' | sort | xargs echo) \
     <(sed 's/, /\n/g' ${das_log_file} | tr -d '[]()' | sort | xargs echo) \
     2>&1>/dev/null
 then
 echo "SUCCESS!"
-echo "Performance test results are the same between the built-in Atom Space and DAS."
+echo "Tests outputs are the same between the built-in Atom Space and DAS."
 exit 0
 else
 echo "FAILED!"
 cat <<EOF
-Performance test results are different between the built-in Atom Space and DAS.
+Tests outputs are different between the built-in Atom Space and DAS.
 Check the log files for more details:
   - Built-in Atom Space: ${builtin_log_file}
   - DAS: ${das_log_file}
