@@ -49,7 +49,7 @@ if diff \
     2>&1>/dev/null
 then
 echo "SUCCESS!"
-echo "Tests outputs are the same between the built-in Atom Space and DAS."
+echo "Tests outputs are the same on both built-in Atom Space and DAS."
 exit 0
 else
 echo "FAILED!"
