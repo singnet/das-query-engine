@@ -9,4 +9,5 @@
 [#229] Improve error handler
 [#218] Make a DAS server read-only
 [#223] Updated kwargs documentation
+[#268] Adding performance tests in MeTTa
 [#268] enhancing perf tests script, added results comparison
