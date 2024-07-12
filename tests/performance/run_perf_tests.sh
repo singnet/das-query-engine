@@ -29,15 +29,36 @@ exit 1
 }
 
 echo -n "Running performance test using MeTTa's built-in Atom Space..."
-log_file=$(mktemp --suffix='_perf_test_builtin').log
-time (metta ${PWD}/tests/performance/test_builtin.metta 2>&1>${log_file})
-echo "Check the log file for more details: ${log_file}"
+builtin_log_file=$(mktemp --suffix='_perf_test_builtin.log')
+time (metta ${PWD}/tests/performance/test_builtin.metta 2>&1>${builtin_log_file})
+echo "Check the log file for more details: ${builtin_log_file}"
 
 echo "-----"
 
 echo -n "Running performance test using DAS..."
-log_file=$(mktemp --suffix='_perf_test_das_ram_only').log
-time (metta ${PWD}/tests/performance/test_das_ram_only.metta 2>&1>${log_file})
-echo "Check the log file for more details: ${log_file}"
+das_log_file=$(mktemp --suffix='_perf_test_das_ram_only.log')
+time (metta ${PWD}/tests/performance/test_das_ram_only.metta 2>&1>${das_log_file})
+echo "Check the log file for more details: ${das_log_file}"
 
 echo "-----"
+
+echo -n "Comparing tests outputs... "
+if diff \
+    <(sed 's/, /\n/g' ${builtin_log_file} | tr -d '[]()' | sort | xargs echo) \
+    <(sed 's/, /\n/g' ${das_log_file} | tr -d '[]()' | sort | xargs echo) \
+    2>&1>/dev/null
+then
+echo "SUCCESS!"
+echo "Tests outputs are the same on both built-in Atom Space and DAS."
+exit 0
+else
+echo "FAILED!"
+cat <<EOF
+Tests outputs are different between the built-in Atom Space and DAS.
+Check the log files for more details:
+  - Built-in Atom Space: ${builtin_log_file}
+  - DAS: ${das_log_file}
+
+EOF
+exit 1
+fi
