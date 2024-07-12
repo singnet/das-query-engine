@@ -8,3 +8,4 @@
 [#216] Changed design for custom filters in TraverseEngine
 [#229] Improve error handler
 [#218] Make a DAS server read-only
+[#268] enhancing perf tests script, added results comparison
