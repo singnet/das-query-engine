@@ -430,22 +430,22 @@ class TestCustomQuery:
         )
 
     def _asserts(self, das: DistributedAtomSpace):
-        node_index = das.create_field_index(atom_type='node', field='is_literal', type='Symbol')
+        node_index = das.create_field_index(atom_type='node', fields=['is_literal'], type='Symbol')
         link_index_type = das.create_field_index(
-            atom_type='link', field='is_toplevel', type='Expression'
+            atom_type='link', fields=['is_toplevel'], type='Expression'
         )
         link_index_composite_type = das.create_field_index(
             atom_type='link',
-            field='is_toplevel',
+            fields=['is_toplevel'],
             composite_type=['Expression', 'Symbol', 'Symbol', 'Symbol'],
         )
 
-        node_iterator = das.custom_query(node_index, is_literal=True, no_iterator=False)
+        node_iterator = das.custom_query(node_index, query=[{'field': 'is_literal', 'value': True}], no_iterator=False)
         link_iterator_type = das.custom_query(
-            link_index_type, is_toplevel=True, chunk_size=10, no_iterator=False
+            link_index_type, query=[{'field': 'is_toplevel', 'value': True}], chunk_size=10, no_iterator=False
         )
         link_iterator_composite_type = das.custom_query(
-            link_index_composite_type, is_toplevel=True, chunk_size=5, no_iterator=False
+            link_index_composite_type, query=[{'field': 'is_toplevel', 'value': True}], chunk_size=5, no_iterator=False
         )
 
         nodes = self._check_asserts(das, node_iterator)

@@ -194,7 +194,7 @@ class FunctionsClient:
     def create_field_index(
         self,
         atom_type: str,
-        field: str,
+        fields: List[str],
         type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
     ) -> str:
@@ -202,7 +202,7 @@ class FunctionsClient:
             'action': 'create_field_index',
             'input': {
                 'atom_type': atom_type,
-                'field': field,
+                'fields': fields,
                 'type': type,
                 'composite_type': composite_type,
             },

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, OrderedDict
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
@@ -502,7 +502,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.query(query, parameters)
 
-    def custom_query(self, index_id: str, **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
+    def custom_query(self, index_id: str, query: List[OrderedDict[str, str]], **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
         """
         Perform a query using a previously created custom index.
 
@@ -532,7 +532,7 @@ class DistributedAtomSpace:
         if isinstance(self.query_engine, LocalQueryEngine) and isinstance(self.backend, InMemoryDB):
             raise NotImplementedError("custom_query() is not implemented for Local DAS in RAM only")
 
-        return self.query_engine.custom_query(index_id, **kwargs)
+        return self.query_engine.custom_query(index_id,  query, **kwargs)
 
     def commit_changes(self, **kwargs):
         """
@@ -734,7 +734,7 @@ class DistributedAtomSpace:
     def create_field_index(
         self,
         atom_type: str,
-        field: str,
+        fields: List[str],
         type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
     ) -> str:
@@ -747,7 +747,7 @@ class DistributedAtomSpace:
         Args:
             atom_type (str): Either 'link' or 'node', if the index is to be created for
                 links or nodes.
-            field (str): field where the index will be created upon
+            field (List[str]): fields where the index will be created upon
             type (str, optional): Only atoms of the passed type will be indexed. Defaults
                 to None, meaning that atom type doesn't matter.
             composite_type (List[Any], optional): Only Atoms type of the passed composite
@@ -771,7 +771,7 @@ class DistributedAtomSpace:
             raise ValueError("'atom_type' should be str")
 
         return self.query_engine.create_field_index(
-            atom_type, field, type=type, composite_type=composite_type
+            atom_type, fields, type=type, composite_type=composite_type
         )
 
     def fetch(

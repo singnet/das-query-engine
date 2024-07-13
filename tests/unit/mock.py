@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, OrderedDict
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 
@@ -324,7 +324,7 @@ class DatabaseMock(AtomDB):
     def create_field_index(
         self,
         atom_type: str,
-        field: str,
+        fields: List[str],
         type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
     ) -> str:
@@ -334,6 +334,32 @@ class DatabaseMock(AtomDB):
         pass
 
     def retrieve_all_atoms(self) -> List[Dict[str, Any]]:
+        pass
+
+
+    def get_node_by_name(self, node_type: str, substring: str) -> str:
+        pass
+
+    def get_atoms_by_field(self, query: List[OrderedDict[str, str]]) -> List[str]:
+        pass
+
+    def get_atoms_by_index(
+        self, 
+        index_id: str, 
+        query: List[OrderedDict[str, str]],             
+        cursor: Optional[int] = 0, 
+        chunk_size: Optional[int] = 500) -> List[str]:
+        pass
+
+    def get_atoms_by_text_field(
+        self,
+        text_value: str,
+        field: Optional[str] = None,
+        text_index_id: Optional[str] = None,
+    ) -> List[str]:
+        pass
+
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
         pass
 
 

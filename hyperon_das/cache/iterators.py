@@ -401,7 +401,7 @@ class CustomQuery(BaseLinksIterator):
             if self.is_remote:
                 return self.backend.custom_query(self.index_id, **kwargs)
             else:
-                return self.backend.get_atoms_by_index(self.index_id, **kwargs)
+                return self.backend.get_atoms_by_index(self.index_id, query=[] **kwargs)
 
 
 class TraverseLinksIterator(QueryAnswerIterator):
