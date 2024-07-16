@@ -21,4 +21,4 @@ integration-tests:
 performance-tests:
 	@bash ./tests/performance/run_perf_tests.sh
 
-pre-commit: unit-tests-coverage lint
+pre-commit: lint unit-tests-coverage unit-tests integration-tests
