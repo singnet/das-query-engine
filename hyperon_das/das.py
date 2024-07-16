@@ -29,20 +29,20 @@ class DistributedAtomSpace:
 
 
         Args:
-            system_parameters (Dict[str, Any], optional): Sets the system parameters. 
+            system_parameters (Dict[str, Any], optional): Sets the system parameters.
                 Defaults to {'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost', 'attention_broker_port': 27000}.
 
         Keyword Args:
             atomdb (str, optional): AtomDB type supported values are 'ram' and 'redis_mongo'. Defaults to 'ram'.
-            query_engine (str, optional): Set the type of connection for the query engine, values are 'remote' or 'local'. 
+            query_engine (str, optional): Set the type of connection for the query engine, values are 'remote' or 'local'.
                 When the this arg is set to 'remote', additional kwargs are required as host and port to connect to the remote query engine
                 and the arg mode is used to configure the read/write privileges.
                 Defaults to 'local'
             host (str, optional): Sets the host for the remote query engine, it's mandatory when the query_engine is equal to 'remote'.
             port (str, optional): Sets the port for the remote query engine, it's mandatory when the query_engine is equal to 'remote'.
-            mode (str, optional): Set query engine's ACL privileges, only available when the query_engine is set to 'remote', accepts 'read-only' or 'read-write'. 
+            mode (str, optional): Set query engine's ACL privileges, only available when the query_engine is set to 'remote', accepts 'read-only' or 'read-write'.
                 Defaults to 'read-only'
-            mongo_hostname (str, optional): MongoDB's hostname, the local or remote query engine can connect to a remote server or run locally. 
+            mongo_hostname (str, optional): MongoDB's hostname, the local or remote query engine can connect to a remote server or run locally.
                 Defaults to 'localhost'
             mongo_port (int, optional): MongoDB port, set this arg if the port is not the standard. Defaults to 27017.
             mongo_username (str, optional): Username used for authentication in the MongoDB database. Defaults to 'mongo'.
@@ -54,7 +54,7 @@ class DistributedAtomSpace:
             redis_password (str, optional): Password used for authentication in the Redis database.
             redis_cluster (bool, optional): Indicates whether Redis is configured in cluster mode. Defaults to True.
             redis_ssl (bool, optional): Set Redis to encrypt the connection. Defaults to True.
-        """        
+        """
         self.system_parameters = system_parameters
         self.atomdb = kwargs.get('atomdb', 'ram')
         self.query_engine = kwargs.get('query_engine', 'local')
@@ -319,10 +319,10 @@ class DistributedAtomSpace:
             link_type (str): Link type being searched (can be '*' when link_targets is not None).
             target_types (List[str], optional): Template of target types being searched.
             link_targets (List[str], optional): Template of targets being searched (handles or '*').
-        
-        Keyword Args:   
+
+        Keyword Args:
             no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any]. \
-                If the query_engine is set to 'local' it always return an iterator. 
+                If the query_engine is set to 'local' it always return an iterator.
                 Defaults to True.
             cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             chunk_size (int, optional): Chunk size. Defaults to 1000.
@@ -373,14 +373,14 @@ class DistributedAtomSpace:
 
         Args:
             atom_handle (str): Atom's handle
-        
-        Keyword Args:   
-            no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any]. 
-                If the query_engine is set to 'remote' it always return an iterator. 
+
+        Keyword Args:
+            no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any].
+                If the query_engine is set to 'remote' it always return an iterator.
                 Defaults to True.
             cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             handles_only (bool, optional): Returns a list of links handles.
-            
+
         Returns:
             List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms
             or a list of strings containing the atom handles
@@ -511,10 +511,10 @@ class DistributedAtomSpace:
 
         Args:
             index_id (str): custom index id to be used in the query.
-            
-        Keyword Args:    
+
+        Keyword Args:
             no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any].
-                If the query_engine is set to 'remote' it always return an iterator. 
+                If the query_engine is set to 'remote' it always return an iterator.
                 Defaults to True.
             cursor (Any, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             chunk_size (int, optional): Chunk size. Defaults to 1000.
