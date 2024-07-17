@@ -5,7 +5,7 @@ import pytest
 from requests import exceptions
 
 from hyperon_das.client import FunctionsClient
-from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
+from hyperon_das.exceptions import ConnectionError, RequestError, TimeoutError
 from hyperon_das.utils import serialize
 
 
