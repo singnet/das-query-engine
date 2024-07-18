@@ -153,7 +153,11 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 400:
-                raise ValueError("Your query couldn't be processed due to an invalid format. Review the way the query is written and try again.", str(e))
+                raise ValueError(
+                    "Your query couldn't be processed due to an invalid format. Review the way the query "
+                    "is written and try again.",
+                    str(e),
+                )
             elif e.status_code == 404:
                 raise Exception("Your query couldn't be processed because Atom nonexistent", str(e))
             raise e
@@ -184,7 +188,7 @@ class FunctionsClient:
         payload = {
             'action': 'get_incoming_links',
             'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
-        }        
+        }
         try:
             return self._send_request(payload)
         except HTTPError as e:
@@ -195,16 +199,18 @@ class FunctionsClient:
         self,
         atom_type: str,
         fields: List[str],
-        type: Optional[str] = None,
+        named_type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
+        index_type: Optional[str] = None,
     ) -> str:
         payload = {
             'action': 'create_field_index',
             'input': {
                 'atom_type': atom_type,
                 'fields': fields,
-                'type': type,
+                'named_type': named_type,
                 'composite_type': composite_type,
+                'index_type': index_type,
             },
         }
         try:
@@ -215,10 +221,10 @@ class FunctionsClient:
             else:
                 raise e
 
-    def custom_query(self, index_id: str, **kwargs) -> List[Dict[str, Any]]:
+    def custom_query(self, index_id: str, query: Query, **kwargs) -> List[Dict[str, Any]]:
         payload = {
             'action': 'custom_query',
-            'input': {'index_id': index_id, 'kwargs': kwargs},
+            'input': {'index_id': index_id, 'query': query, 'kwargs': kwargs},
         }
         try:
             return self._send_request(payload)
@@ -252,6 +258,47 @@ class FunctionsClient:
             if e.status_code == 404:
                 raise AtomDoesNotExist('Atom nonexistent')
             elif e.status_code == 400:
+                raise ValueError(str(e))
+            else:
+                raise e
+
+    def get_atoms_by_field(self, query: Query) -> List[str]:
+        payload = {'action': 'get_atoms_by_field', 'input': {'query': query}}
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 400:
+                raise ValueError(str(e))
+            else:
+                raise e
+
+    def get_atoms_by_text_field(
+        self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
+    ) -> List[str]:
+        payload = {
+            'action': 'get_atoms_by_text_field',
+            'input': {'text_value': text_value, 'field': field, 'text_index_id': text_index_id},
+        }
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 400:
+                raise ValueError(str(e))
+            else:
+                raise e
+
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+        payload = {
+            'action': 'get_node_by_name_starting_with',
+            'input': {
+                'node_type': node_type,
+                'startswith': startswith,
+            },
+        }
+        try:
+            return self._send_request(payload)
+        except HTTPError as e:
+            if e.status_code == 400:
                 raise ValueError(str(e))
             else:
                 raise e

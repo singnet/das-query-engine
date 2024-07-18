@@ -1,8 +1,8 @@
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union, OrderedDict
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
-from hyperon_das_atomdb import WILDCARD, AtomDB, FieldIndexType
+from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
@@ -61,7 +61,9 @@ class QueryEngine(ABC):
         ...  # pragma no cover
 
     @abstractmethod
-    def custom_query(self, index_id: str, query: List[OrderedDict[str, str]], **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
+    def custom_query(
+        self, index_id: str, query: Query, **kwargs
+    ) -> Union[Iterator, List[Dict[str, Any]]]:
         ...  # pragma no cover
 
     @abstractmethod
@@ -77,9 +79,9 @@ class QueryEngine(ABC):
         self,
         atom_type: str,
         fields: List[str],
-        type: Optional[str] = None,
+        named_type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
-        index_type: Optional[FieldIndexType] = None,
+        index_type: Optional[str] = None,
     ) -> str:
         ...  # pragma no cover
 
@@ -99,6 +101,20 @@ class QueryEngine(ABC):
 
     @abstractmethod
     def commit(self, **kwargs) -> None:
+        ...  # pragma no cover
+
+    @abstractmethod
+    def get_atoms_by_field(self, query: Query) -> List[str]:
+        ...  # pragma no cover
+
+    @abstractmethod
+    def get_atoms_by_text_field(
+        self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
+    ) -> List[str]:
+        ...  # pragma no cover
+
+    @abstractmethod
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
         ...  # pragma no cover
 
 
@@ -351,7 +367,9 @@ class LocalQueryEngine(QueryEngine):
         else:
             return query_results
 
-    def custom_query(self, index_id: str, query: List[OrderedDict[str, str]], **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
+    def custom_query(
+        self, index_id: str, query: Query, **kwargs
+    ) -> Union[Iterator, List[Dict[str, Any]]]:
         if kwargs.pop('no_iterator', True):
             return self.local_backend.get_atoms_by_index(index_id, query=query, **kwargs)
         else:
@@ -378,10 +396,13 @@ class LocalQueryEngine(QueryEngine):
         self,
         atom_type: str,
         fields: List[str],
-        type: Optional[str] = None,
+        named_type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
+        index_type: Optional[str] = None,
     ) -> str:
-        return self.local_backend.create_field_index(atom_type, fields, type, composite_type)
+        return self.local_backend.create_field_index(
+            atom_type, fields, named_type, composite_type, index_type
+        )
 
     def fetch(
         self,
@@ -423,6 +444,17 @@ class LocalQueryEngine(QueryEngine):
         queries: Optional[List[Query]] = None,
     ) -> Context:
         das_error(NotImplementedError("Contexts are not implemented for non-server local DAS"))
+
+    def get_atoms_by_field(self, query: Query) -> List[str]:
+        return self.local_backend.get_atoms_by_field(query)
+
+    def get_atoms_by_text_field(
+        self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
+    ) -> List[str]:
+        return self.local_backend.get_atoms_by_text_field(text_value, field, text_index_id)
+
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+        return self.local_backend.get_node_by_name_starting_with(node_type, startswith)
 
 
 class RemoteQueryEngine(QueryEngine):
@@ -505,11 +537,11 @@ class RemoteQueryEngine(QueryEngine):
         links.extend(remote_links)
         return RemoteIncomingLinks(ListIterator(links), **kwargs)
 
-    def custom_query(self, index_id: str, query: List[OrderedDict[str, str]], **kwargs) -> Iterator:
+    def custom_query(self, index_id: str, query: Query, **kwargs) -> Iterator:
         kwargs.pop('no_iterator', None)
         if kwargs.get('cursor') is None:
             kwargs['cursor'] = 0
-        cursor, answer = self.remote_das.custom_query(index_id, query=query **kwargs)
+        cursor, answer = self.remote_das.custom_query(index_id, query=query, **kwargs)
         kwargs['backend'] = self.remote_das
         kwargs['index_id'] = index_id
         kwargs['cursor'] = cursor
@@ -565,10 +597,13 @@ class RemoteQueryEngine(QueryEngine):
         self,
         atom_type: str,
         fields: List[str],
-        type: Optional[str] = None,
+        named_type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
+        index_type: Optional[str] = None,
     ) -> str:
-        return self.remote_das.create_field_index(atom_type, fields, type, composite_type)
+        return self.remote_das.create_field_index(
+            atom_type, fields, named_type, composite_type, index_type
+        )
 
     def fetch(
         self,
@@ -589,3 +624,14 @@ class RemoteQueryEngine(QueryEngine):
         queries: Optional[List[Query]] = None,
     ) -> Context:
         return self.remote_das.create_context(name, queries)
+
+    def get_atoms_by_field(self, query: Query) -> List[str]:
+        return self.remote_das.get_atoms_by_field(query)
+
+    def get_atoms_by_text_field(
+        self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
+    ) -> List[str]:
+        return self.remote_das.get_atoms_by_text_field(text_value, field, text_index_id)
+
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+        return self.remote_das.get_node_by_name_starting_with(node_type, startswith)

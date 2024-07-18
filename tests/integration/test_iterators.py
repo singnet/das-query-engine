@@ -25,6 +25,32 @@ from tests.integration.helpers import (
 from tests.integration.remote_das_info import remote_das_host, remote_das_port
 
 
+@pytest.fixture
+def database_fixture():
+    _db_up()
+    yield
+    _db_down()
+
+
+@pytest.fixture
+def das_local_fixture():
+    yield DistributedAtomSpace(
+        query_engine='local',
+        atomdb='redis_mongo',
+        mongo_port=mongo_port,
+        mongo_username='dbadmin',
+        mongo_password='dassecret',
+        redis_port=redis_port,
+        redis_cluster=False,
+        redis_ssl=False,
+    )
+
+
+@pytest.fixture
+def das_remote_fixture():
+    yield DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
+
+
 class TestIncomingLinks:
     @pytest.fixture(scope="session")
     def _cleanup(self, request):
@@ -430,9 +456,11 @@ class TestCustomQuery:
         )
 
     def _asserts(self, das: DistributedAtomSpace):
-        node_index = das.create_field_index(atom_type='node', fields=['is_literal'], type='Symbol')
+        node_index = das.create_field_index(
+            atom_type='node', fields=['is_literal'], named_type='Symbol'
+        )
         link_index_type = das.create_field_index(
-            atom_type='link', fields=['is_toplevel'], type='Expression'
+            atom_type='link', fields=['is_toplevel'], named_type='Expression'
         )
         link_index_composite_type = das.create_field_index(
             atom_type='link',
@@ -440,18 +468,23 @@ class TestCustomQuery:
             composite_type=['Expression', 'Symbol', 'Symbol', 'Symbol'],
         )
 
-        node_iterator = das.custom_query(node_index, query=[{'field': 'is_literal', 'value': True}], no_iterator=False)
+        node_iterator = das.custom_query(node_index, query={'is_literal': True}, no_iterator=False)
         link_iterator_type = das.custom_query(
-            link_index_type, query=[{'field': 'is_toplevel', 'value': True}], chunk_size=10, no_iterator=False
+            link_index_type,
+            query={'is_toplevel': True},
+            chunk_size=10,
+            no_iterator=False,
         )
         link_iterator_composite_type = das.custom_query(
-            link_index_composite_type, query=[{'field': 'is_toplevel', 'value': True}], chunk_size=5, no_iterator=False
+            link_index_composite_type,
+            query={'is_toplevel': True},
+            chunk_size=5,
+            no_iterator=False,
         )
 
         nodes = self._check_asserts(das, node_iterator)
         links_type = self._check_asserts(das, link_iterator_type)
         links_composite_type = self._check_asserts(das, link_iterator_composite_type)
-
         assert sorted(nodes) == self._all_nodes()
         assert sorted(links_type) == self._all_links()
         assert sorted(links_composite_type) == self._all_links()
@@ -469,25 +502,60 @@ class TestCustomQuery:
             next(iterator)
         return handles
 
-    def test_custom_query_with_local_das_redis_mongo(self, _cleanup):
-        _db_up()
-        das = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='redis_mongo',
-            mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
-            redis_port=redis_port,
-            redis_cluster=False,
-            redis_ssl=False,
-        )
+    def test_custom_query_with_local_das_redis_mongo(
+        self, _cleanup, database_fixture, das_local_fixture
+    ):
+        das = das_local_fixture
         load_metta_animals_base(das)
         das.commit_changes()
         self._asserts(das)
-        _db_down()
 
+    @pytest.mark.skip("Skipping to new version")
     def test_custom_query_with_remote_das(self):
         das = DistributedAtomSpace(
             query_engine='remote', host=remote_das_host, port=remote_das_port
         )
         self._asserts(das)
+
+    def test_get_atom_by_field_local(self, database_fixture, das_local_fixture):
+        das = das_local_fixture
+        load_metta_animals_base(das)
+        das.commit_changes()
+        atom_field = das.get_atoms_by_field({'name': '"chimp"'})
+        assert atom_field
+
+    @pytest.mark.skip("Mismatch version")
+    def test_get_atom_by_field_remote(self, das_remote_fixture):
+        das = das_remote_fixture
+        atom_field = das.get_atoms_by_field({'name': '"chimp"'})
+        assert atom_field
+
+    def test_get_atoms_by_text_field_local(self, database_fixture, das_local_fixture):
+        das = das_local_fixture
+        load_metta_animals_base(das)
+        das.commit_changes()
+        with pytest.raises(Exception, match=r'text index required for \$text query'):
+            das.get_atoms_by_text_field(text_value='"')
+        atom_text_field = das.get_atoms_by_text_field(text_value='"chim', field='name')
+        assert atom_text_field
+
+    @pytest.mark.skip("Mismatch version")
+    def test_get_atoms_by_text_field_remote(self, das_remote_fixture):
+        das = das_remote_fixture
+        with pytest.raises(Exception, match=r'text index required for \$text query'):
+            das.get_atoms_by_text_field(text_value='"')
+        atom_text_field = das.get_atoms_by_text_field(text_value='"chim', field='name')
+        assert atom_text_field
+
+    def test_get_atoms_starting_local(self, database_fixture, das_local_fixture):
+        das = das_local_fixture
+        load_metta_animals_base(das)
+        das.commit_changes()
+        atom_starting_with = das.get_node_by_name_starting_with('Symbol', '"mon')
+        assert atom_starting_with
+
+    @pytest.mark.skip("Mismatch version")
+    def test_get_atoms_starting_remote(self, das_remote_fixture):
+        das = das_remote_fixture
+        atom_starting_with = das.get_node_by_name_starting_with('Symbol', '"mon')
+        assert atom_starting_with
