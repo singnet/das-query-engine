@@ -314,6 +314,63 @@ class TestFunctionsClient:
 
         assert result == expected_response
 
+    def test_get_atoms_by_field(self, mock_request, client):
+        query = [{'field': 'name', 'value': 'test'}]
+        expected_request_data = {"action": "get_atoms_by_field", "input": {'query': query}}
+        expected_response = (14, 26)
+        mock_request.return_value.status_code = 200
+        mock_request.return_value.content = serialize(expected_response)
+        result = client.get_atoms_by_field(query=query)
+
+        mock_request.assert_called_once_with(
+            method='POST',
+            url='http://0.0.0.0:1000/function/query-engine',
+            data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
+        )
+
+        assert result == expected_response
+
+    def test_get_atoms_by_text_field(self, mock_request, client):
+        expected_input = {'text_value': 'value', 'field': None, 'text_index_id': None}
+        expected_request_data = {"action": "get_atoms_by_text_field", "input": expected_input}
+        expected_response = (14, 26)
+        mock_request.return_value.status_code = 200
+        mock_request.return_value.content = serialize(expected_response)
+        result = client.get_atoms_by_text_field(**expected_input)
+
+        mock_request.assert_called_once_with(
+            method='POST',
+            url='http://0.0.0.0:1000/function/query-engine',
+            data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
+        )
+
+        assert result == expected_response
+
+    def test_get_node_by_name_starting_with(self, mock_request, client):
+        expected_input = {
+            'node_type': 'Concept',
+            'startswith': 'nam',
+        }
+        expected_request_data = {
+            "action": "get_node_by_name_starting_with",
+            "input": expected_input,
+        }
+        expected_response = (14, 26)
+        mock_request.return_value.status_code = 200
+        mock_request.return_value.content = serialize(expected_response)
+        result = client.get_node_by_name_starting_with(**expected_input)
+
+        mock_request.assert_called_once_with(
+            method='POST',
+            url='http://0.0.0.0:1000/function/query-engine',
+            data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
+        )
+
+        assert result == expected_response
+
     def test_send_request_success(self, mock_request, client):
         payload = {"action": "get_atom", "input": {"handle": "123"}}
         expected_response = {

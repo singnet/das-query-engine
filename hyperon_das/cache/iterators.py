@@ -399,9 +399,13 @@ class CustomQuery(BaseLinksIterator):
     def get_fetch_data(self, **kwargs) -> tuple:
         if self.backend:
             if self.is_remote:
-                return self.backend.custom_query(self.index_id, **kwargs)
+                return self.backend.custom_query(
+                    self.index_id, query=kwargs.get('query', []), **kwargs
+                )
             else:
-                return self.backend.get_atoms_by_index(self.index_id, **kwargs)
+                return self.backend.get_atoms_by_index(
+                    self.index_id, query=kwargs.get('query', []), **kwargs
+                )
 
 
 class TraverseLinksIterator(QueryAnswerIterator):

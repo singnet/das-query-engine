@@ -28,36 +28,47 @@ class DistributedAtomSpace:
         remote instances can be configured using kwargs options.
 
 
-        Args:
-            system_parameters (Dict[str, Any], optional): Sets the system parameters.
-                Defaults to {'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost', 'attention_broker_port': 27000}.
+        Args: 
+            system_parameters (Dict[str, Any], optional): Sets the system parameters. Defaults to {
+                'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost',
+                'attention_broker_port': 27000}.
 
         Keyword Args:
             atomdb (str, optional): AtomDB type supported values are 'ram' and 'redis_mongo'. Defaults to 'ram'.
-            query_engine (str, optional): Set the type of connection for the query engine, values are 'remote' or 'local'.
-                When the this arg is set to 'remote', additional kwargs are required as host and port to connect to the remote query engine
+            query_engine (str, optional): Set the type of connection for the query engine, values are 'remote' or
+                'local'.
+                When this arg is set to 'remote', additional kwargs are required as host and port to connect
+                to the remote query engine
                 and the arg mode is used to configure the read/write privileges.
                 Defaults to 'local'
-            host (str, optional): Sets the host for the remote query engine, it's mandatory when the query_engine is equal to 'remote'.
-            port (str, optional): Sets the port for the remote query engine, it's mandatory when the query_engine is equal to 'remote'.
-            mode (str, optional): Set query engine's ACL privileges, only available when the query_engine is set to 'remote', accepts 'read-only' or 'read-write'.
+            host (str, optional): Sets the host for the remote query engine, it's mandatory
+                when the query_engine is equal to 'remote'.
+            port (str, optional): Sets the port for the remote query engine, it's mandatory
+                when the query_engine is equal to 'remote'.
+            mode (str, optional): Set query engine's ACL privileges, only available
+                when the query_engine is set to 'remote', accepts 'read-only' or 'read-write'.
                 Defaults to 'read-only'
-            mongo_hostname (str, optional): MongoDB's hostname, the local or remote query engine can connect to a remote server or run locally.
+            mongo_hostname (str, optional): MongoDB's hostname, the local or remote query engine can
+                connect to a remote server or run locally.
                 Defaults to 'localhost'
             mongo_port (int, optional): MongoDB port, set this arg if the port is not the standard. Defaults to 27017.
-            mongo_username (str, optional): Username used for authentication in the MongoDB database. Defaults to 'mongo'.
-            mongo_password (str, optional): Password used for authentication in the MongoDB database. Defaults to 'mongo'.
+            mongo_username (str, optional): Username used for authentication in the MongoDB database.
+                Defaults to 'mongo'.
+            mongo_password (str, optional): Password used for authentication in the MongoDB database.
+                Defaults to 'mongo'.
             mongo_tls_ca_file (Any, optional): Full system path to the TLS certificate.
-            redis_hostname (str, optional): Redis hostname, the local or remote query engine can connect to a remote server or run locally. Defaults to 'localhost'
+            redis_hostname (str, optional): Redis hostname, the local or remote query engine can connect
+                to a remote server or run locally. Defaults to 'localhost'
             redis_port (int, optional): Redis port, set this arg if the port is not the standard. Defaults to 6379.
-            redis_username (str, optional): Username used for authentication in the Redis database, no credentials (username/password) are needed when running locally.
+            redis_username (str, optional): Username used for authentication in the Redis database,
+                no credentials (username/password) are needed when running locally.
             redis_password (str, optional): Password used for authentication in the Redis database.
             redis_cluster (bool, optional): Indicates whether Redis is configured in cluster mode. Defaults to True.
             redis_ssl (bool, optional): Set Redis to encrypt the connection. Defaults to True.
         """
         self.system_parameters = system_parameters
         self.atomdb = kwargs.get('atomdb', 'ram')
-        self.query_engine = kwargs.get('query_engine', 'local')
+        self.query_engine_type = kwargs.get('query_engine', 'local')
         self._set_default_system_parameters()
         self._set_backend(**kwargs)
         self._set_query_engine(**kwargs)
@@ -80,7 +91,7 @@ class DistributedAtomSpace:
             self.backend = InMemoryDB()
         elif self.atomdb == "redis_mongo":
             self.backend = RedisMongoDB(**kwargs)
-            if self.query_engine != "local":
+            if self.query_engine_type != "local":
                 raise InvalidDASParameters(
                     message="'redis_mongo' AtomDB requires local query engine (i.e. 'query_engine=local')"
                 )
@@ -88,18 +99,18 @@ class DistributedAtomSpace:
             raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
 
     def _set_query_engine(self, **kwargs) -> None:
-        if self.query_engine == 'local':
+        if self.query_engine_type == 'local':
             self._das_type = 'local_ram_only' if self.atomdb == 'ram' else 'local_redis_mongo'
             self.query_engine = LocalQueryEngine(self.backend, self.system_parameters, kwargs)
             logger().info('Started local DAS')
-        elif self.query_engine == 'remote':
+        elif self.query_engine_type == 'remote':
             self._das_type = 'remote'
             self.query_engine = RemoteQueryEngine(self.backend, self.system_parameters, kwargs)
             logger().info('Started remote DAS')
         else:
             raise InvalidQueryEngine(
                 message="Use either 'local' or 'remote'",
-                details=f'query_engine={self.query_engine}',
+                details=f'query_engine={self.query_engine_type}',
             )
 
     def _create_context(
@@ -147,6 +158,7 @@ class DistributedAtomSpace:
             str: Node's handle
 
         Examples:
+            >>> das = DistributedAtomSpace()
             >>> result = das.get_node_handle(node_type='Concept', node_name='human')
             >>> print(result)
             "af12f10f9ae2002a1607ba0b47ba8407"
@@ -172,6 +184,7 @@ class DistributedAtomSpace:
            str: Link's handle.
 
         Examples:
+            >>> das = DistributedAtomSpace()
             >>> human_handle = das.get_node_handle(node_type='Concept', node_name='human')
             >>> monkey_handle = das.get_node_handle(node_type='Concept', node_name='monkey')
             >>> result = das.get_link_handle(link_type='Similarity', targets=[human_handle, monkey_handle])
@@ -202,6 +215,7 @@ class DistributedAtomSpace:
             AtomDoesNotExist: If the corresponding atom doesn't exist.
 
         Examples:
+            >>> das = DistributedAtomSpace()
             >>> human_handle = das.get_node_handle(node_type='Concept', node_name='human')
             >>> result = das.get_atom(human_handle)
             >>> print(result)
@@ -218,7 +232,7 @@ class DistributedAtomSpace:
         """
         Retrieve a node given its type and name.
 
-        Args:
+        Args:self.query_engine
             node_type (str): Node type
             node_name (str): Node name
 
@@ -229,6 +243,7 @@ class DistributedAtomSpace:
             NodeDoesNotExist: If the corresponding node doesn't exist.
 
         Examples:
+            >>> das = DistributedAtomSpace()
             >>> result = das.get_node(
                     node_type='Concept',
                     node_name='human'
@@ -259,6 +274,7 @@ class DistributedAtomSpace:
             LinkDoesNotExist: If the corresponding link doesn't exist.
 
         Examples:
+            >>> das = DistributedAtomSpace()
             >>> human_handle = das.get_node_handle('Concept', 'human')
             >>> monkey_handle = das.get_node_handle('Concept', 'monkey')
             >>> result = das.get_link(
@@ -321,10 +337,12 @@ class DistributedAtomSpace:
             link_targets (List[str], optional): Template of targets being searched (handles or '*').
 
         Keyword Args:
-            no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any]. \
+            no_iterator (bool, optional): Set False to return an iterator otherwise it will return a
+                list of Dict[str, Any].
                 If the query_engine is set to 'local' it always return an iterator.
                 Defaults to True.
-            cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
+            cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor
+                position. Defaults to 0.
             chunk_size (int, optional): Chunk size. Defaults to 1000.
             top_level_only (bool optional): Set to True to filter top level links. Defaults to False.
 
@@ -336,7 +354,7 @@ class DistributedAtomSpace:
         Examples:
 
             1. Retrieve all the links of a given type
-
+                >>> das = DistributedAtomSpace()
                 >>> links = das.get_links(link_type='Inheritance')
                 >>> for link in links:
                 >>>     print(link['type'], link['targets'])
@@ -375,7 +393,7 @@ class DistributedAtomSpace:
             atom_handle (str): Atom's handle
 
         Keyword Args:
-            no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any].
+            no_iterator (bool, optional): Set False to return an iterator otherwise it will return a list of Dict[str, Any].
                 If the query_engine is set to 'remote' it always return an iterator.
                 Defaults to True.
             cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
@@ -386,6 +404,7 @@ class DistributedAtomSpace:
             or a list of strings containing the atom handles
 
         Examples:
+            >>> das = DistributedAtomSpace()
             >>> rhino = das.get_node_handle('Concept', 'rhino')
             >>> links = das.get_incoming_links(rhino)
             >>> for link in links:
@@ -502,7 +521,9 @@ class DistributedAtomSpace:
         """
         return self.query_engine.query(query, parameters)
 
-    def custom_query(self, index_id: str, **kwargs) -> Union[Iterator, List[Dict[str, Any]]]:
+    def custom_query(
+        self, index_id: str, query: Query, **kwargs
+    ) -> Union[Iterator, List[Dict[str, Any]]]:
         """
         Perform a query using a previously created custom index.
 
@@ -511,12 +532,17 @@ class DistributedAtomSpace:
 
         Args:
             index_id (str): custom index id to be used in the query.
+            query (Dict[str, Any]): Query dict, fields are the dict's keys and values are the search.
+                It supports multiple fields.
+                eg: {'name': 'human'}
 
         Keyword Args:
-            no_iterator (bool, optional): Set to False to return an iterator otherwise it will return a list of Dict[str, Any].
+            no_iterator (bool, optional): Set False to return an iterator otherwise it will
+                return a list of Dict[str, Any].
                 If the query_engine is set to 'remote' it always return an iterator.
                 Defaults to True.
-            cursor (Any, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
+            cursor (Any, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor
+                position. Defaults to 0.
             chunk_size (int, optional): Chunk size. Defaults to 1000.
 
         Raises:
@@ -526,13 +552,64 @@ class DistributedAtomSpace:
             Union[Iterator, List[Dict[str, Any]]]: An iterator or list of dict containing atom data.
 
         Examples:
-            >>> das.custom_query(index_id='index_123', tag='DAS')
-            >>> das.custom_query(index_id='index_123', tag='DAS', no_iterator=True)
+            >>> das.custom_query(index_id='index_123', query={'tag': 'DAS'})
+            >>> das.custom_query(index_id='index_123', query={'tag': 'DAS'}, no_iterator=True)
         """
         if isinstance(self.query_engine, LocalQueryEngine) and isinstance(self.backend, InMemoryDB):
             raise NotImplementedError("custom_query() is not implemented for Local DAS in RAM only")
 
-        return self.query_engine.custom_query(index_id, **kwargs)
+        return self.query_engine.custom_query(
+            index_id, [{'field': k, 'value': v} for k, v in query.items()], **kwargs
+        )
+
+    def get_atoms_by_field(self, query: Query) -> List[str]:
+        """
+        Search for the atoms containing field and value, performance is improved if an index was
+        previously created.
+
+        Args:
+            query (Dict[str, Any]): Query dict, fields are the dict keys and values are the search.
+                It supports multiple fields.
+                eg: {'name': 'human'}
+
+        Returns:
+            List[str]: List of atom's ids
+        """
+
+        return self.query_engine.get_atoms_by_field(
+            [{'field': k, 'value': v} for k, v in query.items()]
+        )
+
+    def get_atoms_by_text_field(
+        self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
+    ) -> List[str]:
+        """
+        Performs a text search, if a text index is previously created performance a token index search,
+        otherwise will perform a regex search using binary tree and the argument 'field' is mandatory.
+        Performance is improved if a 'binary_tree' or 'token_inverted_list' is previously created using
+        'create_field_index' method.
+
+        Args:
+            text_value (str): Text value to search for
+            field (Optional[str]): Field to check the text_value
+            text_index_id (Optional[str]): Text index
+        Returns:
+            List[str]: List of atom's ids
+        """
+        return self.query_engine.get_atoms_by_text_field(text_value, field, text_index_id)
+
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+        """
+        Performs a search in the nodes names searchin for a node starting with the 'startswith'
+        value.
+
+        Args:
+            node_type (str): Node type
+            startswith (str): String to search for
+        Returns:
+            List[str]: List of atom's ids
+        """
+        return self.query_engine.get_node_by_name_starting_with(node_type, startswith)
 
     def commit_changes(self, **kwargs):
         """
@@ -587,6 +664,7 @@ class DistributedAtomSpace:
             AddNodeException: If 'type' or 'name' fields are missing or invalid somehow.
 
         Examples:
+            >>> das = DistributedAtomSpace()
             >>> node_params = {
                     'type': 'Reactome',
                     'name': 'Reactome:R-HSA-164843',
@@ -620,6 +698,7 @@ class DistributedAtomSpace:
             AddLinkException: If the 'type' or 'targets' fields are missing or invalid somehow.
 
         Examples:
+            >>> das = DistributedAtomSpace()
             >>> link_params = {
                     'type': 'Evaluation',
                     'targets': [
@@ -734,9 +813,10 @@ class DistributedAtomSpace:
     def create_field_index(
         self,
         atom_type: str,
-        field: str,
-        type: Optional[str] = None,
+        fields: List[str],
+        named_type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
+        index_type: Optional[str] = None,
     ) -> str:
         """
         Create a custom index on the passed field of all atoms of the passed type.
@@ -747,11 +827,16 @@ class DistributedAtomSpace:
         Args:
             atom_type (str): Either 'link' or 'node', if the index is to be created for
                 links or nodes.
-            field (str): field where the index will be created upon
-            type (str, optional): Only atoms of the passed type will be indexed. Defaults
+            fields (List[str]): fields where the index will be created upon
+            named_type (str, optional): Only atoms of the passed type will be indexed. Defaults
                 to None, meaning that atom type doesn't matter.
             composite_type (List[Any], optional): Only Atoms type of the passed composite
                 type will be indexed. Defaults to None.
+            index_type (Optional[str]): Type of index, values allowed are 'binary_tree' to create indexes using binary
+                tree in ascending order or 'token_inverted_list' to create index for text field search the text field
+                will be tokenized and every token will be an indexed. Only one token_inverted_list field is allowed.
+                If set as None will create a binary tree index.
+                Defaults to None.
 
         Raises:
             ValueError: If parameters are invalid somehow.
@@ -761,17 +846,24 @@ class DistributedAtomSpace:
                 newly created index.
 
         Examples:
-            >>> index_id = das.create_field_index('link', 'tag', type='Expression')
-            >>> index_id = das.create_field_index('link', 'tag', composite_type=['Expression', 'Symbol', 'Symbol', ['Expression', 'Symbol', 'Symbol', 'Symbol']])
+            >>> index_id = das.create_field_index('link', ['tag'], type='Expression')
+            >>> index_id = das.create_field_index('link', ['tag'], composite_type=['Expression', 'Symbol', 'Symbol', ['Expression', 'Symbol', 'Symbol', 'Symbol']])
         """
-        if type and composite_type:
+        if named_type and composite_type:
             raise ValueError("'type' and 'composite_type' can't be specified simultaneously")
 
-        if type and not isinstance(type, str):
+        if named_type and not isinstance(named_type, str):
             raise ValueError("'atom_type' should be str")
 
+        if not fields:
+            raise ValueError("'fields' should not be None or empty")
+
         return self.query_engine.create_field_index(
-            atom_type, field, type=type, composite_type=composite_type
+            atom_type,
+            fields,
+            named_type=named_type,
+            composite_type=composite_type,
+            index_type=index_type,
         )
 
     def fetch(

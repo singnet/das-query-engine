@@ -92,3 +92,18 @@ class TestDistributedAtomSpace:
         das = DistributedAtomSpace()
         with pytest.raises(NotImplementedError):
             das.create_context("blah", {})
+
+    def test_get_atoms_by_field(self):
+        das = DistributedAtomSpaceMock()
+        atom_field = das.get_atoms_by_field({'Concept': 'human'})
+        assert atom_field
+
+    def test_get_atoms_by_text_field(self):
+        das = DistributedAtomSpaceMock()
+        atom_text_field = das.get_atoms_by_text_field(text_value='human', field='name')
+        assert atom_text_field
+
+    def test_get_node_by_name_starting_with(self):
+        das = DistributedAtomSpaceMock()
+        atom_starting_with = das.get_node_by_name_starting_with('Concept', 'mon')
+        assert atom_starting_with

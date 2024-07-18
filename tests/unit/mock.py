@@ -244,7 +244,7 @@ class DatabaseMock(AtomDB):
         _, name = _split_node_handle(node_handle)
         return name
 
-    def get_matched_node_name(self, node_type: str, substring: str) -> str:
+    def _get_matched_node_name(self, node_type: str, substring: str) -> str:
         answer = []
         if node_type == 'Concept':
             for node in self.all_nodes:
@@ -324,9 +324,10 @@ class DatabaseMock(AtomDB):
     def create_field_index(
         self,
         atom_type: str,
-        field: str,
-        type: Optional[str] = None,
+        fields: List[str],
+        named_type: Optional[str] = None,
         composite_type: Optional[List[Any]] = None,
+        index_type: Optional[str] = None,
     ) -> str:
         pass
 
@@ -335,6 +336,69 @@ class DatabaseMock(AtomDB):
 
     def retrieve_all_atoms(self) -> List[Dict[str, Any]]:
         pass
+
+    def get_node_by_name(self, node_type: str, substring: str) -> str:
+        return self._get_matched_node_name(node_type, substring)
+
+    def get_atoms_by_field(self, query: List[Dict[str, Any]]) -> List[str]:
+        answer = []
+
+        def _append_atom(atom, named_type, name):
+            for q in query:
+                if q['field'] == named_type and q['value'] in name:
+                    return True
+            return False
+
+        for atom in self.all_nodes + self.all_links:
+            if isinstance(atom, str):
+                named_type, name = _split_node_handle(atom)
+                if _append_atom(atom, named_type, name):
+                    answer.append(atom)
+            else:
+                for a in atom[1:]:
+                    named_type, name = _split_node_handle(a)
+                    if _append_atom(atom, named_type, name):
+                        answer.append(atom)
+                        break
+        return answer
+
+    def get_atoms_by_index(
+        self,
+        index_id: str,
+        query: List[Dict[str, Any]],
+        cursor: Optional[int] = 0,
+        chunk_size: Optional[int] = 500,
+    ) -> List[str]:
+        pass
+
+    def get_atoms_by_text_field(
+        self,
+        text_value: str,
+        field: Optional[str] = None,
+        text_index_id: Optional[str] = None,
+    ) -> List[str]:
+        answer = []
+        for atom in self.all_nodes + self.all_links:
+            if isinstance(atom, str):
+                named_type, name = _split_node_handle(atom)
+                if text_value in name:
+                    answer.append(atom)
+            else:
+                for a in atom[1:]:
+                    named_type, name = _split_node_handle(a)
+                    if text_value in name:
+                        answer.append(atom)
+                        break
+        return answer
+
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+        answer = []
+        if node_type == 'Concept':
+            for node in self.all_nodes:
+                _, name = _split_node_handle(node)
+                if name.startswith(startswith):
+                    answer.append(node)
+        return answer
 
 
 class DatabaseAnimals(DatabaseMock):
