@@ -28,9 +28,10 @@ class DistributedAtomSpace:
         remote instances can be configured using kwargs options.
 
 
-        Args: system_parameters (Dict[str, Any], optional): Sets the system parameters. Defaults to {
-        'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost',
-        'attention_broker_port': 27000}.
+        Args: 
+            system_parameters (Dict[str, Any], optional): Sets the system parameters. Defaults to {
+                'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost',
+                'attention_broker_port': 27000}.
 
         Keyword Args:
             atomdb (str, optional): AtomDB type supported values are 'ram' and 'redis_mongo'. Defaults to 'ram'.
