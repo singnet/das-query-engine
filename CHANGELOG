@@ -11,3 +11,4 @@
 [#223] Updated kwargs documentation
 [#268] Adding performance tests in MeTTa
 [#268] enhancing perf tests script, added results comparison
+[#276] API support to AtomDB new queries

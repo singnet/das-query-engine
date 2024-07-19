@@ -524,8 +524,7 @@ class TestCustomQuery:
         atom_field = das.get_atoms_by_field({'name': '"chimp"'})
         assert atom_field
 
-    @pytest.mark.skip("Mismatch version")
-    def test_get_atom_by_field_remote(self, das_remote_fixture):
+    def test_get_atoms_by_field_remote(self, das_remote_fixture):
         das = das_remote_fixture
         atom_field = das.get_atoms_by_field({'name': '"chimp"'})
         assert atom_field
@@ -539,11 +538,8 @@ class TestCustomQuery:
         atom_text_field = das.get_atoms_by_text_field(text_value='"chim', field='name')
         assert atom_text_field
 
-    @pytest.mark.skip("Mismatch version")
     def test_get_atoms_by_text_field_remote(self, das_remote_fixture):
         das = das_remote_fixture
-        with pytest.raises(Exception, match=r'text index required for \$text query'):
-            das.get_atoms_by_text_field(text_value='"')
         atom_text_field = das.get_atoms_by_text_field(text_value='"chim', field='name')
         assert atom_text_field
 
@@ -554,7 +550,6 @@ class TestCustomQuery:
         atom_starting_with = das.get_node_by_name_starting_with('Symbol', '"mon')
         assert atom_starting_with
 
-    @pytest.mark.skip("Mismatch version")
     def test_get_atoms_starting_remote(self, das_remote_fixture):
         das = das_remote_fixture
         atom_starting_with = das.get_node_by_name_starting_with('Symbol', '"mon')
