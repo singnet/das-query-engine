@@ -263,7 +263,10 @@ class FunctionsClient:
                 raise e
 
     def get_atoms_by_field(self, query: Query) -> List[str]:
-        payload = {'action': 'get_atoms_by_field', 'input': {'query': {v['field']:v['value'] for v in query}}}
+        payload = {
+            'action': 'get_atoms_by_field',
+            'input': {'query': {v['field']: v['value'] for v in query}},
+        }
         try:
             return self._send_request(payload)
         except HTTPError as e:
