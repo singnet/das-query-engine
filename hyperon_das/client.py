@@ -5,7 +5,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import exceptions, sessions
 
-from hyperon_das.exceptions import ConnectionError, HTTPError, RequestError, TimeoutError
+from hyperon_das.exceptions import (
+    FunctionsConnectionError,
+    FunctionsTimeoutError,
+    HTTPError,
+    RequestError,
+)
 from hyperon_das.logger import logger
 from hyperon_das.type_alias import Query
 from hyperon_das.utils import connect_to_server, das_error, deserialize, serialize
@@ -45,14 +50,14 @@ class FunctionsClient:
                 )
         except exceptions.ConnectionError as e:
             das_error(
-                ConnectionError(
+                FunctionsConnectionError(
                     message=f"Connection error for URL: '{self.url}' with payload: '{payload}'",
                     details=str(e),
                 )
             )
         except exceptions.Timeout as e:
             das_error(
-                TimeoutError(
+                FunctionsTimeoutError(
                     message=f"Request timed out for URL: '{self.url}' with payload: '{payload}'",
                     details=str(e),
                 )

@@ -5,7 +5,7 @@ import pytest
 from requests import exceptions
 
 from hyperon_das.client import FunctionsClient
-from hyperon_das.exceptions import ConnectionError, RequestError, TimeoutError
+from hyperon_das.exceptions import FunctionsConnectionError, FunctionsTimeoutError, RequestError
 from hyperon_das.utils import serialize
 
 
@@ -399,7 +399,7 @@ class TestFunctionsClient:
 
         payload = {"action": "get_atom", "input": {"handle": "123"}}
 
-        with pytest.raises(ConnectionError):
+        with pytest.raises(FunctionsConnectionError):
             client._send_request(payload)
 
     def test_send_request_timeout_error(self, mock_request, client):
@@ -407,7 +407,7 @@ class TestFunctionsClient:
 
         payload = {"action": "get_atom", "input": {"handle": "123"}}
 
-        with pytest.raises(TimeoutError):
+        with pytest.raises(FunctionsTimeoutError):
             client._send_request(payload)
 
     def test_send_request_request_exception(self, mock_request, client):

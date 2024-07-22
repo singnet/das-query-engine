@@ -33,7 +33,7 @@ class QueryAnswerIterator(ABC):
 
     @abstractmethod
     def is_empty(self) -> bool:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     def get(self) -> Any:
         if not self.source or self.current_value is None:

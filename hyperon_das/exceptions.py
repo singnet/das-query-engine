@@ -1,10 +1,8 @@
 from typing import Union
 
 
-class BaseException(Exception):
-    """
-    Base class to exceptions
-    """
+class QueryEngineBaseException(Exception):
+    """Base class to exceptions in this module."""
 
     def __init__(self, message: str, details: str = ""):
         self.message = message
@@ -13,47 +11,61 @@ class BaseException(Exception):
         super().__init__(self.message, self.details)
 
 
-class QueryParametersException(BaseException):
-    ...  # pragma no cover
+class QueryParametersException(QueryEngineBaseException):
+    """Exception raised for errors in the parameters of a query."""
 
 
-class UnexpectedQueryFormat(BaseException):
-    ...  # pragma no cover
+class UnexpectedQueryFormat(QueryEngineBaseException):
+    """Exception raised for errors in the format of a query."""
 
 
-class InvalidAssignment(BaseException):
-    ...  # pragma no cover
+class InvalidAssignment(QueryEngineBaseException):
+    """Exception raised for invalid assignments."""
 
 
-class ConnectionError(BaseException):
-    ...  # pragma no cover
+class _ConnectionError(QueryEngineBaseException):
+    """Exception raised for connection errors."""
 
 
-class TimeoutError(BaseException):
-    ...  # pragma no cover
+class RetryConnectionError(_ConnectionError):
+    """Exception raised for retry connection errors."""
 
 
-class HTTPError(BaseException):
+class FunctionsConnectionError(_ConnectionError):
+    """Exception raised for functions connection errors."""
+
+
+class _TimeoutError(QueryEngineBaseException):
+    """Exception raised for timeout errors."""
+
+
+class FunctionsTimeoutError(_TimeoutError):
+    """Exception raised for functions timeout errors."""
+
+
+class HTTPError(QueryEngineBaseException):
+    """Exception raised for HTTP errors."""
+
     def __init__(self, message: str, details: str = "", status_code: Union[int, None] = None):
         super().__init__(message, details)
         self.status_code = status_code
 
 
-class RequestError(BaseException):
-    ...  # pragma no cover
+class RequestError(QueryEngineBaseException):
+    """Exception raised for request errors."""
 
 
-class RetryException(BaseException):
-    ...  # pragma no cover
+class RetryException(QueryEngineBaseException):
+    """Exception raised for retry errors."""
 
 
-class InvalidDASParameters(BaseException):
-    ...  # pragma no cover
+class InvalidDASParameters(QueryEngineBaseException):
+    """Exception raised for invalid DAS parameters."""
 
 
-class InvalidQueryEngine(BaseException):
-    ...  # pragma no cover
+class InvalidQueryEngine(QueryEngineBaseException):
+    """Exception raised for invalid query engines."""
 
 
-class GetTraversalCursorException(BaseException):
-    ...  # pragma no cover
+class GetTraversalCursorException(QueryEngineBaseException):
+    """Exception raised for errors in getting traversal cursor."""

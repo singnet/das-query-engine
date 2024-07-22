@@ -32,47 +32,47 @@ from hyperon_das.utils import Assignment, QueryAnswer, das_error
 class QueryEngine(ABC):
     @abstractmethod
     def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def get_link(self, link_type: str, targets: List[str]) -> Union[Dict[str, Any], None]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def get_links(
         self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def get_incoming_links(
         self, atom_handle: str, **kwargs
     ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def query(
         self, query: Query, parameters: Optional[Dict[str, Any]] = {}
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def custom_query(
         self, index_id: str, query: Query, **kwargs
     ) -> Union[Iterator, List[Dict[str, Any]]]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def count_atoms(self) -> Tuple[int, int]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def create_field_index(
@@ -83,7 +83,7 @@ class QueryEngine(ABC):
         composite_type: Optional[List[Any]] = None,
         index_type: Optional[str] = None,
     ) -> str:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def fetch(
@@ -93,29 +93,29 @@ class QueryEngine(ABC):
         port: Optional[int] = None,
         **kwargs,
     ) -> Any:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def create_context(self, name: str, queries: Optional[List[Query]]) -> Context:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def commit(self, **kwargs) -> None:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def get_atoms_by_field(self, query: Query) -> List[str]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def get_atoms_by_text_field(
         self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
     ) -> List[str]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
     @abstractmethod
     def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
-        ...  # pragma no cover
+        raise NotImplementedError
 
 
 class LocalQueryEngine(QueryEngine):

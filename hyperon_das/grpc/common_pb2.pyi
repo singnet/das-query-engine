@@ -37,6 +37,7 @@ class HandleCount(_message.Message):
         key: str
         value: int
         def __init__(self, key: _Optional[str] = ..., value: _Optional[int] = ...) -> None: ...
+
     HANDLE_COUNT_FIELD_NUMBER: _ClassVar[int]
     handle_count: _containers.ScalarMap[str, int]
     def __init__(self, handle_count: _Optional[_Mapping[str, int]] = ...) -> None: ...
