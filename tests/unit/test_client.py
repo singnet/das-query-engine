@@ -316,7 +316,10 @@ class TestFunctionsClient:
 
     def test_get_atoms_by_field(self, mock_request, client):
         query = [{'field': 'name', 'value': 'test'}]
-        expected_request_data = {"action": "get_atoms_by_field", "input": {'query': query}}
+        expected_request_data = {
+            "action": "get_atoms_by_field",
+            "input": {'query': {k['field']: k['value'] for k in query}},
+        }
         expected_response = (14, 26)
         mock_request.return_value.status_code = 200
         mock_request.return_value.content = serialize(expected_response)
