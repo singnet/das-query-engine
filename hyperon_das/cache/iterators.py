@@ -33,7 +33,13 @@ class QueryAnswerIterator(ABC):
 
     @abstractmethod
     def is_empty(self) -> bool:
-        raise NotImplementedError
+        """
+        Determines if the iterator has no more elements to iterate over.
+
+        Returns:
+            bool: True if the iterator is empty and has no more elements to yield, False otherwise.
+        """
+        ...
 
     def get(self) -> Any:
         if not self.source or self.current_value is None:
