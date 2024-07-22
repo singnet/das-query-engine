@@ -3,7 +3,7 @@ from functools import wraps
 from http import HTTPStatus  # noqa: F401
 from typing import Callable
 
-from hyperon_das.exceptions import ConnectionError
+from hyperon_das.exceptions import RetryConnectionError
 from hyperon_das.logger import logger
 
 
@@ -26,7 +26,7 @@ def retry(attempts: int, timeout_seconds: int):
                         )
                         return response
                 except Exception as e:
-                    raise ConnectionError(
+                    raise RetryConnectionError(
                         message="An error occurs while connecting to the server",
                         details=str(e),
                     )
@@ -42,7 +42,7 @@ def retry(attempts: int, timeout_seconds: int):
                 + f' - attempts:{retry_count} - time_attempted: {timer_count}'
             )
             logger().info(message)
-            raise ConnectionError(message)
+            raise RetryConnectionError(message)
 
         return wrapper
 
