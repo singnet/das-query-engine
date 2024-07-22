@@ -335,7 +335,7 @@ class TestFunctionsClient:
         assert result == expected_response
 
     def test_get_atoms_by_text_field(self, mock_request, client):
-        expected_input = {'text_value': 'value', 'field': None, 'text_index_id': None}
+        expected_input = {'text_value': 'value'}
         expected_request_data = {"action": "get_atoms_by_text_field", "input": expected_input}
         expected_response = (14, 26)
         mock_request.return_value.status_code = 200
