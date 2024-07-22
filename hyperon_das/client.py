@@ -25,6 +25,10 @@ class FunctionsClient:
 
     def _send_request(self, payload) -> Any:
         try:
+            if payload.get('input'):
+                normalized_input = {k: v for k, v in payload['input'].items() if v is not None}
+                payload['input'] = normalized_input
+
             payload_serialized = serialize(payload)
 
             with sessions.Session() as session:
