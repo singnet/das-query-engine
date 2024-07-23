@@ -84,7 +84,7 @@ class FunctionsClient:
                 )
             )
 
-    def get_atom(self, handle: str, **kwargs) -> str | dict[str, Any]:
+    def get_atom(self, handle: str, **kwargs) -> str | dict:
         payload = {
             'action': 'get_atom',
             'input': {'handle': handle},
@@ -97,7 +97,7 @@ class FunctionsClient:
             else:
                 raise e
 
-    def get_node(self, node_type: str, node_name: str) -> str | dict[str, Any]:
+    def get_node(self, node_type: str, node_name: str) -> str | dict:
         payload = {
             'action': 'get_node',
             'input': {'node_type': node_type, 'node_name': node_name},
@@ -129,7 +129,7 @@ class FunctionsClient:
         target_types: list[str] | None = None,
         link_targets: list[str] | None = None,
         **kwargs,
-    ) -> list[str] | list[dict[str, Any]]:
+    ) -> list[str] | list[dict]:
         payload = {
             'action': 'get_links',
             'input': {'link_type': link_type, 'kwargs': kwargs},
