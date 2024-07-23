@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from hyperon_das_atomdb import WILDCARD
 
+from hyperon_das.query_engines.query_engine_protocol import QueryEngine
 from hyperon_das.utils import Assignment, QueryAnswer
 
 
@@ -88,20 +89,19 @@ class LazyQueryEvaluator(ProductIterator):
         self,
         link_type: str,
         source: List[QueryAnswerIterator],
-        # das: "DistributedAtomSpace" Circular import,
-        das,
+        query_engine: QueryEngine,
         query_parameters: Optional[Dict[str, Any]],
     ):
         super().__init__(source)
         self.link_type = link_type
         self.query_parameters = query_parameters
-        self.das = das
+        self.query_engine = query_engine
         self.buffered_answer = None
 
     def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
         targets = []
         for target_handle in link["targets"]:
-            atom = self.das.get_atom(target_handle)
+            atom = self.query_engine.get_atom(target_handle)
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
@@ -127,7 +127,7 @@ class LazyQueryEvaluator(ProductIterator):
                     wildcard_flag = True
                 else:
                     target_handle.append(target["handle"])
-            das_query_answer = self.das.get_links(self.link_type, None, target_handle)
+            das_query_answer = self.query_engine.get_links(self.link_type, None, target_handle)
             lazy_query_answer = []
             for answer in das_query_answer:
                 assignment = None
