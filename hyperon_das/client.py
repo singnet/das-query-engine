@@ -17,7 +17,7 @@ from hyperon_das.utils import connect_to_server, das_error, deserialize, seriali
 
 
 class FunctionsClient:
-    def __init__(self, host: str, port: int, name: str | None) -> None:
+    def __init__(self, host: str, port: int, name: str | None = None) -> None:
         if not host and not port:
             das_error(ValueError("'host' and 'port' are mandatory parameters"))
         self.name = name if name else f'client_{host}:{port}'
