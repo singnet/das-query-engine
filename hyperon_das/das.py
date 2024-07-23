@@ -13,6 +13,7 @@ from hyperon_das.exceptions import (
 )
 from hyperon_das.logger import logger
 from hyperon_das.query_engines.local_query_engine import LocalQueryEngine
+from hyperon_das.query_engines.query_engine_protocol import QueryEngine
 from hyperon_das.query_engines.remote_query_engine import RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
 from hyperon_das.type_alias import Query
@@ -20,6 +21,11 @@ from hyperon_das.utils import QueryAnswer, get_package_version
 
 
 class DistributedAtomSpace:
+
+    backend: AtomDB
+    query_engine: QueryEngine
+    cache_controller: CacheController
+
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
         """
         Creates a new DAS object.
@@ -68,7 +74,7 @@ class DistributedAtomSpace:
             redis_ssl (bool, optional): Set Redis to encrypt the connection. Defaults to True.
         """
         self.system_parameters = system_parameters
-        self.atomdb = kwargs.get('atomdb', 'ram')
+        self.atomdb_type = kwargs.get('atomdb', 'ram')
         self.query_engine_type = kwargs.get('query_engine', 'local')
         self._set_default_system_parameters()
         self._set_backend(**kwargs)
@@ -88,9 +94,9 @@ class DistributedAtomSpace:
             self.system_parameters['attention_broker_port'] = 27000
 
     def _set_backend(self, **kwargs) -> None:
-        if self.atomdb == "ram":
+        if self.atomdb_type == "ram":
             self.backend = InMemoryDB()
-        elif self.atomdb == "redis_mongo":
+        elif self.atomdb_type == "redis_mongo":
             self.backend = RedisMongoDB(**kwargs)
             if self.query_engine_type != "local":
                 raise InvalidDASParameters(
@@ -101,7 +107,7 @@ class DistributedAtomSpace:
 
     def _set_query_engine(self, **kwargs) -> None:
         if self.query_engine_type == 'local':
-            self._das_type = 'local_ram_only' if self.atomdb == 'ram' else 'local_redis_mongo'
+            self._das_type = 'local_ram_only' if self.atomdb_type == 'ram' else 'local_redis_mongo'
             self.query_engine = LocalQueryEngine(self.backend, self.system_parameters, kwargs)
             logger().info('Started local DAS')
         elif self.query_engine_type == 'remote':

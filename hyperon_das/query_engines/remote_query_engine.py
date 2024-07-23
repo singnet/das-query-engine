@@ -1,5 +1,6 @@
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
+from hyperon_das_atomdb import AtomDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
 from hyperon_das.cache.iterators import (
@@ -18,7 +19,9 @@ from hyperon_das.utils import QueryAnswer, das_error
 
 
 class RemoteQueryEngine(QueryEngine):
-    def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
+    def __init__(
+        self, backend: AtomDB, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}
+    ):
         self.system_parameters = system_parameters
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
         self.__mode = kwargs.get('mode', 'read-only')

@@ -25,7 +25,7 @@ from hyperon_das.utils import Assignment, QueryAnswer, das_error
 
 class LocalQueryEngine(QueryEngine):
     def __init__(
-        self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}
+        self, backend: AtomDB, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}
     ) -> None:
         self.system_parameters = system_parameters
         self.local_backend = backend

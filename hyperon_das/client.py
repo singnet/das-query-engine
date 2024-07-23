@@ -1,6 +1,6 @@
 import contextlib
 import pickle
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 from requests import exceptions, sessions
@@ -17,7 +17,7 @@ from hyperon_das.utils import connect_to_server, das_error, deserialize, seriali
 
 
 class FunctionsClient:
-    def __init__(self, host: str, port: int, name: Optional[str] = None) -> None:
+    def __init__(self, host: str, port: int, name: str | None) -> None:
         if not host and not port:
             das_error(ValueError("'host' and 'port' are mandatory parameters"))
         self.name = name if name else f'client_{host}:{port}'
@@ -84,7 +84,7 @@ class FunctionsClient:
                 )
             )
 
-    def get_atom(self, handle: str, **kwargs) -> Union[str, Dict]:
+    def get_atom(self, handle: str, **kwargs) -> str | dict[str, Any]:
         payload = {
             'action': 'get_atom',
             'input': {'handle': handle},
@@ -97,7 +97,7 @@ class FunctionsClient:
             else:
                 raise e
 
-    def get_node(self, node_type: str, node_name: str) -> Union[str, Dict]:
+    def get_node(self, node_type: str, node_name: str) -> str | dict[str, Any]:
         payload = {
             'action': 'get_node',
             'input': {'node_type': node_type, 'node_name': node_name},
@@ -110,7 +110,7 @@ class FunctionsClient:
             else:
                 raise e
 
-    def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
+    def get_link(self, link_type: str, link_targets: list[str]) -> dict[str, Any]:
         payload = {
             'action': 'get_link',
             'input': {'link_type': link_type, 'link_targets': link_targets},
@@ -126,10 +126,10 @@ class FunctionsClient:
     def get_links(
         self,
         link_type: str,
-        target_types: List[str] = None,
-        link_targets: List[str] = None,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
         **kwargs,
-    ) -> Union[List[str], List[Dict]]:
+    ) -> list[str] | list[dict[str, Any]]:
         payload = {
             'action': 'get_links',
             'input': {'link_type': link_type, 'kwargs': kwargs},
@@ -151,9 +151,9 @@ class FunctionsClient:
 
     def query(
         self,
-        query: Dict[str, Any],
-        parameters: Optional[Dict[str, Any]] = None,
-    ) -> List[Dict[str, Any]]:
+        query: dict[str, Any],
+        parameters: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         try:
             payload = {
                 'action': 'query',
@@ -171,14 +171,14 @@ class FunctionsClient:
                 raise Exception("Your query couldn't be processed because Atom nonexistent", str(e))
             raise e
 
-    def count_atoms(self) -> Tuple[int, int]:
+    def count_atoms(self) -> tuple[int, int]:
         payload = {
             'action': 'count_atoms',
             'input': {},
         }
         return self._send_request(payload)
 
-    def commit_changes(self, **kwargs) -> Tuple[int, int]:
+    def commit_changes(self, **kwargs) -> tuple[int, int]:
         payload = {
             'action': 'commit_changes',
             'input': {'kwargs': kwargs},
@@ -193,7 +193,7 @@ class FunctionsClient:
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
+    ) -> list[dict | str | tuple[dict, list[dict]]]:
         payload = {
             'action': 'get_incoming_links',
             'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
@@ -202,15 +202,15 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             logger().debug(f'Error during `get_incoming_links` request on remote Das: {str(e)}')
-            return None, [] if kwargs.get('cursor') is not None else []
+            return None, [] if kwargs.get('cursor') is not None else []  # TODO:(angelo) check this
 
     def create_field_index(
         self,
         atom_type: str,
-        fields: List[str],
-        named_type: Optional[str] = None,
-        composite_type: Optional[List[Any]] = None,
-        index_type: Optional[str] = None,
+        fields: list[str],
+        named_type: str | None = None,
+        composite_type: list[Any] | None = None,
+        index_type: str | None = None,
     ) -> str:
         payload = {
             'action': 'create_field_index',
@@ -230,7 +230,7 @@ class FunctionsClient:
             else:
                 raise e
 
-    def custom_query(self, index_id: str, query: Query, **kwargs) -> List[Dict[str, Any]]:
+    def custom_query(self, index_id: str, query: Query, **kwargs) -> list[dict[str, Any]]:
         payload = {
             'action': 'custom_query',
             'input': {'index_id': index_id, 'query': query, 'kwargs': kwargs},
@@ -242,9 +242,9 @@ class FunctionsClient:
 
     def fetch(
         self,
-        query: Union[List[dict], dict],
-        host: Optional[str] = None,
-        port: Optional[int] = None,
+        query: list[dict] | dict,
+        host: str | None = None,
+        port: int | None = None,
         **kwargs,
     ) -> Any:
         payload = {
@@ -256,7 +256,7 @@ class FunctionsClient:
         except HTTPError as e:
             raise e
 
-    def create_context(self, name: str, queries: Optional[List[Query]]) -> Any:
+    def create_context(self, name: str, queries: list[Query] | None) -> Any:
         payload = {
             'action': 'create_context',
             'input': {'name': name, 'queries': queries},
@@ -271,7 +271,7 @@ class FunctionsClient:
             else:
                 raise e
 
-    def get_atoms_by_field(self, query: Query) -> List[str]:
+    def get_atoms_by_field(self, query: Query) -> list[str]:
         payload = {
             'action': 'get_atoms_by_field',
             'input': {'query': {v['field']: v['value'] for v in query}},
@@ -285,8 +285,8 @@ class FunctionsClient:
                 raise e
 
     def get_atoms_by_text_field(
-        self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
-    ) -> List[str]:
+        self, text_value: str, field: str | None = None, text_index_id: str | None = None
+    ) -> list[str]:
         payload = {
             'action': 'get_atoms_by_text_field',
             'input': {'text_value': text_value, 'field': field, 'text_index_id': text_index_id},
@@ -299,7 +299,7 @@ class FunctionsClient:
             else:
                 raise e
 
-    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> list[str]:
         payload = {
             'action': 'get_node_by_name_starting_with',
             'input': {
