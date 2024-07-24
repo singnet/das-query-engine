@@ -165,7 +165,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def count_atoms(self) -> Tuple[int, int]:
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Tuple[int, int]:
         """
         Counts the total number of atoms in the database.
 

@@ -159,6 +159,8 @@ class TestRemoteDistributedAtomSpace:
         response = remote_das.count_atoms()
         assert response[0] == 23
         assert response[1] == 60
+        response_local = remote_das.count_atoms({'context': 'local'})
+        assert response_local == (0, 0)
 
     def _test_query(self, remote_das: DistributedAtomSpace):
         all_inheritance_mammal = [

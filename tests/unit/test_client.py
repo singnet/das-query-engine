@@ -314,6 +314,24 @@ class TestFunctionsClient:
 
         assert result == expected_response
 
+    def test_count_atoms_success_parameters(self, mock_request, client):
+        values = {'parameters': {'context': 'local'}}
+        expected_request_data = {"action": "count_atoms", "input": values}
+        expected_response = (14, 26)
+
+        mock_request.return_value.status_code = 200
+        mock_request.return_value.content = serialize(expected_response)
+        result = client.count_atoms(values['parameters'])
+
+        mock_request.assert_called_once_with(
+            method='POST',
+            url='http://0.0.0.0:1000/function/query-engine',
+            data=serialize(expected_request_data),
+            headers={'Content-Type': 'application/octet-stream'},
+        )
+
+        assert result == expected_response
+
     def test_get_atoms_by_field(self, mock_request, client):
         query = [{'field': 'name', 'value': 'test'}]
         expected_request_data = {

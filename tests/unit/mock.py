@@ -6,6 +6,8 @@ from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das import DistributedAtomSpace
 from hyperon_das.das import LocalQueryEngine, RemoteQueryEngine
 
+from unittest.mock import MagicMock, patch
+
 
 def _build_node_handle(node_type: str, node_name: str) -> str:
     return f'<{node_type}: {node_name}>'
@@ -26,7 +28,8 @@ class DistributedAtomSpaceMock(DistributedAtomSpace):
     def __init__(self, query_engine: Optional[str] = 'local', **kwargs) -> None:
         self.backend = DatabaseAnimals()
         if query_engine == 'remote':
-            self.query_engine = RemoteQueryEngine(self.backend, {}, kwargs)
+            with patch('hyperon_das.client.connect_to_server', return_value=(200, 'OK')):
+                self.query_engine = RemoteQueryEngine(self.backend, {}, kwargs)
         else:
             self.query_engine = LocalQueryEngine(self.backend, {}, kwargs)
 
@@ -292,7 +295,7 @@ class DatabaseMock(AtomDB):
         document = self.get_atom_as_dict(node_handle)
         return document["type"]
 
-    def count_atoms(self):
+    def count_atoms(self, parameters: Dict[str, Any] = None):
         return (len(self.all_nodes), len(self.all_links))
 
     def clear_database(self):

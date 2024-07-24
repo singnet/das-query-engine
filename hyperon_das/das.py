@@ -416,7 +416,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_incoming_links(atom_handle, **kwargs)
 
-    def count_atoms(self) -> Tuple[int, int]:
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Tuple[int, int]:
         """
         Count nodes and links in DAS.
 
@@ -424,10 +424,16 @@ class DistributedAtomSpace:
         remotely. If there are more than one instance of the same atom (local and remote), it's
         counted only once.
 
+        Args:
+            parameters (Optional[Dict[str, Any]]): Dict containing the following keys: 'context' - returning the
+                count of 'local', 'remote' or 'both', 'precision' - sets the count precision as 'precise' or 'fast'.
+                Default value for 'context' is 'both' and 'precision' is 'precise'.
+                Defaults to None.
+
         Returns:
             Tuple[int, int]: (node_count, link_count)
         """
-        return self.query_engine.count_atoms()
+        return self.query_engine.count_atoms(parameters)
 
     def query(
         self,

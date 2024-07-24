@@ -171,10 +171,10 @@ class FunctionsClient:
                 raise Exception("Your query couldn't be processed because Atom nonexistent", str(e))
             raise e
 
-    def count_atoms(self) -> Tuple[int, int]:
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Tuple[int, int]:
         payload = {
             'action': 'count_atoms',
-            'input': {},
+            'input': {'parameters': parameters},
         }
         return self._send_request(payload)
 

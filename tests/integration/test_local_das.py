@@ -49,6 +49,7 @@ class TestLocalDASRedisMongo:
         assert das.count_atoms() == (0, 0)
         das.commit_changes()
         assert das.count_atoms() == (14, 26)
+        assert das.count_atoms({'context': 'remote'}) == (0, 0)
 
         das.add_node({"type": "Concept", "name": "dog"})
         das.add_link(
