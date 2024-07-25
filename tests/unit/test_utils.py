@@ -64,15 +64,15 @@ class TestAssignment:
         va3.assign("v2", "1")
 
         with pytest.raises(Exception):
-            s1 = set([va1, va2])
+            s1 = {va1, va2}
         with pytest.raises(Exception):
-            s2 = set([va1, va3])
+            s2 = {va1, va3}
 
         va1.freeze()
         va2.freeze()
         va3.freeze()
-        s1 = set([va1, va2])
-        s2 = set([va1, va3])
+        s1 = {va1, va2}
+        s2 = {va1, va3}
         assert len(s1) == 1
         assert len(s2) == 2
         assert va1 in s1 and va2 in s1 and va3 not in s1
@@ -153,7 +153,7 @@ class TestQueryAnswer:
             assert handle_count[handles[cursor]] == count[cursor]
 
     def test_get_handle_stats(self):
-        self._check_handle_set(None, set([]), [])
+        self._check_handle_set(None, dict(), [])
 
         self._check_handle_set({'handle': 'h1'}, ['h1'], [1])
 

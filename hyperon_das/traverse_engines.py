@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator
 
 from hyperon_das_atomdb import AtomDoesNotExist
 
+from hyperon_das.cache import LocalIncomingLinks
 from hyperon_das.cache.iterators import TraverseLinksIterator, TraverseNeighborsIterator
 
 if TYPE_CHECKING:  # pragma no cover
@@ -28,13 +29,18 @@ class TraverseEngine:
         return self._cursor
 
     def get_links(self, **kwargs) -> Iterator:
-        """Returns all links that have the current cursor as one of their targets, that is, any links that point to the cursor.
+        """
+        Returns all links that have the current cursor as one of their targets, that is, any links
+        that point to the cursor.
 
         Keyword Args:
             link_type (str, optional): Filter links if named_type matches with this parameter.
-            cursor_position (int, optional): Sets the position of the cursor, return the links after this position.
-            target_type (str, optional):  Filter links if one of the targets matches with this parameter.
-            filter (Callable[[Dict], bool], optional): Function used to filter the results after applying all other filters.
+            cursor_position (int, optional): Sets the position of the cursor, return the links after
+                this position.
+            target_type (str, optional):  Filter links if one of the targets matches with this
+                parameter.
+            filter (Callable[[Dict], bool], optional): Function used to filter the results after
+                applying all other filters.
             chunk_size (int, optional): Chunk size. Defaults to 500.
 
         Returns:

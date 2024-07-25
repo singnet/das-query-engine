@@ -392,7 +392,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_links(link_type, target_types, link_targets, **kwargs)
 
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> List[Union[Dict[str, Any], str]]:
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> list[dict[str, Any] | str]:
         """
         Retrieve all links which has the passed handle as one of its targets.
 

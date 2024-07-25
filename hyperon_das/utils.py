@@ -1,4 +1,5 @@
 import pickle
+from collections.abc import Iterable
 from dataclasses import dataclass
 from http import HTTPStatus  # noqa: F401
 from importlib import import_module
@@ -93,7 +94,7 @@ class Assignment:
             self.mapping[label] = value
             return True
 
-    def merge(self, other: "Assignment", in_place: bool = True) -> Optional[bool]:
+    def merge(self, other: "Assignment", in_place: bool = True) -> Optional["Assignment"] | bool:
         if in_place:
             assert not self.frozen()
             if other:
@@ -112,12 +113,12 @@ class Assignment:
 
 @dataclass
 class QueryAnswer:
-    subgraph: Optional[Dict] = None
-    assignment: Optional[Assignment] = None
+    subgraph: dict[str, Any] | None = None
+    assignment: Assignment | None = None
 
-    def _recursive_get_handle_set(self, atom, handle_set):
+    def _recursive_get_handle_set(self, atom: dict[str, Any], handle_set: set[str]):
         handle_set.add(atom['handle'])
-        targets = atom.get('targets', None)
+        targets: Iterable | None = atom.get('targets', None)
         if targets is not None:
             for target_atom in targets:
                 self._recursive_get_handle_set(target_atom, handle_set)

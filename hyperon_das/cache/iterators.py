@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
 from threading import Semaphore, Thread
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Generic, TypeVar, Iterator, Callable
 
 from hyperon_das_atomdb import WILDCARD
 
@@ -10,16 +10,20 @@ from hyperon_das.query_engines.query_engine_protocol import QueryEngine
 from hyperon_das.utils import Assignment, QueryAnswer
 
 
-class QueryAnswerIterator(ABC):
-    def __init__(self, source: Any):
-        self.source = source
-        self.current_value = None
-        self.iterator = None
+T = TypeVar("T")
+V = TypeVar("V")
 
-    def __iter__(self):
+
+class QueryAnswerIterator(ABC, Generic[T, V]):
+    def __init__(self, source: T):
+        self.source = source
+        self.current_value: V | None = None
+        self.iterator: Iterator[V] | None = None
+
+    def __iter__(self) -> "QueryAnswerIterator":
         return self
 
-    def __next__(self):
+    def __next__(self) -> V:
         if not self.source or self.iterator is None:
             raise StopIteration
         try:
@@ -29,7 +33,7 @@ class QueryAnswerIterator(ABC):
             raise exception
         return self.current_value
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.source)
 
     @abstractmethod
@@ -42,14 +46,14 @@ class QueryAnswerIterator(ABC):
         """
         ...
 
-    def get(self) -> Any:
+    def get(self) -> V:
         if not self.source or self.current_value is None:
             raise StopIteration
         return self.current_value
 
 
-class ListIterator(QueryAnswerIterator):
-    def __init__(self, source: List[Any]):
+class ListIterator(QueryAnswerIterator[list[V], V]):
+    def __init__(self, source: list[V]):
         super().__init__(source)
         if source:
             self.iterator = iter(self.source)
@@ -59,8 +63,8 @@ class ListIterator(QueryAnswerIterator):
         return not self.source
 
 
-class ProductIterator(QueryAnswerIterator):
-    def __init__(self, source: List[QueryAnswerIterator]):
+class ProductIterator(QueryAnswerIterator[list[QueryAnswerIterator], tuple[QueryAnswer]]):
+    def __init__(self, source: list[QueryAnswerIterator]):
         super().__init__(source)
         if not self.is_empty():
             self.current_value = tuple([iterator.get() for iterator in source])
@@ -71,7 +75,7 @@ class ProductIterator(QueryAnswerIterator):
 
 
 class AndEvaluator(ProductIterator):
-    def __init__(self, source: List[QueryAnswerIterator]):
+    def __init__(self, source: list[QueryAnswerIterator]):
         super().__init__(source)
 
     def __next__(self):
@@ -88,30 +92,32 @@ class LazyQueryEvaluator(ProductIterator):
     def __init__(
         self,
         link_type: str,
-        source: List[QueryAnswerIterator],
+        source: list[QueryAnswerIterator],
         query_engine: QueryEngine,
-        query_parameters: Optional[Dict[str, Any]],
+        query_parameters: dict[str, Any] | None,
     ):
         super().__init__(source)
         self.link_type = link_type
         self.query_parameters = query_parameters
         self.query_engine = query_engine
-        self.buffered_answer = None
+        self.buffered_answer: ListIterator[QueryAnswer] | None = None
 
-    def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
-        targets = []
+    def _replace_target_handles(self, link: dict[str, Any]) -> dict[str, Any]:
+        targets: list[dict[str, Any]] = []
         for target_handle in link["targets"]:
             atom = self.query_engine.get_atom(target_handle)
+            if atom is None:
+                continue
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
         link["targets"] = targets
         return link
 
-    def __next__(self):
+    def __next__(self) -> QueryAnswer:
         if self.buffered_answer:
             try:
-                return self.buffered_answer.__next__()
+                return next(self.buffered_answer)
             except StopIteration:
                 self.buffered_answer = None
         while self.buffered_answer is None:
@@ -127,8 +133,10 @@ class LazyQueryEvaluator(ProductIterator):
                     wildcard_flag = True
                 else:
                     target_handle.append(target["handle"])
-            das_query_answer = self.query_engine.get_links(self.link_type, None, target_handle)
-            lazy_query_answer = []
+            das_query_answer: list[dict] = self.query_engine.get_links(
+                self.link_type, None, target_handle
+            )
+            lazy_query_answer: list[QueryAnswer] = []
             for answer in das_query_answer:
                 assignment = None
                 if wildcard_flag:
@@ -152,11 +160,12 @@ class LazyQueryEvaluator(ProductIterator):
                 )
             if lazy_query_answer:
                 self.buffered_answer = ListIterator(lazy_query_answer)
-                next_value = self.buffered_answer.__next__()
-        return next_value
+                return next(self.buffered_answer)
+
+        raise StopIteration
 
 
-class BaseLinksIterator(QueryAnswerIterator, ABC):
+class BaseLinksIterator(Generic[T, V], QueryAnswerIterator[T, V], ABC):
     def __init__(self, source: ListIterator, **kwargs) -> None:
         super().__init__(source)
         if not self.source.is_empty():
@@ -172,7 +181,7 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
                 self.semaphore = Semaphore(1)
                 self.fetch_data_thread.start()
 
-    def __next__(self) -> Any:
+    def __next__(self) -> V:
         if self.iterator:
             try:
                 return self.get_next_value()
@@ -217,15 +226,15 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
         return not self.iterator
 
     @abstractmethod
-    def get_next_value(self) -> Any:
+    def get_next_value(self) -> V:
         raise NotImplementedError("Subclasses must implement get_next_value method")
 
     @abstractmethod
-    def get_current_value(self) -> Any:
+    def get_current_value(self) -> V:
         raise NotImplementedError("Subclasses must implement get_current_value method")
 
     @abstractmethod
-    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> dict[str, Any]:
         raise NotImplementedError("Subclasses must implement get_fetch_data_kwargs method")
 
     @abstractmethod
@@ -233,13 +242,13 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
         raise NotImplementedError("Subclasses must implement get_fetch_data method")
 
 
-class LocalIncomingLinks(BaseLinksIterator):
+class LocalIncomingLinks(BaseLinksIterator[ListIterator, dict[str, Any]]):
     def __init__(self, source: ListIterator, **kwargs) -> None:
         self.atom_handle = kwargs.get('atom_handle')
         self.targets_document = kwargs.get('targets_document', False)
         super().__init__(source, **kwargs)
 
-    def get_next_value(self) -> Any:
+    def get_next_value(self) -> dict[str, Any]:
         if not self.is_empty() and self.backend:
             link_handle = next(self.iterator)
             link_document = self.backend.get_atom(
@@ -248,7 +257,7 @@ class LocalIncomingLinks(BaseLinksIterator):
             self.current_value = link_document
         return self.current_value
 
-    def get_current_value(self) -> Any:
+    def get_current_value(self) -> dict[str, Any] | None:
         if self.backend:
             try:
                 return self.backend.get_atom(
@@ -257,7 +266,7 @@ class LocalIncomingLinks(BaseLinksIterator):
             except StopIteration:
                 return None
 
-    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> dict[str, Any]:
         return {'handles_only': True, 'cursor': self.cursor, 'chunk_size': self.chunk_size}
 
     def get_fetch_data(self, **kwargs) -> tuple:
@@ -292,7 +301,7 @@ class RemoteIncomingLinks(BaseLinksIterator):
         except StopIteration:
             return None
 
-    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> dict[str, Any]:
         return {
             'cursor': self.cursor,
             'chunk_size': self.chunk_size,
@@ -326,7 +335,7 @@ class LocalGetLinks(BaseLinksIterator):
             except StopIteration:
                 return None
 
-    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> dict[str, Any]:
         return {
             'cursor': self.cursor,
             'chunk_size': self.chunk_size,
@@ -364,7 +373,7 @@ class RemoteGetLinks(BaseLinksIterator):
         except StopIteration:
             return None
 
-    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> dict[str, Any]:
         return {
             'cursor': self.cursor,
             'chunk_size': self.chunk_size,
@@ -397,7 +406,7 @@ class CustomQuery(BaseLinksIterator):
         except StopIteration:
             return None
 
-    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
+    def get_fetch_data_kwargs(self) -> dict[str, Any]:
         kwargs = self.kwargs
         kwargs.update({'cursor': self.cursor, 'chunk_size': self.chunk_size})
         return kwargs
@@ -414,8 +423,10 @@ class CustomQuery(BaseLinksIterator):
                 )
 
 
-class TraverseLinksIterator(QueryAnswerIterator):
-    def __init__(self, source: Union[LocalIncomingLinks, RemoteIncomingLinks], **kwargs) -> None:
+class TraverseLinksIterator(
+    QueryAnswerIterator[LocalIncomingLinks | RemoteIncomingLinks, dict[str, Any]]
+):
+    def __init__(self, source: LocalIncomingLinks | RemoteIncomingLinks, **kwargs) -> None:
         super().__init__(source)
         self.cursor = kwargs.get('cursor')
         self.targets_only = kwargs.get('targets_only', False)
@@ -423,13 +434,13 @@ class TraverseLinksIterator(QueryAnswerIterator):
         self.link_type = kwargs.get('link_type')
         self.cursor_position = kwargs.get('cursor_position')
         self.target_type = kwargs.get('target_type')
-        self.custom_filter = kwargs.get('filter')
+        self.custom_filter: Callable[[dict[str, Any]], bool] | None = kwargs.get('filter')
         if not self.source.is_empty():
             self.iterator = self.source
             self.current_value = self._find_first_valid_element()
             self.buffer = self.current_value
 
-    def __next__(self):
+    def __next__(self) -> dict[str, Any]:
         while True:
             if self.buffer:
                 buffered_value, self.buffer = self.buffer, None
@@ -451,7 +462,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
                 if self._filter(link, targets):
                     return targets if self.targets_only else link
 
-    def _filter(self, link: Dict[str, Any], targets: Dict[str, Any]) -> bool:
+    def _filter(self, link: dict[str, Any], targets: dict[str, Any]) -> bool:
         if self.link_type and self.link_type != link['named_type']:
             return False
 
@@ -473,73 +484,78 @@ class TraverseLinksIterator(QueryAnswerIterator):
         if self.custom_filter:
             deep_link = link.copy()
             deep_link['targets'] = targets
-            if self._apply_custom_filter(deep_link) is False:
+            if self.apply_custom_filter(deep_link) is False:
                 return False
 
         return True
 
-    def _apply_custom_filter(self, atom: Dict[str, Any], F=None) -> bool:
-        custom_filter = F if F else self.custom_filter
+    def apply_custom_filter(
+        self, atom: dict[str, Any], custom_filter: Callable[[dict[str, any]], bool] | None = None
+    ) -> bool:
+        custom_filter = custom_filter if custom_filter else self.custom_filter
 
         assert callable(
             custom_filter
-        ), "The custom_filter must be a function with this signature 'def func(atom: dict) -> bool: ...'"
+        ), "The custom_filter must be a function with this signature 'F(atom: dict) -> bool: ...'"
 
         try:
-            if not custom_filter(atom):
-                return False
+            result = custom_filter(atom)
+            assert isinstance(result, bool), "The custom_filter must return a boolean value"
+            return result
         except Exception as e:
-            raise Exception(f"Error while applying the custom filter: {e}")
+            raise Exception(
+                f"Error while applying the custom filter: {type(e)}({e})"
+            )
 
     def is_empty(self) -> bool:
         return not self.current_value
 
 
-class TraverseNeighborsIterator(QueryAnswerIterator):
+class TraverseNeighborsIterator(QueryAnswerIterator[TraverseLinksIterator, dict[str, Any]]):
     def __init__(self, source: TraverseLinksIterator, **kwargs) -> None:
         super().__init__(source)
-        self.buffered_answer = None
+        self.buffered_answer: ListIterator | None = None
         self.cursor = self.source.cursor
         self.target_type = self.source.target_type
         self.visited_neighbors = []
-        self.custom_filter = kwargs.get('filter')
+        self.custom_filter: Callable[[dict[str, any]], bool] | None = kwargs.get('filter')
         if not self.source.is_empty():
             self.iterator = source
             self.current_value = self._find_first_valid_element()
 
-    def __next__(self):
+    def __next__(self) -> dict[str, Any]:
         if self.buffered_answer:
             try:
-                return self.buffered_answer.__next__()
+                return next(self.buffered_answer)
             except StopIteration:
                 self.buffered_answer = None
 
         while True:
-            targets = super().__next__()
+            targets: list[dict[str, Any]] = super().__next__()
             _new_neighbors, match_found = self._process_targets(targets)
             if match_found:
                 self.buffered_answer = ListIterator(_new_neighbors)
-                self.current_value = self.buffered_answer.__next__()
+                self.current_value = next(self.buffered_answer)
                 return self.current_value
 
-    def _find_first_valid_element(self):
+    def _find_first_valid_element(self) -> dict[str, Any]:
         for targets in self.iterator:
             _new_neighbors, match_found = self._process_targets(targets)
             if match_found:
                 self.buffered_answer = ListIterator(_new_neighbors)
                 return self.buffered_answer.get()
 
-    def _process_targets(self, targets: list) -> tuple:
-        answer = []
+    def _process_targets(self, targets: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool]:
+        answer: list[dict[str, Any]] = []
         match_found = False
         for target in targets:
             if self._filter(target):
                 match_found = True
                 self.visited_neighbors.append(target['handle'])
                 answer.append(target)
-        return (answer, match_found)
+        return answer, match_found
 
-    def _filter(self, target: Dict[str, Any]) -> bool:
+    def _filter(self, target: dict[str, Any]) -> bool:
         handle = target['handle']
         if not (
             self.cursor != handle
@@ -549,8 +565,7 @@ class TraverseNeighborsIterator(QueryAnswerIterator):
             return False
 
         if self.custom_filter:
-            if self.source._apply_custom_filter(target, F=self.custom_filter) is False:
-                return False
+            return self.source.apply_custom_filter(target, custom_filter=self.custom_filter)
 
         return True
 

@@ -93,7 +93,7 @@ class LocalQueryEngine(QueryEngine):
         target_types: List[str] = None,
         link_targets: List[str] = None,
         **kwargs,
-    ):
+    ) -> None | tuple[int, list[dict]] | list[dict]:
         if link_type != WILDCARD and target_types is not None:
             return self.local_backend.get_matched_type_template(
                 [link_type, *target_types], **kwargs
@@ -102,7 +102,7 @@ class LocalQueryEngine(QueryEngine):
             try:
                 return self.local_backend.get_matched_links(link_type, link_targets, **kwargs)
             except LinkDoesNotExist:
-                return None, [] if kwargs.get('cursor') is not None else []
+                return None
         elif link_type != WILDCARD:
             return self.local_backend.get_all_links(link_type, **kwargs)
         else:
