@@ -139,9 +139,6 @@ class RemoteQueryEngine(QueryEngine):
         return answer
 
     def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Tuple[int, int]:
-
-        print('aaaaa', parameters)
-
         if (context := parameters.get('context') if parameters else None) == 'local':
             return self.local_query_engine.count_atoms(parameters)
         if context == 'remote':
@@ -150,8 +147,6 @@ class RemoteQueryEngine(QueryEngine):
         local_answer = self.local_query_engine.count_atoms(parameters)
         remote_answer = self.remote_das.count_atoms(parameters)
         return tuple([x + y for x, y in zip(local_answer, remote_answer)])
-
-
 
     def commit(self, **kwargs) -> None:
         if self.__mode == 'read-write':

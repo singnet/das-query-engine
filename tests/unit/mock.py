@@ -1,12 +1,11 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union
+from unittest.mock import patch
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 
 from hyperon_das import DistributedAtomSpace
 from hyperon_das.das import LocalQueryEngine, RemoteQueryEngine
-
-from unittest.mock import MagicMock, patch
 
 
 def _build_node_handle(node_type: str, node_name: str) -> str:
