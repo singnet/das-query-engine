@@ -111,22 +111,23 @@ class TestDistributedAtomSpace:
     def test_count_atoms(self):
         das = DistributedAtomSpaceMock()
         atom_count = das.count_atoms()
-        assert atom_count == (14, 26)
+        assert atom_count == {'link_count': 26, 'node_count': 14, 'atom_count': 40}
 
     def test_count_atoms_local(self):
         das = DistributedAtomSpaceMock()
         atom_count = das.count_atoms({'context': 'local'})
-        assert atom_count == (14, 26)
+        assert atom_count == {'link_count': 26, 'node_count': 14, 'atom_count': 40}
 
     def test_count_atoms_local_remote(self):
         das = DistributedAtomSpaceMock()
         atom_count = das.count_atoms({'context': 'remote'})
-        assert atom_count == (0, 0)
+        assert atom_count == {'link_count': 0, 'node_count': 0, 'atom_count': 0}
 
     def test_count_atoms_local_both(self):
         das = DistributedAtomSpaceMock()
         atom_count = das.count_atoms({'context': 'both'})
-        assert atom_count == (14, 26)
+        assert atom_count == {'link_count': 26, 'node_count': 14, 'atom_count': 40}
+        # assert atom_count == (14, 26)
 
     def test_count_atoms_remote(self):
         das = DistributedAtomSpaceMock('remote', host='localhost', port=123)
@@ -141,7 +142,8 @@ class TestDistributedAtomSpace:
         das = DistributedAtomSpaceMock('remote', host='localhost', port=123)
         with mock.patch(
             'hyperon_das.client.FunctionsClient.count_atoms',
-            return_value=(10, 0),
+            return_value={'link_count': 0, 'node_count': 10, 'atom_count': 0},
         ):
             atom_count = das.count_atoms({'context': 'both'})
-        assert atom_count == (24, 26)
+        # assert atom_count == (24, 26)
+        assert atom_count == {'link_count': 26, 'node_count': 24, 'atom_count': 40}

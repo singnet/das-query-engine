@@ -83,10 +83,10 @@ class TestVultrClientIntegration:
         assert len(links1) == 43
         assert len(links2) == 43
 
+    @pytest.mark.skip('Waiting new version')
     def test_count_atoms(self, server: FunctionsClient):
         ret = server.count_atoms()
-        assert ret[0] == 23
-        assert ret[1] == 60
+        assert ret == {'atom_count': 83, 'node_count': 23, 'link_count': 60}
 
     def test_query(self, server: FunctionsClient):
         server.get_links('Expression', no_iterator=True)

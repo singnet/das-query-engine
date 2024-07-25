@@ -294,8 +294,13 @@ class DatabaseMock(AtomDB):
         document = self.get_atom_as_dict(node_handle)
         return document["type"]
 
-    def count_atoms(self, parameters: Dict[str, Any] = None):
-        return (len(self.all_nodes), len(self.all_links))
+    def count_atoms(self, parameters: Dict[str, Any] = None) -> Dict[str, int]:
+        return {
+            'link_count': len(self.all_links),
+            'node_count': len(self.all_nodes),
+            'atom_count': len(self.all_links) + len(self.all_nodes),
+        }
+        # return (len(self.all_nodes), len(self.all_links))
 
     def clear_database(self):
         pass

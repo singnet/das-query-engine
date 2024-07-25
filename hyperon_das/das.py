@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
@@ -416,12 +416,12 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_incoming_links(atom_handle, **kwargs)
 
-    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Tuple[int, int]:
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
         """
         Count Atoms or nodes and links in DAS.
 
-        By default, the precision is fast returning the total number of atoms, if the precision is 'precise'  it will
-        return the total of nodes and links.
+        By default, the precise parameter is set to False returning the total number of atoms, node and link count
+        will be zero. If the precise parameter is True it will return the total of nodes and links and atoms.
 
         In the case of remote DAS, count the total number of nodes and links stored locally and
         remotely. If there are more than one instance of the same atom (local and remote), it's
@@ -429,12 +429,13 @@ class DistributedAtomSpace:
 
         Args:
             parameters (Optional[Dict[str, Any]]): Dict containing the following keys: 'context' - returning the
-                count of 'local', 'remote' or 'both', 'precision' - sets the count precision as 'precise' or 'fast'.
-                Default value for 'context' is 'both' and 'precision' is 'fast'.
+                count of 'local', 'remote' or 'both', 'precise' - boolean sets the count precision as 'precise' if True
+                 or 'fast' if False.
+                Default value for 'context' is 'both' and for 'precise' is False.
                 Defaults to None.
 
         Returns:
-            Tuple[int, int]: (node_count or atom_count, link_count) 'link_count' is zero if the precision is 'fast'
+            Dict[str, int]: Dict containing the keys 'node_count', 'atom_count', 'link_count'.
         """
         return self.query_engine.count_atoms(parameters)
 
