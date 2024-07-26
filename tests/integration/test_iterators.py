@@ -510,7 +510,7 @@ class TestCustomQuery:
         das.commit_changes()
         self._asserts(das)
 
-    @pytest.mark.skip("Skipping to new version")
+    @pytest.mark.skip("Waiting fix")
     def test_custom_query_with_remote_das(self):
         das = DistributedAtomSpace(
             query_engine='remote', host=remote_das_host, port=remote_das_port

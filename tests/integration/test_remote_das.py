@@ -157,8 +157,9 @@ class TestRemoteDistributedAtomSpace:
 
     def _test_count_atoms(self, remote_das: DistributedAtomSpace):
         response = remote_das.count_atoms()
-        assert response[0] == 23
-        assert response[1] == 60
+        assert response == {'atom_count': 83, 'node_count': 23, 'link_count': 60}
+        response_local = remote_das.count_atoms({'context': 'local'})
+        assert response_local == {'atom_count': 0, 'node_count': 0, 'link_count': 0}
 
     def _test_query(self, remote_das: DistributedAtomSpace):
         all_inheritance_mammal = [
@@ -316,7 +317,11 @@ class TestRemoteDistributedAtomSpace:
         assert cursor.get()['handle'] == metta_animal_base_handles.human
 
     def _test_fetch_atoms(self, remote_das):
-        assert remote_das.backend.count_atoms() == (0, 0)
+        assert remote_das.backend.count_atoms() == {
+            'atom_count': 0,
+            'node_count': 0,
+            'link_count': 0,
+        }
         remote_das.fetch(
             query={
                 "atom_type": "link",
@@ -328,12 +333,24 @@ class TestRemoteDistributedAtomSpace:
                 ],
             }
         )
-        assert remote_das.backend.count_atoms() == (6, 4)
+        assert remote_das.backend.count_atoms() == {
+            'atom_count': 10,
+            'node_count': 6,
+            'link_count': 4,
+        }
 
     def _test_fetch_all_data(self, remote_das):
-        assert remote_das.backend.count_atoms() == (0, 0)
+        assert remote_das.backend.count_atoms() == {
+            'atom_count': 0,
+            'node_count': 0,
+            'link_count': 0,
+        }
         remote_das.fetch()
-        assert remote_das.backend.count_atoms() == (23, 60)
+        assert remote_das.backend.count_atoms() == {
+            'atom_count': 83,
+            'node_count': 23,
+            'link_count': 60,
+        }
 
     @pytest.mark.skip(reason="Disabled. See https://github.com/singnet/das-query-engine/issues/256")
     def test_create_context(self, remote_das):

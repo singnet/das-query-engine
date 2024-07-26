@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
 
@@ -138,11 +138,20 @@ class RemoteQueryEngine(QueryEngine):
             )
         return answer
 
-    def count_atoms(self) -> Tuple[int, int]:
-        local_answer = self.local_query_engine.count_atoms()
-        remote_answer = self.remote_das.count_atoms()
-        return tuple([x + y for x, y in zip(local_answer, remote_answer)])
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
+        if (context := parameters.get('context') if parameters else None) == 'local':
+            return self.local_query_engine.count_atoms(parameters)
+        if context == 'remote':
+            return self.remote_das.count_atoms(parameters)
 
+        local_answer = self.local_query_engine.count_atoms(parameters)
+        remote_answer = self.remote_das.count_atoms(parameters)
+        return {
+            k: (local_answer.get(k, 0) + remote_answer.get(k, 0))
+            for k in ['node_count', 'link_count', 'atom_count']
+        }
+
+    #
     def commit(self, **kwargs) -> None:
         if self.__mode == 'read-write':
             if self.local_query_engine.has_buffer():
