@@ -171,10 +171,10 @@ class FunctionsClient:
                 raise Exception("Your query couldn't be processed because Atom nonexistent", str(e))
             raise e
 
-    def count_atoms(self) -> Tuple[int, int]:
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
         payload = {
             'action': 'count_atoms',
-            'input': {},
+            'input': {'parameters': parameters},
         }
         return self._send_request(payload)
 
@@ -233,7 +233,11 @@ class FunctionsClient:
     def custom_query(self, index_id: str, query: Query, **kwargs) -> List[Dict[str, Any]]:
         payload = {
             'action': 'custom_query',
-            'input': {'index_id': index_id, 'query': query, 'kwargs': kwargs},
+            'input': {
+                'index_id': index_id,
+                'query': {v['field']: v['value'] for v in query},
+                'kwargs': kwargs,
+            },
         }
         try:
             return self._send_request(payload)

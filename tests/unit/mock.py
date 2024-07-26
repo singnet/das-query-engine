@@ -1,5 +1,6 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union
+from unittest.mock import patch
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 
@@ -26,7 +27,8 @@ class DistributedAtomSpaceMock(DistributedAtomSpace):
     def __init__(self, query_engine: Optional[str] = 'local', **kwargs) -> None:
         self.backend = DatabaseAnimals()
         if query_engine == 'remote':
-            self.query_engine = RemoteQueryEngine(self.backend, {}, kwargs)
+            with patch('hyperon_das.client.connect_to_server', return_value=(200, 'OK')):
+                self.query_engine = RemoteQueryEngine(self.backend, {}, kwargs)
         else:
             self.query_engine = LocalQueryEngine(self.backend, {}, kwargs)
 
@@ -292,8 +294,13 @@ class DatabaseMock(AtomDB):
         document = self.get_atom_as_dict(node_handle)
         return document["type"]
 
-    def count_atoms(self):
-        return (len(self.all_nodes), len(self.all_links))
+    def count_atoms(self, parameters: Dict[str, Any] = None) -> Dict[str, int]:
+        return {
+            'link_count': len(self.all_links),
+            'node_count': len(self.all_nodes),
+            'atom_count': len(self.all_links) + len(self.all_nodes),
+        }
+        # return (len(self.all_nodes), len(self.all_links))
 
     def clear_database(self):
         pass

@@ -165,18 +165,19 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def count_atoms(self) -> Tuple[int, int]:
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
         """
         Counts the total number of atoms in the database.
 
         This method aggregates the count of all atoms stored within the database, providing a
-        comprehensive overview of the total number of atoms. It returns a tuple where the first
-        element represents the count of node atoms, and the second element represents the count of
-        link atoms.
+        comprehensive overview of the total number of atoms. It returns a dict where the key 'node_count'  represents
+        the count of node atoms, the key 'link_count' represents the count of link atoms, the key 'atom_count'
+        represents the total of atoms .
 
         Returns:
-            Tuple[int, int]: A tuple containing two integers, where the first integer is the count of
-            node atoms and the second is the count of link atoms.
+            Dict[str, int]: A dict containing str keys and integers, where the key 'node_count' has an integer which is
+            the count of node atoms, the key 'link_count' is the count of link atoms and 'atom_count' is the count of
+            all atoms.
         """
         ...
 

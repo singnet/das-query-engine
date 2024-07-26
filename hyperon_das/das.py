@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
@@ -416,18 +416,28 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_incoming_links(atom_handle, **kwargs)
 
-    def count_atoms(self) -> Tuple[int, int]:
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
         """
-        Count nodes and links in DAS.
+        Count atoms, nodes and links in DAS.
+
+        By default, the precise parameter is set to False returning the total number of atoms, without node and link
+        counts. If the precise parameter is True it will return the total of nodes and links and atoms.
 
         In the case of remote DAS, count the total number of nodes and links stored locally and
         remotely. If there are more than one instance of the same atom (local and remote), it's
         counted only once.
 
+        Args:
+            parameters (Optional[Dict[str, Any]]): Dict containing the following keys: 'context' - returning the
+                count of 'local', 'remote' or 'both', 'precise' - boolean if True provides an accurate but slower count,
+                if False the count will be an estimate, which is faster but less precise.
+                Default value for 'context' is 'both' and for 'precise' is False.
+                Defaults to None.
+
         Returns:
-            Tuple[int, int]: (node_count, link_count)
+            Dict[str, int]: Dict containing the keys 'node_count', 'atom_count', 'link_count'.
         """
-        return self.query_engine.count_atoms()
+        return self.query_engine.count_atoms(parameters)
 
     def query(
         self,

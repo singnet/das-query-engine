@@ -291,8 +291,10 @@ class LocalQueryEngine(QueryEngine):
             kwargs['cursor'] = cursor
             return CustomQuery(ListIterator(answer), **kwargs)
 
-    def count_atoms(self) -> Tuple[int, int]:
-        return self.local_backend.count_atoms()
+    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
+        if parameters and parameters.get('context') == 'remote':
+            return {}
+        return self.local_backend.count_atoms(parameters)
 
     def commit(self, **kwargs) -> None:
         if kwargs.get('buffer'):
