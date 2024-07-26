@@ -1,8 +1,7 @@
 import sys
 
 if sys.version_info < (3, 10):
-    print('hyperon_das requires Python 3.10 or higher')
-    sys.exit(1)
+    raise RuntimeError('hyperon_das requires Python 3.10 or higher')
 
 from hyperon_das.das import DistributedAtomSpace
 
