@@ -121,7 +121,7 @@ class TestDistributedAtomSpace:
     def test_count_atoms_local_remote(self):
         das = DistributedAtomSpaceMock()
         atom_count = das.count_atoms({'context': 'remote'})
-        assert atom_count == {'link_count': 0, 'node_count': 0, 'atom_count': 0}
+        assert atom_count == {}
 
     def test_count_atoms_local_both(self):
         das = DistributedAtomSpaceMock()

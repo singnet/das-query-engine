@@ -293,7 +293,7 @@ class LocalQueryEngine(QueryEngine):
 
     def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
         if parameters and parameters.get('context') == 'remote':
-            return {'atom_count': 0, 'link_count': 0, 'node_count': 0}
+            return {}
         return self.local_backend.count_atoms(parameters)
 
     def commit(self, **kwargs) -> None:

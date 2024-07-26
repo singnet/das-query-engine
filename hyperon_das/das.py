@@ -418,10 +418,10 @@ class DistributedAtomSpace:
 
     def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
         """
-        Count Atoms or nodes and links in DAS.
+        Count atoms, nodes and links in DAS.
 
-        By default, the precise parameter is set to False returning the total number of atoms, node and link count
-        will be zero. If the precise parameter is True it will return the total of nodes and links and atoms.
+        By default, the precise parameter is set to False returning the total number of atoms, without node and link
+        counts. If the precise parameter is True it will return the total of nodes and links and atoms.
 
         In the case of remote DAS, count the total number of nodes and links stored locally and
         remotely. If there are more than one instance of the same atom (local and remote), it's
@@ -429,8 +429,8 @@ class DistributedAtomSpace:
 
         Args:
             parameters (Optional[Dict[str, Any]]): Dict containing the following keys: 'context' - returning the
-                count of 'local', 'remote' or 'both', 'precise' - boolean sets the count precision as 'precise' if True
-                 or 'fast' if False.
+                count of 'local', 'remote' or 'both', 'precise' - boolean if True provides an accurate but slower count,
+                if False the count will be an estimate, which is faster but less precise.
                 Default value for 'context' is 'both' and for 'precise' is False.
                 Defaults to None.
 
