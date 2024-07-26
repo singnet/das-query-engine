@@ -11,7 +11,7 @@ A data manipulation API for Distributed Atomspace (DAS). It allows queries with 
 
 ## Installation
 
-> Before you start, make sure you have [Python](https://www.python.org/) >= 3.8.5 and [Pip](https://pypi.org/project/pip/) installed on your system.
+> Before you start, make sure you have [Python](https://www.python.org/) >= 3.10 and [Pip](https://pypi.org/project/pip/) installed on your system.
 
 You can install and run this project using different methods. Choose the one that suits your needs.
 

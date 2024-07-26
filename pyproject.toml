@@ -15,7 +15,7 @@ packages = [
 "Releases" = "https://github.com/singnet/das-query-engine/releases"
 
 [tool.poetry.dependencies]
-python = "^3.8.5"
+python = "^3.10"
 hyperon-das-atomdb = "0.7.1"
 requests = "^2.31.0"
 grpcio = "^1.62.2"
