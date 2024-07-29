@@ -2,6 +2,10 @@
 name: Run Unit & Integration tests
 
 on:
+  push:
+    branches:
+      - unit-tests
+
   workflow_call:
 
   pull_request:
@@ -13,7 +17,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,7 +38,7 @@ jobs:
         run: make lint
 
   unit-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,7 +59,7 @@ jobs:
         run: make unit-tests
 
   coverage:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,7 +80,7 @@ jobs:
         run: make unit-tests-coverage
 
   integration-tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
