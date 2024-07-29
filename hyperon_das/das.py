@@ -5,6 +5,7 @@ from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.cache.cache_controller import CacheController
+from hyperon_das.constants import DasType
 from hyperon_das.context import Context
 from hyperon_das.exceptions import (
     GetTraversalCursorException,
@@ -101,18 +102,20 @@ class DistributedAtomSpace:
 
     def _set_query_engine(self, **kwargs) -> None:
         if self.query_engine_type == 'local':
-            self._das_type = 'local_ram_only' if self.atomdb == 'ram' else 'local_redis_mongo'
-            self.query_engine = LocalQueryEngine(self.backend, self.system_parameters, kwargs)
-            logger().info('Started local DAS')
-        elif self.query_engine_type == 'remote':
-            self._das_type = 'remote'
-            self.query_engine = RemoteQueryEngine(self.backend, self.system_parameters, kwargs)
-            logger().info('Started remote DAS')
+            das_type = DasType.LOCAL_RAM_ONLY if self.atomdb == "ram" else DasType.LOCAL_REDIS_MONGO
+            self._start_query_engine(LocalQueryEngine, das_type, **kwargs)
+        elif self.query_engine_type == "remote":
+            self._start_query_engine(RemoteQueryEngine, "remote", **kwargs)
         else:
             raise InvalidQueryEngine(
                 message="Use either 'local' or 'remote'",
-                details=f'query_engine={self.query_engine_type}',
+                details=f"query_engine={self.query_engine_type}",
             )
+
+    def _start_query_engine(self, engine_type, das_type, **kwargs):
+        self._das_type = das_type
+        self.query_engine = engine_type(self.backend, self.system_parameters, kwargs)
+        logger().info(f"Started {das_type} DAS")
 
     def _create_context(
         self,
@@ -929,7 +932,7 @@ class DistributedAtomSpace:
         """
 
         if not self.system_parameters.get('running_on_server'):
-            if self._das_type != 'remote' and (not host or not port):
+            if self._das_type != DasType.REMOTE and (not host or not port):
                 raise ValueError("'host' and 'port' are mandatory parameters to local DAS")
 
         documents = self.query_engine.fetch(query, host, port, **kwargs)
