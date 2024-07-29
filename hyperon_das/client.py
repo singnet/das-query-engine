@@ -2,7 +2,7 @@ import contextlib
 import pickle
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
+from hyperon_das_atomdb import AtomDoesNotExist
 from requests import exceptions, sessions
 
 from hyperon_das.exceptions import (
@@ -93,7 +93,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise AtomDoesNotExist(message='Atom Nonexistent')
+                raise AtomDoesNotExist(message='Nonexistent atom')
             else:
                 raise e
 
@@ -106,7 +106,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise NodeDoesNotExist(message='Node Nonexistent')
+                raise AtomDoesNotExist(message='Nonexistent atom')
             else:
                 raise e
 
@@ -119,7 +119,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise LinkDoesNotExist(message='Link Nonexistent')
+                raise AtomDoesNotExist(message='Nonexistent atom')
             else:
                 raise e
 
@@ -143,7 +143,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise AtomDoesNotExist(message='Atom Nonexistent')
+                raise AtomDoesNotExist(message='Nonexistent atom')
             elif e.status_code == 400:
                 raise ValueError(str(e))
             else:
@@ -269,7 +269,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise AtomDoesNotExist('Atom nonexistent')
+                raise AtomDoesNotExist('nonexistent atom')
             elif e.status_code == 400:
                 raise ValueError(str(e))
             else:

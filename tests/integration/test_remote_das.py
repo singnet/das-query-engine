@@ -1,7 +1,7 @@
 from unittest import mock
 
 import pytest
-from hyperon_das_atomdb import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
+from hyperon_das_atomdb import AtomDoesNotExist
 
 from hyperon_das import DistributedAtomSpace
 from hyperon_das.exceptions import GetTraversalCursorException
@@ -70,7 +70,7 @@ class TestRemoteDistributedAtomSpace:
         assert result['name'] == '"human"'
         assert result['named_type'] == 'Symbol'
 
-        with pytest.raises(NodeDoesNotExist):
+        with pytest.raises(AtomDoesNotExist):
             remote_das.get_node(node_type='Fake', node_name='fake')
 
     def _test_get_link(self, remote_das: DistributedAtomSpace):
@@ -90,7 +90,7 @@ class TestRemoteDistributedAtomSpace:
             metta_animal_base_handles.animal,
         ]
 
-        with pytest.raises(LinkDoesNotExist):
+        with pytest.raises(AtomDoesNotExist):
             remote_das.get_link(link_type='Fake', link_targets=['fake1', 'fake2'])
 
     def _test_get_links(self, remote_das: DistributedAtomSpace):
