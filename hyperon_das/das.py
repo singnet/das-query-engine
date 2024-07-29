@@ -105,7 +105,7 @@ class DistributedAtomSpace:
             das_type = DasType.LOCAL_RAM_ONLY if self.atomdb == "ram" else DasType.LOCAL_REDIS_MONGO
             self._start_query_engine(LocalQueryEngine, das_type, **kwargs)
         elif self.query_engine_type == "remote":
-            self._start_query_engine(RemoteQueryEngine, "remote", **kwargs)
+            self._start_query_engine(RemoteQueryEngine, DasType.REMOTE, **kwargs)
         else:
             raise InvalidQueryEngine(
                 message="Use either 'local' or 'remote'",
