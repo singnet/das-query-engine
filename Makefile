@@ -19,6 +19,7 @@ integration-tests:
 	@py.test -sx -vv ./tests/integration
 
 performance-tests:
+	@py.test -sx -vv ./tests/performance
 	@bash ./tests/performance/run_perf_tests.sh
 
 pre-commit: lint unit-tests-coverage unit-tests integration-tests
