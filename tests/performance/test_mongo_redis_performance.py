@@ -1,7 +1,7 @@
 import random
 import time
 from random import randint
-from typing import Any, Callable, Dict
+from typing import Any, Tuple, Dict, List, Optional
 
 import pytest
 
@@ -27,14 +27,14 @@ class TestPerformance:
     @pytest.fixture(autouse=True)
     def _initialize(
         self,
-        node_range,
-        word_range,
-        letter_range,
-        alphabet_range,
-        word_link_percentage,
-        letter_link_percentage,
-        seed,
-    ):
+        node_range: str,
+        word_range: str,
+        letter_range: str,
+        alphabet_range: str,
+        word_link_percentage: float,
+        letter_link_percentage: float,
+        seed: Any,
+    ) -> None:
         self.node_type = 'Concept'
         self.node_range = [int(i) for i in node_range.split('-')]
         self.word_range = [int(i) for i in word_range.split('-')]
@@ -52,18 +52,8 @@ class TestPerformance:
         yield
         _db_down()
 
-    @staticmethod
-    def combinatorial_loop(d: Dict[str, Any], f: Callable[[int, int], None], percentage: float):
-        for v in d.values():
-            v = list(v)
-            for i, _ in enumerate(v):
-                for j in range(i + 1, len(v)):
-                    if random.random() > percentage:
-                        continue
-                    f(v[i], v[j])
-
     @measure
-    def generate_links_word(self, word_dict):
+    def generate_links_word(self, word_dict: Dict[str, Any]) -> Dict[str, Any]:
         links_dict_word = {}
         word_count = self.word_range[1] - self.word_range[0]
         for v in word_dict.values():
@@ -80,36 +70,32 @@ class TestPerformance:
         return links_dict_word
 
     @measure
-    def generate_nodes(self, das: DistributedAtomSpace = None):
+    def generate_nodes(self, das: DistributedAtomSpace = None) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         node_list = []
-        node_names = {}
+        node_names = set()
         word_dict = {}
         for N in range(*self.node_range):
-            node_list.append({'name': []})
+            node = {'name': []}
             word_list = []
             for W in range(*self.word_range):
-                node_list[N]['name'].append([])
-                node_list[N]['name'][W - self.word_range[0]] = ''.join(
-                    [chr(97 + randint(*self.alphabet_range)) for L in range(*self.letter_range)]
-                )
-                word_list.append(node_list[N]['name'][W - self.word_range[0]])
-            node_list[N]['name'] = ' '.join(node_list[N]['name'])
-            node_list[N]['type'] = self.node_type
-            das.add_node(node_list[N])
-
+                node['name'].append([])
+                w = ''.join([chr(97 + randint(*self.alphabet_range)) for _ in range(*self.letter_range)])
+                node['name'][W - self.word_range[0]] = w
+                word_list.append(w)
+            node['name'] = ' '.join(node['name'])
+            node['type'] = self.node_type
+            das.add_node(node)
+            node_list.append(node)
             for w in word_list:
                 if w in word_dict:
                     word_dict[w].add(N)
                 else:
-                    word_dict[w] = set([N])
-
-            if node_list[N]['name'] in node_names:
-                raise ValueError('Exists')
-            node_names[node_list[N]['name']] = 1
+                    word_dict[w] = {N}
+            node_names.add(node['name'])
         return node_list, word_dict
 
     @staticmethod
-    def compare_str(a, b):
+    def compare_str(a: str, b: str) -> int:
         strength = 0
         for i in range(0, len(a)):
             if a[i] == ' ':
@@ -119,7 +105,7 @@ class TestPerformance:
         return strength
 
     @measure
-    def generate_links_letter(self, node_list):
+    def generate_links_letter(self, node_list: List[Dict[str, Any]]) -> Dict[str, Any]:
         links_letter = {}
         words_per_letter = (self.word_range[1] - self.word_range[0]) * (
             self.letter_range[1] - self.letter_range[0]
@@ -136,7 +122,11 @@ class TestPerformance:
 
     @staticmethod
     @measure
-    def add_links(das, links, node_list, link_type=''):
+    def add_links(
+            das: DistributedAtomSpace,
+            links: Dict[str, Any],
+            node_list: List[Dict[str, Any]],
+            link_type: str) -> None:
         for k, v in links.items():
             das.add_link(
                 {
@@ -148,7 +138,11 @@ class TestPerformance:
         das.commit_changes()
 
     @measure
-    def count_atoms(self, das, options=None):
+    def count_atoms(
+            self,
+            das: DistributedAtomSpace,
+            options: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, int]:
         return das.count_atoms(options)
 
     def test_load_performance(self, database):
