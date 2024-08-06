@@ -9,20 +9,23 @@ import pytest
 from hyperon_das import DistributedAtomSpace
 from tests.integration.helpers import _db_down, _db_up, mongo_port, redis_port
 
+# pylint: disable=attribute-defined-outside-init,disable=too-many-instance-attributes
+# pylint: disable=unused-argument,too-many-arguments,missing-function-docstring
 
-def measure(func):  # pylint: disable=missing-function-docstring
+
+def measure(func):
     def wrapper(*args, **kwargs):
-        start = time.time()
+        start = time.perf_counter()
         values = func(*args, **kwargs)
-        end = time.time()
+        end = time.perf_counter()
         TestPerformance.time = end - start
-        print(f'Elapsed time: {TestPerformance.time}')
+        print(f'Elapsed ({func.__name__}) time: {TestPerformance.time}')
         return values
 
     return wrapper
 
 
-class TestPerformance:  # pylint: disable=too-many-instance-attributes,too-many-arguments
+class TestPerformance:
     """Test node/link generation and Hyperon DAS load."""
 
     time = 0.0
@@ -38,26 +41,18 @@ class TestPerformance:  # pylint: disable=too-many-instance-attributes,too-many-
         letter_link_percentage: float,
         seed: Any,
     ) -> None:
-        self.node_type = 'Concept'  # pylint: disable=attribute-defined-outside-init
-        self.node_range = [  # pylint: disable=attribute-defined-outside-init
-            int(i) for i in node_range.split('-')
-        ]
-        self.word_range = [  # pylint: disable=attribute-defined-outside-init
-            int(i) for i in word_range.split('-')
-        ]
-        self.letter_range = [  # pylint: disable=attribute-defined-outside-init
-            int(i) for i in letter_range.split('-')
-        ]
-        self.alphabet_range = [  # pylint: disable=attribute-defined-outside-init
-            int(i) for i in alphabet_range.split('-')
-        ]
-        self.word_link_percentage = (  # pylint: disable=attribute-defined-outside-init
-            word_link_percentage
-        )
-        self.letter_link_percentage = (  # pylint: disable=attribute-defined-outside-init
-            letter_link_percentage
-        )
-        self.seed = seed  # pylint: disable=attribute-defined-outside-init
+        self.node_type = 'Concept'
+        self.node_range = [int(i) for i in node_range.split('-')]
+        self.word_range = [int(i) for i in word_range.split('-')]
+        self.letter_range = [int(i) for i in letter_range.split('-')]
+        self.alphabet_range = [int(i) for i in alphabet_range.split('-')]
+        self.word_link_percentage = word_link_percentage
+        self.letter_link_percentage = letter_link_percentage
+        self.seed = seed
+        self.node_count = 0
+        self.link_word_count = 0
+        self.link_letter_count = 0
+        self.word_count = 0
 
         if seed:
             random.seed(seed)
@@ -68,6 +63,29 @@ class TestPerformance:  # pylint: disable=too-many-instance-attributes,too-many-
         _db_up()
         yield
         _db_down()
+
+    @pytest.fixture()
+    def das(self):
+        yield DistributedAtomSpace(
+            query_engine='local',
+            atomdb='redis_mongo',
+            mongo_port=mongo_port,
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
+            redis_port=redis_port,
+            redis_cluster=False,
+            redis_ssl=False,
+        )
+
+    def print_status(self):
+        print('Nodes Range: ' + ' to '.join((str(n) for n in self.node_range)))
+        print('Words Range: ' + ' to '.join((str(n) for n in self.word_range)))
+        print('Letter Range: ' + ' to '.join((str(n) for n in self.letter_range)))
+        print('Alphabet Range: ' + ' to '.join((chr(97 + k) for k in self.alphabet_range)))
+        print('Nodes: ' + str(self.node_count))
+        print('Words: ' + str(self.word_count))
+        print('Links Word: ' + str(self.link_word_count))
+        print('Links Letter: ' + str(self.link_letter_count))
 
     @measure
     def generate_links_word(self, word_dict: Dict[str, Any]) -> Dict[str, Any]:
@@ -238,54 +256,94 @@ class TestPerformance:  # pylint: disable=too-many-instance-attributes,too-many-
         """
         return das.count_atoms(options)
 
-    def test_load_performance(self, database):  # pylint: disable=unused-argument
-        """
-        Tests the load performance of a Hyperon DAS
-        Args:
-            database: Pytest fixture to manage the database
-
-        """
-        print('Nodes Range: ' + ' to '.join((str(n) for n in self.node_range)))
-        print('Words Range: ' + ' to '.join((str(n) for n in self.word_range)))
-        print('Letter Range: ' + ' to '.join((str(n) for n in self.letter_range)))
-        print('Alphabet Range: ' + ' to '.join((chr(97 + k) for k in self.alphabet_range)))
-        print('Generating Nodes')
-        das = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='redis_mongo',
-            mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
-            redis_port=redis_port,
-            redis_cluster=False,
-            redis_ssl=False,
-        )
+    def _load_database(self, das: DistributedAtomSpace):
+        node_list: list[dict[str, Any]]
         node_list, word_dict = self.generate_nodes(das)
         das.commit_changes()
-
-        print('Nodes: ' + str(len(node_list)))
-        print('Words: ' + str(len(word_dict)))
-        print('Generating links word')
+        self.node_count = len(node_list)
+        self.word_count = len(word_dict)
         links_word = self.generate_links_word(word_dict)
-        print('Links Word: ' + str(len(links_word)))
-        print('Adding Links')
+        self.link_word_count = len(links_word)
         word_count: int = self.word_range[1] - self.word_range[0]
         self.add_links(das, links_word, node_list, 'TokenSimilarity', strength_divisor=word_count)
-        print('Generating links letter')
         links_letter = self.generate_links_letter(node_list)
-        print('Links Letter: ' + str(len(links_letter)))
-        print('Adding Links')
+        self.link_letter_count = len(links_letter)
         self.add_links(das, links_letter, node_list, 'Similarity')
-        print('Counting Links precisely')
-        count_atoms_links_nodes = self.count_atoms(das, {'precise': True})
-        print(count_atoms_links_nodes)
-        print('Counting Links')
-        count_atom = self.count_atoms(das)
-        print(count_atom)
-        total = len(node_list) + len(links_word) + len(links_letter)
-        assert total == count_atom['atom_count']
+        count_atoms_links_nodes: dict[str, int] = self.count_atoms(das, {'precise': True})
+        self.count_atoms(das)
+        return count_atoms_links_nodes
+
+    def test_load_performance(self, database, das: DistributedAtomSpace):
+        print('')
+        count_atoms_links_nodes = self._load_database(das)
+        self.print_status()
+        total = self.node_count + self.link_word_count + self.link_letter_count
+        assert total == count_atoms_links_nodes['atom_count']
         assert {
-            "node_count": len(node_list),
-            "link_count": len(links_word) + len(links_letter),
+            "node_count": self.node_count,
+            "link_count": self.link_word_count + self.link_letter_count,
             "atom_count": total,
         } == count_atoms_links_nodes
+
+    def test_query_atom_by_name(self, database, das: DistributedAtomSpace):
+        pass
+
+    def test_query_node_by_name(self, database, das: DistributedAtomSpace):
+        pass
+
+    def test_query_by_text_field(self, database, das: DistributedAtomSpace):
+        pass
+
+    def test_query_node_by_name_starting_with(self, database, das: DistributedAtomSpace):
+        pass
+
+    @measure
+    def query(self, das, query):
+        return das.query(query)
+
+    @measure
+    def process_query(self, query_answers):
+        print(query_answers)
+        for query_answer in query_answers:
+            print(query_answer.assignment)
+            atom_matching_v1 = das.get_atom(query_answer.assignment.mapping['v1'])
+            atom_matching_v2 = das.get_atom(query_answer.assignment.mapping['v2'])
+            atom_matching_v3 = das.get_atom(query_answer.assignment.mapping['v3'])
+            atom_matching_v4 = das.get_atom(query_answer.assignment.mapping['v4'])
+            print("v1:", atom_matching_v1['type'], atom_matching_v1['name'])
+            # print("v2:", atom_matching_v2['type'], atom_matching_v2['name'])
+            # print("v3:", atom_matching_v3['type'], atom_matching_v2['name'])
+            # print("v4:", atom_matching_v4['type'], atom_matching_v2['name'])
+            # rewrited_query = query_answer.subgraph
+            # print(rewrited_query)
+            print()
+
+    def test_query_nodes_var(self, database, das: DistributedAtomSpace):
+        # links = das.get_links(link_type='TokenSimilarity', target_types=['Concept', 'Concept'])
+        # links = das.get_links(link_type='TokenSimilarity', link_targets=['4c9941037a9dae9a34194098132b3940', '*'])
+        # cursor = das.get_traversal_cursor('4c9941037a9dae9a34194098132b3940')
+        # print(cursor.get())
+        # print("All neighbors:", [(d['type'], d['name']) for d in cursor.get_neighbors()])
+        # for link in links:
+        #     print(link['type'], link['targets'])
+        nodes = ['v1', 'v2', 'v3', 'v4']
+        queries = []
+        for i, node in enumerate(nodes):
+            for j in range(i+1, len(nodes)):
+                query = {
+                    'atom_type': 'link',
+                    'type': 'TokenSimilarity',
+                    'targets': [
+                        {'atom_type': 'variable', 'name': node},
+                        {'atom_type': 'variable', 'name': nodes[j]},
+                    ],
+                }
+                queries.append(query)
+
+
+
+        print(queries)
+        query_answers = self.query(das, queries)
+        self.process_query(query_answers)
+
+
