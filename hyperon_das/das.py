@@ -244,7 +244,7 @@ class DistributedAtomSpace:
             Dict: A Python dict with all node data.
 
         Raises:
-            NodeDoesNotExist: If the corresponding node doesn't exist.
+            AtomDoesNotExist: If the corresponding node doesn't exist.
 
         Examples:
             >>> das = DistributedAtomSpace()
@@ -275,7 +275,7 @@ class DistributedAtomSpace:
             Dict: A Python dict with all link data.
 
         Raises:
-            LinkDoesNotExist: If the corresponding link doesn't exist.
+            AtomDoesNotExist: If the corresponding link doesn't exist.
 
         Examples:
             >>> das = DistributedAtomSpace()

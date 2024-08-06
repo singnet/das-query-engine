@@ -1,6 +1,6 @@
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
+from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.iterators import (
     CustomQuery,
@@ -45,20 +45,20 @@ class RemoteQueryEngine(QueryEngine):
     def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
         try:
             node = self.local_query_engine.get_node(node_type, node_name)
-        except NodeDoesNotExist:
+        except AtomDoesNotExist:
             try:
                 node = self.remote_das.get_node(node_type, node_name)
-            except NodeDoesNotExist as exception:
+            except AtomDoesNotExist as exception:
                 das_error(exception)
         return node
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         try:
             link = self.local_query_engine.get_link(link_type, link_targets)
-        except LinkDoesNotExist:
+        except AtomDoesNotExist:
             try:
                 link = self.remote_das.get_link(link_type, link_targets)
-            except LinkDoesNotExist as exception:
+            except AtomDoesNotExist as exception:
                 das_error(exception)
         return link
 

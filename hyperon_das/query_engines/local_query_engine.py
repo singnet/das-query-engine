@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
-from hyperon_das_atomdb.exceptions import AtomDoesNotExist, LinkDoesNotExist, NodeDoesNotExist
+from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.iterators import (
     AndEvaluator,
@@ -45,7 +45,7 @@ class LocalQueryEngine(QueryEngine):
             try:
                 atom_handle = self.local_backend.get_node_handle(query["type"], query["name"])
                 return ListIterator([QueryAnswer(self.local_backend.get_atom(atom_handle), None)])
-            except NodeDoesNotExist:
+            except AtomDoesNotExist:
                 return ListIterator([])
         elif query["atom_type"] == "link":
             matched_targets = []
@@ -101,7 +101,7 @@ class LocalQueryEngine(QueryEngine):
         elif link_targets is not None:
             try:
                 return self.local_backend.get_matched_links(link_type, link_targets, **kwargs)
-            except LinkDoesNotExist:
+            except AtomDoesNotExist:
                 return None, [] if kwargs.get('cursor') is not None else []
         elif link_type != WILDCARD:
             return self.local_backend.get_all_links(link_type, **kwargs)
@@ -199,7 +199,7 @@ class LocalQueryEngine(QueryEngine):
             return self.local_backend.get_atom(node_handle)
         except AtomDoesNotExist:
             das_error(
-                NodeDoesNotExist(message="Nonexistent node.", details=f'{node_type}:{node_name}')
+                AtomDoesNotExist(message="Nonexistent atom", details=f'{node_type}:{node_name}')
             )
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
@@ -208,7 +208,7 @@ class LocalQueryEngine(QueryEngine):
             return self.local_backend.get_atom(link_handle)
         except AtomDoesNotExist:
             das_error(
-                LinkDoesNotExist(message='Nonexistent link', details=f'{link_type}:{link_targets}')
+                AtomDoesNotExist(message='Nonexistent atom', details=f'{link_type}:{link_targets}')
             )
 
     def get_links(
