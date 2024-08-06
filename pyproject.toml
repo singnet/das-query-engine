@@ -16,7 +16,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-hyperon-das-atomdb = "0.7.1"
+hyperon-das-atomdb = "0.7.2"
 requests = "^2.31.0"
 grpcio = "^1.62.2"
 google = "^3.0.0"
