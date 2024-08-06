@@ -1,6 +1,7 @@
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
+
 from hyperon_das.cache.iterators import (
     CustomQuery,
     ListIterator,

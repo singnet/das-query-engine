@@ -407,6 +407,9 @@ class DatabaseMock(AtomDB):
                     answer.append(node)
         return answer
 
+    def commit(self, **kwargs) -> None:
+        ...  # pragma no cover
+
 
 class DatabaseAnimals(DatabaseMock):
     def __init__(self):
