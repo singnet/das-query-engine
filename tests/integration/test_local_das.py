@@ -34,7 +34,6 @@ class TestLocalDASRedisMongo:
             'node_count': 14,
             'link_count': 26,
         }
-
         _db_down()
 
     def test_add_atom_persistence(self):
