@@ -305,26 +305,17 @@ class TestPerformance:
     def process_query(self, das, query_answers, nodes):
         print(query_answers)
         for query_answer in query_answers:
-            print(query_answer.assignment)
+            # print(query_answer.assignment)
             for node in nodes:
                 atom_matching = das.get_atom(query_answer.assignment.mapping[node])
-                print(f'{node}:', atom_matching['type'], atom_matching['name'])
+                # print(f'{node}:', atom_matching['type'], atom_matching['name'])
             # rewrote_query = query_answer.subgraph
             # print(rewrote_query)
             # print()
 
-
     @pytest.mark.parametrize('nodes', [['v1', 'v2'], ['v1', 'v2', 'v3'], ['v1', 'v2', 'v3', 'v4']])
     def test_query_nodes_var(self, nodes, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
-
-        # links = das.get_links(link_type='TokenSimilarity', target_types=['Concept', 'Concept'])
-        # links = das.get_links(link_type='TokenSimilarity', link_targets=['4c9941037a9dae9a34194098132b3940', '*'])
-        # cursor = das.get_traversal_cursor('4c9941037a9dae9a34194098132b3940')
-        # print(cursor.get())
-        # print("All neighbors:", [(d['type'], d['name']) for d in cursor.get_neighbors()])
-        # for link in links:
-        #     print(link['type'], link['targets'])
         queries = []
         for i, node in enumerate(nodes):
             for j in range(i+1, len(nodes)):
@@ -338,8 +329,7 @@ class TestPerformance:
                 }
                 queries.append(query)
 
-
-
+        print()
         print(queries)
         query_answers = self.query(das, queries)
         self.process_query(das, query_answers, nodes)
