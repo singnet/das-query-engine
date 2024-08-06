@@ -22,6 +22,6 @@ performance-tests:
 	@bash ./tests/performance/run_perf_tests.sh
 
 benchmark-tests:
-	@py.test -sx -vv ./tests/performance
+	@py.test -sx -vv ./tests/performance --letter_link_percentage=$(letter_link_percentage) --word_link_percentage=$(word_link_percentage)
 
 pre-commit: lint unit-tests-coverage unit-tests integration-tests
