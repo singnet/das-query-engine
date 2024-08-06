@@ -46,8 +46,8 @@ class TestPerformance:
         self.word_range = [int(i) for i in word_range.split('-')]
         self.letter_range = [int(i) for i in letter_range.split('-')]
         self.alphabet_range = [int(i) for i in alphabet_range.split('-')]
-        self.word_link_percentage = word_link_percentage
-        self.letter_link_percentage = letter_link_percentage
+        self.word_link_percentage = float(word_link_percentage)
+        self.letter_link_percentage = float(letter_link_percentage)
         self.seed = seed
         self.node_count = 0
         self.link_word_count = 0
@@ -308,7 +308,7 @@ class TestPerformance:
             # print(query_answer.assignment)
             for node in nodes:
                 atom_matching = das.get_atom(query_answer.assignment.mapping[node])
-                # print(f'{node}:', atom_matching['type'], atom_matching['name'])
+                print(f'{node}:', atom_matching['type'], atom_matching['name'])
             # rewrote_query = query_answer.subgraph
             # print(rewrote_query)
             # print()
