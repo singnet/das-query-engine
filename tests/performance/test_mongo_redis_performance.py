@@ -378,3 +378,6 @@ class TestPerformance:
 
         measure_process = measure(process)
         measure_process(das, query_answers, nodes)
+
+        assert isinstance(query_answers, list)
+        assert query_answers
