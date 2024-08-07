@@ -2,8 +2,7 @@
 import random
 import time
 from random import randint
-from typing import Any, Dict, List, Optional, Tuple
-from functools import reduce
+from typing import Any
 
 import pytest
 
@@ -30,6 +29,7 @@ class TestPerformance:
     """Test node/link generation and Hyperon DAS load."""
 
     time = 0.0
+    is_database_loaded = False
 
     @pytest.fixture(autouse=True)
     def _initialize(
@@ -79,6 +79,7 @@ class TestPerformance:
         )
 
     def print_status(self):
+        print()
         print('Nodes Range: ' + ' to '.join((str(n) for n in self.node_range)))
         print('Words Range: ' + ' to '.join((str(n) for n in self.word_range)))
         print('Letter Range: ' + ' to '.join((str(n) for n in self.letter_range)))
@@ -88,6 +89,9 @@ class TestPerformance:
         print('Links Word: ' + str(self.link_word_count))
         print('Links Letter: ' + str(self.link_letter_count))
 
+    def _create_word(self):
+        return ''.join([chr(97 + randint(*self.alphabet_range)) for _ in range(*self.letter_range)])
+
     @staticmethod
     def compare_words(a: str, b: str) -> int:
         return len(set(a.split(' ')) & set(b.split(' ')))
@@ -96,7 +100,7 @@ class TestPerformance:
     def generate_links_word(self, node_list: list[dict[str, Any]]) -> dict[str, Any]:
         links_dict_word: dict[str, Any] = {}
         for i, v in enumerate(node_list):
-            for j in range(i+1, len(node_list)):
+            for j in range(i + 1, len(node_list)):
                 if random.random() > self.word_link_percentage:
                     continue
                 strength = self.compare_words(v['name'], node_list[j]['name'])
@@ -104,9 +108,8 @@ class TestPerformance:
                     links_dict_word[f'{i}->{j}'] = strength
         return links_dict_word
 
-
     @measure
-    def generate_links_word_faster(self, word_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_links_word_faster(self, word_dict: dict[str, Any]) -> dict[str, Any]:
         """
         Generate links from between all pair of nodes which share at least one common word in
         their names.
@@ -114,19 +117,17 @@ class TestPerformance:
         common words as value.
 
         Args:
-            word_dict (Dict[str, Any]): Dict of words
+            word_dict (dict[str, Any]): dict of words
 
         Returns:
-            Dict[str, Any]: Dict of links
+            dict[str, Any]: dict of links
 
         """
-        links_dict_word: Dict[str, Any] = {}
+        links_dict_word: dict[str, Any] = {}
         for v in word_dict.values():
             v = list(v)
             for i, _ in enumerate(v):
                 for j in range(i + 1, len(v)):
-                    if random.random() > self.word_link_percentage:
-                        continue
                     key = f'{min(v[i], v[j])}->{max(v[i], v[j])}'
                     if key in links_dict_word:
                         links_dict_word[key] += 1
@@ -136,32 +137,30 @@ class TestPerformance:
 
     @measure
     def generate_nodes(
-        self, das: Optional[DistributedAtomSpace] = None
-    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+        self, das: DistributedAtomSpace | None = None
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         """
         Creates and add to Hyperon DAS nodes of type "Concept" using W words of length L
         using an alphabet (all small caps) of size K.
 
         Args:
-            das (Optional[DistributedAtomSpace]): Instance of Hyperon DAS to add the nodes.
+            das (DistributedAtomSpace | None): Instance of Hyperon DAS to add the nodes.
                 Defaults to None.
 
         Returns:
-            Tuple[List[Dict[str, Any]], Dict[str, Any]]: Returns a tuple containing the list
+            tuple[list[dict[str, Any]], dict[str, Any]]: Returns a tuple containing the list
                 of nodes as first element and a dict of words.
 
         """
         node_list = []
         node_names = set()
-        word_dict: Dict[str, Any] = {}
+        word_dict: dict[str, Any] = {}
         for node_index in range(*self.node_range):
-            node: Dict[str, Any] = {'name': []}
+            node: dict[str, Any] = {'name': []}
             word_list = []
             for word_index in range(*self.word_range):
                 node['name'].append([])
-                w = ''.join(
-                    [chr(97 + randint(*self.alphabet_range)) for _ in range(*self.letter_range)]
-                )
+                w = self._create_word()
                 node['name'][word_index - self.word_range[0]] = w
                 word_list.append(w)
             node['name'] = ' '.join(node['name'])
@@ -198,24 +197,21 @@ class TestPerformance:
         return strength
 
     @measure
-    def generate_links_letter(self, node_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def generate_links_letter(self, node_list: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Creates links of type Similarity between all pair of nodes which share at least one common
         letter in the same position in their names.
         Outputs a dict containing the link reference {node1->node2} as key and the number of
         common letters as value.
         Args:
-            node_list (List[Dict[str, Any]]): List of nodes
+            node_list (list[dict[str, Any]]): list of nodes
 
         Returns:
-            letter_link_list (Dict[str, Any]): Dict containing the links as key and strength
+            letter_link_list (dict[str, Any]): dict containing the links as key and strength
                 as value.
 
         """
         links_letter = {}
-        words_per_letter = (self.word_range[1] - self.word_range[0]) * (
-            self.letter_range[1] - self.letter_range[0]
-        )
         for i, _ in enumerate(node_list):
             for j in range(i + 1, len(node_list)):
                 if random.random() > self.letter_link_percentage:
@@ -223,15 +219,15 @@ class TestPerformance:
                 key = f'{min(i, j)}->{max(i, j)}'
                 strength = TestPerformance.compare_str(node_list[i]['name'], node_list[j]['name'])
                 if strength > 0:
-                    links_letter[key] = strength / words_per_letter
+                    links_letter[key] = strength
         return links_letter
 
     @staticmethod
     @measure
     def add_links(
         das: DistributedAtomSpace,
-        links: Dict[str, Any],
-        node_list: List[Dict[str, Any]],
+        links: dict[str, Any],
+        node_list: list[dict[str, Any]],
         link_type: str,
         strength_divisor: int = 1,
     ) -> None:
@@ -239,8 +235,8 @@ class TestPerformance:
         Adds link to an instance of Hyperon DAS.
         Args:
             das (DistributedAtomSpace): Instance of Hyperon DAS
-            links (Dict[str, Any]): Dict containing links to add
-            node_list (List[Dict[str, Any]]): List of Nodes to retrieve as link's targets
+            links (dict[str, Any]): dict containing links to add
+            node_list (list[dict[str, Any]]): list of Nodes to retrieve as link's targets
             link_type (str): Type of link
             strength_divisor (int): Divisor number to divide the strength of the link
 
@@ -260,42 +256,49 @@ class TestPerformance:
 
     @measure
     def count_atoms(
-        self, das: DistributedAtomSpace, options: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, int]:
+        self, das: DistributedAtomSpace, options: dict[str, Any] | None = None
+    ) -> dict[str, int]:
         """
         Retrieve the count of atoms measuring the time for the request.
         Args:
             das (DistributedAtomSpace): Instance of Hyperon DAS
-            options (Optional[Dict[str, Any]]): Options dict to retrieve atoms
+            options (dict[str, Any] | None): Options dict to retrieve atoms
 
         Returns:
-            count (Dict[str, int]): Dict containing number of atoms, nodes and links.
+            count (dict[str, int]): dict containing number of atoms, nodes and links.
 
         """
         return das.count_atoms(options)
 
-    def _load_database(self, das: DistributedAtomSpace):
-        node_list: list[dict[str, Any]]
-        node_list, word_dict = self.generate_nodes(das)
-        das.commit_changes()
-        self.node_count = len(node_list)
-        self.word_count = len(word_dict)
-        if self.word_link_percentage >= 1:
-            links_word = self.generate_links_word_faster(word_dict)
-        else:
-            links_word = self.generate_links_word(node_list)
-        self.link_word_count = len(links_word)
-        word_count: int = self.word_range[1] - self.word_range[0]
-        self.add_links(das, links_word, node_list, 'TokenSimilarity', strength_divisor=word_count)
-        links_letter = self.generate_links_letter(node_list)
-        self.link_letter_count = len(links_letter)
-        self.add_links(das, links_letter, node_list, 'Similarity')
-        count_atoms_links_nodes: dict[str, int] = self.count_atoms(das, {'precise': True})
-        self.count_atoms(das)
-        return count_atoms_links_nodes
+    def _load_database(self, das: DistributedAtomSpace) -> dict | None:
+        if not TestPerformance.is_database_loaded:
+            node_list: list[dict[str, Any]]
+            node_list, word_dict = self.generate_nodes(das)
+            das.commit_changes()
+            self.node_count = len(node_list)
+            self.word_count = len(word_dict)
+            if self.word_link_percentage >= 1:
+                links_word = self.generate_links_word_faster(word_dict)
+            else:
+                links_word = self.generate_links_word(node_list)
+            self.link_word_count = len(links_word)
+            word_count: int = self.word_range[1] - self.word_range[0]
+            self.add_links(
+                das, links_word, node_list, 'TokenSimilarity', strength_divisor=word_count
+            )
+            links_letter = self.generate_links_letter(node_list)
+            self.link_letter_count = len(links_letter)
+            words_times_letter = (self.word_range[1] - self.word_range[0]) * (
+                    self.letter_range[1] - self.letter_range[0]
+            )
+            self.add_links(das, links_letter, node_list, 'Similarity', strength_divisor=words_times_letter)
+            count_atoms_links_nodes: dict[str, int] = self.count_atoms(das, {'precise': True})
+            self.count_atoms(das)
+            TestPerformance.is_database_loaded = True
+            return count_atoms_links_nodes
+        return None
 
     def test_load_performance(self, database, das: DistributedAtomSpace):
-        print('')
         count_atoms_links_nodes = self._load_database(das)
         self.print_status()
         total = self.node_count + self.link_word_count + self.link_letter_count
@@ -306,40 +309,55 @@ class TestPerformance:
             "atom_count": total,
         } == count_atoms_links_nodes
 
-    def test_query_atom_by_name(self, database, das: DistributedAtomSpace):
-        pass
+    @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
+    def test_query_atom_by_field(self, link_type, request):
+        das: DistributedAtomSpace = request.getfixturevalue('das')
+        self._load_database(das)
+        measure_query = measure(das.get_atoms_by_field)
+        query_answer = measure_query({'strength': 0.375, 'named_type': link_type})
+        assert isinstance(query_answer, list)
+        assert query_answer
 
-    def test_query_node_by_name(self, database, das: DistributedAtomSpace):
-        pass
+    @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
+    def test_query_atom_by_field_with_index(self, link_type, request):
+        das: DistributedAtomSpace = request.getfixturevalue('das')
+        self._load_database(das)
+        das.create_field_index('link', ['strength', 'named_type'])
+        time.sleep(10)
+        measure_query = measure(das.get_atoms_by_field)
+        query_answer = measure_query({'strength': 0.375, 'named_type': link_type})
+        assert isinstance(query_answer, list)
+        assert query_answer
 
     def test_query_by_text_field(self, database, das: DistributedAtomSpace):
-        pass
+        self._load_database(das)
+        measure_query = measure(das.get_atoms_by_text_field)
+        query_answer = measure_query(self._create_word(), 'name')
+        assert isinstance(query_answer, list)
+        assert query_answer
 
     def test_query_node_by_name_starting_with(self, database, das: DistributedAtomSpace):
-        pass
+        self._load_database(das)
+        measure_query = measure(das.get_node_by_name_starting_with)
+        query_answer = measure_query(self.node_type, self._create_word())
+        assert isinstance(query_answer, list)
+        assert query_answer
 
-    @measure
-    def query(self, das, query):
-        return das.query(query)
-
-    @measure
-    def process_query(self, das, query_answers, nodes):
-        print(query_answers)
-        for query_answer in query_answers:
-            # print(query_answer.assignment)
-            for node in nodes:
-                atom_matching = das.get_atom(query_answer.assignment.mapping[node])
-                print(f'{node}:', atom_matching['type'], atom_matching['name'])
-            rewrote_query = query_answer.subgraph
-            print(rewrote_query)
-            # print()
-
-    @pytest.mark.parametrize('nodes', [['v1', 'v2'], ['v1', 'v2', 'v3']])
-    def test_query_nodes_var(self, nodes, request):
+    @pytest.mark.parametrize(
+        'nodes,link_type',
+        [
+            (['v1', 'v2'], "TokenSimilarity"),
+            (['v1', 'v2'], "Similarity"),
+            (['v1', 'v2', 'v3'], "TokenSimilarity"),
+            (['v1', 'v2', 'v3'], "Similarity"),
+        ],
+    )
+    def test_query_links_nodes_var(self, nodes, link_type, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
+        self._load_database(das)
         queries = []
         for i, node in enumerate(nodes):
-            for j in range(i+1, len(nodes)):
+            for j in range(i + 1, len(nodes)):
                 query = {
                     'atom_type': 'link',
                     'type': 'TokenSimilarity',
@@ -350,9 +368,13 @@ class TestPerformance:
                 }
                 queries.append(query)
 
-        print()
-        print(queries)
-        query_answers = self.query(das, queries)
-        self.process_query(das, query_answers, nodes)
+        measure_query = measure(das.query)
+        query_answers = measure_query(queries)
 
+        def process(d, q, n):
+            for qq in q:
+                for nn in n:
+                    d.get_atom(qq.assignment.mapping[nn])
 
+        measure_process = measure(process)
+        measure_process(das, query_answers, nodes)

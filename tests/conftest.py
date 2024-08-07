@@ -1,14 +1,14 @@
 def pytest_addoption(parser):
-    parser.addoption("--node_range", default='0-10', help="Node range, eg: 0-100")
+    parser.addoption("--node_range", default='0-100', help="Node range, eg: 0-100")
     parser.addoption("--word_range", default="2-10", help="Word range, eg: 2-10")
     parser.addoption("--letter_range", default="2-5", help="Letter range, eg: 2-5")
     parser.addoption("--alphabet_range", default="2-5", help="Alphabet range, eg: 2-5")
     parser.addoption(
-        "--word_link_percentage", default=0.01, help="Percentage of links with same word, eg: 0.1"
+        "--word_link_percentage", default=0.1, help="Percentage of links with same word, eg: 0.1"
     )
     parser.addoption(
         "--letter_link_percentage",
-        default=0.01,
+        default=0.1,
         help="Percentage of links with same letters, eg: 0.1",
     )
     parser.addoption("--seed", default=11, help="Randon seed")
