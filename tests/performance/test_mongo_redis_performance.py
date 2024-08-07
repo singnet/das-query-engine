@@ -323,7 +323,7 @@ class TestPerformance:
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
         das.create_field_index('link', ['strength', 'named_type'])
-        time.sleep(10)
+        time.sleep(10)  # Waiting to mongodb reindex the database
         measure_query = measure(das.get_atoms_by_field)
         query_answer = measure_query({'strength': 0.375, 'named_type': link_type})
         assert isinstance(query_answer, list)
@@ -378,6 +378,4 @@ class TestPerformance:
 
         measure_process = measure(process)
         measure_process(das, query_answers, nodes)
-
-        assert isinstance(query_answers, list)
         assert query_answers
