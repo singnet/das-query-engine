@@ -1,5 +1,5 @@
 def pytest_addoption(parser):
-    parser.addoption("--node_range", default='0-100', help="Node range, eg: 0-100")
+    parser.addoption("--node_range", default='0-10', help="Node range, eg: 0-100")
     parser.addoption("--word_range", default="2-10", help="Word range, eg: 2-10")
     parser.addoption("--letter_range", default="2-5", help="Letter range, eg: 2-5")
     parser.addoption("--alphabet_range", default="2-5", help="Alphabet range, eg: 2-5")
