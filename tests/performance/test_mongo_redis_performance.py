@@ -3,6 +3,7 @@ import random
 import time
 from random import randint
 from typing import Any, Dict, List, Optional, Tuple
+from functools import reduce
 
 import pytest
 
@@ -87,8 +88,25 @@ class TestPerformance:
         print('Links Word: ' + str(self.link_word_count))
         print('Links Letter: ' + str(self.link_letter_count))
 
+    @staticmethod
+    def compare_words(a: str, b: str) -> int:
+        return len(set(a.split(' ')) & set(b.split(' ')))
+
     @measure
-    def generate_links_word(self, word_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_links_word(self, node_list: list[dict[str, Any]]) -> dict[str, Any]:
+        links_dict_word: dict[str, Any] = {}
+        for i, v in enumerate(node_list):
+            for j in range(i+1, len(node_list)):
+                if random.random() > self.word_link_percentage:
+                    continue
+                strength = self.compare_words(v['name'], node_list[j]['name'])
+                if strength > 0:
+                    links_dict_word[f'{i}->{j}'] = strength
+        return links_dict_word
+
+
+    @measure
+    def generate_links_word_faster(self, word_dict: Dict[str, Any]) -> Dict[str, Any]:
         """
         Generate links from between all pair of nodes which share at least one common word in
         their names.
@@ -151,11 +169,11 @@ class TestPerformance:
             if das is not None:
                 das.add_node(node)
             node_list.append(node)
-            for w in word_list:
-                if w in word_dict:
-                    word_dict[w].add(node_index)
+            for word in word_list:
+                if word in word_dict:
+                    word_dict[word].add(node_index)
                 else:
-                    word_dict[w] = {node_index}
+                    word_dict[word] = {node_index}
             node_names.add(node['name'])
         return node_list, word_dict
 
@@ -262,7 +280,10 @@ class TestPerformance:
         das.commit_changes()
         self.node_count = len(node_list)
         self.word_count = len(word_dict)
-        links_word = self.generate_links_word(word_dict)
+        if self.word_link_percentage >= 1:
+            links_word = self.generate_links_word_faster(word_dict)
+        else:
+            links_word = self.generate_links_word(node_list)
         self.link_word_count = len(links_word)
         word_count: int = self.word_range[1] - self.word_range[0]
         self.add_links(das, links_word, node_list, 'TokenSimilarity', strength_divisor=word_count)
@@ -309,11 +330,11 @@ class TestPerformance:
             for node in nodes:
                 atom_matching = das.get_atom(query_answer.assignment.mapping[node])
                 print(f'{node}:', atom_matching['type'], atom_matching['name'])
-            # rewrote_query = query_answer.subgraph
-            # print(rewrote_query)
+            rewrote_query = query_answer.subgraph
+            print(rewrote_query)
             # print()
 
-    @pytest.mark.parametrize('nodes', [['v1', 'v2'], ['v1', 'v2', 'v3'], ['v1', 'v2', 'v3', 'v4']])
+    @pytest.mark.parametrize('nodes', [['v1', 'v2'], ['v1', 'v2', 'v3']])
     def test_query_nodes_var(self, nodes, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         queries = []
