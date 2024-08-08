@@ -56,6 +56,7 @@ class TestPerformance:
 
         if seed:
             random.seed(seed)
+
     @pytest.fixture(autouse=True)
     def _initialize_fixture(
         self,
@@ -67,9 +68,15 @@ class TestPerformance:
         letter_link_percentage: float,
         seed: Any,
     ) -> None:
-        self._initialize(node_range, word_range, letter_range,
-                         alphabet_range, word_link_percentage,
-                         letter_link_percentage, seed)
+        self._initialize(
+            node_range,
+            word_range,
+            letter_range,
+            alphabet_range,
+            word_link_percentage,
+            letter_link_percentage,
+            seed,
+        )
 
     @pytest.fixture(scope="class", autouse=True)
     def database(self):
@@ -302,9 +309,11 @@ class TestPerformance:
             links_letter = self.generate_links_letter(node_list)
             self.link_letter_count = len(links_letter)
             words_times_letter = (self.word_range[1] - self.word_range[0]) * (
-                    self.letter_range[1] - self.letter_range[0]
+                self.letter_range[1] - self.letter_range[0]
             )
-            self.add_links(das, links_letter, node_list, 'Similarity', strength_divisor=words_times_letter)
+            self.add_links(
+                das, links_letter, node_list, 'Similarity', strength_divisor=words_times_letter
+            )
             count_atoms_links_nodes: dict[str, int] = self.count_atoms(das, {'precise': True})
             self.count_atoms(das)
             TestPerformance.is_database_loaded = True
