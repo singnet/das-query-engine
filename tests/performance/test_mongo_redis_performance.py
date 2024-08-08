@@ -31,7 +31,6 @@ class TestPerformance:
     time = 0.0
     is_database_loaded = False
 
-    @pytest.fixture(autouse=True)
     def _initialize(
         self,
         node_range: str,
@@ -57,6 +56,20 @@ class TestPerformance:
 
         if seed:
             random.seed(seed)
+    @pytest.fixture(autouse=True)
+    def _initialize_fixture(
+        self,
+        node_range: str,
+        word_range: str,
+        letter_range: str,
+        alphabet_range: str,
+        word_link_percentage: float,
+        letter_link_percentage: float,
+        seed: Any,
+    ) -> None:
+        self._initialize(node_range, word_range, letter_range,
+                         alphabet_range, word_link_percentage,
+                         letter_link_percentage, seed)
 
     @pytest.fixture(scope="class", autouse=True)
     def database(self):
