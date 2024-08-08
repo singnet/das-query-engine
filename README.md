@@ -45,9 +45,26 @@ If you prefer to manage your Python projects with [Poetry](https://python-poetry
     
     ```bash
     poetry install
-    ``` 
+    ```
+    Note: If perhaps you are running over SSH, poetry install might stuck checking the keyring, you can verify this by running `poetry install -vvv`, then the command will be stuck on the following lines:
+    ```bash
+    Checking if keyring is available
+    [keyring:keyring. backend] Loading KWallet |  
+    [keyring:keyring.backend] Loading SecretService |  
+    [keyring:keyring. backend] Loading Windows |  
+    [keyring: keyring.backend] Loading chainer |  
+    [keyring:keyring.backend] Loading libsecret |  
+    [keyring:keyring.backend] Loading macOS |  
+    Using keyring backend 'SecretService Keyring'
+    ```
+
+    If that is the case, deactivate keyring and run poetry install again:
+    ```bash
+    poetry config keyring.enabled false
+    poetry install
+    ```
     
-4.  Activate the virtual environment created by Poetry:
+5.  Activate the virtual environment created by Poetry:
     
     ```bash
     poetry shell
