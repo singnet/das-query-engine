@@ -1,8 +1,12 @@
+# pylint: disable=missing-module-docstring,missing-class-docstring,
+# pylint: disable=missing-function-docstring,missing-module-docstring,protected-access
+
 import argparse
+
 from test_mongo_redis_performance import TestPerformance
 
-class DasWrapper:
 
+class DasWrapper:
     def __init__(self, filename):
         self.buffer = []
         self.types = set()
@@ -17,12 +21,15 @@ class DasWrapper:
         self.buffer.append(link)
 
     def commit_changes(self):
-        with open(self.filename, 'a+') as f:
+        with open(self.filename, 'a+', encoding='utf8') as f:
             for t in self.types:
                 f.write(f'(: {t} Type)\n')
             for v in self.buffer:
                 if v.get('targets'):
-                    f.write(f"({v['type']} \"{v['targets'][0]['name']}\" \"{v['targets'][1]['name']}\")\n")
+                    f.write(
+                        f"({v['type']} \"{v['targets'][0]['name']}\""
+                        f" \"{v['targets'][1]['name']}\")\n"
+                    )
                 else:
                     f.write(f"(: \"{v['name']}\" {v['type']})\n")
 
@@ -31,6 +38,8 @@ class DasWrapper:
 
     def count_atoms(self, options):
         pass
+
+
 def main():
     test_performance = TestPerformance()
     parser = argparse.ArgumentParser(description='Create MeTTa file.')
@@ -41,9 +50,8 @@ def main():
     parser.add_argument("--alphabet_range", default="2-5", help="Alphabet range, eg: 2-5")
     parser.add_argument("--seed", default=11, help="Randon seed")
     parser.add_argument(
-        "--word_link_percentage",
-        default=0.1,
-        help="Percentage of links with same word, eg: 0.1")
+        "--word_link_percentage", default=0.1, help="Percentage of links with same word, eg: 0.1"
+    )
     parser.add_argument(
         "--letter_link_percentage",
         default=0.1,
@@ -51,11 +59,15 @@ def main():
     )
     args = parser.parse_args()
 
-
-    test_performance._initialize(args.node_range, args.word_range,
-                                 args.letter_range, args.alphabet_range,
-                                 args.word_link_percentage, args.letter_link_percentage,
-                                 args.seed)
+    test_performance._initialize(
+        args.node_range,
+        args.word_range,
+        args.letter_range,
+        args.alphabet_range,
+        args.word_link_percentage,
+        args.letter_link_percentage,
+        args.seed,
+    )
 
     test_performance._load_database(DasWrapper(args.filename))
     test_performance.print_status()
