@@ -98,6 +98,11 @@ Arguments allowed in OPTIONS:
 ```bash
 make benchmark-tests OPTIONS="--word_link_percentage=0.01"
 ```
+or create a MeTTa file using the same options:
+```bash
+make benchmark-tests-metta-file OPTIONS="--word_link_percentage=0.01"
+```
+
 
 You can do the same to run integration tests
 
