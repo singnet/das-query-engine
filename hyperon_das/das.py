@@ -260,7 +260,8 @@ class DistributedAtomSpace:
                 'named_type': 'Concept'
             }
         """
-        return self.query_engine.get_node(node_type, node_name)
+        node_handle = self.backend.node_handle(node_type, node_name)
+        return self.get_atom(node_handle)
 
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         """
@@ -303,7 +304,8 @@ class DistributedAtomSpace:
                 ]
             }
         """
-        return self.query_engine.get_link(link_type, link_targets)
+        link_handle = self.backend.link_handle(link_type, link_targets)
+        return self.get_atom(link_handle)
 
     def get_links(
         self,
