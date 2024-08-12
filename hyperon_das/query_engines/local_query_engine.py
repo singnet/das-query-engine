@@ -193,24 +193,6 @@ class LocalQueryEngine(QueryEngine):
         except AtomDoesNotExist as exception:
             das_error(exception)
 
-    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
-        try:
-            node_handle = self.local_backend.node_handle(node_type, node_name)
-            return self.local_backend.get_atom(node_handle)
-        except AtomDoesNotExist:
-            das_error(
-                AtomDoesNotExist(message="Nonexistent atom", details=f'{node_type}:{node_name}')
-            )
-
-    def get_link(self, link_type: str, link_targets: List[str]) -> Union[Dict[str, Any], None]:
-        try:
-            link_handle = self.local_backend.link_handle(link_type, link_targets)
-            return self.local_backend.get_atom(link_handle)
-        except AtomDoesNotExist:
-            das_error(
-                AtomDoesNotExist(message='Nonexistent atom', details=f'{link_type}:{link_targets}')
-            )
-
     def get_links(
         self,
         link_type: str,

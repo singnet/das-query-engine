@@ -42,26 +42,6 @@ class RemoteQueryEngine(QueryEngine):
                 das_error(exception)
         return atom
 
-    def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
-        try:
-            node = self.local_query_engine.get_node(node_type, node_name)
-        except AtomDoesNotExist:
-            try:
-                node = self.remote_das.get_node(node_type, node_name)
-            except AtomDoesNotExist as exception:
-                das_error(exception)
-        return node
-
-    def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
-        try:
-            link = self.local_query_engine.get_link(link_type, link_targets)
-        except AtomDoesNotExist:
-            try:
-                link = self.remote_das.get_link(link_type, link_targets)
-            except AtomDoesNotExist as exception:
-                das_error(exception)
-        return link
-
     def get_links(
         self,
         link_type: str,
