@@ -88,13 +88,15 @@ make performance-tests
 Generating atoms and checking the performance.
 This test typically takes more than 60 seconds to run with the default settings.
 Arguments allowed in OPTIONS:
-- `--node_range` (default: "0-100"): Specifies the range of nodes.
-- `--word_range` (default: "2-10"): Defines the range for the number of words.
-- `--letter_range` (default: "2-5"): Sets the range for the number of letters.
+- `--node_number` (default: "100"): Specifies the range of nodes.
+- `--word_size` (default: 8): Defines the range for the number of words.
+- `--letter_size` (default: 3): Sets the range for the number of letters.
 - `--alphabet_range` (default: "2-5"): Determines the range for the alphabet size.
 - `--word_link_percentage` (default: 0.1): Percentage of word links.
 - `--letter_link_percentage` (default: 0.1): Percentage of letter links.
 - `--seed` (default: 11): Sets the random seed for reproducibility.
+- `--repeat` (default: 0): (Test only) Repeats the test n times.
+
 ```bash
 make benchmark-tests OPTIONS="--word_link_percentage=0.01"
 ```
