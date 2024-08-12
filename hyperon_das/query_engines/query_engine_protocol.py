@@ -24,41 +24,6 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def get_node(self, node_type: str, node_name: str) -> Union[Dict[str, Any], None]:
-        """
-        Retrieves a node of a specified type and name.
-
-        This method searches for a node that matches the specified type and name. If such a node exists,
-        it returns the node's data; otherwise, it returns None.
-
-        Args:
-            node_type (str): The type of the node to retrieve.
-            node_name (str): The name of the node to retrieve.
-
-        Returns:
-            Union[Dict[str, Any], None]: A dictionary containing the node's data if found, otherwise None.
-        """
-        ...
-
-    @abstractmethod
-    def get_link(self, link_type: str, targets: List[str]) -> Union[Dict[str, Any], None]:
-        """
-        Retrieves a link of a specified type that connects to the given targets.
-
-        This method searches for a link that matches the specified link type and is connected to
-        the provided target nodes. The targets are specified by their handles. If such a link exists,
-        it returns the link's data; otherwise, it returns None.
-
-        Args:
-            link_type (str): The type of the link to retrieve.
-            targets (List[str]): A list of handles for the target nodes that the link connects to.
-
-        Returns:
-            Union[Dict[str, Any], None]: A dictionary containing the link's data if found, otherwise None.
-        """
-        ...
-
-    @abstractmethod
     def get_links(
         self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
     ) -> Union[List[str], List[Dict]]:
