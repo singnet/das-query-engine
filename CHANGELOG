@@ -1,1 +1,2 @@
 [#305] Integration of AttentionBroker server to allow enabling of Cache Controller
+[#308] Chanhe get_node() and get_link() to reuse get_atom()
