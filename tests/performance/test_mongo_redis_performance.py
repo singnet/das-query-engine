@@ -202,8 +202,6 @@ class TestPerformance:
         """
         strength = 0
         for i, s in enumerate(a):
-            if i >= len(b):
-                break
             if s == ' ':
                 continue
             if s == b[i]:
@@ -243,7 +241,7 @@ class TestPerformance:
         links: dict[str, Any],
         node_list: list[dict[str, Any]],
         link_type: str,
-        strength_divisor: int,
+        strength_divisor: int = 1,
     ) -> None:
         """
         Adds link to an instance of Hyperon DAS.

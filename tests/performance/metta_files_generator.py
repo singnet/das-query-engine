@@ -28,7 +28,7 @@ class DasWrapper:
                 if v.get('targets'):
                     f.write(
                         f"({v['type']} \"{v['targets'][0]['name']}\""
-                        f" \"{v['targets'][1]['name']} {v['strength']}\")\n"
+                        f" \"{v['targets'][1]['name']}\")\n"
                     )
                 else:
                     f.write(f"(: \"{v['name']}\" {v['type']})\n")
