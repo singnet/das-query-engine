@@ -97,32 +97,6 @@ class FunctionsClient:
             else:
                 raise e
 
-    def get_node(self, node_type: str, node_name: str) -> Union[str, Dict]:
-        payload = {
-            'action': 'get_node',
-            'input': {'node_type': node_type, 'node_name': node_name},
-        }
-        try:
-            return self._send_request(payload)
-        except HTTPError as e:
-            if e.status_code == 404:
-                raise AtomDoesNotExist(message='Nonexistent atom')
-            else:
-                raise e
-
-    def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
-        payload = {
-            'action': 'get_link',
-            'input': {'link_type': link_type, 'link_targets': link_targets},
-        }
-        try:
-            return self._send_request(payload)
-        except HTTPError as e:
-            if e.status_code == 404:
-                raise AtomDoesNotExist(message='Nonexistent atom')
-            else:
-                raise e
-
     def get_links(
         self,
         link_type: str,
