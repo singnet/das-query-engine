@@ -64,35 +64,6 @@ class TestRemoteDistributedAtomSpace:
         with pytest.raises(AtomDoesNotExist):
             remote_das.get_atom(handle='fake')
 
-    def _test_get_node(self, remote_das: DistributedAtomSpace):
-        result = remote_das.get_node(node_type='Symbol', node_name='"human"')
-        assert result['handle'] == metta_animal_base_handles.human
-        assert result['name'] == '"human"'
-        assert result['named_type'] == 'Symbol'
-
-        with pytest.raises(AtomDoesNotExist):
-            remote_das.get_node(node_type='Fake', node_name='fake')
-
-    def _test_get_link(self, remote_das: DistributedAtomSpace):
-        result = remote_das.get_link(
-            link_type='Expression',
-            link_targets=[
-                metta_animal_base_handles.Inheritance,
-                metta_animal_base_handles.earthworm,
-                metta_animal_base_handles.animal,
-            ],
-        )
-        assert result['handle'] == metta_animal_base_handles.inheritance_earthworm_animal
-        assert result['named_type'] == 'Expression'
-        assert result['targets'] == [
-            metta_animal_base_handles.Inheritance,
-            metta_animal_base_handles.earthworm,
-            metta_animal_base_handles.animal,
-        ]
-
-        with pytest.raises(AtomDoesNotExist):
-            remote_das.get_link(link_type='Fake', link_targets=['fake1', 'fake2'])
-
     def _test_get_links(self, remote_das: DistributedAtomSpace):
         all_inheritance = [
             metta_animal_base_handles.inheritance_human_mammal,
