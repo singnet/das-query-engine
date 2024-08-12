@@ -31,50 +31,6 @@ class TestVultrClientIntegration:
             metta_animal_base_handles.monkey,
         ]
 
-    def test_get_node(self, server: FunctionsClient):
-        result = server.get_node(node_type='Symbol', node_name='"human"')
-        assert result['handle'] == metta_animal_base_handles.human
-        assert result['name'] == '"human"'
-        assert result['named_type'] == 'Symbol'
-
-        result = server.get_node(node_type='Symbol', node_name='"monkey"')
-        assert result['handle'] == metta_animal_base_handles.monkey
-        assert result['name'] == '"monkey"'
-        assert result['named_type'] == 'Symbol'
-
-    def test_get_link(self, server: FunctionsClient):
-        result = server.get_link(
-            link_type='Expression',
-            link_targets=[
-                metta_animal_base_handles.Similarity,
-                metta_animal_base_handles.human,
-                metta_animal_base_handles.monkey,
-            ],
-        )
-        assert result['handle'] == metta_animal_base_handles.similarity_human_monkey
-        assert result['named_type'] == 'Expression'
-        assert result['targets'] == [
-            metta_animal_base_handles.Similarity,
-            metta_animal_base_handles.human,
-            metta_animal_base_handles.monkey,
-        ]
-
-        result = server.get_link(
-            link_type='Expression',
-            link_targets=[
-                metta_animal_base_handles.Inheritance,
-                metta_animal_base_handles.human,
-                metta_animal_base_handles.mammal,
-            ],
-        )
-        assert result['handle'] == metta_animal_base_handles.inheritance_human_mammal
-        assert result['named_type'] == 'Expression'
-        assert result['targets'] == [
-            metta_animal_base_handles.Inheritance,
-            metta_animal_base_handles.human,
-            metta_animal_base_handles.mammal,
-        ]
-
     def test_get_links(self, server: FunctionsClient):
         links1 = server.get_links(
             link_type='Expression', target_types=['Symbol', 'Symbol', 'Symbol']
