@@ -90,8 +90,8 @@ class TestDistributedAtomSpace:
 
     def test_create_context(self):
         das = DistributedAtomSpace()
-        with pytest.raises(NotImplementedError):
-            das.create_context("blah", {})
+        context = das.create_context("blah", {})
+        assert context.name == "blah"
 
     def test_get_atoms_by_field(self):
         das = DistributedAtomSpaceMock()
