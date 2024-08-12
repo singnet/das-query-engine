@@ -944,7 +944,7 @@ class DistributedAtomSpace:
         name: str,
         queries: Optional[List[Query]] = [],
     ) -> Context:
-        if self.system_parameters.get('running_on_server'):
+        if self.query_engine_type == 'local':
             return self._create_context(name, queries)
         else:
             return self.query_engine.create_context(name, queries)
