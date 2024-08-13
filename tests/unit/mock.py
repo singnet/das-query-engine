@@ -5,6 +5,7 @@ from unittest.mock import patch
 from hyperon_das_atomdb import WILDCARD, AtomDB
 
 from hyperon_das import DistributedAtomSpace
+from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.das import LocalQueryEngine, RemoteQueryEngine
 
 
@@ -26,6 +27,7 @@ def _build_link_handle(link_type: str, target_handles: List[str]) -> str:
 class DistributedAtomSpaceMock(DistributedAtomSpace):
     def __init__(self, query_engine: Optional[str] = 'local', **kwargs) -> None:
         self.backend = DatabaseAnimals()
+        self.cache_controller = CacheController()
         if query_engine == 'remote':
             with patch('hyperon_das.client.connect_to_server', return_value=(200, 'OK')):
                 self.query_engine = RemoteQueryEngine(self.backend, {}, kwargs)
