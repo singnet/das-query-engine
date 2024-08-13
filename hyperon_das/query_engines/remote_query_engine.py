@@ -8,6 +8,7 @@ from hyperon_das.cache.iterators import (
     RemoteGetLinks,
     RemoteIncomingLinks,
 )
+from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.client import FunctionsClient
 from hyperon_das.context import Context
 from hyperon_das.exceptions import InvalidDASParameters, QueryParametersException
@@ -18,9 +19,16 @@ from hyperon_das.utils import QueryAnswer, das_error
 
 
 class RemoteQueryEngine(QueryEngine):
-    def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
+    def __init__(
+        self, 
+        backend, 
+        cache_controller: CacheController, 
+        system_parameters: Dict[str, Any], 
+        kwargs: Optional[dict] = {}
+    ):
         self.system_parameters = system_parameters
         self.local_query_engine = LocalQueryEngine(backend, kwargs)
+        self.cache_controller = cache_controller
         self.__mode = kwargs.get('mode', 'read-only')
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
