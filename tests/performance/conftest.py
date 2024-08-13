@@ -46,5 +46,5 @@ def pytest_generate_tests(metafunc):
 
 def pytest_terminal_summary(terminalreporter: TerminalReporter, exitstatus, config):
     terminalreporter.write_sep("-", "Performance Report")
-    for l in PERFORMANCE_REPORT:
-        terminalreporter.write_line(l)
+    for line in PERFORMANCE_REPORT:
+        terminalreporter.write_line(line)
