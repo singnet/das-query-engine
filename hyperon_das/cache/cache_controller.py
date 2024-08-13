@@ -13,18 +13,19 @@ class CacheController:
     engines use it to check for query answers if they are available locally before forwarding
     these queries to a remote DAS.
     """
+
     def __init__(self, system_parameters: Dict[str, Any]):
         """
         System parameters are allowed to change dinamically after the CacheController
         object is created. So the behavior of the CacheController regarding each parameter
         may change accordingly. That's why individual system parameters are not stored individually
-        as object fields. The whole passed system parameter's dict object is stored instead and 
-        checked everytime CacheController behavior is supposed to be controlled by some 
+        as object fields. The whole passed system parameter's dict object is stored instead and
+        checked everytime CacheController behavior is supposed to be controlled by some
         parameter. For example, the method enabled() will always check for the proper parameter
         in order to answer if CacheController is enabled or disabled.
 
         Args:
-            system_parameters (Dict[str, Any], optional): Relevant parameters and their defaults: 
+            system_parameters (Dict[str, Any], optional): Relevant parameters and their defaults:
             {
                 'cache_enabled': False
             }

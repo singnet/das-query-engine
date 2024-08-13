@@ -2,13 +2,13 @@ from typing import Any, Dict, Iterator, List, Optional, Union
 
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
+from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.cache.iterators import (
     CustomQuery,
     ListIterator,
     RemoteGetLinks,
     RemoteIncomingLinks,
 )
-from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.client import FunctionsClient
 from hyperon_das.context import Context
 from hyperon_das.exceptions import InvalidDASParameters, QueryParametersException
@@ -20,11 +20,11 @@ from hyperon_das.utils import QueryAnswer, das_error
 
 class RemoteQueryEngine(QueryEngine):
     def __init__(
-        self, 
-        backend, 
-        cache_controller: CacheController, 
-        system_parameters: Dict[str, Any], 
-        kwargs: Optional[dict] = {}
+        self,
+        backend,
+        cache_controller: CacheController,
+        system_parameters: Dict[str, Any],
+        kwargs: Optional[dict] = {},
     ):
         self.system_parameters = system_parameters
         self.local_query_engine = LocalQueryEngine(backend, cache_controller, kwargs)
