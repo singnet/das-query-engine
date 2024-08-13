@@ -1,0 +1,860 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://singnet.github.io/das-query-engine/Deployment-Process/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../das-overview/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.31">
+    
+    
+      
+        <title>Deployment Process - Distributed Atomspace</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.3cba04c6.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#new-version-of-das-atomdb" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Distributed Atomspace" class="md-header__button md-logo" aria-label="Distributed Atomspace" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Distributed Atomspace
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Deployment Process
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/singnet/das-query-engine" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    singnet/das-query-engine
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Distributed Atomspace" class="md-nav__button md-logo" aria-label="Distributed Atomspace" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Distributed Atomspace
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/singnet/das-query-engine" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    singnet/das-query-engine
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Deployment Process
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Deployment Process
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-atomdb" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Version of DAS AtomDB
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-query-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Version of DAS Query Engine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-serverless-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Version of DAS Serverless Functions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploying-the-built-image-to-production-and-development-environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploying the Built Image to Production and Development Environments
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-metta-parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Version of DAS Metta Parser
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-toolbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      New version of DAS Toolbox
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../das-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Distributed Atomspace - Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../das-users-guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DAS - User's Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guidelines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Developer Guidelines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release-notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Api
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Api
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/DAS/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/Traverse%20Engine/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traverse Engine
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-atomdb" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Version of DAS AtomDB
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-query-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Version of DAS Query Engine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-serverless-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Version of DAS Serverless Functions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploying-the-built-image-to-production-and-development-environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploying the Built Image to Production and Development Environments
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-metta-parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Version of DAS Metta Parser
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-version-of-das-toolbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      New version of DAS Toolbox
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>Deployment Process</h1>
+
+<h2 id="new-version-of-das-atomdb">New Version of DAS AtomDB</h2>
+<ol>
+<li>Go to the repository at AtomDB repository.</li>
+</ol>
+<p>To publish a new version of DAS AtomDB, the first step is to access the
+<a href="https://github.com/singnet/das-atom-db"><u>AtomDB repository</u></a>.</p>
+<p><img alt="AtomDB Repository" src="../assets/img8.jpg" /></p>
+<ol>
+<li>Update the version parameter in <strong><em>pyproject.toml</em></strong></li>
+</ol>
+<p>Before starting to publish the version, it is crucial to ensure that the
+<strong>pyproject.toml</strong> file is updated with the number of the desired new
+version, locating and changing the version parameter in the
+<strong>[tool.poetry]</strong> section.</p>
+<p><img alt="Update pyproject.toml" src="../assets/img14.jpg" /></p>
+<ol>
+<li>Commit the changes</li>
+</ol>
+<p>After this change, it is necessary to commit to the master branch to
+record the change.</p>
+<p><img alt="Commit Changes" src="../assets/img15.jpg" /></p>
+<ol>
+<li>Verify latest created tag before versioning</li>
+</ol>
+<p>It is important to note what the last version created was at <a href="https://github.com/singnet/das-atom-db/tags"><u>https://github.com/singnet/das-atom-db/tags</u></a> before creating a new version.</p>
+<ol>
+<li>Execute PyPI Publishing Workflow
+    Navigate to Actions, select the "Publish to PyPI" workflow, and click on "Run workflow." Choose the master branch, enter the version number in the form that appears (format: 1.0.0) ensure that the inserted version matches the one previously added in the <strong>pyproject.toml</strong> file, and click the "Run workflow" button.</li>
+</ol>
+<p><img alt="PyPI Publishing Workflow" src="../assets/img18.jpg" /></p>
+<ol>
+<li>Monitor the workflow execution. Ensure all jobs complete successfully.</li>
+</ol>
+<p>After the workflow execution, refresh the page and check if a new
+workflow is running. By clicking on it, you can track all jobs. At the
+end of the process, all jobs should have a green check mark. If there is
+an error in any job, it is possible to click on it to view the logs and
+identify the cause of the problem.</p>
+<p><img alt="Monitor Workflow Execution" src="../assets/img22.jpg" /></p>
+<ol>
+<li>Verify the new tag at DAS AtomDB repository tags and pypi project history.</li>
+</ol>
+<p>If everything goes as expected, the new version tag should be available
+at
+<a href="https://github.com/singnet/das-atom-db/tags"><u>https://github.com/singnet/das-atom-db/tags</u></a>
+and
+<a href="https://pypi.org/project/hyperon-das-atomdb/#history"><u>https://pypi.org/project/hyperon-das-atomdb/#history</u></a>.</p>
+<h2 id="new-version-of-das-query-engine">New Version of DAS Query Engine</h2>
+<ol>
+<li>Go to the repository at the <a href="https://github.com/singnet/das-query-engine"><u>Query Engine repository</u></a>.</li>
+</ol>
+<p>To publish a new version of DAS Query Engine, follow a process similarto the one described above for Das AtomDB. Access the repository at<a href="https://github.com/singnet/das-query-engine"><u>https://github.com/singnet/das-query-engine</u></a></p>
+<p><img alt="Query Engine Repository" src="../assets/img29.jpg" /></p>
+<ol>
+<li>Update the version parameter in <strong><em>pyproject.toml</em></strong></li>
+</ol>
+<p>Make sure to update the version number in the <strong>pyproject.toml</strong> file. Additionally, it is necessary to update the version of <strong>hyperon-das-atomdb</strong> in the dependencies, as specified in the <strong>[tool.poetry.dependencies]</strong> section.</p>
+<p><img alt="Update pyproject.toml" src="../assets/img30.jpg" /></p>
+<ol>
+<li>Commit this change to the master branch.</li>
+</ol>
+<p>After this change, it is necessary to commit to the master branch to record the change.</p>
+<p><img alt="Commit Changes" src="../assets/img33.jpg" /></p>
+<ol>
+<li>Verify latest created tag before versioning</li>
+</ol>
+<p>It is important to note what the last version created was at <a href="https://github.com/singnet/das-query-engine/tags"><u>https://github.com/singnet/das-query-engine/tags</u></a> before creating a new version.</p>
+<ol>
+<li>Execute PyPI Publishing Workflow</li>
+</ol>
+<p>Initiate the 'Publish to PyPI' Workflow Manually via the 'Actions' Tab in the Repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format 1.0.0, then click 'Run workflow' to proceed.</p>
+<p><img alt="PyPI Publishing Workflow" src="../assets/img37.jpg" /></p>
+<ol>
+<li>Monitor the workflow execution. Ensure all jobs complete successfully.</li>
+</ol>
+<p>Just like in the case of DAS AtomDB, refresh the page and check if a new workflow is running. By clicking on it, you can track all jobs. At the end of the process, all jobs should have a green check mark. If there is an error in any job, it is possible to click on it to view the logs and identify the cause of the problem.</p>
+<ol>
+<li>Verify the new tag at DAS Query Engine repository tags and pypi project history.</li>
+</ol>
+<p>If everything goes as expected, the new version tag should be available at <a href="https://github.com/singnet/das-query-engine/tags"><u>https://github.com/singnet/das-query-engine/tags</u></a>
+and <a href="https://pypi.org/project/hyperon-das/#history"><u>https://pypi.org/project/hyperon-das/#history</u></a>.</p>
+<h2 id="new-version-of-das-serverless-functions">New Version of DAS Serverless Functions</h2>
+<ol>
+<li>Navigate to the <a href="https://github.com/singnet/das-serverless-functions/"><u>DAS Serverless Functions repository</u></a>.</li>
+</ol>
+<p><img alt="Serverless Functions Repository" src="../assets/img43.jpg" /></p>
+<ol>
+<li>Update the <strong>hyperon-das</strong> version in the requirements file</li>
+</ol>
+<p>Update the version of the <strong>hyperon-das</strong> in the <strong>das-query-engine/requirements.txt</strong> file. This ensures that the correct version is used during the workflow build.</p>
+<p><img alt="Update requirements.txt" src="../assets/img44.jpg" /></p>
+<ol>
+<li>Commit the change to the master branch.</li>
+</ol>
+<p>After this change, it is necessary to commit to the master branch to record the change.</p>
+<p><img alt="Commit Changes" src="../assets/img47.jpg" /></p>
+<ol>
+<li>Verify latest created tag before versioning</li>
+</ol>
+<p>It is important to note what the last version created was at <a href="https://github.com/singnet/das-serverless-functions/tags"><u>https://github.com/singnet/das-serverless-functions/tags</u></a> before creating a new version.</p>
+<ol>
+<li>Select the "Vultr Build" workflow in Actions and run it manually.</li>
+</ol>
+<p>Manually trigger the 'Vultr Build' workflow via the 'Actions' tab in the repository. Ensure the master branch is selected, then input the desired version number following the format 1.0.0. Next, choose 'das-query-engine' from the dropdown menu, and finally, click 'Run workflow' to proceed.</p>
+<p><img alt="Vultr Build Workflow" src="../assets/img51.jpg" /></p>
+<ol>
+<li>Monitor the workflow execution. Ensure all jobs complete successfully.</li>
+</ol>
+<p>After the workflow execution, refresh the page and check if a new workflow is running. By clicking on it, you can track all jobs. At the end of the process, all jobs should have a green check mark. If there is an error in any job, it is possible to click on it to view the logs and identify the cause of the problem.</p>
+<p><img alt="Monitor Workflow Execution" src="../assets/img52.jpg" /></p>
+<ol>
+<li>Verify the new tag at DAS Serverless Functions repository tags and Docker Hub.</li>
+</ol>
+<p>It is important to note that this pipeline should generate an img on Docker Hub, following the format <strong>1.0.0-queryengine</strong>. Make sure that the img is generated correctly and available at <a href="https://hub.docker.com/r/trueagi/das/tags"><u>https://hub.docker.com/r/trueagi/das/tags</u></a>. After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at <a href="https://github.com/singnet/das-serverless-functions/tags"><u>https://github.com/singnet/das-serverless-functions/tags</u></a>.</p>
+<h2 id="deploying-the-built-image-to-production-and-development-environments">Deploying the Built Image to Production and Development Environments</h2>
+<ol>
+<li>For deployment, navigate to DAS Infra Stack Vultr repository.</li>
+</ol>
+<p>The publication process of the img generated in the production and development environments is carried out in the <a href="https://github.com/singnet/das-infra-stack-vultr/"><u>das-infra-stack-vultr repository</u></a>.</p>
+<p><img alt="DAS Infra Stack Vultr Repository" src="../assets/img55.jpg" /></p>
+<ol>
+<li>Update <strong>requirements.txt</strong> and <strong>das-function.yml</strong>.</li>
+</ol>
+<p>Before starting the deployment, it is necessary to update the version of <strong>hyperon-das</strong> in the <strong>requirements.txt</strong> file, ensuring that the correct version is used during integration tests. Before committing the changes to a branch, make the necessary changes in the <strong>das-function.yml</strong> file, updating the image version to the one generated earlier.</p>
+<p><img alt="Update requirements.txt" src="../assets/img61.jpg" /></p>
+<p><img alt="Update das-function.yml" src="../assets/img62.jpg" /></p>
+<ol>
+<li>Commit/Merge the changes to the develop branch.</li>
+</ol>
+<p>Commit your changes to the 'develop' branch or merge them into the 'develop' branch for deployment to the development environment. Following the merge, the 'Vultr Deployment' pipeline will initiate automatically. Verify the successful completion of all jobs with the 'develop' suffix to ensure the development environment is accurately updated.</p>
+<p><img alt="Commit/Merge Changes" src="../assets/img65.jpg" /></p>
+<ol>
+<li>Merge develop branch into master.</li>
+</ol>
+<p>After verification, make a PR from develop to master. After the merge
+to master, check if all jobs were successfully completed, ensuring
+that the production environment is correctly updated. If errors occur
+during tests, they are likely related to the response format, which
+may have been changed due to previously published libraries. In case
+of problems, it is possible to rollback the version by reverting the
+commit to return to the previous version.</p>
+<p><img alt="Merge Develop Branch into Master" src="../assets/img68.jpg" /></p>
+<h2 id="new-version-of-das-metta-parser">New Version of DAS Metta Parser</h2>
+<ol>
+<li>Go to the repository at the <a href="https://github.com/singnet/das-metta-parser"><u>DAS Metta Parser repository</u></a>.</li>
+</ol>
+<p>To publish a new version of DAS Metta Parser, access the repository at<a href="https://github.com/singnet/das-metta-parser"><u>https://github.com/singnet/das-metta-parser</u></a></p>
+<p><img alt="DAS Metta Parser repository" src="../assets/img90.jpg" /></p>
+<ol>
+<li>Verify latest created tag before versioning</li>
+</ol>
+<p>It is important to note what the last version created was at <a href="https://github.com/singnet/das-metta-parser/tags"><u>https://github.com/singnet/das-metta-parser/tags</u></a> before creating a new version.</p>
+<ol>
+<li>Execute DAS Metta Parser Build Workflow</li>
+</ol>
+<p>Initiate the 'DAS Metta Parser Build' Workflow Manually via the 'Actions' Tab in the Repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format 1.0.0, then click 'Run workflow' to proceed.</p>
+<p><img alt="DAS Metta Parser Build Workflow" src="../assets/img91.jpg" /></p>
+<ol>
+<li>Monitor the workflow execution. Ensure all jobs complete successfully.</li>
+</ol>
+<p>Refresh the page and check if a new workflow is running. By clicking on it, you can track all jobs. At the end of the process, all jobs should have a green check mark. If there is an error in any job, it is possible to click on it to view the logs and identify the cause of the problem.</p>
+<p><img alt="DAS Metta Parser Jobs" src="../assets/img92.jpg" /></p>
+<ol>
+<li>Verify the new tag at DAS Metta Parser repository tags and Docker Hub.</li>
+</ol>
+<p>It is important to note that this pipeline should generate an image on Docker Hub, following the format <strong>1.0.0-toolbox</strong>. Make sure that the image is generated correctly and available at <a href="https://hub.docker.com/r/trueagi/das/tags"><u>https://hub.docker.com/r/trueagi/das/tags</u></a>. After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at <a href="https://github.com/singnet/das-metta-parser/tags"><u>https://github.com/singnet/das-metta-parser/tags</u></a>.</p>
+<h2 id="new-version-of-das-toolbox">New version of DAS Toolbox</h2>
+<ol>
+<li>Go to the DAS Toolbox repository.</li>
+</ol>
+<p>To publish a new version of DAS Toolbox, access the repository at <a href="https://github.com/singnet/das-toolbox/"><u>https://github.com/singnet/das-toolbox/</u></a>.</p>
+<p><img alt="DAS Toolbox Repository" src="../assets/img72.jpg" /></p>
+<ol>
+<li>Update the toolbox image version in <strong><em>src/config/config.py</em></strong></li>
+</ol>
+<p>Ensure to update the toolbox image version number in the <strong>src/config/config.py</strong> file. This is important because syntax check and loader are executed from this toolbox image.</p>
+<p><img alt="Update pyproject.toml" src="../assets/img30.jpg" /></p>
+<ol>
+<li>Commit this change to the master branch.</li>
+</ol>
+<p>After this change, it is necessary to commit to the master branch to record the change.</p>
+<ol>
+<li>Verify latest created tag before versioning</li>
+</ol>
+<p>It is important to note what the last version created was at <a href="https://github.com/singnet/das-toolbox/tags"><u>https://github.com/singnet/das-toolbox/tags</u></a> before creating a new version.</p>
+<ol>
+<li>Run the "DAS CLI Build" workflow from Actions.</li>
+</ol>
+<p>Manually execute the “DAS CLI Build” workflow through the “Actions” tab in the repository. Click 'Run workflow' and proceed with the provided instructions, ensuring the master branch is selected. Enter the desired version number in the format 1.0.0, then click 'Run workflow' to proceed.</p>
+<p><img alt="DAS CLI Build Workflow" src="../assets/img73.jpg" /></p>
+<ol>
+<li>Monitor the workflow execution. Ensure all jobs complete successfully.</li>
+</ol>
+<p>After the workflow execution, refresh the page and check if a new workflow is running. By clicking on it, you can track all jobs. At the end of the process, all jobs should have a green check mark. If there is an error in any job, it is possible to click on it to view the logs and identify the cause of the problem.</p>
+<p><img alt="Monitor Workflow Execution" src="../assets/img77.jpg" /></p>
+<ol>
+<li>Verify the new tag at DAS Toolbox repository tags</li>
+</ol>
+<p>After the workflow execution, verify if all jobs were successfully completed. The new version tag should be available at <a href="https://github.com/singnet/das-toolbox/tags"><u>https://github.com/singnet/das-toolbox/tags</u></a>. Additionally, the CLI file generated by the pipeline will be available for download in the workflow artifacts, allowing its use locally.</p>
+<p><img alt="Verify New Tag" src="../assets/img81.jpg" /></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

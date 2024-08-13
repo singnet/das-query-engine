@@ -1,0 +1,3801 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://singnet.github.io/das-query-engine/api/DAS/">
+      
+      
+        <link rel="prev" href="../../release-notes/">
+      
+      
+        <link rel="next" href="../Traverse%20Engine/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.31">
+    
+    
+      
+        <title>DAS - Distributed Atomspace</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.3cba04c6.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#das" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Distributed Atomspace" class="md-header__button md-logo" aria-label="Distributed Atomspace" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Distributed Atomspace
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DAS
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/singnet/das-query-engine" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    singnet/das-query-engine
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Distributed Atomspace" class="md-nav__button md-logo" aria-label="Distributed Atomspace" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Distributed Atomspace
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/singnet/das-query-engine" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    singnet/das-query-engine
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Deployment-Process/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deployment Process
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../das-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Distributed Atomspace - Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../das-users-guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DAS - User's Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guidelines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Developer Guidelines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Api
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Api
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    DAS
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    DAS
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#das" class="md-nav__link">
+    <span class="md-ellipsis">
+      das
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace" class="md-nav__link">
+    <span class="md-ellipsis">
+      DistributedAtomSpace
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DistributedAtomSpace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.add_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      add_link
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.add_node" class="md-nav__link">
+    <span class="md-ellipsis">
+      add_node
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.clear" class="md-nav__link">
+    <span class="md-ellipsis">
+      clear
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.commit_changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      commit_changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.count_atoms" class="md-nav__link">
+    <span class="md-ellipsis">
+      count_atoms
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.create_field_index" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_field_index
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.custom_query" class="md-nav__link">
+    <span class="md-ellipsis">
+      custom_query
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.fetch" class="md-nav__link">
+    <span class="md-ellipsis">
+      fetch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_atom" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_atom
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_atoms_by_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_atoms_by_field
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_atoms_by_text_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_atoms_by_text_field
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_incoming_links" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_incoming_links
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_link
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_link_handle" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_link_handle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_links" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_links
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_node" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_node
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_node_by_name_starting_with" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_node_by_name_starting_with
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_node_handle" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_node_handle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_traversal_cursor" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_traversal_cursor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.query" class="md-nav__link">
+    <span class="md-ellipsis">
+      query
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.reindex" class="md-nav__link">
+    <span class="md-ellipsis">
+      reindex
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Traverse%20Engine/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traverse Engine
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#das" class="md-nav__link">
+    <span class="md-ellipsis">
+      das
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace" class="md-nav__link">
+    <span class="md-ellipsis">
+      DistributedAtomSpace
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="DistributedAtomSpace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.add_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      add_link
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.add_node" class="md-nav__link">
+    <span class="md-ellipsis">
+      add_node
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.clear" class="md-nav__link">
+    <span class="md-ellipsis">
+      clear
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.commit_changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      commit_changes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.count_atoms" class="md-nav__link">
+    <span class="md-ellipsis">
+      count_atoms
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.create_field_index" class="md-nav__link">
+    <span class="md-ellipsis">
+      create_field_index
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.custom_query" class="md-nav__link">
+    <span class="md-ellipsis">
+      custom_query
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.fetch" class="md-nav__link">
+    <span class="md-ellipsis">
+      fetch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_atom" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_atom
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_atoms_by_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_atoms_by_field
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_atoms_by_text_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_atoms_by_text_field
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_incoming_links" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_incoming_links
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_link
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_link_handle" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_link_handle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_links" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_links
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_node" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_node
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_node_by_name_starting_with" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_node_by_name_starting_with
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_node_handle" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_node_handle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.get_traversal_cursor" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_traversal_cursor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.query" class="md-nav__link">
+    <span class="md-ellipsis">
+      query
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#das.DistributedAtomSpace.reindex" class="md-nav__link">
+    <span class="md-ellipsis">
+      reindex
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>DAS</h1>
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="das"></a>
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="das.DistributedAtomSpace" class="doc doc-heading">
+          <code>DistributedAtomSpace</code>
+
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.__init__" class="doc doc-heading">
+          <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">system_parameters</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Creates a new DAS object.
+A DAS client can run locally or locally and remote, connecting to remote DASs instances to query remote atoms,
+if there're different versions of the same atom in local and one of the remote DASs, the local version is returned.
+When running along a remote DAS a host and port is mandatory, by default local instances of the DBs are created,
+remote instances can be configured using kwargs options.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>system_parameters</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Sets the system parameters. Defaults to {
+'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost',
+'attention_broker_port': 27000}.</p>
+            </div>
+          </td>
+          <td>
+                <code>{}</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Other Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>atomdb</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>AtomDB type supported values are 'ram' and 'redis_mongo'. Defaults to 'ram'.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>query_engine</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set the type of connection for the query engine, values are 'remote' or
+'local'.
+When this arg is set to 'remote', additional kwargs are required as host and port to connect
+to the remote query engine
+and the arg mode is used to configure the read/write privileges.
+Defaults to 'local'</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>host</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Sets the host for the remote query engine, it's mandatory
+when the query_engine is equal to 'remote'.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>port</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Sets the port for the remote query engine, it's mandatory
+when the query_engine is equal to 'remote'.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>mode</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set query engine's ACL privileges, only available
+when the query_engine is set to 'remote', accepts 'read-only' or 'read-write'.
+Defaults to 'read-only'</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>mongo_hostname</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>MongoDB's hostname, the local or remote query engine can
+connect to a remote server or run locally.
+Defaults to 'localhost'</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>mongo_port</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>MongoDB port, set this arg if the port is not the standard. Defaults to 27017.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>mongo_username</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Username used for authentication in the MongoDB database.
+Defaults to 'mongo'.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>mongo_password</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Password used for authentication in the MongoDB database.
+Defaults to 'mongo'.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>mongo_tls_ca_file</code></td>
+          <td>
+                <code><span title="typing.Any">Any</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Full system path to the TLS certificate.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>redis_hostname</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Redis hostname, the local or remote query engine can connect
+to a remote server or run locally. Defaults to 'localhost'</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>redis_port</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Redis port, set this arg if the port is not the standard. Defaults to 6379.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>redis_username</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Username used for authentication in the Redis database,
+no credentials (username/password) are needed when running locally.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>redis_password</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Password used for authentication in the Redis database.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>redis_cluster</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Indicates whether Redis is configured in cluster mode. Defaults to True.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>redis_ssl</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set Redis to encrypt the connection. Defaults to True.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.add_link" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">add_link</span><span class="p">(</span><span class="n">link_params</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Adds a link to DAS.</p>
+<p>A link is represented by a Python dict which may contain any number of keys associated to
+values of any type (including lists, sets, nested dicts, etc) , which are all
+recorded with the link, but must contain at least the keys "type" and "targets".
+"type" should map to a string and "targets" to a list of Python dict, each of them being
+itself a representation of either a node or a nested link. "type" and "targets" define the
+link uniquely, i.e. two links with the same "type" and "targets" are considered to be the
+same entity.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>link_params</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A dictionary with link data. The following keys are mandatory:
+- 'type': The type of the link.
+- 'targets': A list of target elements.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dict[str, Any]: The information about the added link, including its unique handle and</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>other fields used internally in DAS.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code>AddLinkException</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If the 'type' or 'targets' fields are missing or invalid somehow.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span> <span class="o">=</span> <span class="n">DistributedAtomSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">link_params</span> <span class="o">=</span> <span class="p">{</span>
+<span class="go">        &#39;type&#39;: &#39;Evaluation&#39;,</span>
+<span class="go">        &#39;targets&#39;: [</span>
+<span class="go">            {&#39;type&#39;: &#39;Predicate&#39;, &#39;name&#39;: &#39;Predicate:has_name&#39;},</span>
+<span class="go">            {</span>
+<span class="go">                &#39;type&#39;: &#39;Set&#39;,</span>
+<span class="go">                &#39;targets&#39;: [</span>
+<span class="go">                    {&#39;type&#39;: &#39;Reactome&#39;, &#39;name&#39;: &#39;Reactome:R-HSA-164843&#39;},</span>
+<span class="go">                    {&#39;type&#39;: &#39;Concept&#39;, &#39;name&#39;: &#39;Concept:2-LTR circle formation&#39;},</span>
+<span class="go">                ],</span>
+<span class="go">            },</span>
+<span class="go">        ],</span>
+<span class="go">    }</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">das</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="n">link_params</span><span class="p">)</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.add_node" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">add_node</span><span class="p">(</span><span class="n">node_params</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Adds a node to DAS.</p>
+<p>A node is represented by a Python dict which may contain any number of keys associated to
+values of any type (including lists, sets, nested dicts, etc) , which are all
+recorded with the node, but must contain at least the keys "type" and "name"
+mapping to strings which define the node uniquely, i.e. two nodes with the same
+"type" and "name" are considered to be the same entity.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>node_params</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A dictionary with node data. The following keys are mandatory:
+- 'type': Node type
+- 'name': Node name</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dict[str, Any]: The information about the added node, including its unique handle and</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>other fields used internally in DAS.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code>AddNodeException</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If 'type' or 'name' fields are missing or invalid somehow.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span> <span class="o">=</span> <span class="n">DistributedAtomSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">node_params</span> <span class="o">=</span> <span class="p">{</span>
+<span class="go">        &#39;type&#39;: &#39;Reactome&#39;,</span>
+<span class="go">        &#39;name&#39;: &#39;Reactome:R-HSA-164843&#39;,</span>
+<span class="go">    }</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">das</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node_params</span><span class="p">)</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.clear" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">clear</span><span class="p">()</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Delete all atoms and custom indexes.</p>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.commit_changes" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">commit_changes</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Commit changes (atom addition/deletion/change) to the databases or to
+the remote DAS Server, depending on the type of DAS being used.</p>
+<p>The behavior of this method depends on the type of DAS being used.</p>
+<ol>
+<li>
+<p>When called in a DAS instantiated with query_engine=remote</p>
+<p>This is called a "Remote DAS" in the documentation. Remote DAS is
+connected to a remote DAS Server which is used to make queries,
+traversing, etc but it also keeps a local Atomspace in RAM which is
+used as a cache. Atom changes are made initially in this local cache.
+When commit_changes() is called in this type of DAS, these changes are
+propagated to the remote DAS Server.</p>
+</li>
+<li>
+<p>When called in a DAS instantiated with query_engine=local and
+   atomdb='ram'.</p>
+<p>No effect.</p>
+</li>
+<li>
+<p>When called in a DAS instantiated with query_engine=local and
+   atomdb='redis_mongo'</p>
+<p>The AtomDB keeps buffers of changes which are not actually written in the
+DBs until commit_changes() is called (or until that buffers size reach a
+threshold).</p>
+</li>
+</ol>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.count_atoms" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">count_atoms</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Count atoms, nodes and links in DAS.</p>
+<p>By default, the precise parameter is set to False returning the total number of atoms, without node and link
+counts. If the precise parameter is True it will return the total of nodes and links and atoms.</p>
+<p>In the case of remote DAS, count the total number of nodes and links stored locally and
+remotely. If there are more than one instance of the same atom (local and remote), it's
+counted only once.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>parameters</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dict containing the following keys: 'context' - returning the
+count of 'local', 'remote' or 'both', 'precise' - boolean if True provides an accurate but slower count,
+if False the count will be an estimate, which is faster but less precise.
+Default value for 'context' is 'both' and for 'precise' is False.
+Defaults to None.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dict[str, int]: Dict containing the keys 'node_count', 'atom_count', 'link_count'.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.create_field_index" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">create_field_index</span><span class="p">(</span><span class="n">atom_type</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">named_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">composite_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index_type</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Create a custom index on the passed field of all atoms of the passed type.</p>
+<p>Remote DAS allow creation of custom indexes based on custom fields in
+nodes or links. These indexes can be used to make subsequent custom queries.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>atom_type</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Either 'link' or 'node', if the index is to be created for
+links or nodes.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>fields</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>fields where the index will be created upon</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>named_type</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Only atoms of the passed type will be indexed. Defaults
+to None, meaning that atom type doesn't matter.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>composite_type</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[<span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Only Atoms type of the passed composite
+type will be indexed. Defaults to None.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>index_type</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Type of index, values allowed are 'binary_tree' to create indexes using binary
+tree in ascending order or 'token_inverted_list' to create index for text field search the text field
+will be tokenized and every token will be an indexed. Only one token_inverted_list field is allowed.
+If set as None will create a binary tree index.
+Defaults to None.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code>ValueError</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If parameters are invalid somehow.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+<td><code>str</code></td>          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The index ID. This ID should be used to make subsequent queries using this
+newly created index.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">index_id</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">create_field_index</span><span class="p">(</span><span class="s1">&#39;link&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;Expression&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_id</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">create_field_index</span><span class="p">(</span><span class="s1">&#39;link&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">],</span> <span class="n">composite_type</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Expression&#39;</span><span class="p">,</span> <span class="s1">&#39;Symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;Symbol&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Expression&#39;</span><span class="p">,</span> <span class="s1">&#39;Symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;Symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;Symbol&#39;</span><span class="p">]])</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.custom_query" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">custom_query</span><span class="p">(</span><span class="n">index_id</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Perform a query using a previously created custom index.</p>
+<p>Actual query parameters can be passed as kwargs according to the type of the previously
+created filter.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>index_id</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>custom index id to be used in the query.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>query</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Query dict, fields are the dict's keys and values are the search.
+It supports multiple fields.
+eg: {'name': 'human'}</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Other Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>no_iterator</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set False to return an iterator otherwise it will
+return a list of Dict[str, Any].
+If the query_engine is set to 'remote' it always return an iterator.
+Defaults to True.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>cursor</code></td>
+          <td>
+                <code><span title="typing.Any">Any</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cursor position in the iterator, starts retrieving links from redis at the cursor
+position. Defaults to 0.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>chunk_size</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Chunk size. Defaults to 1000.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code>NotImplementedError</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If called from Local DAS in RAM only.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="typing.Iterator">Iterator</span>, <span title="typing.List">List</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Union[Iterator, List[Dict[str, Any]]]: An iterator or list of dict containing atom data.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span><span class="o">.</span><span class="n">custom_query</span><span class="p">(</span><span class="n">index_id</span><span class="o">=</span><span class="s1">&#39;index_123&#39;</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="s1">&#39;DAS&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">das</span><span class="o">.</span><span class="n">custom_query</span><span class="p">(</span><span class="n">index_id</span><span class="o">=</span><span class="s1">&#39;index_123&#39;</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="s1">&#39;DAS&#39;</span><span class="p">},</span> <span class="n">no_iterator</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.fetch" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">fetch</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Fetch, from a DAS Server, all atoms that match the passed query or
+all atoms in the server if None is passed as query.</p>
+<p>Instead of adding atoms by calling add_node() and add_link() directly,
+it's possible to fetch all or part of the contents from a DAS server using the
+method fetch(). This method doesn't create a lasting connection with the DAS
+server, it will just fetch the atoms once and close the connection so any
+subsequent changes or queries will not be propagated to the server in any way.
+After fetching the atoms, all queries will be made locally. It's possible to
+call fetch() multiple times fetching from the same DAS Server or from different
+ones.</p>
+<p>The input query is a link, used as a pattern to make the query.
+Variables can be used as link targets as well as nodes. Nested links are
+allowed as well.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>query</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<span title="typing.List">List</span>[dict], dict]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A pattern described as a link (possibly with nested links)
+with nodes and variables used to query the knowledge base. Defaults to None</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>host</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Address to remote server. Defaults to None.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>port</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Port to remote server. Defaults to None.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code>ValueError</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If parameters ar somehow invalid.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Union">Union</span>[None, <span title="typing.List">List</span>[dict]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Union[None, List[dict]]: Returns None.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Union">Union</span>[None, <span title="typing.List">List</span>[dict]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If runing on the server returns a list of dictionaries containing detailed information of the atoms.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
+<span class="go">        &quot;atom_type&quot;: &quot;link&quot;,</span>
+<span class="go">        &quot;type&quot;: &quot;Expression&quot;,</span>
+<span class="go">        &quot;targets&quot;: [</span>
+<span class="go">            {&quot;atom_type&quot;: &quot;node&quot;, &quot;type&quot;: &quot;Symbol&quot;, &quot;name&quot;: &quot;Inheritance&quot;},</span>
+<span class="go">            {&quot;atom_type&quot;: &quot;variable&quot;, &quot;name&quot;: &quot;v1&quot;},</span>
+<span class="go">            {&quot;atom_type&quot;: &quot;node&quot;, &quot;type&quot;: &quot;Symbol&quot;, &quot;name&quot;: &#39;&quot;mammal&quot;&#39;},</span>
+<span class="go">        ],</span>
+<span class="go">    }</span>
+<span class="go">    das = DistributedAtomSpace()</span>
+<span class="go">    das.fetch(query, host=&#39;123.4.5.6&#39;, port=8080)</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_atom" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_atom</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Retrieve an atom given its handle, handles for atoms can be created by using the function 'get_node_handle'.
+A handle is MD5 hash of a node in the graph.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>handle</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Atom's handle.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Other Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>no_target_format</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set this parameter to True to get MongoDB's default output. Defaults to False.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>targets_document</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set this parameter to True to return a tuple containing the document as first element
+and the targets as second element. Defaults to False.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+<td><code>Dict</code></td>          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A Python dict with all atom data.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="hyperon_das_atomdb.AtomDoesNotExist">AtomDoesNotExist</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If the corresponding atom doesn't exist.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span> <span class="o">=</span> <span class="n">DistributedAtomSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">human_handle</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_node_handle</span><span class="p">(</span><span class="n">node_type</span><span class="o">=</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="n">node_name</span><span class="o">=</span><span class="s1">&#39;human&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_atom</span><span class="p">(</span><span class="n">human_handle</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="go">{</span>
+<span class="go">    &#39;handle&#39;: &#39;af12f10f9ae2002a1607ba0b47ba8407&#39;,</span>
+<span class="go">    &#39;composite_type_hash&#39;: &#39;d99a604c79ce3c2e76a2f43488d5d4c3&#39;,</span>
+<span class="go">    &#39;name&#39;: &#39;human&#39;,</span>
+<span class="go">    &#39;named_type&#39;: &#39;Concept&#39;</span>
+<span class="go">}</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_atoms_by_field" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_atoms_by_field</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Search for the atoms containing field and value, performance is improved if an index was
+previously created.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>query</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Query dict, fields are the dict keys and values are the search.
+It supports multiple fields.
+eg: {'name': 'human'}</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List[str]: List of atom's ids</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_atoms_by_text_field" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_atoms_by_text_field</span><span class="p">(</span><span class="n">text_value</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text_index_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Performs a text search, if a text index is previously created performance a token index search,
+otherwise will perform a regex search using binary tree and the argument 'field' is mandatory.
+Performance is improved if a 'binary_tree' or 'token_inverted_list' is previously created using
+'create_field_index' method.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>text_value</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Text value to search for</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>field</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Field to check the text_value</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>text_index_id</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Text index</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      <p>Returns:
+    List[str]: List of atom's ids</p>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_incoming_links" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_incoming_links</span><span class="p">(</span><span class="n">atom_handle</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Retrieve all links which has the passed handle as one of its targets.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>atom_handle</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Atom's handle</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Other Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>no_iterator</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set False to return an iterator otherwise it will return a list of Dict[str, Any].
+If the query_engine is set to 'remote' it always return an iterator.
+Defaults to True.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>cursor</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>handles_only</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Returns a list of links handles.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.List">List</span>[<span title="typing.Union">Union</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>], str]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.List">List</span>[<span title="typing.Union">Union</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>], str]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>or a list of strings containing the atom handles</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span> <span class="o">=</span> <span class="n">DistributedAtomSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rhino</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_node_handle</span><span class="p">(</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="s1">&#39;rhino&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">links</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_incoming_links</span><span class="p">(</span><span class="n">rhino</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">link</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span> <span class="n">link</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">])</span>
+<span class="go">Similarity [&#39;d03e59654221c1e8fcda404fd5c8d6cb&#39;, &#39;99d18c702e813b07260baf577c60c455&#39;]</span>
+<span class="go">Similarity [&#39;99d18c702e813b07260baf577c60c455&#39;, &#39;d03e59654221c1e8fcda404fd5c8d6cb&#39;]</span>
+<span class="go">Inheritance [&#39;99d18c702e813b07260baf577c60c455&#39;, &#39;bdfe4e7a431f73386f37c6448afe5840&#39;]</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_link" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_link</span><span class="p">(</span><span class="n">link_type</span><span class="p">,</span> <span class="n">link_targets</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Retrieve a link given its type and list of targets.
+Targets are hashes of the nodes these hashes or handles can be created using the function 'get_node_handle'.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>link_type</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Link type</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>link_targets</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of target handles.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+<td><code>Dict</code></td>          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A Python dict with all link data.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="hyperon_das_atomdb.AtomDoesNotExist">AtomDoesNotExist</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If the corresponding link doesn't exist.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span> <span class="o">=</span> <span class="n">DistributedAtomSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">human_handle</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_node_handle</span><span class="p">(</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="s1">&#39;human&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">monkey_handle</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_node_handle</span><span class="p">(</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="s1">&#39;monkey&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_link</span><span class="p">(</span>
+<span class="go">        link_type=&#39;Similarity&#39;,</span>
+<span class="go">        link_targets=[human_handle, monkey_handle],</span>
+<span class="go">    )</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="go">{</span>
+<span class="go">    &#39;handle&#39;: &#39;bad7472f41a0e7d601ca294eb4607c3a&#39;,</span>
+<span class="go">    &#39;composite_type_hash&#39;: &#39;ed73ea081d170e1d89fc950820ce1cee&#39;,</span>
+<span class="go">    &#39;is_toplevel&#39;: True,</span>
+<span class="go">    &#39;composite_type&#39;: [</span>
+<span class="go">        &#39;a9dea78180588431ec64d6bc4872fdbc&#39;,</span>
+<span class="go">        &#39;d99a604c79ce3c2e76a2f43488d5d4c3&#39;,</span>
+<span class="go">        &#39;d99a604c79ce3c2e76a2f43488d5d4c3&#39;</span>
+<span class="go">    ],</span>
+<span class="go">    &#39;named_type&#39;: &#39;Similarity&#39;,</span>
+<span class="go">    &#39;named_type_hash&#39;: &#39;a9dea78180588431ec64d6bc4872fdbc&#39;,</span>
+<span class="go">    &#39;targets&#39;: [</span>
+<span class="go">        &#39;af12f10f9ae2002a1607ba0b47ba8407&#39;,</span>
+<span class="go">        &#39;1cdffc6b0b89ff41d68bec237481d1e1&#39;</span>
+<span class="go">    ]</span>
+<span class="go">}</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_link_handle" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_link_handle</span><span class="p">(</span><span class="n">link_type</span><span class="p">,</span> <span class="n">link_targets</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Computes the handle of a link, given its type and targets' handles.</p>
+<p>Note that this is a static method which don't actually query the stored atomspace
+in order to compute the handle. Instead, it just run a MD5 hashing algorithm on
+the parameters that uniquely identify links (i.e. type and list of targets) This
+means e.g. that two links with the same type and the same targets are considered
+to be the exact same entity as they will have the same handle.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>link_type</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Link type.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>link_targets</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List with the target handles.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+<td><code>str</code></td>          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Link's handle.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span> <span class="o">=</span> <span class="n">DistributedAtomSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">human_handle</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_node_handle</span><span class="p">(</span><span class="n">node_type</span><span class="o">=</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="n">node_name</span><span class="o">=</span><span class="s1">&#39;human&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">monkey_handle</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_node_handle</span><span class="p">(</span><span class="n">node_type</span><span class="o">=</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="n">node_name</span><span class="o">=</span><span class="s1">&#39;monkey&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_link_handle</span><span class="p">(</span><span class="n">link_type</span><span class="o">=</span><span class="s1">&#39;Similarity&#39;</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">human_handle</span><span class="p">,</span> <span class="n">monkey_handle</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="go">&quot;bad7472f41a0e7d601ca294eb4607c3a&quot;</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_links" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_links</span><span class="p">(</span><span class="n">link_type</span><span class="p">,</span> <span class="n">target_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">link_targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Retrieve all links that match the passed search criteria.</p>
+<p>This method can be used in four different ways.</p>
+<ol>
+<li>
+<p>Retrieve all the links of a given type</p>
+<p>Set link_type to the desired type and set target_types=None and
+link_targets=None.</p>
+</li>
+<li>
+<p>Retrieve all the links of a given type whose targets are of given types.</p>
+<p>Set link_type to the desired type and target_types to a list with the desired
+types os each target.</p>
+</li>
+<li>
+<p>Retrieve all the links of a given type whose targets match a given list of
+   handles</p>
+<p>Set link_type to the desired type (or pass link_type='<em>' to retrieve links
+of any type) and set link_targets to a list of handles. Any handle in this
+list can be '</em>' meaning that any handle in that position of the targets list
+is a match for the query. Set target_types=None.</p>
+</li>
+</ol>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>link_type</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Link type being searched (can be '*' when link_targets is not None).</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>target_types</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Template of target types being searched.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>link_targets</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Template of targets being searched (handles or '*').</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Other Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>no_iterator</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set False to return an iterator otherwise it will return a
+list of Dict[str, Any].
+If the query_engine is set to 'local' it always return an iterator.
+Defaults to True.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>cursor</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cursor position in the iterator, starts retrieving links from redis at the cursor
+position. Defaults to 0.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>chunk_size</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Chunk size. Defaults to 1000.</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>top_level_only</code></td>
+          <td>
+                <code>bool optional</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Set to True to filter top level links. Defaults to False.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="typing.Iterator">Iterator</span>, <span title="typing.List">List</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Union[Iterator, List[Dict[str, Any]]]: A list of dictionaries containing detailed</p>
+            </div>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="typing.Iterator">Iterator</span>, <span title="typing.List">List</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>information of the links</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      <p>Examples:</p>
+<pre><code>1. Retrieve all the links of a given type
+    &gt;&gt;&gt; das = DistributedAtomSpace()
+    &gt;&gt;&gt; links = das.get_links(link_type='Inheritance')
+    &gt;&gt;&gt; for link in links:
+    &gt;&gt;&gt;     print(link['type'], link['targets'])
+    Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
+    Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
+    Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
+    ...
+
+2. Retrieve all the links of a given type whose targets are of given types.
+
+    &gt;&gt;&gt; links = das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
+    &gt;&gt;&gt; for link in links:
+    &gt;&gt;&gt;     print(link['type'], link['targets'])
+    Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
+    Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
+    Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
+    ...
+
+3. Retrieve all the links of a given type whose targets match a given list of
+   handles
+
+    &gt;&gt;&gt; snake = das.get_node_handle('Concept', 'snake')
+    &gt;&gt;&gt; links = das.get_links(link_type='Similarity', link_targets=[snake, '*'])
+    &gt;&gt;&gt; for link in links:
+    &gt;&gt;&gt;     print(link['type'], link['targets'])
+    Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'b94941d8cd1c0ee4ad3dd3dcab52b964']
+    Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'bb34ce95f161a6b37ff54b3d4c817857']
+</code></pre>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_node" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_node</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">node_name</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Retrieve a node given its type and name.</p>
+<p>Args:self.query_engine
+    node_type (str): Node type
+    node_name (str): Node name</p>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+<td><code>Dict</code></td>          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A Python dict with all node data.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="hyperon_das_atomdb.AtomDoesNotExist">AtomDoesNotExist</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If the corresponding node doesn't exist.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span> <span class="o">=</span> <span class="n">DistributedAtomSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span>
+<span class="go">        node_type=&#39;Concept&#39;,</span>
+<span class="go">        node_name=&#39;human&#39;</span>
+<span class="go">    )</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="go">{</span>
+<span class="go">    &#39;handle&#39;: &#39;af12f10f9ae2002a1607ba0b47ba8407&#39;,</span>
+<span class="go">    &#39;composite_type_hash&#39;: &#39;d99a604c79ce3c2e76a2f43488d5d4c3&#39;,</span>
+<span class="go">    &#39;name&#39;: &#39;human&#39;,</span>
+<span class="go">    &#39;named_type&#39;: &#39;Concept&#39;</span>
+<span class="go">}</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_node_by_name_starting_with" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_node_by_name_starting_with</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">startswith</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Performs a search in the nodes names searchin for a node starting with the 'startswith'
+value.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>node_type</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Node type</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>startswith</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>String to search for</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      <p>Returns:
+    List[str]: List of atom's ids</p>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_node_handle" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_node_handle</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">node_name</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
+  </span>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Computes the handle of a node, given its type and name.</p>
+<p>Note that this is a static method which don't actually query the stored atomspace
+in order to compute the handle. Instead, it just run a MD5 hashing algorithm on
+the parameters that uniquely identify nodes (i.e. type and name) This means e.g.
+that two nodes with the same type and the same name are considered to be the exact
+same entity as they will have the same handle.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>node_type</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Node type</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>node_name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Node name</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+<td><code>str</code></td>          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Node's handle</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">das</span> <span class="o">=</span> <span class="n">DistributedAtomSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">das</span><span class="o">.</span><span class="n">get_node_handle</span><span class="p">(</span><span class="n">node_type</span><span class="o">=</span><span class="s1">&#39;Concept&#39;</span><span class="p">,</span> <span class="n">node_name</span><span class="o">=</span><span class="s1">&#39;human&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="go">&quot;af12f10f9ae2002a1607ba0b47ba8407&quot;</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.get_traversal_cursor" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_traversal_cursor</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Create and return a <a href="/api/Traverse Engine">Traverse Engine</a>, an object that can be used to traverse the
+atomspace hypergraph.</p>
+<p>A TraverseEngine is like a cursor which points to an atom in the hypergraph and
+can be used to probe for links and neighboring atoms and then move on by
+following links. It's functioning is closely tied to the cache system in order
+to optimize the order in which atoms are presented to the caller when probing
+the neighborhood and to use cache's "atom paging" capabilities to minimize
+latency when used in remote DAS.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>handle</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Atom's handle</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="hyperon_das.exceptions.GetTraversalCursorException">GetTraversalCursorException</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If passed handle is invalid, somehow (e.g. if</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+<td><code>TraverseEngine</code></td>          <td>
+                <code><span title="hyperon_das.traverse_engines.TraverseEngine">TraverseEngine</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The object that allows traversal of the hypergraph.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.query" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{})</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Perform a query on the knowledge base using a dict as input and return an
+iterator of QueryAnswer objects. Each such object carries the resulting mapping
+of variables in the query and the corresponding subgraph which is the result
+of applying such mapping to rewrite the query.</p>
+<p>The input dict is a link, used as a pattern to make the query.
+Variables can be used as link targets as well as nodes. Nested links are
+allowed as well.</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>query</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="typing.List">List</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]], <span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A pattern described as a
+link (possibly with nested links) with nodes and variables used to query
+the knowledge base. If the query is represented as a list of dictionaries,
+it is interpreted as a conjunction (AND) of all queries within the list.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr class="doc-section-item">
+          <td><code>parameters</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>query optional parameters</p>
+            </div>
+          </td>
+          <td>
+                <code>{}</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Returns:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="typing.Iterator">Iterator</span>[<span title="hyperon_das.utils.QueryAnswer">QueryAnswer</span>], <span title="typing.List">List</span>[<span title="hyperon_das.utils.QueryAnswer">QueryAnswer</span>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Iterator[QueryAnswer]: An iterator of QueryAnswer objects, which have a field 'assignment',
+with a mapping from variables to handles and another field 'subgraph',
+with the resulting subgraph after applying 'assignment' to rewrite the query.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><span class="doc-section-title">Raises:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td>
+                <code>UnexpectedQueryFormat</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If query resolution lead to an invalid state</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<details class="notes" open>
+  <summary>Notes</summary>
+  <ul>
+<li>Logical connectors OR and NOT are not implemented yet.</li>
+<li>If no match is found for the query, an empty list is returned.</li>
+</ul>
+</details>      <p>Examples:</p>
+<pre><code>&gt;&gt;&gt; das.add_link({
+    "type": "Expression",
+    "targets": [
+        {"type": "Symbol", "name": "Test"},
+        {
+            "type": "Expression",
+            "targets": [
+                {"type": "Symbol", "name": "Test"},
+                {"type": "Symbol", "name": "2"}
+            ]
+        }
+    ]
+})
+&gt;&gt;&gt; query_params = {"toplevel_only": False}
+&gt;&gt;&gt; q1 = {
+    "atom_type": "link",
+    "type": "Expression",
+    "targets": [
+        {"atom_type": "variable", "name": "v1"},
+        {
+            "atom_type": "link",
+            "type": "Expression",
+            "targets": [
+                {"atom_type": "variable", "name": "v2"},
+                {"atom_type": "node", "type": "Symbol", "name": "2"},
+            ]
+        }
+    ]
+}
+&gt;&gt;&gt; for result in das.query(q1, query_params):
+&gt;&gt;&gt;     print(result.assignment.mapping['v1'])
+&gt;&gt;&gt;     print(result.assignment.mapping['v2'])
+&gt;&gt;&gt;     print(result.assignment.subgraph)
+'233d9a6da7d49d4164d863569e9ab7b6'
+'963d66edfb77236054125e3eb866c8b5'
+[
+    {
+        'handle': 'dbcf1c7b610a5adea335bf08f6509978',
+        'type': 'Expression',
+        'template': ['Expression', 'Symbol', ['Expression', 'Symbol', 'Symbol']],
+        'targets': [
+            {'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'},
+            {
+                'handle': '233d9a6da7d49d4164d863569e9ab7b6',
+                'type': 'Expression',
+                'template': ['Expression', 'Symbol', 'Symbol'],
+                'targets': [
+                    {'handle': '963d66edfb77236054125e3eb866c8b5', 'type': 'Symbol', 'name': 'Test'},
+                    {'handle': '9f27a331633c8bc3c49435ffabb9110e', 'type': 'Symbol', 'name': '2'}
+                ]
+            }
+        ]
+    }
+]
+</code></pre>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="das.DistributedAtomSpace.reindex" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">reindex</span><span class="p">(</span><span class="n">pattern_index_templates</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Rebuild all indexes according to the passed specification</p>
+
+
+
+  <p><span class="doc-section-title">Parameters:</span></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr class="doc-section-item">
+          <td><code>pattern_index_templates</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Dict">Dict</span>[str, <span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>indexes are specified by atom type in a dict mapping from atom types
+to a pattern template:</p>
+<p>{
+    <atom type>: <pattern template>
+}</p>
+<p>Pattern template is also a dict:</p>
+<p>{
+    "named_type": True/False
+    "selected_positions": [n1, n2, ...]
+}</p>
+<p>Pattern templates are applied to each link entered in the atom space in order to determine
+which entries should be created in the inverted pattern index. Entries in the inverted
+pattern index are like patterns where the link type and each of its targets may be replaced
+by wildcards. For instance, given a similarity link Similarity(handle1, handle2) it could be
+used to create any of the following entries in the inverted pattern index:</p>
+<pre><code>*(handle1, handle2)
+Similarity(*, handle2)
+Similarity(handle1, *)
+Similarity(*, *)
+</code></pre>
+<p>If we create all possibilities of index entries to all links, the pattern index size will
+grow exponentially so we limit the entries we want to create by each type of link. This is
+what a pattern template for a given link type is. For instance if we apply this pattern
+template:</p>
+<p>{
+    "named_type": False
+    "selected_positions": [0, 1]
+}</p>
+<p>to Similarity(handle1, handle2) we'll create only the following entries:</p>
+<pre><code>Similarity(*, handle2)
+Similarity(handle1, *)
+Similarity(*, *)
+</code></pre>
+<p>If we apply this pattern template instead:</p>
+<p>{
+    "named_type": True
+    "selected_positions": [1]
+}</p>
+<p>We'll have:</p>
+<pre><code>*(handle1, handle2)
+Similarity(handle1, *)
+</code></pre>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+
+</div>
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

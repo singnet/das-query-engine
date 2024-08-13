@@ -1,0 +1,1559 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://singnet.github.io/das-query-engine/das-users-guide/">
+      
+      
+        <link rel="prev" href="../das-overview/">
+      
+      
+        <link rel="next" href="../developer_guidelines/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.31">
+    
+    
+      
+        <title>DAS - User's Guide - Distributed Atomspace</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.3cba04c6.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#das-users-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Distributed Atomspace" class="md-header__button md-logo" aria-label="Distributed Atomspace" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Distributed Atomspace
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DAS - User's Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/singnet/das-query-engine" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    singnet/das-query-engine
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Distributed Atomspace" class="md-nav__button md-logo" aria-label="Distributed Atomspace" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Distributed Atomspace
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/singnet/das-query-engine" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    singnet/das-query-engine
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Deployment-Process/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deployment Process
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../das-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Distributed Atomspace - Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    DAS - User's Guide
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    DAS - User's Guide
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table of contents
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-das-with-data-in-ram" class="md-nav__link">
+    <span class="md-ellipsis">
+      Local DAS with data in RAM
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local DAS with data in RAM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-atoms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding atoms
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fetching-from-a-das-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fetching from a DAS server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getting-atoms-by-their-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting atoms by their properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#traversing-the-hypergraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      Traversing the hypergraph
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-matcher-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern Matcher Queries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connecting-to-a-remote-das" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connecting to a remote DAS
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Connecting to a remote DAS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#querying-a-remote-das" class="md-nav__link">
+    <span class="md-ellipsis">
+      Querying a remote DAS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Indexes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-a-das-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Starting a DAS Server
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guidelines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Developer Guidelines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release-notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Api
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Api
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/DAS/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DAS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/Traverse%20Engine/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traverse Engine
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table of contents
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-das-with-data-in-ram" class="md-nav__link">
+    <span class="md-ellipsis">
+      Local DAS with data in RAM
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local DAS with data in RAM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-atoms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding atoms
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fetching-from-a-das-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fetching from a DAS server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getting-atoms-by-their-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting atoms by their properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#traversing-the-hypergraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      Traversing the hypergraph
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-matcher-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern Matcher Queries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connecting-to-a-remote-das" class="md-nav__link">
+    <span class="md-ellipsis">
+      Connecting to a remote DAS
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Connecting to a remote DAS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#querying-a-remote-das" class="md-nav__link">
+    <span class="md-ellipsis">
+      Querying a remote DAS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Indexes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-a-das-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      Starting a DAS Server
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="das-users-guide">DAS - User's Guide</h1>
+<p>Atomspace is the hypergraph OpenCog Hyperon uses to represent and store knowledge, being the source of knowledge for AI agents and the container of any computational result that might be created or achieved during their execution.</p>
+<p>The <strong>Distributed Atomspace (DAS)</strong> is an extension of OpenCog Hyperon's Atomspace into a more independent component designed to support multiple simultaneous connections with different AI algorithms, providing a flexible query interface to distributed knowledge bases. It can be used as a component (e.g. a Python library) or as a stand-alone server to store essentially arbitrarily large knowledge bases and provide means for the agents to traverse regions of the hypergraphs and perform global queries involving properties, connectivity, subgraph topology, etc.</p>
+<p>Regardless of being used locally or remotely, DAS provides the exact same API to query or traverse the Atomspace. This API is fully documented <a href="https://singnet.github.io/das-query-engine/api/das/">here</a>. In this document we provide examples and best practices to use this API with each type of DAS.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#ramdas">Local DAS with data in RAM</a><ul>
+<li><a href="#addatoms">Adding atoms</a></li>
+<li><a href="#fetch">Fetching from a DAS server</a></li>
+<li><a href="#atomquery">Getting atoms by their properties</a></li>
+<li><a href="#traversing">Traversing the hypergraph</a></li>
+<li><a href="#patternmatcher">Pattern Matcher Queries</a></li>
+</ul>
+</li>
+<li><a href="#remotedas">Connecting to a remote DAS</a><ul>
+<li><a href="#remotequery">Querying a remote DAS</a></li>
+<li><a href="#customindex">Custom indexes</a></li>
+</ul>
+</li>
+<li><a href="#dasserver">Starting a DAS Server</a></li>
+</ul>
+<p><a id='ramdas'></a></p>
+<h2 id="local-das-with-data-in-ram">Local DAS with data in RAM</h2>
+<p>A local DAS stores atoms as Python dicts in RAM. One can create an empty DAS by calling the basic constructor with no parameters.</p>
+<pre><code class="language-python">from hyperon_das import DistributedAtomSpace
+
+das = DistributedAtomSpace()
+print(das.count_atoms())
+</code></pre>
+<pre><code>(0, 0)
+</code></pre>
+<p>This is equivalent to instantiating it passing <code>query_engine='local'</code></p>
+<pre><code class="language-python">from hyperon_das import DistributedAtomSpace
+
+das = DistributedAtomSpace(query_engine='local')
+print(das.count_atoms())
+</code></pre>
+<pre><code>(0, 0)
+</code></pre>
+<p>The <code>query_engine</code> parameter is used to select from <code>local</code> or <code>remote</code> DAS. <a href="#remotedas">Remote DAS</a> is explained later in this document.</p>
+<p>A local DAS can be populated using the methods <code>add_node()</code> and <code>add_link()</code>. Let's use this simple knowledge base as an example.</p>
+<p align="center">
+<img src="../docs/assets/pmquery_1.png" width="400"/>
+</p>
+
+<p>We have only one type of node (e.g. Concept) to represent animals and two types of links, (e.g. Inheritance and Similarity) to represent relations between them.</p>
+<p><a id='addatoms'></a></p>
+<h3 id="adding-atoms">Adding atoms</h3>
+<p>We can add nodes explicitly by calling <code>add_node()</code> passing a Python dict representing the node. This dict may contain any number of keys associated to values of any type (including lists, sets, nested dicts, etc) , which are all recorded with the node, but must contain at least the keys <code>type</code> and <code>name</code> mapping to strings which define the node uniquely, i.e. two nodes with the same <code>type</code> and <code>name</code> are considered to be the same entity.</p>
+<p><code>add_link()</code> works mostly in the same way. For links, the mandatory fields are <code>type</code> and <code>targets</code>, which is a list of Python dicts representing either nodes or nested links.</p>
+<pre><code class="language-python">    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;chimp&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;mammal&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;reptile&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;snake&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;dinosaur&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;triceratops&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;earthworm&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;rhino&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;vine&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;ent&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;animal&quot;})
+    das.add_node({&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;plant&quot;}) ;
+</code></pre>
+<p>We can also add nodes implicitly while adding links.</p>
+<pre><code class="language-python">das.add_link(
+    {
+        &quot;type&quot;: &quot;Similarity&quot;,
+        &quot;targets&quot;: [
+            {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;},
+            {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;},
+        ],
+    }
+) ;
+</code></pre>
+<p>"human" and "monkey" would be inserted if they hadn't been inserted before. Adding the node or link more than once is allowed and has no side effects. So let's add the whole set of links from our knowledge base.</p>
+<pre><code class="language-python">das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;chimp&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;chimp&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;snake&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;earthworm&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;rhino&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;triceratops&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;snake&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;vine&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;ent&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;chimp&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;chimp&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;earthworm&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;snake&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;triceratops&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;rhino&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;vine&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;snake&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Similarity&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;ent&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;mammal&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;mammal&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;chimp&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;mammal&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;mammal&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;animal&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;reptile&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;animal&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;snake&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;reptile&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;dinosaur&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;reptile&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;triceratops&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;dinosaur&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;earthworm&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;animal&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;rhino&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;mammal&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;vine&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;plant&quot;}, ], })
+das.add_link( { &quot;type&quot;: &quot;Inheritance&quot;, &quot;targets&quot;: [ {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;ent&quot;}, {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;plant&quot;}, ], }) ;
+</code></pre>
+<p>Links are always asymetric, so symmetric relationships like "Similarity" are represented by adding two links. For instance:</p>
+<pre><code>das.add_link(
+    {
+        &quot;type&quot;: &quot;Similarity&quot;,
+        &quot;targets&quot;: [
+            {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;},
+            {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;},
+        ],
+    }
+)
+</code></pre>
+<p>and</p>
+<pre><code>das.add_link(
+    {
+        &quot;type&quot;: &quot;Similarity&quot;,
+        &quot;targets&quot;: [
+            {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;monkey&quot;},
+            {&quot;type&quot;: &quot;Concept&quot;, &quot;name&quot;: &quot;human&quot;},
+        ],
+    }
+)
+</code></pre>
+<p>Considering this, we can print the atom count again.</p>
+<pre><code class="language-python">print(das.count_atoms())
+</code></pre>
+<pre><code>(14, 26)
+</code></pre>
+<p><a id='fetch'></a></p>
+<h3 id="fetching-from-a-das-server">Fetching from a DAS server</h3>
+<p>Instead of adding atoms by calling <code>add_node()</code> and <code>add_link()</code> directly, it's possible to fetch all or part of the contents from a DAS server using the method <code>fetch()</code>. This method doesn't create a lasting connection with the DAS server, it will just fetch the atoms once and close the connection so any subsequent changes or queries will not be propagated to the server in any way. After fetching the atoms, all queries will be made locally. It's possible to call <code>fetch()</code> multiple times fetching from the same DAS Server or from different ones.</p>
+<pre><code class="language-python">from hyperon_das import DistributedAtomSpace
+
+remote_das_host = &quot;45.63.85.59&quot;
+remote_das_port = 8080
+
+imported_das = DistributedAtomSpace()
+print(imported_das.count_atoms())
+
+links_to_import = {
+    'atom_type': 'link',
+    'type': 'Expression',
+    'targets': [
+        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Inheritance'},
+        {'atom_type': 'variable', 'name': 'v2'},
+        {'atom_type': 'variable', 'name': 'v3'},
+    ]
+}
+
+imported_das.fetch(links_to_import, remote_das_host, remote_das_port)
+print(imported_das.count_atoms())
+</code></pre>
+<pre><code>(0, 0)
+(15, 12)
+</code></pre>
+<p>The first parameter of <code>fetch()</code> is a pattern to describe which atoms should be fetched. It's exactly the same pattern used to make <a href="#patternmatcher">pattern matching</a>.</p>
+<p><a id='atomquery'></a></p>
+<h3 id="getting-atoms-by-their-properties">Getting atoms by their properties</h3>
+<p>DAS has an API to query atoms by their properties. Most of this API is based on atom handles. Handles are MD5 signatures associated with atoms. For now they are supposed to be unique ids for atoms although this is not 100% true (conflict handling is planned to be implemented in the near future). DAS provides two static methods to compute handles for nodes and links: <code>das.get_node_handle()</code> and <code>das.get_link_handle()</code>.</p>
+<pre><code class="language-python">human = das.get_node_handle('Concept', 'human')
+ent = das.get_node_handle('Concept', 'ent')
+
+print(&quot;human:&quot;, human)
+print(&quot;ent:&quot;, ent)
+
+similarity_link = das.get_link_handle('Similarity', [human, ent])
+
+print(&quot;Similarity link:&quot;, similarity_link)
+</code></pre>
+<pre><code>human: af12f10f9ae2002a1607ba0b47ba8407
+ent: 4e8e26e3276af8a5c2ac2cc2dc95c6d2
+Similarity link: 16f7e407087bfa0b35b13d13a1aadcae
+</code></pre>
+<p>Note that these are static methods which don't actually query the stored atomspace in order to compute those handles. Instead, they just run a MD5 hashing algorithm over the data that uniquely identifies nodes and links, i.e. node type and name in the case of nodes and link type and targets in the case of links. This means e.g. that two nodes with the same type and the same name are considered to be the exact same entity.</p>
+<p>Atom handles can be used to retrieve the actual atom document.</p>
+<pre><code class="language-python">das.get_atom(human)
+</code></pre>
+<pre><code>{'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
+ 'type': 'Concept',
+ 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
+ 'name': 'human',
+ 'named_type': 'Concept'}
+</code></pre>
+<p>Convenience methods can be used to retrieve atoms passing its basic properties instead.</p>
+<pre><code class="language-python">print(&quot;human:&quot;, das.get_node('Concept', 'human'))
+print(&quot;\nSimilarity link:&quot;, das.get_link('Similarity', [human, ent]))
+</code></pre>
+<pre><code>human: {'handle': 'af12f10f9ae2002a1607ba0b47ba8407', 'type': 'Concept', 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3', 'name': 'human', 'named_type': 'Concept'}
+
+Similarity link: {'handle': '16f7e407087bfa0b35b13d13a1aadcae', 'type': 'Similarity', 'composite_type_hash': 'ed73ea081d170e1d89fc950820ce1cee', 'is_toplevel': True, 'composite_type': ['a9dea78180588431ec64d6bc4872fdbc', 'd99a604c79ce3c2e76a2f43488d5d4c3', 'd99a604c79ce3c2e76a2f43488d5d4c3'], 'named_type': 'Similarity', 'named_type_hash': 'a9dea78180588431ec64d6bc4872fdbc', 'targets': ['af12f10f9ae2002a1607ba0b47ba8407', '4e8e26e3276af8a5c2ac2cc2dc95c6d2']}
+</code></pre>
+<p>It's possible to get all links pointing to a specific atom.</p>
+<pre><code class="language-python"># All links pointing from/to 'rhino'
+
+rhino = das.get_node_handle('Concept', 'rhino')
+links = das.get_incoming_links(rhino)
+for link in links:
+    print(link['type'], link['targets'])
+</code></pre>
+<pre><code>Similarity ['d03e59654221c1e8fcda404fd5c8d6cb', '99d18c702e813b07260baf577c60c455']
+Similarity ['99d18c702e813b07260baf577c60c455', 'd03e59654221c1e8fcda404fd5c8d6cb']
+Inheritance ['99d18c702e813b07260baf577c60c455', 'bdfe4e7a431f73386f37c6448afe5840']
+</code></pre>
+<p>Links can also be retrieved by other properties or partial definition of its main properties (type and targets). The method <code>get_links()</code> can be used passing different combinations of parameters.</p>
+<pre><code class="language-python"># All inheritance links
+
+links = das.get_links(link_type='Inheritance')
+for link in links:
+    print(link['type'], link['targets'])                      
+</code></pre>
+<pre><code>Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
+Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
+Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
+Inheritance ['c1db9b517073e51eb7ef6fed608ec204', 'b99ae727c787f1b13b452fd4c9ce1b9a']
+Inheritance ['bdfe4e7a431f73386f37c6448afe5840', '0a32b476852eeb954979b87f5f6cb7af']
+Inheritance ['1cdffc6b0b89ff41d68bec237481d1e1', 'bdfe4e7a431f73386f37c6448afe5840']
+Inheritance ['af12f10f9ae2002a1607ba0b47ba8407', 'bdfe4e7a431f73386f37c6448afe5840']
+Inheritance ['b99ae727c787f1b13b452fd4c9ce1b9a', '0a32b476852eeb954979b87f5f6cb7af']
+Inheritance ['4e8e26e3276af8a5c2ac2cc2dc95c6d2', '80aff30094874e75028033a38ce677bb']
+Inheritance ['d03e59654221c1e8fcda404fd5c8d6cb', '08126b066d32ee37743e255a2558cccd']
+Inheritance ['99d18c702e813b07260baf577c60c455', 'bdfe4e7a431f73386f37c6448afe5840']
+Inheritance ['08126b066d32ee37743e255a2558cccd', 'b99ae727c787f1b13b452fd4c9ce1b9a']
+</code></pre>
+<pre><code class="language-python"># Inheritance links between two Concept nodes
+
+links = das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
+for link in links:
+    print(link['type'], link['targets'])   
+</code></pre>
+<pre><code>Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
+Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
+Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
+Inheritance ['c1db9b517073e51eb7ef6fed608ec204', 'b99ae727c787f1b13b452fd4c9ce1b9a']
+Inheritance ['bdfe4e7a431f73386f37c6448afe5840', '0a32b476852eeb954979b87f5f6cb7af']
+Inheritance ['1cdffc6b0b89ff41d68bec237481d1e1', 'bdfe4e7a431f73386f37c6448afe5840']
+Inheritance ['af12f10f9ae2002a1607ba0b47ba8407', 'bdfe4e7a431f73386f37c6448afe5840']
+Inheritance ['b99ae727c787f1b13b452fd4c9ce1b9a', '0a32b476852eeb954979b87f5f6cb7af']
+Inheritance ['4e8e26e3276af8a5c2ac2cc2dc95c6d2', '80aff30094874e75028033a38ce677bb']
+Inheritance ['d03e59654221c1e8fcda404fd5c8d6cb', '08126b066d32ee37743e255a2558cccd']
+Inheritance ['99d18c702e813b07260baf577c60c455', 'bdfe4e7a431f73386f37c6448afe5840']
+Inheritance ['08126b066d32ee37743e255a2558cccd', 'b99ae727c787f1b13b452fd4c9ce1b9a']
+</code></pre>
+<pre><code class="language-python"># Similarity links where 'snake' is the first target
+
+snake = das.get_node_handle('Concept', 'snake')
+links = das.get_links(link_type='Similarity', link_targets=[snake, '*'])
+for link in links:
+    print(link['type'], link['targets']) 
+</code></pre>
+<pre><code>Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'b94941d8cd1c0ee4ad3dd3dcab52b964']
+Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'bb34ce95f161a6b37ff54b3d4c817857']
+</code></pre>
+<pre><code class="language-python"># Any links where 'snake' is the first target
+
+snake = das.get_node_handle('Concept', 'snake')
+links = das.get_links(link_type='*', link_targets=[snake, '*'])
+for link in links:
+    print(link['type'], link['targets']) 
+</code></pre>
+<pre><code>Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'b94941d8cd1c0ee4ad3dd3dcab52b964']
+Inheritance ['c1db9b517073e51eb7ef6fed608ec204', 'b99ae727c787f1b13b452fd4c9ce1b9a']
+Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'bb34ce95f161a6b37ff54b3d4c817857']
+</code></pre>
+<p><a id='traversing'></a></p>
+<h3 id="traversing-the-hypergraph">Traversing the hypergraph</h3>
+<p>It's possible to traverse the hypergraph using a <code>TraverseEngine</code> which is like a cursor that can be moved through nodes and links. First, let's initiate a <code>TraverseEngine</code> pointing to "human". In order to do this, we need to call <code>get_traversal_cursor()</code> passing the handle of the atom to be used as the starting point for the traversing. This atom can be either a link or a node. We'll use the method <code>das.get_node_handle()</code> to get the handle of the Concept "human" and start on it.</p>
+<pre><code class="language-python">cursor = das.get_traversal_cursor(das.get_node_handle('Concept', 'human'))
+</code></pre>
+<p>Once we have a cursor we can get the whole document of the atom pointed by it:</p>
+<pre><code class="language-python">cursor.get()
+</code></pre>
+<pre><code>{'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
+ 'type': 'Concept',
+ 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
+ 'name': 'human',
+ 'named_type': 'Concept'}
+</code></pre>
+<p>We can also see all links that make reference to cursor. Optional parameters can be used to filter which links should be considered. Here are some examples. We're printing only link type and targets to make the output cleaner.</p>
+<pre><code class="language-python"># All links pointing from/to cursor
+print(&quot;All links:&quot;, [(d['type'], d['targets']) for d in cursor.get_links()])
+
+# Only Inheritance links
+print(&quot;\nInheritance links:&quot;, [(d['type'], d['targets']) for d in cursor.get_links(link_type='Inheritance')])
+
+# Links whose first target is our cursor
+print(&quot;\n'human' is first link target:&quot;, [(d['type'], d['targets']) for d in cursor.get_links(cursor_position=0)])
+</code></pre>
+<pre><code>All links: [('Similarity', ['af12f10f9ae2002a1607ba0b47ba8407', '4e8e26e3276af8a5c2ac2cc2dc95c6d2']), ('Inheritance', ['af12f10f9ae2002a1607ba0b47ba8407', 'bdfe4e7a431f73386f37c6448afe5840']), ('Similarity', ['af12f10f9ae2002a1607ba0b47ba8407', '5b34c54bee150c04f9fa584b899dc030']), ('Similarity', ['1cdffc6b0b89ff41d68bec237481d1e1', 'af12f10f9ae2002a1607ba0b47ba8407']), ('Similarity', ['4e8e26e3276af8a5c2ac2cc2dc95c6d2', 'af12f10f9ae2002a1607ba0b47ba8407']), ('Similarity', ['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1']), ('Similarity', ['5b34c54bee150c04f9fa584b899dc030', 'af12f10f9ae2002a1607ba0b47ba8407'])]
+
+Inheritance links: [('Inheritance', ['af12f10f9ae2002a1607ba0b47ba8407', 'bdfe4e7a431f73386f37c6448afe5840'])]
+
+'human' is first link target: [('Similarity', ['af12f10f9ae2002a1607ba0b47ba8407', '4e8e26e3276af8a5c2ac2cc2dc95c6d2']), ('Inheritance', ['af12f10f9ae2002a1607ba0b47ba8407', 'bdfe4e7a431f73386f37c6448afe5840']), ('Similarity', ['af12f10f9ae2002a1607ba0b47ba8407', '5b34c54bee150c04f9fa584b899dc030']), ('Similarity', ['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'])]
+</code></pre>
+<p>There are other possibilities for filtering such as custom filter methods, target types, etc. They're explained in the <a href="https://singnet.github.io/das-query-engine/api/das/">DAS API</a>.</p>
+<p>There are also convenience methods to get the cursor's "neighbors", which are the other atoms pointed by the links attached to the cursor. Let's investigate the neighbors of "human". Again, we can use the same filters to select which links and targets to consider in order to get the neighbors of the cursor.</p>
+<pre><code class="language-python"># All &quot;human&quot; neighbors
+print(&quot;All neighbors:&quot;, [(d['type'], d['name']) for d in cursor.get_neighbors()])
+
+# Only neighbors linked through Inheritance links
+print(&quot;\nInheritance relations:&quot;, [(d['type'], d['name']) for d in cursor.get_neighbors(link_type='Inheritance')])
+
+# Only neighbors that are similar to &quot;human&quot; (i.e. they share a Similarity link)
+print(&quot;\nSimilar to 'human':&quot;, [(d['type'], d['name']) for d in cursor.get_neighbors(link_type='Similarity', cursor_position=0)])
+</code></pre>
+<pre><code>All neighbors: [('Concept', 'ent'), ('Concept', 'mammal'), ('Concept', 'chimp'), ('Concept', 'monkey')]
+
+Inheritance relations: [('Concept', 'mammal')]
+
+Similar to 'human': [('Concept', 'ent'), ('Concept', 'chimp'), ('Concept', 'monkey')]
+</code></pre>
+<p><a id='cache'></a>
+<code>get_links()</code> and <code>get_neighbors()</code> use the <a href="https://github.com/singnet/das/blob/master/docs/das-overview.md">DAS Cache system</a> to sort the atoms before they are returned to the caller. In addition to this, these methods return an iterator rather than an actual list of atoms and this iterator is controlled by the cache system as well. The idea here is that atoms may have a large number of links (and consequently neighbors) attached to it so the AI/ML agent may not be interested in iterating on all of them. Atoms are presented in such a way that high importance atoms tend to be presented first while low importance atoms tend to be presented later.</p>
+<p>We can move the cursor by following its links. </p>
+<pre><code class="language-python">cursor = das.get_traversal_cursor(das.get_node_handle('Concept', 'human'))
+cursor.follow_link()
+cursor.get()
+</code></pre>
+<pre><code>{'handle': '4e8e26e3276af8a5c2ac2cc2dc95c6d2',
+ 'type': 'Concept',
+ 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
+ 'name': 'ent',
+ 'named_type': 'Concept'}
+</code></pre>
+<p><code>follow_link()</code> just gets the first link returned by <code>get_links()</code> in order to follow it and select a target. The same filters described above can be used here to constraint the links/targets that will be considered. For instance we could use the following code to get the most abstract concept (considering our Inheritance links) starting from "human".</p>
+<pre><code class="language-python">cursor = das.get_traversal_cursor(das.get_node_handle('Concept', 'human'))
+base = cursor.get()['name']
+while True:
+    print(base)
+    cursor.follow_link(link_type='Inheritance', cursor_position=0)
+    if cursor.get()['name'] == base:
+        break
+    base = cursor.get()['name']
+cursor.get()
+</code></pre>
+<pre><code>human
+mammal
+animal
+
+
+
+
+
+{'handle': '0a32b476852eeb954979b87f5f6cb7af',
+ 'type': 'Concept',
+ 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
+ 'name': 'animal',
+ 'named_type': 'Concept'}
+</code></pre>
+<p><a id='patternmatcher'></a></p>
+<h3 id="pattern-matcher-queries">Pattern Matcher Queries</h3>
+<p>DAS can answer pattern matching queries. These are queries where the caller specifies a <em>pattern</em> i.e. a boolean expression of subgraphs with nodes, links and wildcards and the engine finds every subgraph in the knowledge base that satisfies the passed expression. Patterns are a list of Python dicts describing a subgraph with wildcards.</p>
+<p>The method <code>query()</code> expects a pattern and outputs a list of <code>QueryAnswer</code>. Each element in such a list has the variable assignment that satisfies the pattern and the subgraph which is the pattern itself rewritten using the given assignment.</p>
+<pre><code class="language-python"># This is a pattern like:
+#
+# Inheritance
+#     v1
+#     plant
+#
+# The expected answer is all Inheritance links whose second target == 'plant'
+#
+query = {
+    'atom_type': 'link',
+    'type': 'Inheritance',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v1'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'plant'},
+    ]
+}
+
+for query_answer in das.query(query):
+    print(query_answer.assignment)
+    atom_matching_v1 = das.get_atom(query_answer.assignment.mapping['v1'])
+    print(&quot;v1:&quot;, atom_matching_v1['type'], atom_matching_v1['name'])
+    rewrited_query = query_answer.subgraph
+    print(rewrited_query)
+    print()
+</code></pre>
+<pre><code>[('v1', 'b94941d8cd1c0ee4ad3dd3dcab52b964')]
+v1: Concept vine
+{'handle': 'e4685d56969398253b6f77efd21dc347', 'type': 'Inheritance', 'composite_type_hash': '41c082428b28d7e9ea96160f7fd614ad', 'is_toplevel': True, 'composite_type': ['e40489cd1e7102e35469c937e05c8bba', 'd99a604c79ce3c2e76a2f43488d5d4c3', 'd99a604c79ce3c2e76a2f43488d5d4c3'], 'named_type': 'Inheritance', 'named_type_hash': 'e40489cd1e7102e35469c937e05c8bba', 'targets': [{'handle': 'b94941d8cd1c0ee4ad3dd3dcab52b964', 'type': 'Concept', 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3', 'name': 'vine', 'named_type': 'Concept'}, {'handle': '80aff30094874e75028033a38ce677bb', 'type': 'Concept', 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3', 'name': 'plant', 'named_type': 'Concept'}]}
+
+[('v1', '4e8e26e3276af8a5c2ac2cc2dc95c6d2')]
+v1: Concept ent
+{'handle': 'ee1c03e6d1f104ccd811cfbba018451a', 'type': 'Inheritance', 'composite_type_hash': '41c082428b28d7e9ea96160f7fd614ad', 'is_toplevel': True, 'composite_type': ['e40489cd1e7102e35469c937e05c8bba', 'd99a604c79ce3c2e76a2f43488d5d4c3', 'd99a604c79ce3c2e76a2f43488d5d4c3'], 'named_type': 'Inheritance', 'named_type_hash': 'e40489cd1e7102e35469c937e05c8bba', 'targets': [{'handle': '4e8e26e3276af8a5c2ac2cc2dc95c6d2', 'type': 'Concept', 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3', 'name': 'ent', 'named_type': 'Concept'}, {'handle': '80aff30094874e75028033a38ce677bb', 'type': 'Concept', 'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3', 'name': 'plant', 'named_type': 'Concept'}]}
+</code></pre>
+<pre><code class="language-python"># This is a pattern like:
+#
+# AND
+#     Inheritance
+#         v1
+#         mammal
+#     Inheritance
+#         v2
+#         dinosaur
+#     Similarity
+#         v1
+#         v2
+#
+# The expected answer is all pair of animals such that 
+# one inherits from mammal, the other inherits from dinosaur 
+# and they have a Similarity link between them.
+#
+exp1 = {
+    'atom_type': 'link',
+    'type': 'Inheritance',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v1'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'mammal'},
+    ]
+}
+exp2 = {
+    'atom_type': 'link',
+    'type': 'Inheritance',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v2'},
+        {'atom_type': 'node', 'type': 'Concept', 'name': 'dinosaur'},
+    ]
+}
+exp3 = {
+    'atom_type': 'link',
+    'type': 'Similarity',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v1'},
+        {'atom_type': 'variable', 'name': 'v2'},
+    ]
+}
+query = [exp1, exp2, exp3] # a list of expressions mean an AND of them
+
+for query_answer in das.query(query):
+    print(query_answer.assignment)
+    atom_matching_v1 = das.get_atom(query_answer.assignment.mapping['v1'])
+    atom_matching_v2 = das.get_atom(query_answer.assignment.mapping['v2'])
+    print(&quot;v1:&quot;, atom_matching_v1['type'], atom_matching_v1['name'])
+    print(&quot;v2:&quot;, atom_matching_v2['type'], atom_matching_v2['name'])
+    #rewrited_query = query_answer.subgraph
+    #print(rewrited_query)
+    print()
+</code></pre>
+<pre><code>[('v1', '99d18c702e813b07260baf577c60c455'), ('v2', 'd03e59654221c1e8fcda404fd5c8d6cb')]
+v1: Concept rhino
+v2: Concept triceratops
+</code></pre>
+<pre><code class="language-python"># This is a pattern like:
+#
+# AND
+#     Similarity
+#         v1
+#         v2
+#     Similarity
+#         v2
+#         v3
+#     Similarity
+#         v3
+#         v1
+#
+# The expected answer is all triplet of animals such that 
+# all of them have a Similarity link with the other two.
+#
+exp1 = {
+    'atom_type': 'link',
+    'type': 'Similarity',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v1'},
+        {'atom_type': 'variable', 'name': 'v2'},
+    ]
+}
+exp2 = {
+    'atom_type': 'link',
+    'type': 'Similarity',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v2'},
+        {'atom_type': 'variable', 'name': 'v3'},
+    ]
+}
+exp3 = {
+    'atom_type': 'link',
+    'type': 'Similarity',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v3'},
+        {'atom_type': 'variable', 'name': 'v1'},
+    ]
+}
+query = [exp1, exp2, exp3] # a list of expressions mean an AND of them
+
+for query_answer in das.query(query):
+    atom_matching_v1 = das.get_atom(query_answer.assignment.mapping['v1'])
+    atom_matching_v2 = das.get_atom(query_answer.assignment.mapping['v2'])
+    atom_matching_v3 = das.get_atom(query_answer.assignment.mapping['v3'])
+    print(&quot;v1:&quot;, atom_matching_v1['type'], atom_matching_v1['name'])
+    print(&quot;v2:&quot;, atom_matching_v2['type'], atom_matching_v2['name'])
+    print(&quot;v3:&quot;, atom_matching_v3['type'], atom_matching_v3['name'])
+    print()
+</code></pre>
+<pre><code>v1: Concept monkey
+v2: Concept chimp
+v3: Concept human
+
+v1: Concept human
+v2: Concept monkey
+v3: Concept chimp
+
+v1: Concept chimp
+v2: Concept monkey
+v3: Concept human
+
+v1: Concept monkey
+v2: Concept human
+v3: Concept chimp
+
+v1: Concept human
+v2: Concept chimp
+v3: Concept monkey
+
+v1: Concept chimp
+v2: Concept human
+v3: Concept monkey
+</code></pre>
+<p><a id='remotedas'></a></p>
+<h2 id="connecting-to-a-remote-das">Connecting to a remote DAS</h2>
+<p>When a DAS is instantiated with a remote query engine, it will connect to a DAS Server previously populated with a knowledge base. Atoms in the remote DAS Server become available for fetching, querying and modification.</p>
+<p>In addition to the remote DAS, an internal local DAS is also kept locally. Some of the methods in the API will look for atoms first in this local DAS before going to the remote one. Other methods can be configured to search only in one of them (remote or local) or in both. We'll explain this behavior on a case by case basis.</p>
+<p>In our example, we'll connect to a DAS Server pre-loaded with the following MeTTa expressions:</p>
+<pre><code>(: Similarity Type)
+(: Concept Type)
+(: Inheritance Type)
+(: &quot;human&quot; Concept)
+(: &quot;monkey&quot; Concept)
+(: &quot;chimp&quot; Concept)
+(: &quot;snake&quot; Concept)
+(: &quot;earthworm&quot; Concept)
+(: &quot;rhino&quot; Concept)
+(: &quot;triceratops&quot; Concept)
+(: &quot;vine&quot; Concept)
+(: &quot;ent&quot; Concept)
+(: &quot;mammal&quot; Concept)
+(: &quot;animal&quot; Concept)
+(: &quot;reptile&quot; Concept)
+(: &quot;dinosaur&quot; Concept)
+(: &quot;plant&quot; Concept)
+(Similarity &quot;human&quot; &quot;monkey&quot;)
+(Similarity &quot;human&quot; &quot;chimp&quot;)
+(Similarity &quot;chimp&quot; &quot;monkey&quot;)
+(Similarity &quot;snake&quot; &quot;earthworm&quot;)
+(Similarity &quot;rhino&quot; &quot;triceratops&quot;)
+(Similarity &quot;snake&quot; &quot;vine&quot;)
+(Similarity &quot;human&quot; &quot;ent&quot;)
+(Inheritance &quot;human&quot; &quot;mammal&quot;)
+(Inheritance &quot;monkey&quot; &quot;mammal&quot;)
+(Inheritance &quot;chimp&quot; &quot;mammal&quot;)
+(Inheritance &quot;mammal&quot; &quot;animal&quot;)
+(Inheritance &quot;reptile&quot; &quot;animal&quot;)
+(Inheritance &quot;snake&quot; &quot;reptile&quot;)
+(Inheritance &quot;dinosaur&quot; &quot;reptile&quot;)
+(Inheritance &quot;triceratops&quot; &quot;dinosaur&quot;)
+(Inheritance &quot;earthworm&quot; &quot;animal&quot;)
+(Inheritance &quot;rhino&quot; &quot;mammal&quot;)
+(Inheritance &quot;vine&quot; &quot;plant&quot;)
+(Inheritance &quot;ent&quot; &quot;plant&quot;)
+(Similarity &quot;monkey&quot; &quot;human&quot;)
+(Similarity &quot;chimp&quot; &quot;human&quot;)
+(Similarity &quot;monkey&quot; &quot;chimp&quot;)
+(Similarity &quot;earthworm&quot; &quot;snake&quot;)
+(Similarity &quot;triceratops&quot; &quot;rhino&quot;)
+(Similarity &quot;vine&quot; &quot;snake&quot;)
+(Similarity &quot;ent&quot; &quot;human&quot;)
+</code></pre>
+<p>Semantically, this is the same knowledge base we used as an example for a local DAS above. However, the mapping to nodes and links is slightly different as described in the <a href="https://github.com/singnet/das-metta-parser">DAS MeTTa Parser</a> documentation. For instance, each expression, like:</p>
+<pre><code>(Similarity &quot;ent&quot; &quot;human&quot;)
+</code></pre>
+<p>is mapped to 4 atoms. 3 nodes and 1 link as follows.</p>
+<pre><code>{
+    'type': 'Expression',
+    'targets': [
+        {'type': 'Symbol', 'name', 'Similarity'},
+        {'type': 'Symbol', 'name', '&quot;ent&quot;'},
+        {'type': 'Symbol', 'name', '&quot;human&quot;'}
+    ]
+}
+</code></pre>
+<pre><code class="language-python">from hyperon_das import DistributedAtomSpace
+
+host = '45.63.85.59'
+port = '8080'
+
+remote_das = DistributedAtomSpace(query_engine='remote', host=host, port=port)
+print(f&quot;Connected to DAS Server at {host}:{port}&quot;)
+
+print(&quot;(nodes, links) =&quot;, remote_das.count_atoms())
+
+</code></pre>
+<pre><code>Connected to DAS Server at 45.63.85.59:8080
+(nodes, links) = (23, 60)
+</code></pre>
+<p>Atoms can be retrieved by their properties using <code>get_atom()</code>, <code>get_node()</code>, <code>get_link()</code>, <code>get_incoming_links()</code> and <code>get_links()</code> in the same way described <a href="#atomquery">here</a> for local DAS. The only difference is that the local DAS will be searched first for <code>get_atom()</code>, <code>get_node()</code>, <code>get_link()</code> before going to the remote DAS when the atom is not found locally. <code>get_incoming_links()</code> and <code>get_links()</code> will search in both, local and remote DAS, and return an iterator to the results. As we explain <a href="#cache">here</a>, these iterators use the cache system to sort the results and determine how atoms are fetched from the remote DAS.</p>
+<p><code>add_node()</code> and <code>add_link()</code> will add atoms only in the local DAS. If you add an atom that already exists in the remote DAS, the local copy is always returned by the methods above. To propagate changes to the remote DAS one needs to call <code>commit()</code>. We'll not provide examples of changes in the remote DAS here because we're using a single DAS Server to serve tests with this animals KB so if you commit changes to it everyone will be affected. So please don't use this notebook to commit changes to our test server.</p>
+<p><code>fetch()</code> also works in the same way (described <a href="#fetch">here</a>) for a remote DAS. The only difference is that now the caller can omit the parameters for <code>host</code> and <code>port</code> which are defaulted to the connected remote DAS Server. Fetching from a different DAS Server is still possible by setting the proper values for <code>host</code> and <code>port</code>.</p>
+<p>If you execute the cells below you'll notice a delay between each call. This is because the cache system is not in place yet so each call is issuing an actual query to the remote DAS.</p>
+<pre><code class="language-python"># Compute the handle and get the actual document for &quot;symbol&quot;
+symbol = '&quot;earthworm&quot;'
+symbol_handle = remote_das.get_node_handle('Symbol', symbol)
+symbol_document = remote_das.get_atom(symbol_handle)
+symbol_document
+</code></pre>
+<pre><code>{'handle': '665509d366ac3c2821b3b6b266f996bd',
+ 'type': 'Symbol',
+ 'composite_type_hash': '02c86eb2792f3262c21d030a87e19793',
+ 'name': '"earthworm"',
+ 'named_type': 'Symbol',
+ 'is_literal': True}
+</code></pre>
+<pre><code class="language-python"># Get expressions like (* base_symbol *)
+iterator = remote_das.get_links(link_type='Expression', link_targets=['*', symbol_handle, '*'])
+for link in iterator:
+    atom1 = remote_das.get_atom(link['targets'][0])
+    atom2 = remote_das.get_atom(link['targets'][2])
+    print(f&quot;({atom1['name']} {symbol} {atom2['name']})&quot;)
+</code></pre>
+<pre><code>(: "earthworm" Concept)
+(Inheritance "earthworm" "animal")
+(Similarity "earthworm" "snake")
+</code></pre>
+<pre><code class="language-python"># Re-adding an existing atom with a custom field
+remote_das.add_node(
+    {
+        'type': 'Symbol',
+        'name': symbol,
+        'truth_value': tuple([0.1, 0.9])
+    }
+)
+remote_das.get_node('Symbol', symbol)
+</code></pre>
+<pre><code>{'handle': '665509d366ac3c2821b3b6b266f996bd',
+ 'type': 'Symbol',
+ 'composite_type_hash': '02c86eb2792f3262c21d030a87e19793',
+ 'name': '"earthworm"',
+ 'named_type': 'Symbol',
+ 'truth_value': (0.1, 0.9)}
+</code></pre>
+<pre><code class="language-python"># Add (to the local DAS only) a new expression mentioning the base_symbol
+remote_das.add_link(
+    { 
+        'type': 'Expression', 
+        'targets': [ 
+            {'type': 'Symbol', 'name': 'Pos'}, 
+            {'type': 'Symbol', 'name': symbol},
+            {'type': 'Symbol', 'name': 'noun'}
+        ]
+    }
+)
+# Get expressions like (* base_symbol *) again
+iterator = remote_das.get_links(link_type='Expression', link_targets=['*', symbol_handle, '*'])
+for link in iterator:
+    atom1 = remote_das.get_atom(link['targets'][0])
+    atom2 = remote_das.get_atom(link['targets'][2])
+    print(f&quot;({atom1['name']} {symbol} {atom2['name']})&quot;)
+</code></pre>
+<pre><code>(Pos "earthworm" noun)
+(: "earthworm" Concept)
+(Inheritance "earthworm" "animal")
+(Similarity "earthworm" "snake")
+</code></pre>
+<p>The methods for traversing the hypergraph work basically in the same way as for the local DAS (this is described <a href="#traversing">here</a>). Because of the way MeTTa expressions are mapped to nodes/links with only one type of node and one type of link, traversing is less intuitive from a human perspective but it still makes sense to implement algorithms. Local and remote DAS are considered by the <code>TraverseEngine</code> and the whole logic of this component is subject to the cache management rules, i.e., the cache will try to pre-fetch atoms and present query answers prioritizing more relevant atoms as the caller navigates through the atomspace hypergraph.</p>
+<p><a id='remotequery'></a></p>
+<h3 id="querying-a-remote-das">Querying a remote DAS</h3>
+<p>The Pattern Matcher in a remote DAS works basically in the same way as in a local DAS (this is described <a href="#patternmatcher">here</a>). The main difference is the optional parameter <code>query_scope</code> which can be used to define the scope of the query as <code>local_only</code>, <code>remote_only</code> or <code>local_and_remote</code> (its default value is <code>remote_only</code>).</p>
+<pre><code class="language-python">query = {
+    'atom_type': 'link',
+    'type': 'Expression',
+    'targets': [
+        {'atom_type': 'variable', 'name': 'v1'},
+        {'atom_type': 'node', 'type': 'Symbol', 'name': symbol},
+        {'atom_type': 'variable', 'name': 'v2'}
+    ]
+}
+
+# The default is to query remote_only
+results = remote_das.query(query)
+print(&quot;Remote only&quot;)
+for query_answer in results:
+    v1_atom = query_answer[1]['targets'][0]
+    v2_atom = query_answer[1]['targets'][2]
+    print(f&quot;({v1_atom['name']} {symbol} {v2_atom['name']})&quot;)
+
+results = remote_das.query(query, {'query_scope': 'local_only'})
+print()
+print(&quot;Local only&quot;)
+for query_answer in results:
+    v1_atom = query_answer.subgraph['targets'][0]
+    v2_atom = query_answer.subgraph['targets'][2]
+    print(f&quot;({v1_atom['name']} {symbol} {v2_atom['name']})&quot;)
+
+# local_and_remote is not implemented yet
+#results = remote_das.query(query, {'query_scope': 'local_and_remote'})
+#print(&quot;Remote + Local&quot;)
+#for query_answer in results:
+#    v1_atom = query_answer[1]['targets'][0]
+#    v2_atom = query_answer[1]['targets'][2]
+#    print(f&quot;({v1_atom['name']} {symbol} {v2_atom['name']})&quot;)
+
+</code></pre>
+<pre><code>Remote only
+(Inheritance "earthworm" "animal")
+(: "earthworm" Concept)
+(Similarity "earthworm" "snake")
+
+Local only
+(Pos "earthworm" noun)
+</code></pre>
+<p><a id='customindex'></a></p>
+<h3 id="custom-indexes">Custom Indexes</h3>
+<p>Remote DAS allow creation of custom indexes based on custom fields in nodes or links. These indexes can be used to make subsequent custom queries.</p>
+<pre><code class="language-python">symbol_name_index = remote_das.create_field_index('node', 'name', type='Symbol')
+results = remote_das.custom_query(symbol_name_index, name='&quot;human&quot;')
+for atom in results:
+    print(atom['type'], atom['name'])
+</code></pre>
+<pre><code>Symbol "human"
+</code></pre>
+<p>In this example, we're creating an index for the field <code>name</code> in nodes. <code>name</code> is supposed to be defined in every node of the knowledge base. To create an index on a field which is defined only for a certain type of node, an extra <code>type</code> parameter should be passed to define which type of nodes should enter in the index: e.g. <code>remote_das.create_field_index('node', 'lemma', type='Word')</code> would create an index for the field <code>lemma</code> on all nodes of type <code>Word</code>. This type of index works only for string or number (integer or floating point) fields.
+Indexes for links can be created likewise.</p>
+<p><a id='dasserver'></a></p>
+<h2 id="starting-a-das-server">Starting a DAS Server</h2>
+<p>A DAS Server can be set up using the <a href="https://github.com/singnet/das-toolbox">DAS Toolbox</a> following these steps:</p>
+<ol>
+<li>Setup environment variables</li>
+<li>Start DB servers</li>
+<li>Load MeTTa knowledge base</li>
+<li>Start FaaS gateway</li>
+</ol>
+<p>First, you need to install the latest version of <code>das-cli</code> in your environment. Follow the instructions in the <a href="https://github.com/singnet/das-toolbox">toolbox repo</a> to make this.</p>
+<p>Then we'll start by setting up the environment.</p>
+<p><span style="color:red"><em>THE COMMANDS BELOW WILL CREATE FILES IN YOUR FILESYSTEM</em></span>.</p>
+<p>Run the following cell.</p>
+<pre><code class="language-python">!das-cli config list
+</code></pre>
+<p>If it outputs something like this:</p>
+<pre><code>+----------+----------------+-----------------------+
+| Service  | Name           | Value                 |
++----------+----------------+-----------------------+
+| redis    | port           | 29000                 |
+| redis    | container_name | das-cli-redis-29000   |
+| mongodb  | port           | 28000                 |
+| mongodb  | container_name | das-cli-mongodb-28000 |
+| mongodb  | username       | dbadmin               |
+| mongodb  | password       | dassecret             |
+| loader   | container_name | das-cli-loader        |
+| openfaas | container_name | das-cli-openfaas-8080 |
++----------+----------------+-----------------------+
+</code></pre>
+<p>It's because you already have a config file in <code>~/.das</code>. If that's the case you need to decide if you want to re-use the same port numbers or not. It's OK to have several databases in your machine. They are Docker containers listening in the given port.</p>
+<p>If the previous <code>das-cli config list</code> command output is empty, you just need to create a new config file. You can do so by running</p>
+<pre><code>das-cli config set
+</code></pre>
+<p>In a terminal. When you have done it, run the next cell to make sure you have a config file in place.</p>
+<pre><code class="language-python">!das-cli config list
+</code></pre>
+<p>Containers for the DBMS servers and OpenFaas will be created listening on the given ports. Run the next cell to make sure any previously used containers are properly removed. If there are none, nothing will be done.</p>
+<pre><code class="language-python">!das-cli db stop
+!das-cli faas stop
+</code></pre>
+<p>Now we need to start the DBMS servers.</p>
+<pre><code class="language-python">!das-cli db start
+</code></pre>
+<p>You can double check that the DB containers are in place listing the active docker containers.</p>
+<pre><code class="language-python">!docker ps
+</code></pre>
+<p>You should see containers for Redis and MongoDB listening on the ports you defined in the config file.</p>
+<p>Now we need to load a MeTTa file. You can use your own file here or run the next cell to download the same file we used in <a href="#remotedas">this section</a>.</p>
+<pre><code class="language-python">!wget -o /tmp/.get.output https://raw.githubusercontent.com/singnet/das-metta-parser/master/tests/data/animals.metta &amp;&amp; mv -f animals.metta /tmp
+</code></pre>
+<p>You may want to change the path in the cell below to point to another file.</p>
+<pre><code class="language-python">!das-cli metta load /tmp/animals.metta
+</code></pre>
+<p>You may call <code>das-cli metta load</code> multiple times loading different files. To clear the databases you can use <code>das-cli db restart</code>.</p>
+<p>Once you're done loading the knowledge base, you need to start the FaaS server.</p>
+<pre><code class="language-python">!das-cli faas start
+</code></pre>
+<p>It's done. At this point you should be able to point one or more remote DAS to this DAS Server, as we described <a href="#remotedas">here</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>
