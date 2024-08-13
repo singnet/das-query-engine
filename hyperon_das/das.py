@@ -73,8 +73,8 @@ class DistributedAtomSpace:
         self.query_engine_type = kwargs.get('query_engine', 'local')
         self._set_default_system_parameters()
         self._set_backend(**kwargs)
-        self._set_query_engine(**kwargs)
         self.cache_controller = CacheController(self.system_parameters)
+        self._set_query_engine(**kwargs)
 
     def _set_default_system_parameters(self) -> None:
         # Internals
