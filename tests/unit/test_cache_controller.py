@@ -43,6 +43,10 @@ class TestCacheController:
         controller = CacheController({'cache_enabled': False})
         assert not controller.enabled()
 
+    def test_get_atom(self):
+        controller = CacheController({})
+        controller.get_atom('blah') == None
+
     def test_add_context(self):
         controller = self._build_controller()
         context = Context(

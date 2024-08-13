@@ -83,4 +83,4 @@ class CacheController:
         Returns:
             Optional[Dict[str, Any]]: Atom document or None if the atom is not in local cache
         """
-        return atom_table.get(handle, None)
+        return self.atom_table.get(handle, None)
