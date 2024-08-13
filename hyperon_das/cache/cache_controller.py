@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from hyperon_das.cache.attention_broker_gateway import AttentionBrokerGateway
 from hyperon_das.context import Context
@@ -13,12 +13,12 @@ class CacheController:
     engines use it to check for query answers if they are available locally before forwarding
     these queries to a remote DAS.
     """
-    def __init__(self, system_parameters):
+    def __init__(self, system_parameters: Dict[str, Any]):
         """
         System parameters are allowed to change dinamically after the CacheController
         object is created. So the behavior of the CacheController regarding each parameter
         may change accordingly. That's why individual system parameters are not stored individually
-        as object fields. The whole passed SystemParameters object is stored instead and 
+        as object fields. The whole passed system parameter's dict object is stored instead and 
         checked everytime CacheController behavior is supposed to be controlled by some 
         parameter. For example, the method enabled() will always check for the proper parameter
         in order to answer if CacheController is enabled or disabled.
@@ -30,6 +30,7 @@ class CacheController:
             }
         """
         self.system_parameters = system_parameters
+        self.atom_table = {}
         if self.enabled():
             self.attention_broker = AttentionBrokerGateway(system_parameters)
 
@@ -74,3 +75,12 @@ class CacheController:
             return
         for query_answer in context.query_answers:
             self.regard_query_answer(query_answer)
+
+    def get_atom(self, handle: str) -> Optional[Dict[str, Any]]:
+        """
+        Returns the corresponding atom if it's present in the local cache or None otherwise.
+
+        Returns:
+            Optional[Dict[str, Any]]: Atom document or None if the atom is not in local cache
+        """
+        return atom_table.get(handle, None)
