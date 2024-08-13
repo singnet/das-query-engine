@@ -27,7 +27,7 @@ class RemoteQueryEngine(QueryEngine):
         kwargs: Optional[dict] = {}
     ):
         self.system_parameters = system_parameters
-        self.local_query_engine = LocalQueryEngine(backend, kwargs)
+        self.local_query_engine = LocalQueryEngine(backend, cache_controller, kwargs)
         self.cache_controller = cache_controller
         self.__mode = kwargs.get('mode', 'read-only')
         self.host = kwargs.get('host')
