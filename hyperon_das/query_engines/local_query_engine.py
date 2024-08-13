@@ -5,6 +5,7 @@ from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
+from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.cache.iterators import (
     AndEvaluator,
     CustomQuery,
@@ -15,7 +16,6 @@ from hyperon_das.cache.iterators import (
     QueryAnswerIterator,
 )
 from hyperon_das.client import FunctionsClient
-from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.context import Context
 from hyperon_das.exceptions import UnexpectedQueryFormat
 from hyperon_das.logger import logger
@@ -26,11 +26,11 @@ from hyperon_das.utils import Assignment, QueryAnswer, das_error
 
 class LocalQueryEngine(QueryEngine):
     def __init__(
-        self, 
-        backend, 
-        cache_controller: CacheController, 
-        system_parameters: Dict[str, Any], 
-        kwargs: Optional[dict] = {}
+        self,
+        backend,
+        cache_controller: CacheController,
+        system_parameters: Dict[str, Any],
+        kwargs: Optional[dict] = {},
     ) -> None:
         self.system_parameters = system_parameters
         self.local_backend = backend

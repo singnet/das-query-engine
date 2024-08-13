@@ -30,7 +30,9 @@ class DistributedAtomSpaceMock(DistributedAtomSpace):
         self.cache_controller = CacheController({})
         if query_engine == 'remote':
             with patch('hyperon_das.client.connect_to_server', return_value=(200, 'OK')):
-                self.query_engine = RemoteQueryEngine(self.backend, self.cache_controller, {}, kwargs)
+                self.query_engine = RemoteQueryEngine(
+                    self.backend, self.cache_controller, {}, kwargs
+                )
         else:
             self.query_engine = LocalQueryEngine(self.backend, self.cache_controller, {}, kwargs)
 

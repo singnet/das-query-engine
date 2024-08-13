@@ -45,7 +45,7 @@ class TestCacheController:
 
     def test_get_atom(self):
         controller = CacheController({})
-        controller.get_atom('blah') == None
+        assert controller.get_atom('blah') is None
 
     def test_add_context(self):
         controller = self._build_controller()

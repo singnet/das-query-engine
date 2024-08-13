@@ -114,7 +114,9 @@ class DistributedAtomSpace:
 
     def _start_query_engine(self, engine_type, das_type, **kwargs):
         self._das_type = das_type
-        self.query_engine = engine_type(self.backend, self.cache_controller, self.system_parameters, kwargs)
+        self.query_engine = engine_type(
+            self.backend, self.cache_controller, self.system_parameters, kwargs
+        )
         logger().info(f"Started {das_type} DAS")
 
     def _create_context(
