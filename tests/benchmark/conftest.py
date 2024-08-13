@@ -1,13 +1,15 @@
 from _pytest.terminal import TerminalReporter
 
-PERFORMANCE_REPORT = []
+PERFORMANCE_REPORT: list[str] = []
 
 
 def pytest_addoption(parser):
-    parser.addoption("--node_number", default=100, help="Node number, eg: 100")
-    parser.addoption("--repeat", action='store', help='Number of times to repeat each test')
-    parser.addoption("--word_size", default=8, help="Word range, eg: 2-10")
-    parser.addoption("--letter_size", default=3, help="Letter range, eg: 2-5")
+    parser.addoption("--node_count", default=100, help="Node number, eg: 100")
+    parser.addoption(
+        "--repeat", default=1, action='store', help='Number of times to repeat each test'
+    )
+    parser.addoption("--word_count", default=8, help="Word range, eg: 2-10")
+    parser.addoption("--word_length", default=3, help="Letter range, eg: 2-5")
     parser.addoption("--alphabet_range", default="2-5", help="Alphabet range, eg: 2-5")
     parser.addoption(
         "--word_link_percentage", default=0.1, help="Percentage of links with same word, eg: 0.1"
@@ -17,21 +19,21 @@ def pytest_addoption(parser):
         default=0.1,
         help="Percentage of links with same letters, eg: 0.1",
     )
-    parser.addoption("--seed", default=11, help="Randon seed")
+    parser.addoption("--seed", default=11, help="Randon number seed")
 
 
 def pytest_generate_tests(metafunc):
     performance_test_params = [
-        "node_number",
-        "word_size",
-        "letter_size",
+        "node_count",
+        "word_count",
+        "word_length",
         "alphabet_range",
         "word_link_percentage",
         "letter_link_percentage",
         "seed",
     ]
     if all((i in metafunc.fixturenames for i in performance_test_params)):
-        metafunc.config.getoption("node_number")
+        metafunc.config.getoption("node_count")
         metafunc.parametrize(
             ",".join(performance_test_params),
             [[metafunc.config.getoption(v) for v in performance_test_params]],

@@ -35,13 +35,13 @@ class TestPerformance:
     time = 0.0
     is_database_loaded = False
     debug = False
-    test_duration = {}
+    test_duration: dict[str, list[float]] = {}
 
     def _initialize(
         self,
-        node_number: str,
-        word_size: str,
-        letter_size: str,
+        node_count: str,
+        word_count: str,
+        word_length: str,
         alphabet_range: str,
         word_link_percentage: float,
         letter_link_percentage: float,
@@ -49,19 +49,16 @@ class TestPerformance:
         debug: bool,
     ) -> None:
         self.node_type: str = 'Concept'
-        self.node_number: int = int(node_number)
-        self.word_size: int = int(word_size)
-        self.letter_size: int = int(letter_size)
+        self.node_count: int = int(node_count)
+        self.word_count: int = int(word_count)
+        self.word_length: int = int(word_length)
         self.alphabet_range: list[int] = [int(i) for i in alphabet_range.split('-')]
         self.word_link_percentage: float = float(word_link_percentage)
         self.letter_link_percentage: float = float(letter_link_percentage)
         self.seed: Any = seed
-        self.node_count: int = 0
         self.link_word_count: int = 0
         self.link_letter_count: int = 0
-        self.word_count: int = 0
         TestPerformance.debug = debug
-        # self.test_duration = {}
 
         if seed:
             random.seed(seed)
@@ -69,18 +66,18 @@ class TestPerformance:
     @pytest.fixture(autouse=True)
     def _initialize_fixture(
         self,
-        node_number: str,
-        word_size: str,
-        letter_size: str,
+        node_count: str,
+        word_count: str,
+        word_length: str,
         alphabet_range: str,
         word_link_percentage: float,
         letter_link_percentage: float,
         seed: Any,
     ) -> None:
         self._initialize(
-            node_number,
-            word_size,
-            letter_size,
+            node_count,
+            word_count,
+            word_length,
             alphabet_range,
             word_link_percentage,
             letter_link_percentage,
@@ -112,14 +109,25 @@ class TestPerformance:
     def print_results(self):
         yield
         for k, v in self.test_duration.items():
-            PERFORMANCE_REPORT.append(
-                f'{k}\tMedian: {statistics.median(v)}\tSTDEV: {statistics.stdev(v)}'
-            )
+            if len(v) > 1:
+                PERFORMANCE_REPORT.append(
+                    f'{k}\tAverage: {statistics.mean(v)}\tSTDEV: {statistics.stdev(v)}'
+                )
+            else:
+                PERFORMANCE_REPORT.append(f'{k}\tExecution Time: {v}')
 
     @pytest.fixture
     def measurement(self, repeat, request):
-        regex = r"^(.*)(?=\[)"
-        test_name = re.compile(regex).search(request.node.name).group(1)
+        # replaces the repeat number to aggregate the test result
+        regex = r"-([0-9]+\.[0-9]+)|-[0-9]+"
+        test_name = request.node.name
+        test_name = re.sub(
+            regex,
+            lambda m: ""
+            if (m.start() == [match.start() for match in re.finditer(regex, test_name)][7])
+            else m.group(),
+            request.node.name,
+        )
         if test_name not in self.test_duration:
             self.test_duration[test_name] = []
         start_time = time.perf_counter()
@@ -130,15 +138,15 @@ class TestPerformance:
     def print_status(self):
         if TestPerformance.debug:
             print()
-            print('Word Size:', self.word_size)
-            print('Letter Size:', self.letter_size)
+            print('Word Count:', self.word_count)
+            print('Word Length:', self.word_length)
             print('Alphabet Range: ' + ' to '.join((chr(97 + k) for k in self.alphabet_range)))
             print('Nodes: ' + str(self.node_count))
             print('Links Word: ' + str(self.link_word_count))
             print('Links Letter: ' + str(self.link_letter_count))
 
     def _create_word(self) -> str:
-        return ''.join([chr(97 + randint(*self.alphabet_range)) for _ in range(self.letter_size)])
+        return ''.join([chr(97 + randint(*self.alphabet_range)) for _ in range(self.word_length)])
 
     @staticmethod
     def compare_words(a: str, b: str) -> int:
@@ -174,8 +182,8 @@ class TestPerformance:
         node_list = []
         node_names = set()
 
-        for _ in range(self.node_number):
-            word_list = [self._create_word() for _ in range(self.word_size)]
+        for _ in range(self.node_count):
+            word_list = [self._create_word() for _ in range(self.word_count)]
             node = {
                 'name': ' '.join(word_list),
                 'type': self.node_type,
@@ -184,7 +192,7 @@ class TestPerformance:
                 das.add_node(node)
             node_list.append(node)
             node_names.add(node['name'])
-
+        print(len(node_list), self.node_count)
         return node_list
 
     @staticmethod
@@ -283,16 +291,15 @@ class TestPerformance:
         """
         return das.count_atoms(options)
 
-    def _load_database(self, das: DistributedAtomSpace) -> dict | None:
+    def _load_database(self, das: DistributedAtomSpace) -> dict:
         if not TestPerformance.is_database_loaded:
             node_list: list[dict[str, Any]]
             node_list = self.generate_nodes(das)
             das.commit_changes()
-            self.node_count = len(node_list)
             links_word = self.generate_links_word(node_list)
             self.link_word_count = len(links_word)
             self.add_links(
-                das, links_word, node_list, 'TokenSimilarity', strength_divisor=self.word_size
+                das, links_word, node_list, 'TokenSimilarity', strength_divisor=self.word_count
             )
             links_letter = self.generate_links_letter(node_list)
             self.link_letter_count = len(links_letter)
@@ -301,7 +308,7 @@ class TestPerformance:
                 links_letter,
                 node_list,
                 'Similarity',
-                strength_divisor=self.letter_size * self.word_size,
+                strength_divisor=self.word_length * self.word_count,
             )
             count_atoms_links_nodes: dict[str, int] = self.count_atoms(das, {'precise': True})
             self.count_atoms(das)
@@ -359,15 +366,16 @@ class TestPerformance:
     @pytest.mark.parametrize(
         'nodes,link_type',
         [
-            (['v1', 'v2'], "TokenSimilarity"),
-            (['v1', 'v2'], "Similarity"),
-            (['v1', 'v2', 'v3'], "TokenSimilarity"),
-            (['v1', 'v2', 'v3'], "Similarity"),
+            ('v1,v2', "TokenSimilarity"),
+            ('v1,v2', "Similarity"),
+            ('v1,v2,v3', "TokenSimilarity"),
+            ('v1,v2,v3', "Similarity"),
         ],
     )
     def test_query_links_nodes_var(self, nodes, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
+        nodes = nodes.split(',')
         queries = []
         for i, node in enumerate(nodes):
             for j in range(i + 1, len(nodes)):

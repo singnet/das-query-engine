@@ -22,9 +22,9 @@ performance-tests:
 	@bash ./tests/performance/run_perf_tests.sh
 
 benchmark-tests:
-	@py.test -sx -vv ./tests/performance $(OPTIONS)
+	@py.test -sx -vv ./tests/benchmark $(OPTIONS)
 
 benchmark-tests-metta-file:
-	@python ./tests/performance/metta_files_generator.py $(OPTIONS)
+	@python ./tests/benchmark/metta_files_generator.py $(OPTIONS)
 
 pre-commit: lint unit-tests-coverage unit-tests integration-tests

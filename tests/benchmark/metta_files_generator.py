@@ -3,7 +3,7 @@
 
 import argparse
 
-from test_mongo_redis_performance import TestPerformance
+from test_redis_mongo_benchmark import TestPerformance
 
 
 class DasWrapper:
@@ -47,9 +47,9 @@ def main():
     test_performance = TestPerformance()
     parser = argparse.ArgumentParser(description='Create MeTTa file.')
     parser.add_argument("--filename", default='test.metta', help="Filename full path")
-    parser.add_argument("--node_number", default=100, help="Node range, eg: 100")
-    parser.add_argument("--word_size", default=8, help="Word range, eg: 2-10")
-    parser.add_argument("--letter_size", default=3, help="Letter range, eg: 2-5")
+    parser.add_argument("--node_count", default=100, help="Node range, eg: 100")
+    parser.add_argument("--word_count", default=8, help="Word range, eg: 2-10")
+    parser.add_argument("--word_length", default=3, help="Letter range, eg: 2-5")
     parser.add_argument("--alphabet_range", default="2-5", help="Alphabet range, eg: 2-5")
     parser.add_argument("--seed", default=11, help="Randon seed")
     parser.add_argument(
@@ -63,9 +63,9 @@ def main():
     args = parser.parse_args()
 
     test_performance._initialize(
-        int(args.node_number),
-        int(args.word_size),
-        int(args.letter_size),
+        int(args.node_count),
+        int(args.word_count),
+        int(args.word_length),
         args.alphabet_range,
         args.word_link_percentage,
         args.letter_link_percentage,
