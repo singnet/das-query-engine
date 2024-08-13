@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
+
+from hyperon_das_atomdb.database import IncomingLinksT
 
 from hyperon_das.context import Context
 from hyperon_das.type_alias import Query
@@ -52,7 +54,7 @@ class QueryEngine(ABC):
     @abstractmethod
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
+    ) -> tuple[int | None, IncomingLinksT | Iterator]:
         """
         Retrieves incoming links for a specified atom handle, with optional filtering parameters.
 

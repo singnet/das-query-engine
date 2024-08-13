@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Type, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
@@ -21,7 +21,9 @@ from hyperon_das.utils import QueryAnswer, get_package_version
 
 
 class DistributedAtomSpace:
-    def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
+    backend: AtomDB
+
+    def __init__(self, system_parameters: Dict[str, Any] | None = None, **kwargs) -> None:
         """
         Creates a new DAS object.
         A DAS client can run locally or locally and remote, connecting to remote DASs instances to query remote atoms,
@@ -68,7 +70,7 @@ class DistributedAtomSpace:
             redis_cluster (bool, optional): Indicates whether Redis is configured in cluster mode. Defaults to True.
             redis_ssl (bool, optional): Set Redis to encrypt the connection. Defaults to True.
         """
-        self.system_parameters = system_parameters
+        self.system_parameters = system_parameters or dict()
         self.atomdb = kwargs.get('atomdb', 'ram')
         self.query_engine_type = kwargs.get('query_engine', 'local')
         self._set_default_system_parameters()
@@ -112,20 +114,25 @@ class DistributedAtomSpace:
                 details=f"query_engine={self.query_engine_type}",
             )
 
-    def _start_query_engine(self, engine_type, das_type, **kwargs):
+    def _start_query_engine(
+        self,
+        engine_type: Type[LocalQueryEngine | RemoteQueryEngine],
+        das_type: str,
+        **kwargs,
+    ) -> None:
         self._das_type = das_type
         self.query_engine = engine_type(
-            self.backend, self.cache_controller, self.system_parameters, kwargs
+            self.backend, self.cache_controller, self.system_parameters, **kwargs
         )
         logger().info(f"Started {das_type} DAS")
 
     def _create_context(
         self,
         name: str,
-        queries: Optional[List[Query]] = [],
+        queries: Optional[List[Query]] = None,
     ) -> Context:
         context_node = self.add_node({'type': Context.CONTEXT_NODE_TYPE, 'name': name})
-        query_answer = [self.query(query, {'no_iterator': True}) for query in queries]
+        query_answer = [self.query(query, {'no_iterator': True}) for query in (queries or [])]
         context = Context(context_node, query_answer)
         self.cache_controller.add_context(context)
         return context
@@ -393,7 +400,9 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_links(link_type, target_types, link_targets, **kwargs)
 
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> List[Union[Dict[str, Any], str]]:
+    def get_incoming_links(
+        self, atom_handle: str, **kwargs
+    ) -> Iterator | list[dict[str, Any]] | list[str]:
         """
         Retrieve all links which has the passed handle as one of its targets.
 
@@ -421,7 +430,8 @@ class DistributedAtomSpace:
             Similarity ['99d18c702e813b07260baf577c60c455', 'd03e59654221c1e8fcda404fd5c8d6cb']
             Inheritance ['99d18c702e813b07260baf577c60c455', 'bdfe4e7a431f73386f37c6448afe5840']
         """
-        return self.query_engine.get_incoming_links(atom_handle, **kwargs)
+        _, links = self.query_engine.get_incoming_links(atom_handle, **kwargs)
+        return links
 
     def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
         """
@@ -449,7 +459,7 @@ class DistributedAtomSpace:
     def query(
         self,
         query: Query,
-        parameters: Optional[Dict[str, Any]] = {},
+        parameters: Optional[Dict[str, Any]] = None,
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         """
         Perform a query on the knowledge base using a dict as input and return an
@@ -946,7 +956,7 @@ class DistributedAtomSpace:
     def create_context(
         self,
         name: str,
-        queries: Optional[List[Query]] = [],
+        queries: Optional[List[Query]] = None,
     ) -> Context:
         if self.query_engine_type == 'local':
             return self._create_context(name, queries)

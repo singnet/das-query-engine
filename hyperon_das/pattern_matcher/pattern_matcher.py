@@ -614,7 +614,8 @@ class Link(Atom):
         if any(handle == WILDCARD for handle in target_handles):
             if DEBUG_LINK:
                 print(f'self.atom_type = {self.atom_type} ' f'target_handles = {target_handles}')
-            matched = db.get_matched_links(self.atom_type, target_handles, extra_parameters)
+            kwargs = extra_parameters or dict()
+            _, matched = db.get_matched_links(self.atom_type, target_handles, **kwargs)
             if DEBUG_LINK:
                 print(f'matched = {matched}')
             if DEBUG_LINK:
@@ -718,7 +719,7 @@ class LinkTemplate(LogicalExpression):
         return f'<{self.link_type}: {self.targets}>'
 
     def _assign_variables(
-        self, db: AtomDB, link: str, link_targets: List[str]
+        self, db: AtomDB, link: str, link_targets: list[str] | tuple[str, ...]
     ) -> Optional[Assignment]:
         assert len(link_targets) == len(
             self.targets
@@ -741,8 +742,9 @@ class LinkTemplate(LogicalExpression):
     ) -> bool:
         if DEBUG_LINK_TEMPLATE:
             print('link template match', self)
-        matched = db.get_matched_type_template(
-            [self.link_type, *[v.type for v in self.targets]], extra_parameters
+        kwargs = extra_parameters or dict()
+        _, matched = db.get_matched_type_template(
+            [self.link_type, *[v.type for v in self.targets]], **kwargs
         )
         if DEBUG_LINK_TEMPLATE:
             print('len(matched)', len(matched))

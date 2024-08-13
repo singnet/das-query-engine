@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator
 
 from hyperon_das_atomdb import AtomDoesNotExist
 
+from hyperon_das.cache import QueryAnswerIterator
 from hyperon_das.cache.iterators import TraverseLinksIterator, TraverseNeighborsIterator
 
 if TYPE_CHECKING:  # pragma no cover
@@ -27,7 +28,7 @@ class TraverseEngine:
         """
         return self._cursor
 
-    def get_links(self, **kwargs) -> Iterator:
+    def get_links(self, **kwargs) -> QueryAnswerIterator:
         """Returns all links that have the current cursor as one of their targets, that is, any links that point to the cursor.
 
         Keyword Args:
