@@ -41,13 +41,15 @@ class RemoteQueryEngine(QueryEngine):
         return self.__mode
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
-        try:
-            atom = self.local_query_engine.get_atom(handle, **kwargs)
-        except AtomDoesNotExist:
+        atom = self.cache_controller.get_atom(handle)
+        if atom is None:
             try:
-                atom = self.remote_das.get_atom(handle, **kwargs)
-            except AtomDoesNotExist as exception:
-                das_error(exception)
+                atom = self.local_query_engine.get_atom(handle, **kwargs)
+            except AtomDoesNotExist:
+                try:
+                    atom = self.remote_das.get_atom(handle, **kwargs)
+                except AtomDoesNotExist as exception:
+                    das_error(exception)
         return atom
 
     def get_links(
