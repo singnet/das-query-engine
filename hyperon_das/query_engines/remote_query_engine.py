@@ -2,6 +2,7 @@ from typing import Any, Dict, Iterator, List, Optional, Union
 
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
+from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.cache.iterators import (
     CustomQuery,
     ListIterator,
@@ -18,9 +19,16 @@ from hyperon_das.utils import QueryAnswer, das_error
 
 
 class RemoteQueryEngine(QueryEngine):
-    def __init__(self, backend, system_parameters: Dict[str, Any], kwargs: Optional[dict] = {}):
+    def __init__(
+        self,
+        backend,
+        cache_controller: CacheController,
+        system_parameters: Dict[str, Any],
+        kwargs: Optional[dict] = {},
+    ):
         self.system_parameters = system_parameters
-        self.local_query_engine = LocalQueryEngine(backend, kwargs)
+        self.local_query_engine = LocalQueryEngine(backend, cache_controller, kwargs)
+        self.cache_controller = cache_controller
         self.__mode = kwargs.get('mode', 'read-only')
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')
@@ -33,13 +41,15 @@ class RemoteQueryEngine(QueryEngine):
         return self.__mode
 
     def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
-        try:
-            atom = self.local_query_engine.get_atom(handle, **kwargs)
-        except AtomDoesNotExist:
+        atom = self.cache_controller.get_atom(handle)
+        if atom is None:
             try:
-                atom = self.remote_das.get_atom(handle, **kwargs)
-            except AtomDoesNotExist as exception:
-                das_error(exception)
+                atom = self.local_query_engine.get_atom(handle, **kwargs)
+            except AtomDoesNotExist:
+                try:
+                    atom = self.remote_das.get_atom(handle, **kwargs)
+                except AtomDoesNotExist as exception:
+                    das_error(exception)
         return atom
 
     def get_links(

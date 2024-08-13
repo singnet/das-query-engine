@@ -46,6 +46,11 @@ class TestRemoteDistributedAtomSpace:
             == f'http://{remote_das_host}:{remote_das_port}/function/query-engine'
         )
 
+    def test_cache_controller(self, remote_das: DistributedAtomSpace):
+        remote_das.cache_controller.atom_table["h1"] = {"handle": "h1"}
+        print(remote_das.cache_controller.atom_table["h1"])
+        assert remote_das.query_engine.get_atom("h1")["handle"] == "h1"
+
     def _test_get_atom(self, remote_das: DistributedAtomSpace):
         result = remote_das.get_atom(handle=metta_animal_base_handles.human)
         assert result['handle'] == metta_animal_base_handles.human
