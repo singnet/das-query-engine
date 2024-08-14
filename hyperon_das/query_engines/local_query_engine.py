@@ -48,7 +48,7 @@ class LocalQueryEngine(QueryEngine):
     def _recursive_query(
         self,
         query: Query,
-        mappings: Set[Assignment] | None = None,
+        mappings: Set[Assignment] | None = None,  # TODO: this parameter is never used
         parameters: Dict[str, Any] = [],
     ) -> QueryAnswerIterator:
         if isinstance(query, list):
