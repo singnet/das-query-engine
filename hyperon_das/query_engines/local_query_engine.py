@@ -173,7 +173,7 @@ class LocalQueryEngine(QueryEngine):
             if target["atom_type"] == "node":
                 handle = self.local_backend.node_handle(target["type"], target["name"])
             elif target["atom_type"] == "link":
-                handle = self._generate_target_handles([target])
+                handle = self._generate_target_handles(target["targets"])
             elif target["atom_type"] == "variable":
                 handle = WILDCARD
             targets_hash.append(handle)
