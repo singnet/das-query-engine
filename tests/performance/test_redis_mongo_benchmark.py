@@ -404,20 +404,22 @@ class TestPerformance:
         measure_process(das, query_answers, nodes)
         assert query_answers
 
-    @pytest.mark.skip("Infinite loop sometimes")
-    # @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
+    @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
     def test_traverse_links(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
         nodes = das.get_node_by_name_starting_with(self.node_type, self._create_word())
         node = random.choice(nodes)
         cursor = das.get_traversal_cursor(node)
-        start_node = cursor.get()
+        cursors = {cursor.get()['handle']}
 
-        while cursor.get_links(link_type=link_type):
-            cursor.follow_link()
-            if cursor.get()['name'] == start_node['name']:
+        while True:
+            cursor.follow_link(link_type=link_type)
+            if cursor.get()['handle'] in cursors:
                 break
+            cursors.add(cursor.get()['handle'])
+
+        assert len(cursors) > 1
 
     @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
     def test_traverse_neighbors(self, link_type, repeat, measurement, request):
@@ -426,10 +428,10 @@ class TestPerformance:
         nodes = das.get_node_by_name_starting_with(self.node_type, self._create_word())
         node = random.choice(nodes)
         cursor = das.get_traversal_cursor(node)
-        start_node = cursor.get()
-        while neighbors := cursor.get_neighbors(link_type=link_type):
+        cursors = {cursor.get()['handle']}
+        while True:
             links = []
-            for n in neighbors:
+            for n in cursor.get_neighbors(link_type=link_type):
                 try: # cursor.get_neighbors is returning all neighbors
                     link = das.get_link(link_type, link_targets=[cursor.get()['handle'], n['handle']])
                     links.append(link)
@@ -440,8 +442,9 @@ class TestPerformance:
                 break
             winner = max(links, key=lambda x: x['strength'])
             next_node = winner['targets'][1]
-            if next_node == start_node['handle']:
-                return
             cursor = das.get_traversal_cursor(next_node)
+            if cursor.get()['handle'] in cursors:
+                break
+            cursors.add(cursor.get()['handle'])
 
-
+        assert len(cursors) > 1
