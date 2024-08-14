@@ -332,8 +332,10 @@ class TestPerformance:
     def test_query_atom_by_field(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
+        _, links = das.get_links(link_type, no_iterator=True)
+        link = random.choice(links)
         measure_query = measure(das.get_atoms_by_field)
-        query_answer = measure_query({'strength': 0.375, 'named_type': link_type})
+        query_answer = measure_query({'strength': link['strength'], 'named_type': link_type})
         assert isinstance(query_answer, list)
         assert query_answer
 
@@ -341,9 +343,10 @@ class TestPerformance:
     def test_query_atom_by_field_with_index(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
-        # time.sleep(10)  # Waiting to mongodb reindex the database
+        _, links = das.get_links(link_type, no_iterator=True)
+        link = random.choice(links)
         measure_query = measure(das.get_atoms_by_field)
-        query_answer = measure_query({'strength': 0.375, 'named_type': link_type})
+        query_answer = measure_query({'strength': link['strength'], 'named_type': link_type})
         assert isinstance(query_answer, list)
         assert query_answer
 
@@ -400,3 +403,44 @@ class TestPerformance:
         measure_process = measure(process)
         measure_process(das, query_answers, nodes)
         assert query_answers
+
+    @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
+    def test_traverse_links(self, link_type, repeat, measurement, request):
+        das: DistributedAtomSpace = request.getfixturevalue('das')
+        self._load_database(das)
+        nodes = das.get_node_by_name_starting_with(self.node_type, self._create_word())
+        node = random.choice(nodes)
+        cursor = das.get_traversal_cursor(node)
+        start_node = cursor.get()
+
+        while cursor.get_links(link_type=link_type):
+            cursor.follow_link()
+            if cursor.get()['name'] == start_node['name']:
+                break
+
+    @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
+    def test_traverse_neighbours(self, link_type, repeat, measurement, request):
+        das: DistributedAtomSpace = request.getfixturevalue('das')
+        self._load_database(das)
+        nodes = das.get_node_by_name_starting_with(self.node_type, self._create_word())
+        node = random.choice(nodes)
+        cursor = das.get_traversal_cursor(node)
+        start_node = cursor.get()
+        while neighbours := cursor.get_neighbors(link_type=link_type):
+            links = []
+            for n in neighbours:
+                try:
+                    link = das.get_link(link_type, link_targets=[cursor.get()['handle'], n['handle']])
+                    links.append(link)
+                except:
+                    pass
+
+            if not links:
+                break
+            winner = max(links, key=lambda x: x['strength'])
+            next_node = winner['targets'][1]
+            if next_node == start_node['handle']:
+                return
+            cursor = das.get_traversal_cursor(next_node)
+
+
