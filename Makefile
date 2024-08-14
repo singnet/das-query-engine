@@ -19,12 +19,12 @@ integration-tests:
 	@py.test -sx -vv ./tests/integration
 
 performance-tests:
-	@bash ./tests/performance/run_perf_tests.sh
+	@bash ./tests/performance/dasgate/run_perf_tests.sh
 
 benchmark-tests:
-	@py.test -sx -vv ./tests/benchmark $(OPTIONS)
+	@py.test -sx -vv ./tests/performance $(OPTIONS)
 
 benchmark-tests-metta-file:
-	@python ./tests/benchmark/metta_files_generator.py $(OPTIONS)
+	@python ./tests/performance/metta_files_generator.py $(OPTIONS)
 
 pre-commit: lint unit-tests-coverage unit-tests integration-tests
