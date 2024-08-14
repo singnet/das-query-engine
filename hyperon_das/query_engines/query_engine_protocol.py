@@ -27,8 +27,12 @@ class QueryEngine(ABC):
 
     @abstractmethod
     def get_links(
-        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
-    ) -> Union[List[str], List[Dict]]:
+        self,
+        link_type: str,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
+        **kwargs,
+    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
         """
         Retrieves links of a specified type, optionally filtered by target types or specific targets.
 
@@ -231,7 +235,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def create_context(self, name: str, queries: Optional[List[Query]]) -> Context:
+    def create_context(self, name: str, queries: List[Query] = []) -> Context:
         """
         Creates a new context with a specified name and an optional list of queries.
 
