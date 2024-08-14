@@ -1,11 +1,16 @@
 from copy import deepcopy
+from typing import Any, Iterator
 
 import pytest
+from hyperon_das_atomdb import AtomDB
 
 from hyperon_das.pattern_matcher import (
     And,
+    Assignment,
+    CompositeAssignment,
     Link,
     LinkTemplate,
+    LogicalExpression,
     Node,
     Not,
     OrderedAssignment,
@@ -39,15 +44,15 @@ class TestPatternMatchingAnswer:
     def database(self):
         return DatabaseMock()
 
-    def test_patterns(self, database):
+    def test_patterns(self, database: AtomDB):
         db = database
 
         mammal = Node('Concept', 'mammal')
         human = Node('Concept', 'human')
 
-        def get_items(assignment, key=-1):
+        def get_items(assignment: Assignment, key=-1) -> Iterator[tuple[Any, ...]]:
             if isinstance(assignment, OrderedAssignment):
-                return assignment.mapping.items()
+                return iter(assignment.mapping.items())
             elif isinstance(assignment, UnorderedAssignment):
                 symbols = []
                 for key in assignment.symbols:
@@ -60,14 +65,21 @@ class TestPatternMatchingAnswer:
                 mapping = []
                 for symbol, value in zip(symbols, values):
                     mapping.append(tuple([symbol, value]))
-                return mapping
+                return iter(mapping)
             else:
+                assert isinstance(assignment, CompositeAssignment)
                 if key == -1:
-                    return assignment.ordered_mapping.mapping.items()
+                    return iter(assignment.ordered_mapping.mapping.items())
                 else:
                     return get_items(assignment.unordered_mappings[key])
 
-        def check_pattern(db, pattern, expected_match, assignments, key=-1):
+        def check_pattern(
+            db: AtomDB,
+            pattern: LogicalExpression,
+            expected_match: bool,
+            assignments: list[dict[str, str]],
+            key=-1,
+        ) -> None:
             answer = PatternMatchingAnswer()
             assert expected_match == pattern.matched(db, answer)
             if expected_match:

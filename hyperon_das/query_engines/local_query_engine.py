@@ -1,8 +1,16 @@
 import re
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
+from collections import OrderedDict
+from typing import Any, Dict, Iterator, List, Optional, Set, Union
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
+from hyperon_das_atomdb.database import (
+    AtomT,
+    HandlesListT,
+    IncomingLinksT,
+    MatchedLinksResultT,
+    MatchedTargetsListT,
+)
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController
@@ -27,20 +35,21 @@ from hyperon_das.utils import Assignment, QueryAnswer, das_error
 class LocalQueryEngine(QueryEngine):
     def __init__(
         self,
-        backend,
+        backend: AtomDB,
         cache_controller: CacheController,
         system_parameters: Dict[str, Any],
-        kwargs: Optional[dict] = {},
+        **kwargs,
     ) -> None:
         self.system_parameters = system_parameters
         self.local_backend = backend
+        self.buffer: list[dict[str, Any]] = []
         self.cache_controller = cache_controller
 
     def _recursive_query(
         self,
         query: Query,
-        mappings: Set[Assignment] = None,
-        parameters: Optional[Dict[str, Any]] = None,
+        mappings: Set[Assignment] | None = None,  # TODO: this parameter is never used
+        parameters: Dict[str, Any] = [],
     ) -> QueryAnswerIterator:
         if isinstance(query, list):
             sub_expression_results = [
@@ -70,10 +79,7 @@ class LocalQueryEngine(QueryEngine):
                         )
                     )
             return LazyQueryEvaluator(
-                link_type=query["type"],
-                source=matched_targets,
-                query_engine=self,
-                query_parameters=parameters,
+                link_type=query["type"], source=matched_targets, query_engine=self
             )
         else:
             das_error(
@@ -83,7 +89,7 @@ class LocalQueryEngine(QueryEngine):
                 )
             )
 
-    def _to_link_dict_list(self, db_answer: Union[List[str], List[Dict]]) -> List[Dict]:
+    def _to_link_dict_list(self, db_answer: HandlesListT | MatchedTargetsListT) -> List[Dict]:
         if not db_answer:
             return []
         flat_handle = isinstance(db_answer[0], str)
@@ -96,10 +102,10 @@ class LocalQueryEngine(QueryEngine):
     def _get_related_links(
         self,
         link_type: str,
-        target_types: List[str] = None,
-        link_targets: List[str] = None,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
         **kwargs,
-    ):
+    ) -> MatchedLinksResultT:
         if link_type != WILDCARD and target_types is not None:
             return self.local_backend.get_matched_type_template(
                 [link_type, *target_types], **kwargs
@@ -108,7 +114,7 @@ class LocalQueryEngine(QueryEngine):
             try:
                 return self.local_backend.get_matched_links(link_type, link_targets, **kwargs)
             except AtomDoesNotExist:
-                return None, [] if kwargs.get('cursor') is not None else []
+                return None, []
         elif link_type != WILDCARD:
             return self.local_backend.get_all_links(link_type, **kwargs)
         else:
@@ -127,7 +133,7 @@ class LocalQueryEngine(QueryEngine):
 
     def _process_link(self, query: dict) -> List[dict]:
         target_handles = self._generate_target_handles(query['targets'])
-        matched_links = self.local_backend.get_matched_links(
+        _, matched_links = self.local_backend.get_matched_links(
             link_type=query["type"], target_handles=target_handles
         )
         unique_handles = set()
@@ -158,13 +164,16 @@ class LocalQueryEngine(QueryEngine):
 
         return result
 
-    def _generate_target_handles(self, targets: List[Dict[str, Any]]) -> List[str]:
-        targets_hash = []
+    def _generate_target_handles(
+        self, targets: List[Dict[str, Any]]
+    ) -> list[str | list[str] | list[Any]]:  # multiple levels of nested lists due to recursion
+        targets_hash: list[str | list[str] | list[Any]] = []
         for target in targets:
+            handle: str | list[str] | None = None
             if target["atom_type"] == "node":
                 handle = self.local_backend.node_handle(target["type"], target["name"])
             elif target["atom_type"] == "link":
-                handle = self._generate_target_handles(target)
+                handle = self._generate_target_handles(target["targets"])
             elif target["atom_type"] == "variable":
                 handle = WILDCARD
             targets_hash.append(handle)
@@ -202,52 +211,53 @@ class LocalQueryEngine(QueryEngine):
     def get_links(
         self,
         link_type: str,
-        target_types: List[str] = None,
-        link_targets: List[str] = None,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
         **kwargs,
-    ) -> Union[Iterator, List[str], List[Dict]]:
+    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
         if kwargs.get('no_iterator', True):
-            answer = self._get_related_links(link_type, target_types, link_targets, **kwargs)
-            if not answer:
+            cursor, answer = self._get_related_links(
+                link_type, target_types, link_targets, **kwargs
+            )
+            if not answer:  # atom does not exist
                 return []
-            if isinstance(answer, tuple):
-                if isinstance(answer[0], int):
-                    return answer[0], self._to_link_dict_list(answer[1])
+            if isinstance(answer[0], tuple):
+                if isinstance(cursor, int):
+                    return cursor, self._to_link_dict_list(answer)
                 else:
-                    return self._to_link_dict_list(answer[1])
+                    return self._to_link_dict_list(answer)
             return self._to_link_dict_list(answer)
         else:
             if kwargs.get('cursor') is None:
                 kwargs['cursor'] = 0
-            answer = self._get_related_links(link_type, target_types, link_targets, **kwargs)
+            cursor, answer = self._get_related_links(
+                link_type, target_types, link_targets, **kwargs
+            )
+            if cursor:
+                kwargs['cursor'] = cursor
             kwargs['backend'] = self
             kwargs['link_type'] = link_type
             kwargs['target_types'] = target_types
             kwargs['link_targets'] = link_targets
-            if isinstance(answer, tuple):  # redis_mongo use case
-                kwargs['cursor'] = answer[0]
-                answer = answer[1]
             return LocalGetLinks(ListIterator(answer), **kwargs)
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> Union[Iterator, List[Union[dict, str, Tuple[dict, List[dict]]]]]:
+    ) -> tuple[int | None, IncomingLinksT | Iterator]:
         if kwargs.get('no_iterator', True):
             return self.local_backend.get_incoming_links(atom_handle, **kwargs)
         else:
             kwargs['handles_only'] = True
-            links = self.local_backend.get_incoming_links(atom_handle, **kwargs)
+            cursor, links = self.local_backend.get_incoming_links(atom_handle, **kwargs)
+            kwargs['cursor'] = cursor
             kwargs['backend'] = self.local_backend
             kwargs['atom_handle'] = atom_handle
-            if isinstance(links, tuple):  # redis_mongo use case
-                kwargs['cursor'] = links[0]
-                links = links[1]
-            return LocalIncomingLinks(ListIterator(links), **kwargs)
+            return cursor, LocalIncomingLinks(ListIterator(links), **kwargs)
 
     def query(
         self,
         query: Query,
-        parameters: Optional[Dict[str, Any]] = {},
+        parameters: Dict[str, Any] = {},
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         no_iterator = parameters.get("no_iterator", False)
         if no_iterator:
@@ -266,8 +276,8 @@ class LocalQueryEngine(QueryEngine):
             return query_results
 
     def custom_query(
-        self, index_id: str, query: Query, **kwargs
-    ) -> Union[Iterator, List[Dict[str, Any]]]:
+        self, index_id: str, query: list[OrderedDict[str, str]], **kwargs
+    ) -> Iterator | tuple[int, list[AtomT]]:
         if kwargs.pop('no_iterator', True):
             return self.local_backend.get_atoms_by_index(index_id, query=query, **kwargs)
         else:
@@ -341,11 +351,11 @@ class LocalQueryEngine(QueryEngine):
     def create_context(
         self,
         name: str,
-        queries: Optional[List[Query]] = None,
-    ) -> Context:
+        queries: List[Query] = [],
+    ) -> Context:  # type: ignore
         das_error(NotImplementedError("Contexts are not implemented for non-server local DAS"))
 
-    def get_atoms_by_field(self, query: Query) -> List[str]:
+    def get_atoms_by_field(self, query: list[OrderedDict[str, str]]) -> List[str]:
         return self.local_backend.get_atoms_by_field(query)
 
     def get_atoms_by_text_field(

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
 from threading import Semaphore, Thread
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 from hyperon_das_atomdb import WILDCARD
 
@@ -86,15 +86,10 @@ class AndEvaluator(ProductIterator):
 
 class LazyQueryEvaluator(ProductIterator):
     def __init__(
-        self,
-        link_type: str,
-        source: List[QueryAnswerIterator],
-        query_engine: QueryEngine,
-        query_parameters: Optional[Dict[str, Any]],
+        self, link_type: str, source: List[QueryAnswerIterator], query_engine: QueryEngine
     ):
         super().__init__(source)
         self.link_type = link_type
-        self.query_parameters = query_parameters
         self.query_engine = query_engine
         self.buffered_answer = None
 
@@ -168,7 +163,7 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
             self.iterator = self.source
             self.current_value = self.get_current_value()
             self.fetch_data_thread = Thread(target=self._fetch_data)
-            if self.cursor != 0:
+            if self.cursor not in (0, None):
                 self.semaphore = Semaphore(1)
                 self.fetch_data_thread.start()
 
@@ -181,7 +176,7 @@ class BaseLinksIterator(QueryAnswerIterator, ABC):
                 self.iterator = None
                 if self.fetch_data_thread.is_alive():
                     self.fetch_data_thread.join()
-                if self.cursor == 0 and len(self.buffer_queue) == 0:
+                if self.cursor in (0, None) and len(self.buffer_queue) == 0:
                     self.current_value = None
                     raise e
                 self._refresh_iterator()
@@ -278,8 +273,12 @@ class RemoteIncomingLinks(BaseLinksIterator):
                 link_document = next(self.iterator)
                 if isinstance(link_document, tuple) or isinstance(link_document, list):
                     handle = link_document[0]['handle']
-                else:
+                elif isinstance(link_document, dict):
                     handle = link_document['handle']
+                elif isinstance(link_document, str):
+                    handle = link_document
+                else:
+                    raise ValueError(f"Invalid link document: {link_document}")
                 if handle not in self.returned_handles:
                     self.returned_handles.add(handle)
                     self.current_value = link_document
@@ -434,7 +433,13 @@ class TraverseLinksIterator(QueryAnswerIterator):
             if self.buffer:
                 buffered_value, self.buffer = self.buffer, None
                 return buffered_value
-            link, targets = super().__next__()
+            link = super().__next__()
+            if isinstance(link, tuple):
+                link, targets = link
+            elif isinstance(link, dict):
+                targets = link.pop('targets_document', [])
+            else:
+                raise ValueError(f"Invalid link document: {link}")
             if (
                 not self.link_type
                 and self.cursor_position is None
@@ -447,11 +452,17 @@ class TraverseLinksIterator(QueryAnswerIterator):
 
     def _find_first_valid_element(self):
         if self.source:
-            for link, targets in self.source:
+            for link in self.source:
+                if isinstance(link, tuple):
+                    link, targets = link
+                elif isinstance(link, dict):
+                    targets = link.get('targets_document', [])
+                else:
+                    raise ValueError(f"Invalid link document: {link}")
                 if self._filter(link, targets):
                     return targets if self.targets_only else link
 
-    def _filter(self, link: Dict[str, Any], targets: Dict[str, Any]) -> bool:
+    def _filter(self, link: Dict[str, Any], targets: list[dict[str, Any]]) -> bool:
         if self.link_type and self.link_type != link['named_type']:
             return False
 

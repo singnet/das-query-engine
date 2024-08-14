@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
+
+from hyperon_das_atomdb.database import IncomingLinksT
 
 from hyperon_das.context import Context
 from hyperon_das.type_alias import Query
@@ -25,8 +27,12 @@ class QueryEngine(ABC):
 
     @abstractmethod
     def get_links(
-        self, link_type: str, target_types: List[str] = None, link_targets: List[str] = None
-    ) -> Union[List[str], List[Dict]]:
+        self,
+        link_type: str,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
+        **kwargs,
+    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
         """
         Retrieves links of a specified type, optionally filtered by target types or specific targets.
 
@@ -52,7 +58,7 @@ class QueryEngine(ABC):
     @abstractmethod
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
+    ) -> tuple[int | None, IncomingLinksT | Iterator]:
         """
         Retrieves incoming links for a specified atom handle, with optional filtering parameters.
 
@@ -229,7 +235,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def create_context(self, name: str, queries: Optional[List[Query]]) -> Context:
+    def create_context(self, name: str, queries: List[Query] = []) -> Context:
         """
         Creates a new context with a specified name and an optional list of queries.
 

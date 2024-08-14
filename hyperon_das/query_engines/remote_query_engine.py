@@ -1,5 +1,6 @@
 from typing import Any, Dict, Iterator, List, Optional, Union
 
+from hyperon_das_atomdb.database import IncomingLinksT
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController
@@ -24,7 +25,7 @@ class RemoteQueryEngine(QueryEngine):
         backend,
         cache_controller: CacheController,
         system_parameters: Dict[str, Any],
-        kwargs: Optional[dict] = {},
+        **kwargs,
     ):
         self.system_parameters = system_parameters
         self.local_query_engine = LocalQueryEngine(backend, cache_controller, kwargs)
@@ -55,10 +56,10 @@ class RemoteQueryEngine(QueryEngine):
     def get_links(
         self,
         link_type: str,
-        target_types: List[str] = None,
-        link_targets: List[str] = None,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
         **kwargs,
-    ) -> Union[Iterator, List[str], List[Dict]]:
+    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
         kwargs.pop('no_iterator', None)
         if kwargs.get('cursor') is None:
             kwargs['cursor'] = 0
@@ -74,18 +75,28 @@ class RemoteQueryEngine(QueryEngine):
         links.extend(remote_links)
         return RemoteGetLinks(ListIterator(links), **kwargs)
 
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> Iterator:
+    def get_incoming_links(
+        self, atom_handle: str, **kwargs
+    ) -> tuple[int | None, IncomingLinksT | Iterator]:
         kwargs.pop('no_iterator', None)
         if kwargs.get('cursor') is None:
             kwargs['cursor'] = 0
         kwargs['handles_only'] = False
-        links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
+        _, links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
         cursor, remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
         kwargs['cursor'] = cursor
         kwargs['backend'] = self.remote_das
         kwargs['atom_handle'] = atom_handle
         links.extend(remote_links)
-        return RemoteIncomingLinks(ListIterator(links), **kwargs)
+        if (
+            links
+            and kwargs.get('targets_document')
+            and isinstance(links, list)
+            and isinstance(links[0], dict)
+            and 'targets_document' in links[0]
+        ):
+            links = [(link, link.pop('targets_document', [])) for link in links]
+        return cursor, RemoteIncomingLinks(ListIterator(links), **kwargs)
 
     def custom_query(self, index_id: str, query: Query, **kwargs) -> Iterator:
         kwargs.pop('no_iterator', None)

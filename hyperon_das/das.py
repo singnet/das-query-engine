@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Type, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
@@ -21,6 +21,8 @@ from hyperon_das.utils import QueryAnswer, get_package_version
 
 
 class DistributedAtomSpace:
+    backend: AtomDB
+
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
         """
         Creates a new DAS object.
@@ -31,7 +33,7 @@ class DistributedAtomSpace:
 
 
         Args:
-            system_parameters (Dict[str, Any], optional): Sets the system parameters. Defaults to {
+            system_parameters (Dict[str, Any]): Sets the system parameters. Defaults to {
                 'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost',
                 'attention_broker_port': 27000}.
 
@@ -112,17 +114,22 @@ class DistributedAtomSpace:
                 details=f"query_engine={self.query_engine_type}",
             )
 
-    def _start_query_engine(self, engine_type, das_type, **kwargs):
+    def _start_query_engine(
+        self,
+        engine_type: Type[LocalQueryEngine | RemoteQueryEngine],
+        das_type: str,
+        **kwargs,
+    ) -> None:
         self._das_type = das_type
         self.query_engine = engine_type(
-            self.backend, self.cache_controller, self.system_parameters, kwargs
+            self.backend, self.cache_controller, self.system_parameters, **kwargs
         )
         logger().info(f"Started {das_type} DAS")
 
     def _create_context(
         self,
         name: str,
-        queries: Optional[List[Query]] = [],
+        queries: List[Query] = [],
     ) -> Context:
         context_node = self.add_node({'type': Context.CONTEXT_NODE_TYPE, 'name': name})
         query_answer = [self.query(query, {'no_iterator': True}) for query in queries]
@@ -312,8 +319,8 @@ class DistributedAtomSpace:
     def get_links(
         self,
         link_type: str,
-        target_types: List[str] = None,
-        link_targets: List[str] = None,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
         **kwargs,
     ) -> Union[Iterator, List[Dict[str, Any]]]:
         """
@@ -393,7 +400,9 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_links(link_type, target_types, link_targets, **kwargs)
 
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> List[Union[Dict[str, Any], str]]:
+    def get_incoming_links(
+        self, atom_handle: str, **kwargs
+    ) -> Iterator | list[dict[str, Any]] | list[str]:
         """
         Retrieve all links which has the passed handle as one of its targets.
 
@@ -421,9 +430,10 @@ class DistributedAtomSpace:
             Similarity ['99d18c702e813b07260baf577c60c455', 'd03e59654221c1e8fcda404fd5c8d6cb']
             Inheritance ['99d18c702e813b07260baf577c60c455', 'bdfe4e7a431f73386f37c6448afe5840']
         """
-        return self.query_engine.get_incoming_links(atom_handle, **kwargs)
+        _, links = self.query_engine.get_incoming_links(atom_handle, **kwargs)
+        return links
 
-    def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
+    def count_atoms(self, parameters: Dict[str, Any] = []) -> Dict[str, int]:
         """
         Count atoms, nodes and links in DAS.
 
@@ -449,7 +459,7 @@ class DistributedAtomSpace:
     def query(
         self,
         query: Query,
-        parameters: Optional[Dict[str, Any]] = {},
+        parameters: Dict[str, Any] = {},
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         """
         Perform a query on the knowledge base using a dict as input and return an
@@ -466,7 +476,7 @@ class DistributedAtomSpace:
                 link (possibly with nested links) with nodes and variables used to query
                 the knowledge base. If the query is represented as a list of dictionaries,
                 it is interpreted as a conjunction (AND) of all queries within the list.
-            parameters (Dict[str, Any], optional): query optional parameters
+            parameters (Dict[str, Any]): query optional parameters, defaults to {}
 
         Returns:
             Iterator[QueryAnswer]: An iterator of QueryAnswer objects, which have a field 'assignment',
@@ -946,7 +956,7 @@ class DistributedAtomSpace:
     def create_context(
         self,
         name: str,
-        queries: Optional[List[Query]] = [],
+        queries: List[Query] = [],
     ) -> Context:
         if self.query_engine_type == 'local':
             return self._create_context(name, queries)
