@@ -19,7 +19,7 @@ integration-tests:
 	@py.test -sx -vv ./tests/integration
 
 performance-tests:
-	@bash ./tests/performance/run_perf_tests.sh
+	@bash ./tests/performance/dasgate/run_perf_tests.sh
 
 benchmark-tests:
 	@py.test -sx -vv ./tests/performance $(OPTIONS)

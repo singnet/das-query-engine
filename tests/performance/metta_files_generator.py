@@ -3,7 +3,7 @@
 
 import argparse
 
-from test_mongo_redis_performance import TestPerformance
+from test_redis_mongo_benchmark import TestPerformance
 
 
 class DasWrapper:
@@ -39,14 +39,17 @@ class DasWrapper:
     def count_atoms(self, options):
         pass
 
+    def create_field_index(self, *args, **kwargs):
+        pass
+
 
 def main():
     test_performance = TestPerformance()
     parser = argparse.ArgumentParser(description='Create MeTTa file.')
     parser.add_argument("--filename", default='test.metta', help="Filename full path")
-    parser.add_argument("--node_range", default='0-100', help="Node range, eg: 0-100")
-    parser.add_argument("--word_range", default="2-10", help="Word range, eg: 2-10")
-    parser.add_argument("--letter_range", default="2-5", help="Letter range, eg: 2-5")
+    parser.add_argument("--node_count", default=100, help="Node range, eg: 100")
+    parser.add_argument("--word_count", default=8, help="Word range, eg: 2-10")
+    parser.add_argument("--word_length", default=3, help="Letter range, eg: 2-5")
     parser.add_argument("--alphabet_range", default="2-5", help="Alphabet range, eg: 2-5")
     parser.add_argument("--seed", default=11, help="Randon seed")
     parser.add_argument(
@@ -60,13 +63,14 @@ def main():
     args = parser.parse_args()
 
     test_performance._initialize(
-        args.node_range,
-        args.word_range,
-        args.letter_range,
+        int(args.node_count),
+        int(args.word_count),
+        int(args.word_length),
         args.alphabet_range,
         args.word_link_percentage,
         args.letter_link_percentage,
         args.seed,
+        debug=True,
     )
 
     test_performance._load_database(DasWrapper(args.filename))
