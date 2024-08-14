@@ -1,3 +1,4 @@
 [#305] Integration of AttentionBroker server to allow enabling of Cache Controller
 [#308] Change get_node() and get_link() to reuse get_atom()
 [#307] Change get_atom() to check is atom is present in the cache before forwarding the query to remote DAS
+[#304] syncing QE with the new Atom DB (PR #313)
