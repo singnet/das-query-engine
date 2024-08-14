@@ -138,13 +138,12 @@ class DatabaseMock(AtomDB):
             )
             self._add_incoming_set(str(link), link[1:])
 
-        # TODO: is this necessary?
-        # nested_link = [
-        #     'Evaluation',
-        #     human,
-        #     ['Evaluation', human, _build_link_handle('Set', [monkey, mammal])],
-        # ]
-        # self.all_links.append(nested_link)
+        nested_link = [
+            'Evaluation',
+            human,
+            ['Evaluation', human, _build_link_handle('Set', [monkey, mammal])],
+        ]
+        self.all_links.append(nested_link)  # type: ignore
 
     def __repr__(self) -> str:
         return "<Atom database Mock>"

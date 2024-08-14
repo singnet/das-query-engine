@@ -1,6 +1,6 @@
 import re
 from collections import OrderedDict
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Set, Union
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
@@ -35,7 +35,7 @@ from hyperon_das.utils import Assignment, QueryAnswer, das_error
 class LocalQueryEngine(QueryEngine):
     def __init__(
         self,
-        backend,
+        backend: AtomDB,
         cache_controller: CacheController,
         system_parameters: Dict[str, Any],
         **kwargs,
@@ -48,8 +48,8 @@ class LocalQueryEngine(QueryEngine):
     def _recursive_query(
         self,
         query: Query,
-        mappings: Set[Assignment] = None,
-        parameters: Optional[Dict[str, Any]] = None,
+        mappings: Set[Assignment] | None = None,
+        parameters: Dict[str, Any] = [],
     ) -> QueryAnswerIterator:
         if isinstance(query, list):
             sub_expression_results = [
@@ -102,8 +102,8 @@ class LocalQueryEngine(QueryEngine):
     def _get_related_links(
         self,
         link_type: str,
-        target_types: List[str] = None,
-        link_targets: List[str] = None,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
         **kwargs,
     ) -> MatchedLinksResultT:
         if link_type != WILDCARD and target_types is not None:
@@ -164,20 +164,19 @@ class LocalQueryEngine(QueryEngine):
 
         return result
 
-    def _generate_target_handles(self, targets: List[Dict[str, Any]]) -> list[str]:
-        targets_hash: list[str] = []
+    def _generate_target_handles(
+        self, targets: List[Dict[str, Any]]
+    ) -> list[str | list[str] | list[Any]]:  # multiple levels of nested lists due to recursion
+        targets_hash: list[str | list[str] | list[Any]] = []
         for target in targets:
             handle: str | list[str] | None = None
             if target["atom_type"] == "node":
                 handle = self.local_backend.node_handle(target["type"], target["name"])
             elif target["atom_type"] == "link":
-                handle = self._generate_target_handles([target])  # TODO: check if this is correct
+                handle = self._generate_target_handles([target])
             elif target["atom_type"] == "variable":
                 handle = WILDCARD
-            if handle and isinstance(handle, str):  # TODO: check if this is correct
-                targets_hash.append(handle)
-            elif handle and isinstance(handle, list):  # TODO: check if this is correct
-                targets_hash.extend(handle)
+            targets_hash.append(handle)
         return targets_hash
 
     def _handle_to_atoms(self, handle: str) -> Union[List[dict], dict]:
@@ -212,10 +211,10 @@ class LocalQueryEngine(QueryEngine):
     def get_links(
         self,
         link_type: str,
-        target_types: List[str] = None,
-        link_targets: List[str] = None,
+        target_types: list[str] | None = None,
+        link_targets: list[str] | None = None,
         **kwargs,
-    ) -> Union[Iterator, List[str], List[Dict], Tuple[int, List[Dict]]]:  # TODO: simplify
+    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
         if kwargs.get('no_iterator', True):
             cursor, answer = self._get_related_links(
                 link_type, target_types, link_targets, **kwargs
@@ -258,9 +257,9 @@ class LocalQueryEngine(QueryEngine):
     def query(
         self,
         query: Query,
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Dict[str, Any] = {},
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
-        no_iterator = bool(parameters and parameters.get("no_iterator", False))
+        no_iterator = parameters.get("no_iterator", False)
         if no_iterator:
             logger().debug(
                 {
@@ -352,7 +351,7 @@ class LocalQueryEngine(QueryEngine):
     def create_context(
         self,
         name: str,
-        queries: Optional[List[Query]] = None,
+        queries: List[Query] = [],
     ) -> Context:  # type: ignore
         das_error(NotImplementedError("Contexts are not implemented for non-server local DAS"))
 
