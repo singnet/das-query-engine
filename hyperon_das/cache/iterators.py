@@ -437,7 +437,7 @@ class TraverseLinksIterator(QueryAnswerIterator):
             if isinstance(link, tuple):
                 link, targets = link
             elif isinstance(link, dict):
-                targets = link.get('targets_document', [])
+                targets = link.pop('targets_document', [])
             else:
                 raise ValueError(f"Invalid link document: {link}")
             if (
