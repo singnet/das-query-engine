@@ -192,7 +192,6 @@ class TestPerformance:
                 das.add_node(node)
             node_list.append(node)
             node_names.add(node['name'])
-        print(len(node_list), self.node_count)
         return node_list
 
     @staticmethod
@@ -431,13 +430,9 @@ class TestPerformance:
         cursors = {cursor.get()['handle']}
         while True:
             links = []
-            for n in cursor.get_neighbors(link_type=link_type):
-                try: # cursor.get_neighbors is returning all neighbors
-                    link = das.get_link(link_type, link_targets=[cursor.get()['handle'], n['handle']])
-                    links.append(link)
-                except:
-                    pass
-
+            for n in cursor.get_neighbors(link_type=link_type, cursor_position=0):
+                link = das.get_link(link_type, link_targets=[cursor.get()['handle'], n['handle']])
+                links.append(link)
             if not links:
                 break
             winner = max(links, key=lambda x: x['strength'])
