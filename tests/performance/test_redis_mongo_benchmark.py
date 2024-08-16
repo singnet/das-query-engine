@@ -130,9 +130,11 @@ class TestPerformance:
         )
         if test_name not in self.test_duration:
             self.test_duration[test_name] = []
-        start_time = time.perf_counter()
+        # start_time = time.perf_counter()
+        start_time = time.process_time_ns()
         yield
-        end_time = time.perf_counter()
+        end_time = time.process_time_ns()
+        # end_time = time.perf_counter()
         self.test_duration[test_name].append(end_time - start_time)
 
     def print_status(self):
