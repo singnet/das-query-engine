@@ -84,7 +84,7 @@ class QueryEngine(ABC):
 
     @abstractmethod
     def query(
-        self, query: Query, parameters: Optional[Dict[str, Any]] = {}
+        self, query: Query, parameters: dict[str, Any] | None = None
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         """
         Executes a query against the database and returns the results.
@@ -97,8 +97,11 @@ class QueryEngine(ABC):
             query (Query): The query to be executed. This is typically a structured query that
                            specifies what data to retrieve or what operations to perform.
             parameters (Optional[Dict[str, Any]]): A dictionary of parameters that can modify the
-                           query execution or its results. For example, 'no_iterator' can be set to
-                           True to return a list instead of an iterator.
+                           query execution or its results.
+                           'no_iterator' can be set to True to return a list instead of an iterator.
+                           'query_scope' can be set to 'remote_only' to query the remote DAS (default),
+                           'synchronous_update' to query remote and sync, 'local_only' to query local DAS
+                           or 'local_and_remote' to query both (Not available yet)
 
         Returns:
             Union[Iterator[QueryAnswer], List[QueryAnswer]]: Depending on the 'no_iterator' parameter,
@@ -235,7 +238,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def create_context(self, name: str, queries: List[Query] = []) -> Context:
+    def create_context(self, name: str, queries: list[Query] | None = None) -> Context:
         """
         Creates a new context with a specified name and an optional list of queries.
 

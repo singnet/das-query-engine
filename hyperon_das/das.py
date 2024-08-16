@@ -23,7 +23,7 @@ from hyperon_das.utils import QueryAnswer, get_package_version
 class DistributedAtomSpace:
     backend: AtomDB
 
-    def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
+    def __init__(self, system_parameters: dict[str, Any] | None = None, **kwargs) -> None:
         """
         Creates a new DAS object.
         A DAS client can run locally or locally and remote, connecting to remote DASs instances to query remote atoms,
@@ -70,7 +70,7 @@ class DistributedAtomSpace:
             redis_cluster (bool, optional): Indicates whether Redis is configured in cluster mode. Defaults to True.
             redis_ssl (bool, optional): Set Redis to encrypt the connection. Defaults to True.
         """
-        self.system_parameters = system_parameters
+        self.system_parameters = system_parameters or {}
         self.atomdb = kwargs.get('atomdb', 'ram')
         self.query_engine_type = kwargs.get('query_engine', 'local')
         self._set_default_system_parameters()
@@ -129,8 +129,9 @@ class DistributedAtomSpace:
     def _create_context(
         self,
         name: str,
-        queries: List[Query] = [],
+        queries: list[Query] | None = None,
     ) -> Context:
+        queries = queries or []
         context_node = self.add_node({'type': Context.CONTEXT_NODE_TYPE, 'name': name})
         query_answer = [self.query(query, {'no_iterator': True}) for query in queries]
         context = Context(context_node, query_answer)
@@ -433,7 +434,7 @@ class DistributedAtomSpace:
         _, links = self.query_engine.get_incoming_links(atom_handle, **kwargs)
         return links
 
-    def count_atoms(self, parameters: Dict[str, Any] = []) -> Dict[str, int]:
+    def count_atoms(self, parameters: Dict[str, Any] = None) -> Dict[str, int]:
         """
         Count atoms, nodes and links in DAS.
 
@@ -454,12 +455,12 @@ class DistributedAtomSpace:
         Returns:
             Dict[str, int]: Dict containing the keys 'node_count', 'atom_count', 'link_count'.
         """
-        return self.query_engine.count_atoms(parameters)
+        return self.query_engine.count_atoms(parameters or [])
 
     def query(
         self,
         query: Query,
-        parameters: Dict[str, Any] = {},
+        parameters: dict[str, Any] | None = None,
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         """
         Perform a query on the knowledge base using a dict as input and return an
@@ -476,7 +477,12 @@ class DistributedAtomSpace:
                 link (possibly with nested links) with nodes and variables used to query
                 the knowledge base. If the query is represented as a list of dictionaries,
                 it is interpreted as a conjunction (AND) of all queries within the list.
-            parameters (Dict[str, Any]): query optional parameters, defaults to {}
+            parameters (Dict[str, Any]): query optional parameters, defaults to None.
+                Eg:
+                'no_iterator' can be set to True to return a list instead of an iterator.
+                'query_scope' can be set to 'remote_only' to query the remote DAS (default),
+                'synchronous_update' to query remote and sync, 'local_only' to query local DAS
+                or 'local_and_remote' to query both (Not available yet)
 
         Returns:
             Iterator[QueryAnswer]: An iterator of QueryAnswer objects, which have a field 'assignment',
@@ -956,7 +962,7 @@ class DistributedAtomSpace:
     def create_context(
         self,
         name: str,
-        queries: List[Query] = [],
+        queries: list[Query] | None = None,
     ) -> Context:
         if self.query_engine_type == 'local':
             return self._create_context(name, queries)

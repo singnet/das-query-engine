@@ -49,7 +49,7 @@ class LocalQueryEngine(QueryEngine):
         self,
         query: Query,
         mappings: Set[Assignment] | None = None,  # TODO: this parameter is never used
-        parameters: Dict[str, Any] = [],
+        parameters: dict[str, Any] | None = None,
     ) -> QueryAnswerIterator:
         if isinstance(query, list):
             sub_expression_results = [
@@ -246,20 +246,20 @@ class LocalQueryEngine(QueryEngine):
     ) -> tuple[int | None, IncomingLinksT | Iterator]:
         if kwargs.get('no_iterator', True):
             return self.local_backend.get_incoming_links(atom_handle, **kwargs)
-        else:
-            kwargs['handles_only'] = True
-            cursor, links = self.local_backend.get_incoming_links(atom_handle, **kwargs)
-            kwargs['cursor'] = cursor
-            kwargs['backend'] = self.local_backend
-            kwargs['atom_handle'] = atom_handle
-            return cursor, LocalIncomingLinks(ListIterator(links), **kwargs)
+
+        kwargs['handles_only'] = True
+        cursor, links = self.local_backend.get_incoming_links(atom_handle, **kwargs)
+        kwargs['cursor'] = cursor
+        kwargs['backend'] = self.local_backend
+        kwargs['atom_handle'] = atom_handle
+        return cursor, LocalIncomingLinks(ListIterator(links), **kwargs)
 
     def query(
         self,
         query: Query,
-        parameters: Dict[str, Any] = {},
-    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
-        no_iterator = parameters.get("no_iterator", False)
+        parameters: dict[str, Any] | None = None,
+    ) -> Iterator[QueryAnswer] | list[dict[str, Any]]:
+        no_iterator = parameters.get("no_iterator", False) if parameters else False
         if no_iterator:
             logger().debug(
                 {
@@ -269,11 +269,10 @@ class LocalQueryEngine(QueryEngine):
             )
         query_results = self._recursive_query(query, parameters)
         if no_iterator:
-            answer = [result for result in query_results]
+            answer = list(query_results)
             logger().debug(f"query: {query} result: {str(answer)}")
             return answer
-        else:
-            return query_results
+        return query_results
 
     def custom_query(
         self, index_id: str, query: list[OrderedDict[str, str]], **kwargs
@@ -351,7 +350,7 @@ class LocalQueryEngine(QueryEngine):
     def create_context(
         self,
         name: str,
-        queries: List[Query] = [],
+        queries: list[Query] | None = None,
     ) -> Context:  # type: ignore
         das_error(NotImplementedError("Contexts are not implemented for non-server local DAS"))
 
