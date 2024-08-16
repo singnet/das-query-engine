@@ -1,13 +1,16 @@
-isort:
-	@isort ./hyperon_das ./tests --multi-line=3 --trailing-comma --force-grid-wrap=0 --use-parentheses --line-width=100
+# isort:
+# 	@isort ./hyperon_das ./tests --multi-line=3 --trailing-comma --force-grid-wrap=0 --use-parentheses --line-width=100
 
-black:
-	@black ./hyperon_das ./tests --line-length 100 -t py37 --skip-string-normalization
+# black:
+# 	@black ./hyperon_das ./tests --line-length 100 -t py37 --skip-string-normalization
 
-flake8:
-	@flake8 ./hyperon_das ./tests --show-source --extend-ignore E501 --exclude ./hyperon_das/grpc/
+# flake8:
+# 	@flake8 ./hyperon_das ./tests --show-source --extend-ignore E501 --exclude ./hyperon_das/grpc/
 
-lint: isort black flake8
+pylint:
+	@pylint ./hyperon_das --rcfile=.pylintrc
+
+lint: pylint
 
 unit-tests:
 	@py.test -sx -vv ./tests/unit
