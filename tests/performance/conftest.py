@@ -21,10 +21,24 @@ def pytest_addoption(parser):
     )
     parser.addoption("--seed", default=11, help="Randon number seed")
 
-    parser.addoption("--mongo_host_port", default="localhost:15927", help="Mongo hostname and port. eg: localhost:1234")
-    parser.addoption("--mongo_credentials", default="dbadmin:dassecret", help="Mongo username and password. eg: user:pass")
-    parser.addoption("--redis_host_port", default="localhost:15926", help="Redis hostname and port. eg: localhost:1234")
-    parser.addoption("--redis_credentials", default=":", help="Redis username and password. eg: user:pass")
+    parser.addoption(
+        "--mongo_host_port",
+        default="localhost:15927",
+        help="Mongo hostname and port. eg: localhost:1234",
+    )
+    parser.addoption(
+        "--mongo_credentials",
+        default="dbadmin:dassecret",
+        help="Mongo username and password. eg: user:pass",
+    )
+    parser.addoption(
+        "--redis_host_port",
+        default="localhost:15926",
+        help="Redis hostname and port. eg: localhost:1234",
+    )
+    parser.addoption(
+        "--redis_credentials", default=":", help="Redis username and password. eg: user:pass"
+    )
     parser.addoption("--redis_cluster", default=False, help="Redis cluster configuration")
     parser.addoption("--redis_ssl", default=False, help="Sets Redis SSL")
 
@@ -43,7 +57,7 @@ def pytest_generate_tests(metafunc):
         "redis_host_port",
         "redis_credentials",
         "redis_cluster",
-        "redis_ssl"
+        "redis_ssl",
     ]
     if all((i in metafunc.fixturenames for i in performance_test_params)):
         metafunc.config.getoption("node_count")
