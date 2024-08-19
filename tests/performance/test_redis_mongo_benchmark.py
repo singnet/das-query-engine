@@ -10,7 +10,7 @@ import pytest
 from conftest import PERFORMANCE_REPORT
 
 from hyperon_das import DistributedAtomSpace
-from tests.integration.helpers import _db_down, _db_up, mongo_port, redis_port
+from tests.integration.helpers import _db_down, _db_up
 
 # pylint: disable=attribute-defined-outside-init,disable=too-many-instance-attributes
 # pylint: disable=unused-argument,too-many-arguments,missing-function-docstring,too-many-locals
