@@ -35,7 +35,7 @@ class TestVultrClientIntegration:
         links1 = server.get_links(
             link_type='Expression', target_types=['Symbol', 'Symbol', 'Symbol']
         )
-        _, links2 = server.get_links(link_type='Expression')
+        links2 = server.get_links(link_type='Expression')
         assert len(links1) == 43
         assert len(links2) == 43
 
@@ -117,39 +117,50 @@ class TestVultrClientIntegration:
                 targets_document.append(server.get_atom(target))
             expected_atoms_targets.append([atom, targets_document])
 
-        response_handles = server.get_incoming_links(
+        cursor, response_handles = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=True
         )
+        assert cursor is None
+        assert all(isinstance(handle, str) for handle in response_handles)
         assert len(response_handles) == 9
         # response_handles has an extra link (named_type == MettaType) defining
         #     the metta type of '"human"'--> Type
         # response_handles has an extra link (named_type == Expression) defining
         #     the metta expression (: "human" Type)
         assert len(set(response_handles).difference(set(expected_handles))) == 1
-        response_handles = server.get_incoming_links(
+        cursor, response_handles = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=True
         )
+        assert cursor is None
+        assert all(isinstance(handle, str) for handle in response_handles)
         assert len(response_handles) == 9
         assert len(set(response_handles).difference(set(expected_handles))) == 1
 
-        response_atoms = server.get_incoming_links(
+        cursor, response_atoms = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=False
         )
+        assert cursor is None
         assert len(response_atoms) == 9
         for atom in response_atoms:
+            assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
-        response_atoms = server.get_incoming_links(metta_animal_base_handles.human)
+        cursor, response_atoms = server.get_incoming_links(metta_animal_base_handles.human)
+        assert cursor is None
         assert len(response_atoms) == 9
         for atom in response_atoms:
+            assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
-        response_atoms_targets = server.get_incoming_links(
+        cursor, response_atoms_targets = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=False
         )
+        assert cursor is None
         assert len(response_atoms_targets) == 9
-        for atom_targets in response_atoms_targets:
-            if len(atom_targets[0]["targets"]) == 3:
-                assert list(atom_targets) in expected_atoms_targets
+        for atom in response_atoms_targets:
+            assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"
+            atom_targets = atom.pop('targets_document')
+            if len(atom_targets) == 3:
+                assert [atom, atom_targets] in expected_atoms_targets
