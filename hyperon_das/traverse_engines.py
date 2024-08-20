@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator
 
 from hyperon_das_atomdb import AtomDoesNotExist
 
-from hyperon_das.cache import QueryAnswerIterator
+from hyperon_das.cache import LocalIncomingLinks, QueryAnswerIterator, RemoteIncomingLinks
 from hyperon_das.cache.iterators import TraverseLinksIterator, TraverseNeighborsIterator
 
 if TYPE_CHECKING:  # pragma no cover
@@ -54,13 +54,15 @@ class TraverseEngine:
                 )
             >>> next(links)
         """
-        incoming_links = self.das.get_incoming_links(
+        cursor, incoming_links = self.das.get_incoming_links(
             atom_handle=self._cursor['handle'],
             no_iterator=False,
             targets_document=True,
             cursor=0,
             chunk_size=kwargs.get('chunk_size', 500),
         )
+        assert cursor == 0
+        assert isinstance(incoming_links, (LocalIncomingLinks, RemoteIncomingLinks))
         return TraverseLinksIterator(source=incoming_links, cursor=self._cursor['handle'], **kwargs)
 
     def get_neighbors(self, **kwargs) -> Iterator:

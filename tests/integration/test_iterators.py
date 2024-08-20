@@ -100,7 +100,9 @@ class TestIncomingLinks:
     def test_incoming_links_with_das_ram_only(self, human_handle):
         das = DistributedAtomSpace()
         load_metta_animals_base(das)
-        iterator = das.get_incoming_links(human_handle, no_iterator=False)
+        cursor, iterator = das.get_incoming_links(human_handle, no_iterator=False)
+        assert cursor is None
+        assert isinstance(iterator, (LocalIncomingLinks, RemoteIncomingLinks))
         self._check_asserts(das, iterator)
 
     def test_incoming_links_with_das_redis_mongo(self, human_handle, _cleanup):
@@ -117,7 +119,9 @@ class TestIncomingLinks:
         )
         load_metta_animals_base(das)
         das.commit_changes()
-        iterator = das.get_incoming_links(human_handle, no_iterator=False, cursor=0)
+        cursor, iterator = das.get_incoming_links(human_handle, no_iterator=False, cursor=0)
+        assert cursor == 0
+        assert isinstance(iterator, (LocalIncomingLinks, RemoteIncomingLinks))
         self._check_asserts(das, iterator)
         _db_down()
 
@@ -125,7 +129,9 @@ class TestIncomingLinks:
         das = DistributedAtomSpace(
             query_engine='remote', host=remote_das_host, port=remote_das_port
         )
-        iterator = das.get_incoming_links(human_handle)
+        cursor, iterator = das.get_incoming_links(human_handle)
+        assert cursor == 0
+        assert isinstance(iterator, (LocalIncomingLinks, RemoteIncomingLinks))
         self._check_asserts(das, iterator)
 
 

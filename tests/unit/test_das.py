@@ -4,6 +4,7 @@ import pytest
 from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
+from hyperon_das.cache import RemoteIncomingLinks
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.exceptions import GetTraversalCursorException, InvalidQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
@@ -33,10 +34,12 @@ class TestDistributedAtomSpace:
 
     def test_get_incoming_links(self):
         das = DistributedAtomSpaceMock()
-        links = das.get_incoming_links('<Concept: human>', handles_only=True)
+        cursor, links = das.get_incoming_links('<Concept: human>', handles_only=True)
+        assert cursor is None
         assert len(links) == 7
 
-        links = das.get_incoming_links('<Concept: human>')
+        cursor, links = das.get_incoming_links('<Concept: human>')
+        assert cursor is None
         assert len(links) == 7
 
         with mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
@@ -45,20 +48,26 @@ class TestDistributedAtomSpace:
         with mock.patch(
             'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=(0, [])
         ):
-            links = das_remote.get_incoming_links('<Concept: human>')
+            cursor, links = das_remote.get_incoming_links('<Concept: human>')
+        assert cursor == 0
+        assert isinstance(links, RemoteIncomingLinks)
         assert len(links.source.source) == 7
 
         with mock.patch(
             'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=(0, [1, 2, 3, 4])
         ):
-            links = das_remote.get_incoming_links('<Concept: snet>')
+            cursor, links = das_remote.get_incoming_links('<Concept: snet>')
+        assert cursor == 0
+        assert isinstance(links, RemoteIncomingLinks)
         assert links.source.source == [1, 2, 3, 4]
 
         with mock.patch(
             'hyperon_das.client.FunctionsClient.get_incoming_links',
             return_value=(0, ["['Inheritance', '<Concept: ent>', '<Concept: snet>']"]),
         ):
-            links = das_remote.get_incoming_links('<Concept: ent>', handles_only=True)
+            cursor, links = das_remote.get_incoming_links('<Concept: ent>', handles_only=True)
+        assert cursor == 0
+        assert isinstance(links, RemoteIncomingLinks)
         assert set(links.source.source) == {
             "['Inheritance', '<Concept: ent>', '<Concept: plant>']",
             "['Similarity', '<Concept: ent>', '<Concept: human>']",
