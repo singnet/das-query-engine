@@ -1,6 +1,6 @@
 #!/bin/bash
 
-which metta 2>&1>/dev/null || {
+which metta 2>&1 > /dev/null || {
 cat <<EOF
 metta not found in PATH, please install hyperon package:
 
@@ -28,25 +28,29 @@ EOF
 exit 1
 }
 
+metta_scripts_root="${PWD}/tests/performance/dasgate"
+
 echo -n "Running performance test using MeTTa's built-in Atom Space..."
-builtin_log_file=$(mktemp --suffix='_perf_test_builtin.log')
-time (metta ${PWD}/tests/performance/test_builtin.metta 2>&1>${builtin_log_file})
+metta_script="${metta_scripts_root}/test_builtin.metta"
+builtin_log_file="$(mktemp --suffix='_perf_test_builtin.log')"
+time (metta "${metta_script}" 2>&1 > "${builtin_log_file}")
 echo "Check the log file for more details: ${builtin_log_file}"
 
 echo "-----"
 
 echo -n "Running performance test using DAS..."
-das_log_file=$(mktemp --suffix='_perf_test_das_ram_only.log')
-time (metta ${PWD}/tests/performance/test_das_ram_only.metta 2>&1>${das_log_file})
+metta_script="${metta_scripts_root}/test_das_ram_only.metta"
+das_log_file="$(mktemp --suffix='_perf_test_das_ram_only.log')"
+time (metta "${metta_script}" 2>&1 > "${das_log_file}")
 echo "Check the log file for more details: ${das_log_file}"
 
 echo "-----"
 
 echo -n "Comparing tests outputs... "
 if diff \
-    <(sed 's/, /\n/g' ${builtin_log_file} | tr -d '[]()' | sort | xargs echo) \
-    <(sed 's/, /\n/g' ${das_log_file} | tr -d '[]()' | sort | xargs echo) \
-    2>&1>/dev/null
+    <(sed 's/, /\n/g' "${builtin_log_file}" | tr -d '[]()' | sort | xargs echo) \
+    <(sed 's/, /\n/g' "${das_log_file}" | tr -d '[]()' | sort | xargs echo) \
+    2>&1 > /dev/null
 then
 echo "SUCCESS!"
 echo "Tests outputs are the same on both built-in Atom Space and DAS."
