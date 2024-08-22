@@ -154,7 +154,7 @@ class DistributedAtomSpace:
         }
 
     @staticmethod
-    def get_node_handle(node_type: str, node_name: str) -> str:
+    def compute_node_handle(node_type: str, node_name: str) -> str:
         """
         Computes the handle of a node, given its type and name.
 
@@ -173,14 +173,14 @@ class DistributedAtomSpace:
 
         Examples:
             >>> das = DistributedAtomSpace()
-            >>> result = das.get_node_handle(node_type='Concept', node_name='human')
+            >>> result = das.compute_node_handle(node_type='Concept', node_name='human')
             >>> print(result)
             "af12f10f9ae2002a1607ba0b47ba8407"
         """
         return AtomDB.node_handle(node_type, node_name)
 
     @staticmethod
-    def get_link_handle(link_type: str, link_targets: List[str]) -> str:
+    def compute_link_handle(link_type: str, link_targets: List[str]) -> str:
         """
         Computes the handle of a link, given its type and targets' handles.
 
@@ -199,26 +199,28 @@ class DistributedAtomSpace:
 
         Examples:
             >>> das = DistributedAtomSpace()
-            >>> human_handle = das.get_node_handle(node_type='Concept', node_name='human')
-            >>> monkey_handle = das.get_node_handle(node_type='Concept', node_name='monkey')
-            >>> result = das.get_link_handle(link_type='Similarity', targets=[human_handle, monkey_handle])
+            >>> human_handle = das.compute_node_handle(node_type='Concept', node_name='human')
+            >>> monkey_handle = das.compute_node_handle(node_type='Concept', node_name='monkey')
+            >>> result = das.compute_link_handle(link_type='Similarity', targets=[human_handle, monkey_handle])
             >>> print(result)
             "bad7472f41a0e7d601ca294eb4607c3a"
 
         """
         return AtomDB.link_handle(link_type, link_targets)
 
-    def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
+    def get_atom(self, handle: str) -> Dict[str, Any]:
         """
-        Retrieve an atom given its handle, handles for atoms can be created by using the function 'get_node_handle'.
-        A handle is MD5 hash of a node in the graph.
+        Retrieve an atom given its handle.
 
+        A handle is a MD5 hash of a node in the graph. It cam be computed using `compute_node_handle()' or `compute_link_handle()`.
 
         Args:
             handle (str): Atom's handle.
 
         Keyword Args:
-            no_target_format (bool, optional): Set this parameter to True to get MongoDB's default output. Defaults to False.
+            no_target_format (bool, optional): If True, a list of target handles is returned in
+                link's `targets` field. If False, a list with actual target documents is returned
+                instead. Defaults to False.
             targets_document (bool, optional): Set this parameter to True to return a tuple containing the document as first element
                 and the targets as second element. Defaults to False.
 
@@ -230,7 +232,7 @@ class DistributedAtomSpace:
 
         Examples:
             >>> das = DistributedAtomSpace()
-            >>> human_handle = das.get_node_handle(node_type='Concept', node_name='human')
+            >>> human_handle = das.compute_node_handle(node_type='Concept', node_name='human')
             >>> result = das.get_atom(human_handle)
             >>> print(result)
             {
@@ -240,7 +242,49 @@ class DistributedAtomSpace:
                 'named_type': 'Concept'
             }
         """
-        return self.query_engine.get_atom(handle, **kwargs)
+        return self.query_engine.get_atom(handle, no_target_format=True)
+
+    def get_atoms(self, handles: List[str]) -> List[Dict[str, Any]]:
+        """
+        Retrieve atoms given a list of handles.
+
+        A handle is a MD5 hash of a node in the graph. It cam be computed using
+        `compute_node_handle()' or `compute_link_handle()`.
+
+        It is preferable to call get atoms() passing a list of handles rather than
+        repeatedly calling get_atom() for each handle because get_atoms() makes at
+        most one remote request, if necessary.
+
+        Args:
+            handles (List[str]): List with Atom's handles.
+
+        Returns:
+            Dict: A list of Python dicts with all atom data.
+
+        Raises:
+            AtomDoesNotExist: If some of the atoms doesn't exist.
+
+        Examples:
+            >>> das = DistributedAtomSpace()
+            >>> human_handle = das.compute_node_handle(node_type='Concept', node_name='human')
+            >>> animal_handle = das.compute_node_handle(node_type='Concept', node_name='monkey')
+            >>> result = das.get_atoms([human_handle, animal_handle])
+            >>> print(result[0])
+            >>> print(result[1])
+            {
+                'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
+                'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
+                'name': 'human',
+                'named_type': 'Concept'
+            }
+            {
+                'handle': '1cdffc6b0b89ff41d68bec237481d1e1'
+                'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
+                'name': 'monkey',
+                'named_type': 'Concept'
+            }
+        """
+        return self.query_engine.get_atoms(handles, no_target_format=True)
 
     def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
         """
@@ -276,7 +320,7 @@ class DistributedAtomSpace:
     def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
         """
         Retrieve a link given its type and list of targets.
-        Targets are hashes of the nodes these hashes or handles can be created using the function 'get_node_handle'.
+        Targets are hashes of the nodes these hashes or handles can be created using the function 'compute_node_handle'.
 
         Args:
             link_type (str): Link type
@@ -290,8 +334,8 @@ class DistributedAtomSpace:
 
         Examples:
             >>> das = DistributedAtomSpace()
-            >>> human_handle = das.get_node_handle('Concept', 'human')
-            >>> monkey_handle = das.get_node_handle('Concept', 'monkey')
+            >>> human_handle = das.compute_node_handle('Concept', 'human')
+            >>> monkey_handle = das.compute_node_handle('Concept', 'monkey')
             >>> result = das.get_link(
                     link_type='Similarity',
                     link_targets=[human_handle, monkey_handle],
@@ -392,7 +436,7 @@ class DistributedAtomSpace:
             3. Retrieve all the links of a given type whose targets match a given list of
                handles
 
-                >>> snake = das.get_node_handle('Concept', 'snake')
+                >>> snake = das.compute_node_handle('Concept', 'snake')
                 >>> links = das.get_links(link_type='Similarity', link_targets=[snake, '*'])
                 >>> for link in links:
                 >>>     print(link['type'], link['targets'])
@@ -423,7 +467,7 @@ class DistributedAtomSpace:
 
         Examples:
             >>> das = DistributedAtomSpace()
-            >>> rhino = das.get_node_handle('Concept', 'rhino')
+            >>> rhino = das.compute_node_handle('Concept', 'rhino')
             >>> links = das.get_incoming_links(rhino)
             >>> for link in links:
             >>>     print(link['type'], link['targets'])

@@ -53,6 +53,9 @@ class RemoteQueryEngine(QueryEngine):
                     das_error(exception)
         return atom
 
+    def get_atoms(self, handles: List[str]) -> List[Dict[str, Any]]:
+        return self.cache_controller.get_atoms(handles)
+
     def get_links(
         self,
         link_type: str,
