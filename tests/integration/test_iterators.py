@@ -267,7 +267,9 @@ class TestTraverseLinks:
 
     def _check_asserts(self, das: DistributedAtomSpace, iterator: QueryAnswerIterator):
         current_value = iterator.get()
-        assert current_value == das.query_engine.get_atom(iterator.get()['handle'], targets_document=True)
+        assert current_value == das.query_engine.get_atom(
+            iterator.get()['handle'], targets_document=True
+        )
         assert isinstance(current_value, dict)
         assert iterator.is_empty() is False
         link_handles = sorted([item['handle'] for item in iterator])
