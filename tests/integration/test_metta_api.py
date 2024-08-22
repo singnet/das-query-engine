@@ -107,13 +107,13 @@ class TestMettaAPI:
             assert len(answer) == 2
             for qa in answer:
                 handle = qa.assignment.mapping["$v2"]
-                assert handle == das.get_node_handle(
+                assert handle == das.compute_node_handle(
                     "Symbol", "2"
-                ) or handle == das.get_link_handle(
+                ) or handle == das.compute_link_handle(
                     "Expression",
                     [
-                        das.get_node_handle("Symbol", "Test"),
-                        das.get_node_handle("Symbol", "2"),
+                        das.compute_node_handle("Symbol", "Test"),
+                        das.compute_node_handle("Symbol", "2"),
                     ],
                 )
                 atom = das.get_atom(handle)
@@ -149,16 +149,16 @@ class TestMettaAPI:
             assert len(answer) == 2
             for qa in answer:
                 handle = qa.assignment.mapping["$v"]
-                if handle == das.get_node_handle("Symbol", "Test"):
+                if handle == das.compute_node_handle("Symbol", "Test"):
                     symbol = das.get_atom(handle)
                     assert symbol["type"] == "Symbol"
                     assert symbol["name"] == "Test"
                     handle = answer[0].assignment.mapping["$x"]
-                    assert handle == das.get_link_handle(
+                    assert handle == das.compute_link_handle(
                         "Expression",
                         [
-                            das.get_node_handle("Symbol", "Test"),
-                            das.get_node_handle("Symbol", "2"),
+                            das.compute_node_handle("Symbol", "Test"),
+                            das.compute_node_handle("Symbol", "2"),
                         ],
                     )
                     symbol = das.get_atom(handle)
@@ -169,16 +169,16 @@ class TestMettaAPI:
                     symbol2 = das.get_atom(symbol["targets"][1])
                     assert symbol2["type"] == "Symbol"
                     assert symbol2["name"] == "2"
-                elif handle == das.get_node_handle("Symbol", "Best"):
+                elif handle == das.compute_node_handle("Symbol", "Best"):
                     symbol = das.get_atom(handle)
                     assert symbol["type"] == "Symbol"
                     assert symbol["name"] == "Best"
                     handle = answer[1].assignment.mapping["$x"]
-                    assert handle == das.get_link_handle(
+                    assert handle == das.compute_link_handle(
                         "Expression",
                         [
-                            das.get_node_handle("Symbol", "Test"),
-                            das.get_node_handle("Symbol", "2"),
+                            das.compute_node_handle("Symbol", "Test"),
+                            das.compute_node_handle("Symbol", "2"),
                         ],
                     )
                     symbol = das.get_atom(handle)

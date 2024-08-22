@@ -78,7 +78,7 @@ class TestDistributedAtomSpace:
     def test_get_traversal_cursor(self):
         das = DistributedAtomSpace()
         das.add_node({'type': 'Concept', 'name': 'human'})
-        human = das.get_node_handle('Concept', 'human')
+        human = das.compute_node_handle('Concept', 'human')
 
         cursor = das.get_traversal_cursor(human)
 
@@ -88,6 +88,55 @@ class TestDistributedAtomSpace:
             das.get_traversal_cursor(handle='snet')
 
         assert exc.value.message == 'Cannot start Traversal. Atom does not exist'
+
+    def test_get_atom(self):
+        das = DistributedAtomSpace()
+        das.add_link(
+            {
+                'type': 'expression',
+                'targets': [
+                    {'type': 'symbol', 'name': 'a'},
+                    {
+                        'type': 'expression',
+                        'targets': [
+                            {'type': 'symbol', 'name': 'b'},
+                            {'type': 'symbol', 'name': 'c'},
+                        ],
+                    },
+                ],
+            }
+        )
+
+        handle = {}
+        for n in ['a', 'b', 'c']:
+            handle[n] = das.compute_node_handle('symbol', n)
+
+        handle['internal_link'] = das.compute_link_handle('expression', [handle['b'], handle['c']])
+        handle['external_link'] = das.compute_link_handle(
+            'expression', [handle['a'], handle['internal_link']]
+        )
+
+        for n in ['a', 'b', 'c']:
+            document = das.get_atom(handle[n])
+            assert document['type'] == 'symbol'
+            assert document['name'] == n
+            assert document['handle'] == handle[n]
+
+        document = das.get_atom(handle['internal_link'])
+        assert document['type'] == 'expression'
+        assert document['handle'] == handle['internal_link']
+        assert document['targets'] == [handle['b'], handle['c']]
+
+        document = das.get_atom(handle['external_link'])
+        assert document['type'] == 'expression'
+        assert document['handle'] == handle['external_link']
+        assert document['targets'] == [handle['a'], handle['internal_link']]
+
+        assert das.get_atoms([handle['a'], handle['external_link'], handle['c']]) == [
+            das.get_atom(handle['a']),
+            das.get_atom(handle['external_link']),
+            das.get_atom(handle['c']),
+        ]
 
     def test_about(self):
         das = DistributedAtomSpace()

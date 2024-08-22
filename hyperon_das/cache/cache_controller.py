@@ -66,11 +66,12 @@ class CacheController:
         """
         Creates a new context to attach importance of atoms.
 
+        Contexts are used by the AttentionBroker in order to keep different importance values for
+        atoms in different contexts.
+
         Args:
             context (Context): new COntext object to be added.
 
-        Contexts are used by the AttentionBroker in order to keep different importance values for
-        atoms in different contexts.
         """
         if not self.enabled():
             return
@@ -85,3 +86,15 @@ class CacheController:
             Optional[Dict[str, Any]]: Atom document or None if the atom is not in local cache
         """
         return self.atom_table.get(handle, None)
+
+    def get_atoms(self, handles: List[str]) -> List[Dict[str, Any]]:
+        """
+        Return a list of atoms given their handles.
+
+        Args:
+            handles (List[str]): List of handles.
+
+        Returns:
+            List[Dict[str, Any]]
+        """
+        raise NotImplementedError()
