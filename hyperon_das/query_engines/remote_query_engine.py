@@ -67,10 +67,10 @@ class RemoteQueryEngine(QueryEngine):
         if kwargs.get('cursor') is None:
             kwargs['cursor'] = 0
         links = self.local_query_engine.get_links(link_type, target_types, link_targets, **kwargs)
-        cursor, remote_links = self.remote_das.get_links(
-            link_type, target_types, link_targets, **kwargs
-        )
-        kwargs['cursor'] = cursor
+        remote_links = self.remote_das.get_links(link_type, target_types, link_targets, **kwargs)
+        if isinstance(remote_links, tuple):
+            cursor, remote_links = remote_links
+            kwargs['cursor'] = cursor
         kwargs['backend'] = self.remote_das
         kwargs['link_type'] = link_type
         kwargs['target_types'] = target_types

@@ -144,7 +144,7 @@ class LocalQueryEngine(QueryEngine):
                 link_handle = link
                 link_targets = target_handles
             else:
-                link_handle, *link_targets = link
+                link_handle, link_targets = link
 
             if link_handle not in unique_handles:
                 unique_handles.add(link_handle)

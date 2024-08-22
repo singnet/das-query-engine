@@ -1,8 +1,9 @@
 import contextlib
 import pickle
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import AtomDoesNotExist
+from hyperon_das_atomdb.database import IncomingLinksT
 from requests import exceptions, sessions
 
 from hyperon_das.exceptions import (
@@ -167,7 +168,7 @@ class FunctionsClient:
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> List[Union[dict, str, Tuple[dict, List[dict]]]]:
+    ) -> tuple[int | None, IncomingLinksT | Iterator]:
         payload = {
             'action': 'get_incoming_links',
             'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
@@ -176,7 +177,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             logger().debug(f'Error during `get_incoming_links` request on remote Das: {str(e)}')
-            return None, [] if kwargs.get('cursor') is not None else []
+            return None, []
 
     def create_field_index(
         self,

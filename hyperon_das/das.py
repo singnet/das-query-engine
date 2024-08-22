@@ -2,6 +2,7 @@ from typing import Any, Dict, Iterator, List, Optional, Type, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
+from hyperon_das_atomdb.database import IncomingLinksT
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.cache.cache_controller import CacheController
@@ -366,7 +367,7 @@ class DistributedAtomSpace:
         target_types: list[str] | None = None,
         link_targets: list[str] | None = None,
         **kwargs,
-    ) -> Union[Iterator, List[Dict[str, Any]]]:
+    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
         """
         Retrieve all links that match the passed search criteria.
 
@@ -446,7 +447,7 @@ class DistributedAtomSpace:
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> Iterator | list[dict[str, Any]] | list[str]:
+    ) -> tuple[int | None, IncomingLinksT | Iterator]:
         """
         Retrieve all links which has the passed handle as one of its targets.
 
@@ -474,8 +475,7 @@ class DistributedAtomSpace:
             Similarity ['99d18c702e813b07260baf577c60c455', 'd03e59654221c1e8fcda404fd5c8d6cb']
             Inheritance ['99d18c702e813b07260baf577c60c455', 'bdfe4e7a431f73386f37c6448afe5840']
         """
-        _, links = self.query_engine.get_incoming_links(atom_handle, **kwargs)
-        return links
+        return self.query_engine.get_incoming_links(atom_handle, **kwargs)
 
     def count_atoms(self, parameters: Dict[str, Any] = []) -> Dict[str, int]:
         """
