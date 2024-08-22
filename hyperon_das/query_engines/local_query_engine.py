@@ -202,11 +202,14 @@ class LocalQueryEngine(QueryEngine):
             return bool(atoms)
         return False
 
-    def get_atom(self, handle: str, **kwargs) -> Union[Dict[str, Any], None]:
+    def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
         try:
             return self.local_backend.get_atom(handle, **kwargs)
         except AtomDoesNotExist as exception:
             das_error(exception)
+
+    def get_atoms(self, handles: str, **kwargs) -> List[Dict[str, Any]]:
+        return [self.local_backend.get_atom(handle, **kwargs) for handle in handles]
 
     def get_links(
         self,

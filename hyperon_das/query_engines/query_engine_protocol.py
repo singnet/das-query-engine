@@ -10,18 +10,36 @@ from hyperon_das.utils import QueryAnswer
 
 class QueryEngine(ABC):
     @abstractmethod
-    def get_atom(self, handle: str) -> Union[Dict[str, Any], None]:
+    def get_atom(self, handle: str) -> Dict[str, Any]:
         """
         Retrieves an atom from the database using its unique handle.
 
         This method searches the database for an atom with the specified handle. If found, it returns
-        the atom's data as a dictionary. If no atom with the given handle exists, it returns None.
+        the atom's data as a dictionary. If no atom with the given handle exists, an exception is thrown.
 
         Args:
             handle (str): The unique handle of the atom to retrieve.
 
         Returns:
-            Union[Dict[str, Any], None]: A dictionary containing the atom's data if found, otherwise None.
+            Dict[str, Any]: A dictionary containing the atom's data.
+        """
+        ...
+
+    @abstractmethod
+    def get_atoms(self, handles: List[str]) -> List[Dict[str, Any]]:
+        """
+        Retrieves atoms from the database using their unique handles.
+
+        This method searches the database for atoms with the specified handles and return them in a list
+        or throw an exception if any of them doesn't exist.
+
+        Remote query engines do a single request to remote DAS in order to get all the requested atoms.
+
+        Args:
+            handles (List[str]): Unique handle of the atoms to retrieve.
+
+        Returns:
+            List[Dict[str, Any]]: List with requested atoms.
         """
         ...
 
