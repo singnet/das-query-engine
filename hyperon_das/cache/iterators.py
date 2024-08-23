@@ -1,5 +1,4 @@
 import copy
-
 from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
