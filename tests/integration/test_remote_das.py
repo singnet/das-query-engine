@@ -48,7 +48,6 @@ class TestRemoteDistributedAtomSpace:
 
     def test_cache_controller(self, remote_das: DistributedAtomSpace):
         remote_das.cache_controller.atom_table["h1"] = {"handle": "h1"}
-        print(remote_das.cache_controller.atom_table["h1"])
         assert remote_das.query_engine.get_atom("h1")["handle"] == "h1"
 
     def test_get_atom(self, remote_das: DistributedAtomSpace):
@@ -329,7 +328,6 @@ class TestRemoteDistributedAtomSpace:
             'link_count': 60,
         }
 
-    @pytest.mark.skip(reason="Disabled. See https://github.com/singnet/das-query-engine/issues/256")
     def test_create_context(self, remote_das):
         context_name = 'my context'
         context = remote_das.create_context(context_name)
