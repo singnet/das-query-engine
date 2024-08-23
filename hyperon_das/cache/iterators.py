@@ -95,8 +95,8 @@ class LazyQueryEvaluator(ProductIterator):
 
     def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
         targets = []
-        for target_handle in link["targets"]:
-            atom = self.query_engine.get_atom(target_handle)
+        for target in link["targets"]:
+            atom = target if isinstance(target, dict) else self.query_engine.get_atom(target)
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
@@ -129,9 +129,14 @@ class LazyQueryEvaluator(ProductIterator):
                 if wildcard_flag:
                     assignment = Assignment()
                     assignment_failed = False
-                    for query_answer_target, handle in zip(target_info, answer["targets"]):
+                    for query_answer_target, answer_target in zip(target_info, answer["targets"]):
                         target = query_answer_target.subgraph
                         if target.get("atom_type", None) == "variable":
+                            handle = (
+                                answer_target
+                                if isinstance(answer_target, str)
+                                else answer_target["handle"]
+                            )
                             if not assignment.assign(target["name"], handle):
                                 assignment_failed = True
                         else:

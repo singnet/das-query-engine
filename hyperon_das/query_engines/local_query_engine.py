@@ -267,7 +267,7 @@ class LocalQueryEngine(QueryEngine):
                     'data': {'query': query, 'parameters': parameters},
                 }
             )
-        query_results = self._recursive_query(query, parameters)
+        query_results = self._recursive_query(query, parameters=parameters)
         if no_iterator:
             answer = [result for result in query_results]
             logger().debug(f"query: {query} result: {str(answer)}")
