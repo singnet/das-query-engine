@@ -32,7 +32,7 @@ class TestRemoteDistributedAtomSpace:
     def traversal(self, das: DistributedAtomSpace, handle: str):
         return das.get_traversal_cursor(handle)
 
-    def _test_server_connection(self):
+    def test_server_connection(self):
         try:
             das = DistributedAtomSpace(
                 query_engine='remote', host=remote_das_host, port=remote_das_port
@@ -48,10 +48,9 @@ class TestRemoteDistributedAtomSpace:
 
     def test_cache_controller(self, remote_das: DistributedAtomSpace):
         remote_das.cache_controller.atom_table["h1"] = {"handle": "h1"}
-        print(remote_das.cache_controller.atom_table["h1"])
         assert remote_das.query_engine.get_atom("h1")["handle"] == "h1"
 
-    def _test_get_atom(self, remote_das: DistributedAtomSpace):
+    def test_get_atom(self, remote_das: DistributedAtomSpace):
         result = remote_das.get_atom(handle=metta_animal_base_handles.human)
         assert result['handle'] == metta_animal_base_handles.human
         assert result['name'] == '"human"'
@@ -69,7 +68,7 @@ class TestRemoteDistributedAtomSpace:
         with pytest.raises(AtomDoesNotExist):
             remote_das.get_atom(handle='fake')
 
-    def _test_get_links(self, remote_das: DistributedAtomSpace):
+    def test_get_links(self, remote_das: DistributedAtomSpace):
         all_inheritance = [
             metta_animal_base_handles.inheritance_human_mammal,
             metta_animal_base_handles.inheritance_monkey_mammal,
@@ -114,7 +113,7 @@ class TestRemoteDistributedAtomSpace:
         )
         assert next(link)['handle'] == metta_animal_base_handles.inheritance_earthworm_animal
 
-    def _test_get_incoming_links(self, remote_das: DistributedAtomSpace):
+    def test_get_incoming_links(self, remote_das: DistributedAtomSpace):
         expected_handles = [
             metta_animal_base_handles.inheritance_vine_plant,
             metta_animal_base_handles.similarity_snake_vine,
@@ -124,20 +123,20 @@ class TestRemoteDistributedAtomSpace:
 
         expected_atoms = [remote_das.get_atom(handle) for handle in expected_handles]
 
-        response_atoms = remote_das.get_incoming_links(
+        _, response_atoms = remote_das.get_incoming_links(
             metta_animal_base_handles.vine, handles_only=False
         )
         for atom in response_atoms:
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
-    def _test_count_atoms(self, remote_das: DistributedAtomSpace):
-        response = remote_das.count_atoms()
-        assert response == {'atom_count': 83, 'node_count': 23, 'link_count': 60}
+    def test_count_atoms(self, remote_das: DistributedAtomSpace):
+        response = remote_das.count_atoms(parameters={})
+        assert response == {'atom_count': 83, 'node_count': 0, 'link_count': 0}
         response_local = remote_das.count_atoms({'context': 'local'})
         assert response_local == {'atom_count': 0, 'node_count': 0, 'link_count': 0}
 
-    def _test_query(self, remote_das: DistributedAtomSpace):
+    def test_query(self, remote_das: DistributedAtomSpace):
         all_inheritance_mammal = [
             metta_animal_base_handles.inheritance_chimp_mammal,
             metta_animal_base_handles.inheritance_human_mammal,
@@ -249,13 +248,14 @@ class TestRemoteDistributedAtomSpace:
                     ],
                 )
 
-    def _test_get_traversal_cursor(self, remote_das: DistributedAtomSpace):
+    def test_get_traversal_cursor(self, remote_das: DistributedAtomSpace):
         cursor = remote_das.get_traversal_cursor(metta_animal_base_handles.human)
         assert cursor.get()['handle'] == metta_animal_base_handles.human
         with pytest.raises(GetTraversalCursorException):
             remote_das.get_traversal_cursor('fake_handle')
 
-    def _test_traverse_engine_methods(self, remote_das: DistributedAtomSpace):
+    @pytest.mark.skip(reason="Disabled. Waiting for https://github.com/singnet/das/issues/73")
+    def test_traverse_engine_methods(self, remote_das: DistributedAtomSpace):
         cursor: TraverseEngine = self.traversal(remote_das, metta_animal_base_handles.dinosaur)
         assert cursor.get()['handle'] == metta_animal_base_handles.dinosaur
 
@@ -292,7 +292,7 @@ class TestRemoteDistributedAtomSpace:
         cursor.goto(metta_animal_base_handles.human)
         assert cursor.get()['handle'] == metta_animal_base_handles.human
 
-    def _test_fetch_atoms(self, remote_das):
+    def test_fetch_atoms(self, remote_das):
         assert remote_das.backend.count_atoms() == {
             'atom_count': 0,
             'node_count': 0,
@@ -315,7 +315,7 @@ class TestRemoteDistributedAtomSpace:
             'link_count': 4,
         }
 
-    def _test_fetch_all_data(self, remote_das):
+    def test_fetch_all_data(self, remote_das):
         assert remote_das.backend.count_atoms() == {
             'atom_count': 0,
             'node_count': 0,
@@ -328,7 +328,6 @@ class TestRemoteDistributedAtomSpace:
             'link_count': 60,
         }
 
-    @pytest.mark.skip(reason="Disabled. See https://github.com/singnet/das-query-engine/issues/256")
     def test_create_context(self, remote_das):
         context_name = 'my context'
         context = remote_das.create_context(context_name)
