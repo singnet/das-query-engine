@@ -1,3 +1,5 @@
+import copy
+
 from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
@@ -100,8 +102,9 @@ class LazyQueryEvaluator(ProductIterator):
             if atom.get("targets", None) is not None:
                 atom = self._replace_target_handles(atom)
             targets.append(atom)
-        link["targets"] = targets
-        return link
+        answer = copy.deepcopy(link)
+        answer["targets"] = targets
+        return answer
 
     def __next__(self):
         if self.buffered_answer:
