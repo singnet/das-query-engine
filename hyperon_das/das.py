@@ -477,7 +477,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_incoming_links(atom_handle, **kwargs)
 
-    def count_atoms(self, parameters: Dict[str, Any] = []) -> Dict[str, int]:
+    def count_atoms(self, parameters: Dict[str, Any] = {}) -> Dict[str, int]:
         """
         Count atoms, nodes and links in DAS.
 
