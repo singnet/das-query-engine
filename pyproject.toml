@@ -38,23 +38,6 @@ mkdocs-material = "^9.5.13"
 mkdocstrings = "^0.24.1"
 mkdocstrings-python = "^1.8.0"
 
-[tool.isort]
-py_version = 38
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 100
-
-[tool.black]
-line-length = 100
-target-version = ['py38']
-skip-string-normalization = true
-
-[tool.flake8]
-show-source = true
-extend-ignore = ["E501"]
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
