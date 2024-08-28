@@ -1,11 +1,11 @@
 isort:
-	@isort ./hyperon_das ./tests --multi-line=3 --trailing-comma --force-grid-wrap=0 --use-parentheses --line-width=100
+	@isort --settings-path .isort.cfg ./hyperon_das ./tests
 
 black:
-	@black ./hyperon_das ./tests --line-length 100 -t py37 --skip-string-normalization
+	@black --config .black.cfg ./hyperon_das ./tests
 
 flake8:
-	@flake8 ./hyperon_das ./tests --show-source --extend-ignore E501 --exclude ./hyperon_das/grpc/
+	@flake8 --config .flake8.cfg ./hyperon_das ./tests --exclude ./hyperon_das/grpc/
 
 lint: isort black flake8
 
