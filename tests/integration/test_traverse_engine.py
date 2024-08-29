@@ -99,7 +99,7 @@ class TestTraverseEngine:
             link_type='Expression',
             cursor_position=2,
             target_type='Symbol',
-            filter=(None, is_literal),
+            filters=(None, is_literal),
         )
         neighbors_handles = sorted([neighbor['handle'] for neighbor in neighbors])
         assert neighbors_handles == sorted(
@@ -130,7 +130,7 @@ class TestTraverseEngine:
 
         traverse.goto(metta_animal_base_handles.human)
         traverse.follow_link(
-            link_type='Expression', cursor_position=2, target_type='Symbol', filter=(None, is_ent)
+            link_type='Expression', cursor_position=2, target_type='Symbol', filters=(None, is_ent)
         )
         assert traverse.get()['name'] == '"ent"'
 
@@ -143,11 +143,11 @@ class TestTraverseEngine:
         def is_mammal(atom):
             return atom['name'] == '"mammal"'
 
-        neighbors = traverse.get_neighbors(filter=(is_expression_link, is_mammal))
+        neighbors = traverse.get_neighbors(filters=(is_expression_link, is_mammal))
         assert [i['handle'] for i in neighbors] == [metta_animal_base_handles.mammal]
-        neighbors = traverse.get_neighbors(filter=(None, is_mammal))
+        neighbors = traverse.get_neighbors(filters=(None, is_mammal))
         assert [i['handle'] for i in neighbors] == [metta_animal_base_handles.mammal]
-        neighbors = traverse.get_neighbors(filter=(is_expression_link, None))
+        neighbors = traverse.get_neighbors(filters=(is_expression_link, None))
         handles = sorted([i['handle'] for i in neighbors])
         assert handles == sorted(
             [
@@ -161,7 +161,7 @@ class TestTraverseEngine:
                 metta_animal_base_handles.typedef_mark,
             ]
         )
-        neighbors = traverse.get_neighbors(filter=is_expression_link)
+        neighbors = traverse.get_neighbors(filters=(is_expression_link, None))
         assert sorted([i['handle'] for i in neighbors]) == sorted(
             [
                 metta_animal_base_handles.chimp,

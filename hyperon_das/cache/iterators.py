@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from itertools import product
 from threading import Semaphore, Thread
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Iterator, List
 
 from hyperon_das_atomdb import WILDCARD
 
@@ -416,7 +416,9 @@ class CustomQuery(BaseLinksIterator):
 
 
 class TraverseLinksIterator(QueryAnswerIterator):
-    def __init__(self, source: Union[LocalIncomingLinks, RemoteIncomingLinks], **kwargs) -> None:
+    def __init__(
+        self, source: LocalIncomingLinks | RemoteIncomingLinks | Iterator, **kwargs
+    ) -> None:
         super().__init__(source)
         self.cursor = kwargs.get('cursor')
         self.targets_only = kwargs.get('targets_only', False)

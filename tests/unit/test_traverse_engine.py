@@ -844,9 +844,26 @@ class TestTraverseEngine:
                 animal_base_handles.human,
                 link_type='Inheritance',
                 target_type='Fake',
-                filter=(None, my_filter),
+                filters=(None, my_filter),
             )
             assert len(neighbors) == 1
+
+            neighbors = _build_neighbors(
+                animal_base_handles.human,
+                link_type='Inheritance',
+                target_type='Fake',
+                filters=None,
+            )
+
+            assert len(neighbors) == 3
+
+            with pytest.raises(ValueError):
+                _build_neighbors(
+                    animal_base_handles.human,
+                    link_type='Inheritance',
+                    target_type='Fake',
+                    filters=my_filter,
+                )
 
         def _vine_neighbors():
             neighbors = _build_neighbors(animal_base_handles.vine, link_type='Similarity')
@@ -934,12 +951,12 @@ class TestTraverseEngine:
                 return False
 
             neighbors = _build_neighbors(
-                animal_base_handles.vine, link_type='Similarity', filter=(None, my_filter)
+                animal_base_handles.vine, link_type='Similarity', filters=(None, my_filter)
             )
             assert len(neighbors) == 0
 
             neighbors = _build_neighbors(
-                animal_base_handles.vine, link_type='Inheritance', filter=(None, my_filter)
+                animal_base_handles.vine, link_type='Inheritance', filters=(None, my_filter)
             )
             assert das.get_atom(fake_v1) in neighbors
             assert len(neighbors) == 1
