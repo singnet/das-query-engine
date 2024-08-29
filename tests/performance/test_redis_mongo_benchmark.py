@@ -10,7 +10,7 @@ import pytest
 from conftest import PERFORMANCE_REPORT
 
 from hyperon_das import DistributedAtomSpace
-from tests.integration.helpers import _db_down, _db_up, mongo_port, redis_port
+from tests.integration.helpers import _db_down, _db_up
 
 # pylint: disable=attribute-defined-outside-init,disable=too-many-instance-attributes
 # pylint: disable=unused-argument,too-many-arguments,missing-function-docstring,too-many-locals
@@ -73,6 +73,12 @@ class TestPerformance:
         word_link_percentage: float,
         letter_link_percentage: float,
         seed: Any,
+        mongo_host_port: str,
+        mongo_credentials: str,
+        redis_host_port: str,
+        redis_credentials: str,
+        redis_cluster: bool,
+        redis_ssl: bool,
     ) -> None:
         self._initialize(
             node_count,
@@ -84,6 +90,12 @@ class TestPerformance:
             seed,
             False,
         )
+        self.mongo_host, self.mongo_port = mongo_host_port.split(":")
+        self.mongo_user, self.mongo_pass = mongo_credentials.split(":")
+        self.redis_host, self.redis_port = redis_host_port.split(":")
+        self.redis_user, self.redis_pass = redis_credentials.split(":")
+        self.redis_cluster = redis_cluster
+        self.redis_ssl = redis_ssl
 
     @pytest.fixture(scope="class", autouse=True)
     def database(self):
@@ -97,12 +109,16 @@ class TestPerformance:
         yield DistributedAtomSpace(
             query_engine='local',
             atomdb='redis_mongo',
-            mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
-            redis_port=redis_port,
-            redis_cluster=False,
-            redis_ssl=False,
+            mongo_host=self.mongo_host,
+            mongo_port=int(self.mongo_port),
+            mongo_username=self.mongo_user,
+            mongo_password=self.mongo_pass,
+            redis_host=self.redis_host,
+            redis_port=int(self.redis_port),
+            redis_username=self.redis_user,
+            redis_password=self.redis_pass,
+            redis_cluster=self.redis_cluster,
+            redis_ssl=self.redis_ssl,
         )
 
     @pytest.fixture(scope='class', autouse=True)

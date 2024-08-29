@@ -95,7 +95,13 @@ Arguments allowed in OPTIONS:
 - `--word_link_percentage` (default: 0.1): Percentage of word links.
 - `--letter_link_percentage` (default: 0.1): Percentage of letter links.
 - `--seed` (default: 11): Sets the random seed for reproducibility (int/float).
-- `--repeat` (default: 1): (Test only) Repeats test n times to collect average/std deviation of execution time..
+- `--repeat` (default: 1): (Test only) Repeats test n times to collect average/std deviation of execution time.
+- `--mongo_host_port` (default: "localhost:15927"): (Test only) Mongo hostname and port. eg: localhost:1234.
+- `--mongo_credentials` (default: \*\*\*:\*\*\* ): (Test only) Mongo username and password. eg: user:pass.
+- `--redis_host_port` (default: "localhost:15926"): (Test only) Redis hostname and port. eg: localhost:1234.
+- `--redis_credentials` (default: ":"): (Test only) Redis username and password. eg: user:pass.
+- `--redis_cluster` (default: False): (Test only) Redis cluster configuration.
+- `--redis_ssl` (default: False): (Test only) Sets Redis SSL.
 
 ```bash
 make benchmark-tests OPTIONS="--word_link_percentage=0.01"
