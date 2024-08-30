@@ -520,7 +520,7 @@ class DistributedAtomSpace:
                 link (possibly with nested links) with nodes and variables used to query
                 the knowledge base. If the query is represented as a list of dictionaries,
                 it is interpreted as a conjunction (AND) of all queries within the list.
-            parameters (Dict[str, Any]): query optional parameters, defaults to None.
+            parameters (Dict[str, Any]): query optional parameters, defaults to {}.
                 Eg:
                 'no_iterator' can be set to True to return a list instead of an iterator.
                 'query_scope' can be set to 'remote_only' to query the remote DAS (default),
