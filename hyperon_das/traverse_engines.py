@@ -1,8 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, Iterator
+from typing import TYPE_CHECKING, Any, Dict
 
 from hyperon_das_atomdb import AtomDoesNotExist
 
-from hyperon_das.cache import LocalIncomingLinks, QueryAnswerIterator, RemoteIncomingLinks
+from hyperon_das.cache import LocalIncomingLinks, RemoteIncomingLinks
 from hyperon_das.cache.iterators import TraverseLinksIterator, TraverseNeighborsIterator
 
 if TYPE_CHECKING:  # pragma no cover
@@ -28,7 +28,7 @@ class TraverseEngine:
         """
         return self._cursor
 
-    def get_links(self, **kwargs) -> QueryAnswerIterator:
+    def get_links(self, **kwargs) -> TraverseLinksIterator:
         """Returns all links that have the current cursor as one of their targets, that is, any links that point to the cursor.
 
         Keyword Args:
@@ -65,7 +65,7 @@ class TraverseEngine:
         assert isinstance(incoming_links, (LocalIncomingLinks, RemoteIncomingLinks))
         return TraverseLinksIterator(source=incoming_links, cursor=self._cursor['handle'], **kwargs)
 
-    def get_neighbors(self, **kwargs) -> Iterator:
+    def get_neighbors(self, **kwargs) -> TraverseNeighborsIterator:
         """Get all of "neighbors" that pointing to current cursor.
            Possible use cases to filter parameter:
             a. traverse.get_neighbors(..., filter=custom_filter)
@@ -81,8 +81,9 @@ class TraverseEngine:
             link_type (str, optional): Filter links if named_type matches with this parameter.
             cursor_position (int, optional): Sets the position of the cursor, return the links after this position.
             target_type (str, optional):  Filter links if one of the targets matches with this parameter.
-            filter (tuple(Callable[[Dict], bool], Callable[[Dict], bool]), optional): Tuple containing filter function for links at pos 0
-                and filter function for targets at pos 1. Used to filter the results after applying all other filters.
+            filters (tuple[Callable[[dict], bool] | None, Callable[[dict], bool] | None], optional): Tuple containing
+                filter function for links at pos 0 and filter function for targets at pos 1.
+                Used to filter the results after applying all other filters.
 
         Returns:
             Iterator: An iterator that contains the neighbors that match the criteria.
@@ -96,13 +97,14 @@ class TraverseEngine:
                 )
             >>> next(neighbors)
         """
-        custom_filter = kwargs.pop('filter', None)
+        custom_filter = kwargs.pop('filters', None)
         filter_link = filter_target = None
+
+        if custom_filter is not None and not isinstance(custom_filter, tuple):
+            raise ValueError("The argument filters must be a tuple.")
 
         if isinstance(custom_filter, tuple):
             filter_link, filter_target = custom_filter
-        else:
-            filter_link = custom_filter
 
         if filter_link is not None:
             kwargs['filter'] = filter_link
@@ -126,9 +128,9 @@ class TraverseEngine:
             link_type (str, optional): Filter links if named_type matches with this parameter.
             cursor_position (int, optional): Sets the position of the cursor, return the links after this position.
             target_type (str, optional):  Filter links if one of the targets matches with this parameter.
-            filter (tuple(Callable[[Dict], bool], Callable[[Dict], bool]), optional): Tuple containing filter function for links at pos 0
-                and filter function for targets at pos 1. Used to filter the results after applying all other filters.
-
+            filters (tuple[Callable[[dict], bool] | None, Callable[[dict], bool] | None], optional): Tuple containing
+                filter function for links at pos 0 and filter function for targets at pos 1.
+                Used to filter the results after applying all other filters.
         Returns:
             Dict[str, Any]: The current cursor. A Python dict with all atom data.
         """

@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 from hyperon_das_atomdb.database import IncomingLinksT
@@ -19,6 +20,13 @@ from hyperon_das.type_alias import Query
 from hyperon_das.utils import QueryAnswer, das_error
 
 
+class QueryScopes(Enum):
+    REMOTE_ONLY = 'remote_only'
+    SYNCHRONOUS_UPDATE = 'synchronous_update'
+    LOCAL_ONLY = 'local_only'
+    LOCAL_AND_REMOTE = 'local_and_remote'
+
+
 class RemoteQueryEngine(QueryEngine):
     def __init__(
         self,
@@ -36,6 +44,7 @@ class RemoteQueryEngine(QueryEngine):
         if not self.host or not self.port:
             das_error(InvalidDASParameters(message="'host' and 'port' are mandatory parameters"))
         self.remote_das = FunctionsClient(self.host, self.port)
+        self.query_scope_values = {*[q.value for q in QueryScopes]}
 
     @property
     def mode(self):
@@ -115,17 +124,20 @@ class RemoteQueryEngine(QueryEngine):
     def query(
         self,
         query: Query,
-        parameters: Optional[Dict[str, Any]] = {},
-    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
+        parameters: Dict[str, Any] | None = None,
+    ) -> Iterator[QueryAnswer] | list[dict[str, Any]]:
+        parameters = parameters or {}
         query_scope = parameters.get('query_scope', 'remote_only')
-        if query_scope == 'remote_only' or query_scope == 'synchronous_update':
-            if query_scope == 'synchronous_update':
-                self.commit()
-            parameters['no_iterator'] = True
-            answer = self.remote_das.query(query, parameters)
-        elif query_scope == 'local_only':
-            answer = self.local_query_engine.query(query, parameters)
-        elif query_scope == 'local_and_remote':
+        try:
+            query_scope = QueryScopes(query_scope)
+        except ValueError:
+            das_error(
+                QueryParametersException(
+                    message=f'Invalid value for "query_scope": "{query_scope}"'
+                )
+            )
+
+        if query_scope == QueryScopes.LOCAL_AND_REMOTE:
             das_error(
                 QueryParametersException(
                     message=(
@@ -134,13 +146,14 @@ class RemoteQueryEngine(QueryEngine):
                     )
                 )
             )
-        else:
-            das_error(
-                QueryParametersException(
-                    message=f'Invalid value for "query_scope": "{query_scope}"'
-                )
-            )
-        return answer
+
+        if query_scope in {QueryScopes.REMOTE_ONLY, QueryScopes.SYNCHRONOUS_UPDATE}:
+            if query_scope == QueryScopes.SYNCHRONOUS_UPDATE:
+                self.commit()
+            parameters['no_iterator'] = True
+            return self.remote_das.query(query, parameters)
+
+        return self.local_query_engine.query(query, parameters)
 
     def count_atoms(self, parameters: Optional[Dict[str, Any]] = None) -> Dict[str, int]:
         if (context := parameters.get('context') if parameters else None) == 'local':
