@@ -132,8 +132,9 @@ jobs:
 
       - name: Perform Benchmark
         run: |
-          unbuffer make performance-tests 2>&1 \
+          make performance-tests 2>&1 \
           | grep -A 6 'Running performance test using DAS' \
           | grep -E '^(real|Comparing tests outputs)' \
           | sed -z 's/real[[:blank:]]*//g;s/Comparing tests outputs... //g;s/\n/,/g' \
-          | cut -d ',' -f 1,2
+          | cut -d ',' -f 1,3 \
+          | grep -q 'SUCCESS!' && exit 0 || exit 1
