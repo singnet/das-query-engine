@@ -130,18 +130,26 @@ jobs:
           poetry lock --no-update
           poetry install
 
+      - name: Build hyperon-das
+        run: poetry build
+
+      - name: Install hyperon-das
+        run: pip install $(find ./dist -name *.whl)
+
       - name: Perform Benchmark
         run: |
-          make performance-tests
-
-          output=$(make performance-tests 2>&1 \
-          | grep -A 6 'Running performance test using DAS' \
-          | grep -E '^(real|Comparing tests outputs)' \
-          | sed -z 's/real[[:blank:]]*//g;s/Comparing tests outputs... //g;s/\n/,/g')
-
-          echo "$output"
+          output=$(make performance-tests 2>&1)
+          real_time=$(echo "$output" | grep "^real" | awk 'NR==2 {print $2}')
 
           if echo "$output" | grep -q 'SUCCESS!'; then
+            status="SUCCESS!"
+          else
+            status="FAILURE!"
+          fi
+
+          echo "$real_time $status"
+
+          if [ "$status" == "SUCCESS!" ]; then
             exit 0
           else
             exit 1
