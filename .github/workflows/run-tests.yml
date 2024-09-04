@@ -111,3 +111,29 @@ jobs:
 
       - name: Perform Integration Testing
         run: make integration-tests
+
+  benchmark:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ^3.10
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |-
+          pip3 install poetry
+          poetry lock --no-update
+          poetry export --dev -f requirements.txt | pip3 install -r /dev/stdin
+
+      - name: Perform Benchmark
+        run: |
+          unbuffer make performance-tests 2>&1 \
+          | grep -A 6 'Running performance test using DAS' \
+          | grep -E '^(real|Comparing tests outputs)' \
+          | sed -z 's/real[[:blank:]]*//g;s/Comparing tests outputs... //g;s/\n/,/g' \
+          | cut -d ',' -f 1,2
