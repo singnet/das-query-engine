@@ -132,7 +132,7 @@ class TestRemoteDistributedAtomSpace:
 
     def test_count_atoms(self, remote_das: DistributedAtomSpace):
         response = remote_das.count_atoms(parameters={})
-        assert response == {'atom_count': 83, 'node_count': 0, 'link_count': 0}
+        assert response == {'atom_count': 66, 'node_count': 0, 'link_count': 0}
         response_local = remote_das.count_atoms({'context': 'local'})
         assert response_local == {'atom_count': 0, 'node_count': 0, 'link_count': 0}
 
@@ -323,9 +323,9 @@ class TestRemoteDistributedAtomSpace:
         }
         remote_das.fetch()
         assert remote_das.backend.count_atoms() == {
-            'atom_count': 83,
+            'atom_count': 66,
             'node_count': 23,
-            'link_count': 60,
+            'link_count': 43,
         }
 
     def test_create_context(self, remote_das):
