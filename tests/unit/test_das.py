@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
+import copy
 
 from hyperon_das.cache import RemoteIncomingLinks
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
@@ -31,6 +32,22 @@ class TestDistributedAtomSpace:
 
         assert exc.value.message == "Use either 'local' or 'remote'"
         assert exc.value.details == 'query_engine=snet'
+
+
+    def test_create_das_redis_mongo_local(self):
+        with pytest.raises(Exception):
+            DistributedAtomSpaceMock(atomdb="redis_mongo", query_engine="remote")
+
+    # Example
+    @pytest.mark.parametrize("params,expected", [
+        ({"name": "A", "type": "A"}, {"name": "A", "type": "A"})
+    ])
+    def test_add_nodes(self, params, expected):
+        das = DistributedAtomSpaceMock()
+        das.set_backend_return("add_node", copy.deepcopy(expected))
+        node = das.add_node(params)
+        assert isinstance(node, dict)
+        assert node == expected
 
     def test_get_incoming_links(self):
         das = DistributedAtomSpaceMock()

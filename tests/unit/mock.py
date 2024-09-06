@@ -2,6 +2,8 @@ import re
 from collections import OrderedDict
 from typing import Any, List, Optional, Tuple
 from unittest.mock import patch
+from unittest import mock
+from abc import abstractmethod
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.database import (
@@ -49,8 +51,37 @@ class DistributedAtomSpaceMock(DistributedAtomSpace):
             self.query_engine = LocalQueryEngine(self.backend, self.cache_controller, {}, **kwargs)
 
 
-class DatabaseMock(AtomDB):
+    def set_backend_return(self, function_name, value):
+        methods = [f for f in dir(AtomDB) if callable(getattr(AtomDB, f)) and not f.startswith("__")]
+        if function_name not in methods:
+            raise ValueError("'function_name' must be one of " + ", ".join(methods))
+        if isinstance(getattr(self.backend, function_name), mock.MagicMock):
+            getattr(self.backend, function_name).return_value = value
+        else:
+            setattr(self.backend, function_name, mock.MagicMock(return_value=value))
+
+def add_abstract_methods(cls, abc_class):
+    methods = [f for f in dir(abc_class) if callable(getattr(abc_class, f)) and not f.startswith("__")]
+    for method_name in methods:
+        if method_name not in dir(cls):
+            setattr(cls, method_name,  mock.MagicMock())
+
+
+class AtomDBMock:
     def __init__(self):
+        method_list = [f for f in dir(AtomDB) if callable(getattr(AtomDB, f)) and not f.startswith("__")]
+        for method in method_list:
+            setattr(self, method, mock.MagicMock())
+
+
+add_abstract_methods(AtomDBMock, AtomDB)
+
+class DatabaseMock:
+    def __init__(self):
+        method_list = [f for f in dir(AtomDB) if callable(getattr(AtomDB, f)) and not f.startswith("__")]
+        for method in method_list:
+            if isinstance(getattr(self, method), mock.MagicMock):
+                setattr(self, method, mock.MagicMock())
         human = _build_node_handle('Concept', 'human')
         monkey = _build_node_handle('Concept', 'monkey')
         chimp = _build_node_handle('Concept', 'chimp')
@@ -238,8 +269,6 @@ class DatabaseMock(AtomDB):
     def get_all_nodes(self, node_type: str, names: bool = False) -> list[str]:
         return self.all_nodes if node_type == 'Concept' else []
 
-    def get_all_links(self, link_type: str, **kwargs) -> tuple[int | None, list[str]]:
-        raise NotImplementedError()
 
     def get_matched_type_template(self, template: list[Any], **kwargs) -> MatchedTypesResultT:
         assert len(template) == 3
@@ -257,9 +286,6 @@ class DatabaseMock(AtomDB):
                 if substring in name:
                     answer.append(node)
         return answer
-
-    def get_matched_type(self, link_type: str, **kwargs) -> MatchedTypesResultT:
-        raise NotImplementedError()
 
     def get_atom_as_dict(self, handle: str, arity: int | None = 0) -> dict[str, Any]:
         if handle in self.all_nodes:
@@ -296,47 +322,10 @@ class DatabaseMock(AtomDB):
             'node_count': len(self.all_nodes),
             'atom_count': len(self.all_links) + len(self.all_nodes),
         }
-        # return (len(self.all_nodes), len(self.all_links))
-
-    def clear_database(self):
-        raise NotImplementedError()
-
-    def add_link(self, link_params: LinkParamsT, toplevel: bool = True) -> LinkT | None:
-        raise NotImplementedError()
-
-    def add_node(self, node_params: NodeParamsT) -> NodeT | None:
-        raise NotImplementedError()
 
     def get_incoming_links(self, atom_handle: str, **kwargs) -> tuple[int | None, IncomingLinksT]:
         links = self.incoming_set.get(atom_handle) or []
         return kwargs.get('cursor'), links
-
-    def get_atom_type(self, handle: str) -> str | None:
-        raise NotImplementedError()
-
-    def reindex(
-        self, pattern_index_templates: dict[str, list[dict[str, Any]]] | None = None
-    ) -> None:
-        raise NotImplementedError()
-
-    def delete_atom(self, handle: str, **kwargs) -> None:
-        raise NotImplementedError()
-
-    def create_field_index(
-        self,
-        atom_type: str,
-        fields: list[str],
-        named_type: str | None = None,
-        composite_type: list[Any] | None = None,
-        index_type: FieldIndexType | None = None,
-    ) -> str:
-        raise NotImplementedError()
-
-    def bulk_insert(self, documents: list[AtomT]) -> None:
-        raise NotImplementedError()
-
-    def retrieve_all_atoms(self) -> list[AtomT]:
-        raise NotImplementedError()
 
     def get_node_by_name(self, node_type: str, substring: str) -> list[str]:
         return self._get_matched_node_name(node_type, substring)
@@ -401,12 +390,12 @@ class DatabaseMock(AtomDB):
                     answer.append(node)
         return answer
 
-    def commit(self, **kwargs) -> None:
-        raise NotImplementedError()
 
+add_abstract_methods(DatabaseMock, AtomDB)
 
-class DatabaseAnimals(DatabaseMock):
+class DatabaseAnimals(DatabaseMock, AtomDB):
     def __init__(self):
+        super().__init__()
         human = _build_node_handle('Concept', 'human')
         monkey = _build_node_handle('Concept', 'monkey')
         chimp = _build_node_handle('Concept', 'chimp')
