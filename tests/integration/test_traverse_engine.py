@@ -1,5 +1,4 @@
 import pytest
-from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
 
 from hyperon_das.das import DistributedAtomSpace
 
