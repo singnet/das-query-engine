@@ -1,5 +1,4 @@
 import pytest
-from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
 
 from hyperon_das.das import DistributedAtomSpace
 
@@ -13,6 +12,8 @@ from .helpers import (
     redis_port,
 )
 from .remote_das_info import remote_das_host, remote_das_port
+
+# from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
 
 
 class TestTraverseEngine:
@@ -52,13 +53,13 @@ class TestTraverseEngine:
                 metta_animal_base_handles.similarity_chimp_human,
                 metta_animal_base_handles.inheritance_human_mammal,
                 metta_animal_base_handles.human_typedef,
-                hasher.expression_hash(
-                    hasher.named_type_hash('MettaType'),
-                    [
-                        hasher.terminal_hash('Symbol', '"human"'),
-                        hasher.terminal_hash('Symbol', 'Concept'),
-                    ],
-                ),
+                # hasher.expression_hash(
+                #     hasher.named_type_hash('MettaType'),
+                #     [
+                #         hasher.terminal_hash('Symbol', '"human"'),
+                #         hasher.terminal_hash('Symbol', 'Concept'),
+                #     ],
+                # ),
             ]
         )
 

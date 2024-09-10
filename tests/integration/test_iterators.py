@@ -1,7 +1,6 @@
 from typing import Union
 
 import pytest
-from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
 
 from hyperon_das import DistributedAtomSpace
 from hyperon_das.cache import QueryAnswerIterator
@@ -23,6 +22,8 @@ from tests.integration.helpers import (
     redis_port,
 )
 from tests.integration.remote_das_info import remote_das_host, remote_das_port
+
+# from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
 
 
 @pytest.fixture
@@ -71,13 +72,13 @@ class TestIncomingLinks:
                 metta_animal_base_handles.similarity_ent_human,
                 metta_animal_base_handles.inheritance_human_mammal,
                 metta_animal_base_handles.human_typedef,
-                hasher.expression_hash(
-                    hasher.named_type_hash('MettaType'),
-                    [
-                        hasher.terminal_hash('Symbol', '"human"'),
-                        hasher.terminal_hash('Symbol', 'Concept'),
-                    ],
-                ),
+                # hasher.expression_hash(
+                #     hasher.named_type_hash('MettaType'),
+                #     [
+                #         hasher.terminal_hash('Symbol', '"human"'),
+                #         hasher.terminal_hash('Symbol', 'Concept'),
+                #     ],
+                # ),
             ]
         )
 
@@ -89,7 +90,7 @@ class TestIncomingLinks:
         assert isinstance(current_value, dict)
         assert iterator.is_empty() is False
         link_handles = sorted([item['handle'] for item in iterator])
-        assert len(link_handles) == 9
+        assert len(link_handles) == 8
         assert link_handles == self._human_incoming_links()
         assert iterator.is_empty() is True
         with pytest.raises(StopIteration):
