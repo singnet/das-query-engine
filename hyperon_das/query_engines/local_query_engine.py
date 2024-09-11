@@ -8,6 +8,7 @@ from hyperon_das_atomdb.database import (
     AtomT,
     HandlesListT,
     IncomingLinksT,
+    LinkT,
     MatchedLinksResultT,
     MatchedTargetsListT,
 )
@@ -26,6 +27,7 @@ from hyperon_das.cache.iterators import (
 from hyperon_das.client import FunctionsClient
 from hyperon_das.context import Context
 from hyperon_das.exceptions import UnexpectedQueryFormat
+from hyperon_das.link_filters import LinkFilter
 from hyperon_das.logger import logger
 from hyperon_das.query_engines.query_engine_protocol import QueryEngine
 from hyperon_das.type_alias import Query
@@ -211,38 +213,20 @@ class LocalQueryEngine(QueryEngine):
     def get_atoms(self, handles: str, **kwargs) -> List[Dict[str, Any]]:
         return [self.local_backend.get_atom(handle, **kwargs) for handle in handles]
 
-    def get_links(
-        self,
-        link_type: str,
-        target_types: list[str] | None = None,
-        link_targets: list[str] | None = None,
-        **kwargs,
-    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
-        if kwargs.get('no_iterator', True):
-            cursor, answer = self._get_related_links(
-                link_type, target_types, link_targets, **kwargs
-            )
-            if not answer:  # atom does not exist
-                return []
-            if isinstance(answer[0], tuple):
-                if isinstance(cursor, int):
-                    return cursor, self._to_link_dict_list(answer)
-                else:
-                    return self._to_link_dict_list(answer)
-            return self._to_link_dict_list(answer)
-        else:
-            if kwargs.get('cursor') is None:
-                kwargs['cursor'] = 0
-            cursor, answer = self._get_related_links(
-                link_type, target_types, link_targets, **kwargs
-            )
-            if cursor:
-                kwargs['cursor'] = cursor
-            kwargs['backend'] = self
-            kwargs['link_type'] = link_type
-            kwargs['target_types'] = target_types
-            kwargs['link_targets'] = link_targets
-            return LocalGetLinks(ListIterator(answer), **kwargs)
+    def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
+        _, answer = self._get_related_links(
+            link_type = link_filter.link_type,
+            target_types = link_filter.target_types,
+            link_targets = link_filter.targets,
+            toplevel_only = link_filter.toplevel_only
+        )
+        return answer
+
+    def get_links(self, link_filter: LinkFilter) -> List[LinkT]:
+        handles = self.get_link_handles(link_filter)
+        if not handles:
+            return []
+        return self._to_link_dict_list(handles)
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs

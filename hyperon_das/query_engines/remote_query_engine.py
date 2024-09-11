@@ -1,19 +1,19 @@
 from enum import Enum
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-from hyperon_das_atomdb.database import IncomingLinksT
+from hyperon_das_atomdb.database import IncomingLinksT, LinkT
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController
 from hyperon_das.cache.iterators import (
     CustomQuery,
     ListIterator,
-    RemoteGetLinks,
     RemoteIncomingLinks,
 )
 from hyperon_das.client import FunctionsClient
 from hyperon_das.context import Context
 from hyperon_das.exceptions import InvalidDASParameters, QueryParametersException
+from hyperon_das.link_filters import LinkFilter
 from hyperon_das.query_engines.local_query_engine import LocalQueryEngine
 from hyperon_das.query_engines.query_engine_protocol import QueryEngine
 from hyperon_das.type_alias import Query
@@ -65,27 +65,24 @@ class RemoteQueryEngine(QueryEngine):
     def get_atoms(self, handles: List[str]) -> List[Dict[str, Any]]:
         return self.cache_controller.get_atoms(handles)
 
-    def get_links(
-        self,
-        link_type: str,
-        target_types: list[str] | None = None,
-        link_targets: list[str] | None = None,
-        **kwargs,
-    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
-        kwargs.pop('no_iterator', None)
-        if kwargs.get('cursor') is None:
-            kwargs['cursor'] = 0
-        links = self.local_query_engine.get_links(link_type, target_types, link_targets, **kwargs)
-        remote_links = self.remote_das.get_links(link_type, target_types, link_targets, **kwargs)
+    def get_links(self, link_filter: LinkFilter) -> List[LinkT]:
+        links = self.local_query_engine.get_links(link_filter)
+        kwargs = {}
+        kwargs['cursor'] = 0
+        kwargs['toplevel_only'] = link_filter.toplevel_only
+        remote_links = self.remote_das.get_links(
+            link_type = link_filter.link_type,
+            target_types = link_filter.target_types,
+            link_targets = link_filter.targets,
+            **kwargs)
         if isinstance(remote_links, tuple):
             cursor, remote_links = remote_links
-            kwargs['cursor'] = cursor
-        kwargs['backend'] = self.remote_das
-        kwargs['link_type'] = link_type
-        kwargs['target_types'] = target_types
-        kwargs['link_targets'] = link_targets
         links.extend(remote_links)
-        return RemoteGetLinks(ListIterator(links), **kwargs)
+        return links
+
+    def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
+        #TODO Implement get_link_handles() in faas client
+        return [link['handle'] for link in self.get_links(link_filter)]
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs

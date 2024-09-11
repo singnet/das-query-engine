@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-from hyperon_das_atomdb.database import IncomingLinksT
+from hyperon_das_atomdb.database import IncomingLinksT, LinkT
 
 from hyperon_das.context import Context
+from hyperon_das.link_filters import LinkFilter
 from hyperon_das.type_alias import Query
 from hyperon_das.utils import QueryAnswer
 
@@ -44,32 +45,28 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def get_links(
-        self,
-        link_type: str,
-        target_types: list[str] | None = None,
-        link_targets: list[str] | None = None,
-        **kwargs,
-    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
+    def get_links(link_filter: LinkFilter) -> List[LinkT]:
         """
-        Retrieves links of a specified type, optionally filtered by target types or specific targets.
-
-        This method can be used to fetch links that match a given link type. Additionally, it allows
-        for filtering based on the types of the targets (target_types) or the specific targets
-        themselves (link_targets). If both target_types and link_targets are provided, the method
-        filters using both criteria.
+        Retrieves all links that match the passed filtering criteria.
 
         Args:
-            link_type (str): The type of links to retrieve. This parameter is mandatory.
-            target_types (List[str], optional): A list of target types to filter the links by. If
-                provided, only links that have targets of these types will be returned. Defaults to None.
-            link_targets (List[str], optional): A list of specific targets to filter the links by. If
-                provided, only links that have these specific targets will be returned. Defaults to None.
+            link_filter (LinkFilter): Filtering criteria to be used to select links
 
         Returns:
-            Union[List[str], List[Dict]]: A list of links that match the criteria. The list contains
-            either strings (handles of the links) or dictionaries (the link objects themselves),
-            depending on the implementation details of the subclass.
+            List[LinkT]: A list of link documents
+        """
+        ...
+
+    @abstractmethod
+    def get_link_handles(link_filter: LinkFilter) -> List[LinkT]:
+        """
+        Retrieve the handle of all links that match the passed filtering criteria.
+
+        Args:
+            link_filter (LinkFilter): Filtering criteria to be used to select links
+
+        Returns:
+            List[str]: A list of link handles
         """
         ...
 
