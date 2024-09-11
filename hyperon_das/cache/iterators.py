@@ -308,42 +308,6 @@ class RemoteIncomingLinks(BaseLinksIterator):
             return self.backend.get_incoming_links(self.atom_handle, **kwargs)
 
 
-class LocalGetLinks(BaseLinksIterator):
-    def __init__(self, source: ListIterator, **kwargs) -> None:
-        self.link_type = kwargs.get('link_type')
-        self.target_types = kwargs.get('target_types')
-        self.link_targets = kwargs.get('link_targets')
-        self.toplevel_only = kwargs.get('toplevel_only')
-        super().__init__(source, **kwargs)
-
-    def get_next_value(self) -> Any:
-        if not self.is_empty() and self.backend:
-            value = next(self.iterator)
-            self.current_value = self.backend._to_link_dict_list([value])[0]
-        return self.current_value
-
-    def get_current_value(self) -> Any:
-        if self.backend:
-            try:
-                value = self.source.get()
-                return self.backend._to_link_dict_list([value])[0]
-            except StopIteration:
-                return None
-
-    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
-        return {
-            'cursor': self.cursor,
-            'chunk_size': self.chunk_size,
-            'toplevel_only': self.toplevel_only,
-        }
-
-    def get_fetch_data(self, **kwargs) -> tuple:
-        if self.backend:
-            return self.backend._get_related_links(
-                self.link_type, self.target_types, self.link_targets, **kwargs
-            )
-
-
 class CustomQuery(BaseLinksIterator):
     def __init__(self, source: ListIterator, **kwargs) -> None:
         self.index_id = kwargs.pop('index_id', None)

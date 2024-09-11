@@ -6,7 +6,6 @@ import pytest
 from hyperon_das.cache.iterators import (
     BaseLinksIterator,
     ListIterator,
-    LocalGetLinks,
     LocalIncomingLinks,
     ProductIterator,
     RemoteIncomingLinks,
@@ -327,61 +326,6 @@ class TestRemoteIncomingLinks:
         result = iterator.get_fetch_data(cursor=0, chunk_size=100)
         assert result == (123, [{'handle': 'link1'}, {'handle': 'link2'}])
         backend.get_incoming_links.assert_called_once_with('atom1', cursor=0, chunk_size=100)
-
-
-class TestLocalGetLinks:
-    @pytest.fixture
-    def iterator(self):
-        link_type = 'Similarity'
-        cursor = 0
-        chunk_size = 500
-        target_types = ['Type1', 'Type2']
-        link_targets = ['Target1', 'Target2']
-        toplevel_only = True
-
-        source = ListIterator([1, 2, 3])
-
-        backend = mock.Mock()
-        backend._to_link_dict_list.side_effect = lambda x: [{'handle': x[0], 'name': f'Link{x[0]}'}]
-        backend._get_related_links.return_value = (
-            cursor,
-            [{'handle': 1, 'name': 'Link1'}, {'handle': 2, 'name': 'Link2'}],
-        )
-
-        return LocalGetLinks(
-            source,
-            backend=backend,
-            link_type=link_type,
-            target_types=target_types,
-            link_targets=link_targets,
-            toplevel_only=toplevel_only,
-            cursor=cursor,
-            chunk_size=chunk_size,
-        )
-
-    def test_get_next_value(self, iterator):
-        iterator.get_next_value()
-        assert iterator.current_value == {'handle': 1, 'name': 'Link1'}
-
-        iterator.get_next_value()
-        assert iterator.current_value == {'handle': 2, 'name': 'Link2'}
-
-        iterator.get_next_value()
-        assert iterator.current_value == {'handle': 3, 'name': 'Link3'}
-
-    def test_get_current_value(self, iterator):
-        current_value = iterator.get_current_value()
-        assert current_value == {'handle': 1, 'name': 'Link1'}
-
-    def test_get_fetch_data_kwargs(self, iterator):
-        fetch_data_kwargs = iterator.get_fetch_data_kwargs()
-        expected_kwargs = {'cursor': 0, 'chunk_size': 500, 'toplevel_only': True}
-        assert fetch_data_kwargs == expected_kwargs
-
-    def test_get_fetch_data(self, iterator):
-        fetch_data = iterator.get_fetch_data()
-        expected_fetch_data = (0, [{'handle': 1, 'name': 'Link1'}, {'handle': 2, 'name': 'Link2'}])
-        assert fetch_data == expected_fetch_data
 
 
 class TestTraverseLinksIterator:
