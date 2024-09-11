@@ -1,15 +1,11 @@
 from enum import Enum
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional
 
 from hyperon_das_atomdb.database import IncomingLinksT, LinkT
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController
-from hyperon_das.cache.iterators import (
-    CustomQuery,
-    ListIterator,
-    RemoteIncomingLinks,
-)
+from hyperon_das.cache.iterators import CustomQuery, ListIterator, RemoteIncomingLinks
 from hyperon_das.client import FunctionsClient
 from hyperon_das.context import Context
 from hyperon_das.exceptions import InvalidDASParameters, QueryParametersException
@@ -71,17 +67,18 @@ class RemoteQueryEngine(QueryEngine):
         kwargs['cursor'] = 0
         kwargs['toplevel_only'] = link_filter.toplevel_only
         remote_links = self.remote_das.get_links(
-            link_type = link_filter.link_type,
-            target_types = link_filter.target_types,
-            link_targets = link_filter.targets,
-            **kwargs)
+            link_type=link_filter.link_type,
+            target_types=link_filter.target_types,
+            link_targets=link_filter.targets,
+            **kwargs,
+        )
         if isinstance(remote_links, tuple):
             cursor, remote_links = remote_links
         links.extend(remote_links)
         return links
 
     def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
-        #TODO Implement get_link_handles() in faas client
+        # TODO Implement get_link_handles() in faas client
         return [link['handle'] for link in self.get_links(link_filter)]
 
     def get_incoming_links(

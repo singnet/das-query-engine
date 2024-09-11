@@ -7,9 +7,9 @@ from typing import Any, Dict, Iterator, List
 
 from hyperon_das_atomdb import WILDCARD
 
+import hyperon_das.link_filters as link_filters
 from hyperon_das.query_engines.query_engine_protocol import QueryEngine
 from hyperon_das.utils import Assignment, QueryAnswer
-import hyperon_das.link_filters as link_filters
 
 
 class QueryAnswerIterator(ABC):
@@ -126,7 +126,8 @@ class LazyQueryEvaluator(ProductIterator):
                 else:
                     target_handle.append(target["handle"])
             das_query_answer = self.query_engine.get_links(
-                link_filters.Targets(target_handle, self.link_type))
+                link_filters.Targets(target_handle, self.link_type)
+            )
             lazy_query_answer = []
             for answer in das_query_answer:
                 assignment = None

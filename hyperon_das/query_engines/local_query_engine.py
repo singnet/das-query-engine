@@ -20,7 +20,6 @@ from hyperon_das.cache.iterators import (
     CustomQuery,
     LazyQueryEvaluator,
     ListIterator,
-    LocalGetLinks,
     LocalIncomingLinks,
     QueryAnswerIterator,
 )
@@ -215,10 +214,10 @@ class LocalQueryEngine(QueryEngine):
 
     def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
         _, answer = self._get_related_links(
-            link_type = link_filter.link_type,
-            target_types = link_filter.target_types,
-            link_targets = link_filter.targets,
-            toplevel_only = link_filter.toplevel_only
+            link_type=link_filter.link_type,
+            target_types=link_filter.target_types,
+            link_targets=link_filter.targets,
+            toplevel_only=link_filter.toplevel_only,
         )
         return answer
 

@@ -6,7 +6,6 @@ from hyperon_das import DistributedAtomSpace
 from hyperon_das.cache import QueryAnswerIterator
 from hyperon_das.cache.iterators import (
     CustomQuery,
-    LocalGetLinks,
     LocalIncomingLinks,
     RemoteIncomingLinks,
     TraverseNeighborsIterator,
