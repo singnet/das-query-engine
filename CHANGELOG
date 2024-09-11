@@ -1,1 +1,1 @@
-
+[#338] Change get_links() API to use link filters instead of optional parameters
