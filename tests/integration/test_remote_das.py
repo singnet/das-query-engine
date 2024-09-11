@@ -5,6 +5,7 @@ from hyperon_das_atomdb import AtomDoesNotExist
 
 from hyperon_das import DistributedAtomSpace
 from hyperon_das.exceptions import GetTraversalCursorException
+import hyperon_das.link_filters as link_filters
 from hyperon_das.traverse_engines import TraverseEngine
 
 from .helpers import metta_animal_base_handles
@@ -85,7 +86,7 @@ class TestRemoteDistributedAtomSpace:
             metta_animal_base_handles.inheritance_typedef,
         ]
 
-        links = remote_das.get_links(link_type='Expression')
+        links = remote_das.get_links(link_filters.NamedType('Expression'))
         inheritance_links = []
         for link in links:
             if metta_animal_base_handles.Inheritance in link['targets']:
@@ -93,9 +94,9 @@ class TestRemoteDistributedAtomSpace:
         assert len(inheritance_links) == 13
         assert sorted(inheritance_links) == sorted(all_inheritance)
 
-        links = remote_das.get_links(
-            link_type='Expression', target_types=['Symbol', 'Symbol', 'Symbol']
-        )
+        links = remote_das.get_links(link_filters.FlatTypeTemplate(
+            ['Symbol', 'Symbol', 'Symbol'],
+            'Expression'))
         inheritance_links = []
         for link in links:
             if metta_animal_base_handles.Inheritance in link['targets']:
@@ -103,15 +104,14 @@ class TestRemoteDistributedAtomSpace:
         assert len(inheritance_links) == 13
         assert sorted(inheritance_links) == sorted(all_inheritance)
 
-        link = remote_das.get_links(
-            link_type='Expression',
-            link_targets=[
+        link = remote_das.get_links(link_filters.Targets(
+            [
                 metta_animal_base_handles.Inheritance,
                 metta_animal_base_handles.earthworm,
                 metta_animal_base_handles.animal,
             ],
-        )
-        assert next(link)['handle'] == metta_animal_base_handles.inheritance_earthworm_animal
+            'Expression'))
+        assert link[0]['handle'] == metta_animal_base_handles.inheritance_earthworm_animal
 
     def test_get_incoming_links(self, remote_das: DistributedAtomSpace):
         expected_handles = [
