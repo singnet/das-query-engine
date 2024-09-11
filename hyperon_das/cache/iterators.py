@@ -9,6 +9,7 @@ from hyperon_das_atomdb import WILDCARD
 
 from hyperon_das.query_engines.query_engine_protocol import QueryEngine
 from hyperon_das.utils import Assignment, QueryAnswer
+import hyperon_das.link_filters as link_filters
 
 
 class QueryAnswerIterator(ABC):
@@ -124,7 +125,8 @@ class LazyQueryEvaluator(ProductIterator):
                     wildcard_flag = True
                 else:
                     target_handle.append(target["handle"])
-            das_query_answer = self.query_engine.get_links(self.link_type, None, target_handle)
+            das_query_answer = self.query_engine.get_links(
+                link_filters.Targets(target_handle, self.link_type))
             lazy_query_answer = []
             for answer in das_query_answer:
                 assignment = None
@@ -337,44 +339,6 @@ class LocalGetLinks(BaseLinksIterator):
     def get_fetch_data(self, **kwargs) -> tuple:
         if self.backend:
             return self.backend._get_related_links(
-                self.link_type, self.target_types, self.link_targets, **kwargs
-            )
-
-
-class RemoteGetLinks(BaseLinksIterator):
-    def __init__(self, source: ListIterator, **kwargs) -> None:
-        self.link_type = kwargs.get('link_type')
-        self.target_types = kwargs.get('target_types')
-        self.link_targets = kwargs.get('link_targets')
-        self.toplevel_only = kwargs.get('toplevel_only')
-        self.returned_handles = set()
-        super().__init__(source, **kwargs)
-
-    def get_next_value(self) -> Any:
-        if not self.is_empty():
-            value = next(self.iterator)
-            handle = value.get('handle')
-            if handle not in self.returned_handles:
-                self.returned_handles.add(handle)
-                self.current_value = value
-        return self.current_value
-
-    def get_current_value(self) -> Any:
-        try:
-            return self.source.get()
-        except StopIteration:
-            return None
-
-    def get_fetch_data_kwargs(self) -> Dict[str, Any]:
-        return {
-            'cursor': self.cursor,
-            'chunk_size': self.chunk_size,
-            'toplevel_only': self.toplevel_only,
-        }
-
-    def get_fetch_data(self, **kwargs) -> tuple:
-        if self.backend:
-            return self.backend.get_links(
                 self.link_type, self.target_types, self.link_targets, **kwargs
             )
 

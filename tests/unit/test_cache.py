@@ -9,7 +9,6 @@ from hyperon_das.cache.iterators import (
     LocalGetLinks,
     LocalIncomingLinks,
     ProductIterator,
-    RemoteGetLinks,
     RemoteIncomingLinks,
     TraverseLinksIterator,
     TraverseNeighborsIterator,
@@ -383,86 +382,6 @@ class TestLocalGetLinks:
         fetch_data = iterator.get_fetch_data()
         expected_fetch_data = (0, [{'handle': 1, 'name': 'Link1'}, {'handle': 2, 'name': 'Link2'}])
         assert fetch_data == expected_fetch_data
-
-
-class TestRemoteGetLinks:
-    def test_get_next_value(self):
-        source = ListIterator([{'handle': 'handle1'}, {'handle': 'handle2'}, {'handle': 'handle3'}])
-        iterator = RemoteGetLinks(
-            source,
-            link_type='link_type',
-            target_types=['type1', 'type2'],
-            link_targets=['target1', 'target2'],
-            toplevel_only=True,
-        )
-
-        iterator.get_next_value()
-        assert iterator.current_value == {'handle': 'handle1'}
-
-        iterator.get_next_value()
-        assert iterator.current_value == {'handle': 'handle2'}
-
-        iterator.get_next_value()
-        assert iterator.current_value == {'handle': 'handle3'}
-
-        with pytest.raises(StopIteration):
-            iterator.get_next_value()
-
-    def test_get_current_value(self):
-        source = ListIterator([{'handle': 'handle1'}, {'handle': 'handle2'}, {'handle': 'handle3'}])
-        iterator = RemoteGetLinks(
-            source,
-            link_type='link_type',
-            target_types=['type1', 'type2'],
-            link_targets=['target1', 'target2'],
-            toplevel_only=True,
-        )
-
-        assert iterator.get_current_value() == {'handle': 'handle1'}
-
-        iterator.get_next_value()
-        assert iterator.get_current_value() == {'handle': 'handle1'}
-
-        iterator.get_next_value()
-        assert iterator.get_current_value() == {'handle': 'handle2'}
-
-        iterator.get_next_value()
-        assert iterator.get_current_value() == {'handle': 'handle3'}
-
-        with pytest.raises(StopIteration):
-            iterator.get_next_value()
-        assert iterator.get_current_value() is None
-
-    def test_get_fetch_data_kwargs(self):
-        source = ListIterator([{'handle': 'handle1'}, {'handle': 'handle2'}, {'handle': 'handle3'}])
-        iterator = RemoteGetLinks(
-            source,
-            link_type='link_type',
-            target_types=['type1', 'type2'],
-            link_targets=['target1', 'target2'],
-            toplevel_only=True,
-        )
-
-        kwargs = iterator.get_fetch_data_kwargs()
-        assert kwargs == {'cursor': 0, 'chunk_size': 1000, 'toplevel_only': True}
-
-    def test_get_fetch_data(self):
-        backend = mock.Mock()
-        backend.get_links.return_value = (
-            123,
-            [{'handle': 'link1'}, {'handle': 'link2'}, {'handle': 'link3'}],
-        )
-        iterator = RemoteGetLinks(
-            ListIterator([{'handle': 'handle1'}, {'handle': 'handle2'}, {'handle': 'handle3'}]),
-            link_type='link_type',
-            target_types=['type1', 'type2'],
-            link_targets=['target1', 'target2'],
-            toplevel_only=True,
-            backend=backend,
-        )
-
-        data = iterator.get_fetch_data(cursor=0, chunk_size=100)
-        assert data == (123, [{'handle': 'link1'}, {'handle': 'link2'}, {'handle': 'link3'}])
 
 
 class TestTraverseLinksIterator:
