@@ -1,4 +1,5 @@
 """Test node and link generation and Hyperon DAS load performance."""
+
 import random
 import re
 import statistics
@@ -139,9 +140,11 @@ class TestPerformance:
         test_name = request.node.name
         test_name = re.sub(
             regex,
-            lambda m: ""
-            if (m.start() == [match.start() for match in re.finditer(regex, test_name)][7])
-            else m.group(),
+            lambda m: (
+                ""
+                if (m.start() == [match.start() for match in re.finditer(regex, test_name)][7])
+                else m.group()
+            ),
             request.node.name,
         )
         if test_name not in self.test_duration:

@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 from hyperon_das_atomdb import AtomDoesNotExist
 
+import hyperon_das.link_filters as link_filters
 from hyperon_das import DistributedAtomSpace
 from hyperon_das.exceptions import GetTraversalCursorException
 from hyperon_das.traverse_engines import TraverseEngine
@@ -85,7 +86,7 @@ class TestRemoteDistributedAtomSpace:
             metta_animal_base_handles.inheritance_typedef,
         ]
 
-        links = remote_das.get_links(link_type='Expression')
+        links = remote_das.get_links(link_filters.NamedType('Expression'))
         inheritance_links = []
         for link in links:
             if metta_animal_base_handles.Inheritance in link['targets']:
@@ -94,7 +95,7 @@ class TestRemoteDistributedAtomSpace:
         assert sorted(inheritance_links) == sorted(all_inheritance)
 
         links = remote_das.get_links(
-            link_type='Expression', target_types=['Symbol', 'Symbol', 'Symbol']
+            link_filters.FlatTypeTemplate(['Symbol', 'Symbol', 'Symbol'], 'Expression')
         )
         inheritance_links = []
         for link in links:
@@ -104,14 +105,16 @@ class TestRemoteDistributedAtomSpace:
         assert sorted(inheritance_links) == sorted(all_inheritance)
 
         link = remote_das.get_links(
-            link_type='Expression',
-            link_targets=[
-                metta_animal_base_handles.Inheritance,
-                metta_animal_base_handles.earthworm,
-                metta_animal_base_handles.animal,
-            ],
+            link_filters.Targets(
+                [
+                    metta_animal_base_handles.Inheritance,
+                    metta_animal_base_handles.earthworm,
+                    metta_animal_base_handles.animal,
+                ],
+                'Expression',
+            )
         )
-        assert next(link)['handle'] == metta_animal_base_handles.inheritance_earthworm_animal
+        assert link[0]['handle'] == metta_animal_base_handles.inheritance_earthworm_animal
 
     def test_get_incoming_links(self, remote_das: DistributedAtomSpace):
         expected_handles = [

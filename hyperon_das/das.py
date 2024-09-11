@@ -2,7 +2,7 @@ from typing import Any, Dict, Iterator, List, Optional, Type, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
-from hyperon_das_atomdb.database import IncomingLinksT
+from hyperon_das_atomdb.database import AtomT, IncomingLinksT, LinkT, NodeT
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.cache.cache_controller import CacheController
@@ -13,6 +13,7 @@ from hyperon_das.exceptions import (
     InvalidDASParameters,
     InvalidQueryEngine,
 )
+from hyperon_das.link_filters import LinkFilter
 from hyperon_das.logger import logger
 from hyperon_das.query_engines.local_query_engine import LocalQueryEngine
 from hyperon_das.query_engines.remote_query_engine import RemoteQueryEngine
@@ -208,7 +209,7 @@ class DistributedAtomSpace:
         """
         return AtomDB.link_handle(link_type, link_targets)
 
-    def get_atom(self, handle: str) -> Dict[str, Any]:
+    def get_atom(self, handle: str) -> AtomT:
         """
         Retrieve an atom given its handle.
 
@@ -244,7 +245,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_atom(handle, no_target_format=True)
 
-    def get_atoms(self, handles: List[str]) -> List[Dict[str, Any]]:
+    def get_atoms(self, handles: List[str]) -> List[AtomT]:
         """
         Retrieve atoms given a list of handles.
 
@@ -286,7 +287,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_atoms(handles, no_target_format=True)
 
-    def get_node(self, node_type: str, node_name: str) -> Dict[str, Any]:
+    def get_node(self, node_type: str, node_name: str) -> NodeT:
         """
         Retrieve a node given its type and name.
 
@@ -317,7 +318,7 @@ class DistributedAtomSpace:
         node_handle = self.backend.node_handle(node_type, node_name)
         return self.get_atom(node_handle)
 
-    def get_link(self, link_type: str, link_targets: List[str]) -> Dict[str, Any]:
+    def get_link(self, link_type: str, link_targets: List[str]) -> LinkT:
         """
         Retrieve a link given its type and list of targets.
         Targets are hashes of the nodes these hashes or handles can be created using the function 'compute_node_handle'.
@@ -361,89 +362,29 @@ class DistributedAtomSpace:
         link_handle = self.backend.link_handle(link_type, link_targets)
         return self.get_atom(link_handle)
 
-    def get_links(
-        self,
-        link_type: str,
-        target_types: list[str] | None = None,
-        link_targets: list[str] | None = None,
-        **kwargs,
-    ) -> Union[Iterator, List[str], List[Dict], tuple[int, List[Dict]]]:  # TODO: simplify
+    def get_links(self, link_filter: LinkFilter) -> List[LinkT]:
         """
-        Retrieve all links that match the passed search criteria.
-
-        This method can be used in four different ways.
-
-        1. Retrieve all the links of a given type
-
-            Set link_type to the desired type and set target_types=None and
-            link_targets=None.
-
-        2. Retrieve all the links of a given type whose targets are of given types.
-
-            Set link_type to the desired type and target_types to a list with the desired
-            types os each target.
-
-        3. Retrieve all the links of a given type whose targets match a given list of
-           handles
-
-            Set link_type to the desired type (or pass link_type='*' to retrieve links
-            of any type) and set link_targets to a list of handles. Any handle in this
-            list can be '*' meaning that any handle in that position of the targets list
-            is a match for the query. Set target_types=None.
+        Retrieves all links that match the passed filtering criteria.
 
         Args:
-            link_type (str): Link type being searched (can be '*' when link_targets is not None).
-            target_types (List[str], optional): Template of target types being searched.
-            link_targets (List[str], optional): Template of targets being searched (handles or '*').
-
-        Keyword Args:
-            no_iterator (bool, optional): Set False to return an iterator otherwise it will return a
-                list of Dict[str, Any].
-                If the query_engine is set to 'local' it always return an iterator.
-                Defaults to True.
-            cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor
-                position. Defaults to 0.
-            chunk_size (int, optional): Chunk size. Defaults to 1000.
-            top_level_only (bool optional): Set to True to filter top level links. Defaults to False.
-
+            link_filter (LinkFilter): Filtering criteria to be used to select links
 
         Returns:
-            Union[Iterator, List[Dict[str, Any]]]: A list of dictionaries containing detailed
-            information of the links
-
-        Examples:
-
-            1. Retrieve all the links of a given type
-                >>> das = DistributedAtomSpace()
-                >>> links = das.get_links(link_type='Inheritance')
-                >>> for link in links:
-                >>>     print(link['type'], link['targets'])
-                Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
-                Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
-                Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
-                ...
-
-            2. Retrieve all the links of a given type whose targets are of given types.
-
-                >>> links = das.get_links(link_type='Inheritance', target_types=['Concept', 'Concept'])
-                >>> for link in links:
-                >>>     print(link['type'], link['targets'])
-                Inheritance ['5b34c54bee150c04f9fa584b899dc030', 'bdfe4e7a431f73386f37c6448afe5840']
-                Inheritance ['b94941d8cd1c0ee4ad3dd3dcab52b964', '80aff30094874e75028033a38ce677bb']
-                Inheritance ['bb34ce95f161a6b37ff54b3d4c817857', '0a32b476852eeb954979b87f5f6cb7af']
-                ...
-
-            3. Retrieve all the links of a given type whose targets match a given list of
-               handles
-
-                >>> snake = das.compute_node_handle('Concept', 'snake')
-                >>> links = das.get_links(link_type='Similarity', link_targets=[snake, '*'])
-                >>> for link in links:
-                >>>     print(link['type'], link['targets'])
-                Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'b94941d8cd1c0ee4ad3dd3dcab52b964']
-                Similarity ['c1db9b517073e51eb7ef6fed608ec204', 'bb34ce95f161a6b37ff54b3d4c817857']
+            List[LinkT]: A list of link documents
         """
-        return self.query_engine.get_links(link_type, target_types, link_targets, **kwargs)
+        return self.query_engine.get_links(link_filter)
+
+    def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
+        """
+        Retrieve the handle of all links that match the passed filtering criteria.
+
+        Args:
+            link_filter (LinkFilter): Filtering criteria to be used to select links
+
+        Returns:
+            List[str]: A list of link handles
+        """
+        return self.query_engine.get_link_handles(link_filter)
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
