@@ -34,41 +34,33 @@ class TestDistributedAtomSpace:
 
     def test_get_incoming_links(self):
         das = DistributedAtomSpaceMock()
-        cursor, links = das.get_incoming_links('<Concept: human>', handles_only=True)
-        assert cursor is None
+        links = das.get_incoming_links('<Concept: human>', handles_only=True)
         assert len(links) == 7
 
-        cursor, links = das.get_incoming_links('<Concept: human>')
-        assert cursor is None
+        links = das.get_incoming_links('<Concept: human>')
         assert len(links) == 7
 
         with mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
             das_remote = DistributedAtomSpaceMock('remote', host='test', port=8080)
 
         with mock.patch(
-            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=(0, [])
+            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[]
         ):
-            cursor, links = das_remote.get_incoming_links('<Concept: human>')
-        assert cursor == 0
-        assert isinstance(links, RemoteIncomingLinks)
-        assert len(links.source.source) == 7
+            links = das_remote.get_incoming_links('<Concept: human>')
+        assert len(links) == 7
 
         with mock.patch(
-            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=(0, [1, 2, 3, 4])
+            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[1, 2, 3, 4]
         ):
-            cursor, links = das_remote.get_incoming_links('<Concept: snet>')
-        assert cursor == 0
-        assert isinstance(links, RemoteIncomingLinks)
-        assert links.source.source == [1, 2, 3, 4]
+            links = das_remote.get_incoming_links('<Concept: snet>')
+        assert links == [1, 2, 3, 4]
 
         with mock.patch(
             'hyperon_das.client.FunctionsClient.get_incoming_links',
-            return_value=(0, ["['Inheritance', '<Concept: ent>', '<Concept: snet>']"]),
+            return_value=["['Inheritance', '<Concept: ent>', '<Concept: snet>']"],
         ):
-            cursor, links = das_remote.get_incoming_links('<Concept: ent>', handles_only=True)
-        assert cursor == 0
-        assert isinstance(links, RemoteIncomingLinks)
-        assert set(links.source.source) == {
+            links = das_remote.get_incoming_links('<Concept: ent>', handles_only=True)
+        assert set(links) == {
             "['Inheritance', '<Concept: ent>', '<Concept: plant>']",
             "['Similarity', '<Concept: ent>', '<Concept: human>']",
             "['Similarity', '<Concept: human>', '<Concept: ent>']",

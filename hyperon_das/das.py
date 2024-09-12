@@ -388,7 +388,7 @@ class DistributedAtomSpace:
 
     def get_incoming_links(
         self, atom_handle: str, **kwargs
-    ) -> tuple[int | None, IncomingLinksT | Iterator]:
+    ) -> IncomingLinksT | Iterator:
         """
         Retrieve all links which has the passed handle as one of its targets.
 

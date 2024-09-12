@@ -5,7 +5,7 @@ from hyperon_das_atomdb.database import IncomingLinksT, LinkT
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController
-from hyperon_das.cache.iterators import CustomQuery, ListIterator, RemoteIncomingLinks
+from hyperon_das.cache.iterators import CustomQuery, ListIterator
 from hyperon_das.client import FunctionsClient
 from hyperon_das.context import Context
 from hyperon_das.exceptions import InvalidDASParameters, QueryParametersException
@@ -81,16 +81,9 @@ class RemoteQueryEngine(QueryEngine):
         # TODO Implement get_link_handles() in faas client
         return [link['handle'] for link in self.get_links(link_filter)]
 
-    def get_incoming_links(
-        self, atom_handle: str, **kwargs
-    ) -> tuple[int | None, IncomingLinksT | Iterator]:
-        kwargs.pop('no_iterator', None)
-        if kwargs.get('cursor') is None:
-            kwargs['cursor'] = 0
-        kwargs['handles_only'] = False
-        _, links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
-        cursor, remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
-        kwargs['cursor'] = cursor
+    def get_incoming_links( self, atom_handle: str, **kwargs) -> IncomingLinksT:
+        links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
+        remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
         kwargs['backend'] = self.remote_das
         kwargs['atom_handle'] = atom_handle
         links.extend(remote_links)
@@ -102,7 +95,7 @@ class RemoteQueryEngine(QueryEngine):
             and 'targets_document' in links[0]
         ):
             links = [(link, link.pop('targets_document', [])) for link in links]
-        return cursor, RemoteIncomingLinks(ListIterator(links), **kwargs)
+        return links
 
     def custom_query(self, index_id: str, query: Query, **kwargs) -> Iterator:
         kwargs.pop('no_iterator', None)

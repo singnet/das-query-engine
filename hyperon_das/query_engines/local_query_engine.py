@@ -6,7 +6,7 @@ from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.database import (
     AtomT,
-    HandlesListT,
+    HandleListT,
     IncomingLinksT,
     LinkT,
     MatchedLinksResultT,
@@ -20,13 +20,12 @@ from hyperon_das.cache.iterators import (
     CustomQuery,
     LazyQueryEvaluator,
     ListIterator,
-    LocalIncomingLinks,
     QueryAnswerIterator,
 )
 from hyperon_das.client import FunctionsClient
 from hyperon_das.context import Context
 from hyperon_das.exceptions import UnexpectedQueryFormat
-from hyperon_das.link_filters import LinkFilter
+from hyperon_das.link_filters import LinkFilter, LinkFilterType
 from hyperon_das.logger import logger
 from hyperon_das.query_engines.query_engine_protocol import QueryEngine
 from hyperon_das.type_alias import Query
@@ -90,7 +89,7 @@ class LocalQueryEngine(QueryEngine):
                 )
             )
 
-    def _to_link_dict_list(self, db_answer: HandlesListT | MatchedTargetsListT) -> List[Dict]:
+    def _to_link_dict_list(self, db_answer: HandleListT | MatchedTargetsListT) -> List[Dict]:
         if not db_answer:
             return []
         flat_handle = isinstance(db_answer[0], str)
@@ -212,14 +211,25 @@ class LocalQueryEngine(QueryEngine):
     def get_atoms(self, handles: str, **kwargs) -> List[Dict[str, Any]]:
         return [self.local_backend.get_atom(handle, **kwargs) for handle in handles]
 
+
     def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
-        _, answer = self._get_related_links(
-            link_type=link_filter.link_type,
-            target_types=link_filter.target_types,
-            link_targets=link_filter.targets,
-            toplevel_only=link_filter.toplevel_only,
-        )
-        return answer
+        if link_filter.filter_type == LinkFilterType.FLAT_TYPE_TEMPLATE:
+            return self.local_backend.get_matched_type_template(
+                [link_filter.link_type, *link_type.target_types],
+                toplevel_only=link_filter.toplevel_only)
+        elif link_filter.filter_type == LinkFilterType.TARGETS:
+            return self.local_backend.get_matched_links(
+                link_filter.link_type,
+                link_filter.targets,
+                toplevel_only=link_filter.toplevel_only)
+        elif link_filter.filter_type == LinkFilterType.NAMED_TYPE:
+            return self.local_backend.get_all_links(
+                link_filter.link_type,
+                toplevel_only=link_filter.toplevel_only)
+        else:
+            das_error(
+                ValueError("Invalid LinkFilterType: {link_filter.filter_type}")
+            )
 
     def get_links(self, link_filter: LinkFilter) -> List[LinkT]:
         handles = self.get_link_handles(link_filter)
@@ -227,18 +237,8 @@ class LocalQueryEngine(QueryEngine):
             return []
         return self._to_link_dict_list(handles)
 
-    def get_incoming_links(
-        self, atom_handle: str, **kwargs
-    ) -> tuple[int | None, IncomingLinksT | Iterator]:
-        if kwargs.get('no_iterator', True):
-            return self.local_backend.get_incoming_links(atom_handle, **kwargs)
-
-        kwargs['handles_only'] = True
-        cursor, links = self.local_backend.get_incoming_links(atom_handle, **kwargs)
-        kwargs['cursor'] = cursor
-        kwargs['backend'] = self.local_backend
-        kwargs['atom_handle'] = atom_handle
-        return cursor, LocalIncomingLinks(ListIterator(links), **kwargs)
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
+        return self.local_backend.get_incoming_links(atom_handle, **kwargs)
 
     def query(
         self,

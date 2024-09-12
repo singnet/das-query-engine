@@ -71,11 +71,9 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def get_incoming_links(
-        self, atom_handle: str, **kwargs
-    ) -> tuple[int | None, IncomingLinksT | Iterator]:
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
         """
-        Retrieves incoming links for a specified atom handle, with optional filtering parameters.
+        Retrieves incoming links for a specified atom handle.
 
         This method fetches all links pointing to the specified atom, identified by its handle. It
         can return a simple list of links, a list of dictionaries with link details, or a list of
@@ -91,7 +89,7 @@ class QueryEngine(ABC):
                       returned data. The exact options available depend on the implementation.
 
         Returns:
-            List[Union[dict, str, Tuple[dict, List[dict]]]]: A list containing the incoming links. The
+            List[dict]: A list containing the incoming links. The
             format of the list's elements can vary based on the provided keyword arguments and the
             implementation details.
         """

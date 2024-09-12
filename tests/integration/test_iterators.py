@@ -6,8 +6,6 @@ from hyperon_das import DistributedAtomSpace
 from hyperon_das.cache import QueryAnswerIterator
 from hyperon_das.cache.iterators import (
     CustomQuery,
-    LocalIncomingLinks,
-    RemoteIncomingLinks,
     TraverseNeighborsIterator,
 )
 from tests.integration.helpers import (
@@ -50,90 +48,7 @@ def das_remote_fixture():
     yield DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
 
 
-class TestIncomingLinks:
-    @pytest.fixture(scope="session")
-    def _cleanup(self, request):
-        return cleanup(request)
-
-    @pytest.fixture
-    def human_handle(self):
-        return metta_animal_base_handles.human
-
-    def _human_incoming_links(self):
-        return sorted(
-            [
-                metta_animal_base_handles.similarity_human_monkey,
-                metta_animal_base_handles.similarity_monkey_human,
-                metta_animal_base_handles.similarity_human_chimp,
-                metta_animal_base_handles.similarity_chimp_human,
-                metta_animal_base_handles.similarity_human_ent,
-                metta_animal_base_handles.similarity_ent_human,
-                metta_animal_base_handles.inheritance_human_mammal,
-                metta_animal_base_handles.human_typedef,
-                # hasher.expression_hash(
-                #     hasher.named_type_hash('MettaType'),
-                #     [
-                #         hasher.terminal_hash('Symbol', '"human"'),
-                #         hasher.terminal_hash('Symbol', 'Concept'),
-                #     ],
-                # ),
-            ]
-        )
-
-    def _check_asserts(
-        self, das: DistributedAtomSpace, iterator: Union[LocalIncomingLinks, RemoteIncomingLinks]
-    ):
-        current_value = iterator.get()
-        assert current_value == das.get_atom(iterator.get()['handle'])
-        assert isinstance(current_value, dict)
-        assert iterator.is_empty() is False
-        link_handles = sorted([item['handle'] for item in iterator])
-        assert len(link_handles) == 8
-        assert link_handles == self._human_incoming_links()
-        assert iterator.is_empty() is True
-        with pytest.raises(StopIteration):
-            iterator.get()
-        with pytest.raises(StopIteration):
-            next(iterator)
-
-    def test_incoming_links_with_das_ram_only(self, human_handle):
-        das = DistributedAtomSpace()
-        load_metta_animals_base(das)
-        cursor, iterator = das.get_incoming_links(human_handle, no_iterator=False)
-        assert cursor is None
-        assert isinstance(iterator, (LocalIncomingLinks, RemoteIncomingLinks))
-        self._check_asserts(das, iterator)
-
-    def test_incoming_links_with_das_redis_mongo(self, human_handle, _cleanup):
-        _db_up()
-        das = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='redis_mongo',
-            mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
-            redis_port=redis_port,
-            redis_cluster=False,
-            redis_ssl=False,
-        )
-        load_metta_animals_base(das)
-        das.commit_changes()
-        cursor, iterator = das.get_incoming_links(human_handle, no_iterator=False, cursor=0)
-        assert cursor == 0
-        assert isinstance(iterator, (LocalIncomingLinks, RemoteIncomingLinks))
-        self._check_asserts(das, iterator)
-        _db_down()
-
-    def test_incoming_links_with_remote_das(self, human_handle):
-        das = DistributedAtomSpace(
-            query_engine='remote', host=remote_das_host, port=remote_das_port
-        )
-        cursor, iterator = das.get_incoming_links(human_handle)
-        assert cursor == 0
-        assert isinstance(iterator, (LocalIncomingLinks, RemoteIncomingLinks))
-        self._check_asserts(das, iterator)
-
-
+@pytest.mark.skip(reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73")
 class TestTraverseLinks:
     @pytest.fixture(scope="session")
     def _cleanup(self, request):
@@ -213,6 +128,7 @@ class TestTraverseLinks:
         self._check_asserts(das, iterator)
 
 
+@pytest.mark.skip(reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73")
 class TestTraverseNeighbors:
     @pytest.fixture(scope="session")
     def _cleanup(self, request):
