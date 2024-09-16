@@ -78,8 +78,8 @@ class TestPerformance:
         mongo_credentials: str,
         redis_host_port: str,
         redis_credentials: str,
-        redis_cluster: bool,
-        redis_ssl: bool,
+        redis_cluster: bool = True,
+        redis_ssl: bool = False,
     ) -> None:
         self._initialize(
             node_count,
