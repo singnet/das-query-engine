@@ -215,7 +215,7 @@ class LocalQueryEngine(QueryEngine):
     def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
         if link_filter.filter_type == LinkFilterType.FLAT_TYPE_TEMPLATE:
             return self.local_backend.get_matched_type_template(
-                [link_filter.link_type, *link_type.target_types],
+                [link_filter.link_type, *link_filter.target_types],
                 toplevel_only=link_filter.toplevel_only)
         elif link_filter.filter_type == LinkFilterType.TARGETS:
             return self.local_backend.get_matched_links(
@@ -223,9 +223,10 @@ class LocalQueryEngine(QueryEngine):
                 link_filter.targets,
                 toplevel_only=link_filter.toplevel_only)
         elif link_filter.filter_type == LinkFilterType.NAMED_TYPE:
-            return self.local_backend.get_all_links(
+            _, answer = self.local_backend.get_all_links(
                 link_filter.link_type,
                 toplevel_only=link_filter.toplevel_only)
+            return answer
         else:
             das_error(
                 ValueError("Invalid LinkFilterType: {link_filter.filter_type}")
