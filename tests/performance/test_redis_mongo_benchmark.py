@@ -110,11 +110,11 @@ class TestPerformance:
         yield DistributedAtomSpace(
             query_engine='local',
             atomdb='redis_mongo',
-            mongo_host=self.mongo_host,
+            mongo_hostname=self.mongo_host,
             mongo_port=int(self.mongo_port),
             mongo_username=self.mongo_user,
             mongo_password=self.mongo_pass,
-            redis_host=self.redis_host,
+            redis_hostname=self.redis_host,
             redis_port=int(self.redis_port),
             redis_username=self.redis_user,
             redis_password=self.redis_pass,
