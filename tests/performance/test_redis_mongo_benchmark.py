@@ -92,8 +92,9 @@ class TestPerformance:
             False,
         )
         self.mongo_host, self.mongo_port = mongo_host_port.split(":")
-        self.mongo_user, self.mongo_pass = mongo_credentials.split(":")
+        self.mongo_user, self.mongo_pass = (mongo_credentials.split(":") if mongo_credentials else [None, None])
         self.redis_host, self.redis_port = redis_host_port.split(":")
+        self.redis_user, self.redis_pass = (redis_credentials.split(":") if redis_credentials else [None, None])
         self.redis_user, self.redis_pass = redis_credentials.split(":")
         self.redis_cluster = redis_cluster
         self.redis_ssl = redis_ssl
