@@ -1,1 +1,2 @@
 [#338] Change get_links() API to use link filters instead of optional parameters
+[das-atom-db#216] Removed cursor from api of get_matched*() and get_incoming_links()
