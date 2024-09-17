@@ -425,6 +425,7 @@ class TestPerformance:
         measure_process(das, query_answers, nodes)
         assert query_answers
 
+    @pytest.mark.skip(reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73")
     @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
     def test_traverse_links(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
@@ -442,6 +443,7 @@ class TestPerformance:
 
         assert len(cursors) > 1
 
+    @pytest.mark.skip(reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73")
     @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
     def test_traverse_neighbors(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
