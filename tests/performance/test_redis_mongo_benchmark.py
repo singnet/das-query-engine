@@ -11,6 +11,7 @@ import pytest
 from conftest import PERFORMANCE_REPORT
 
 from hyperon_das import DistributedAtomSpace
+import hyperon_das.link_filters as link_filters
 from tests.integration.helpers import _db_down, _db_up
 
 # pylint: disable=attribute-defined-outside-init,disable=too-many-instance-attributes
@@ -352,7 +353,7 @@ class TestPerformance:
     def test_query_atom_by_field(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
-        _, links = das.get_links(link_type, no_iterator=True)
+        links = das.get_links(link_filters.NamedType(link_type))
         link = random.choice(links)
         measure_query = measure(das.get_atoms_by_field)
         query_answer = measure_query({'strength': link['strength'], 'named_type': link_type})
@@ -363,7 +364,7 @@ class TestPerformance:
     def test_query_atom_by_field_with_index(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
-        _, links = das.get_links(link_type, no_iterator=True)
+        links = das.get_links(link_filters.NamedType(link_type))
         link = random.choice(links)
         measure_query = measure(das.get_atoms_by_field)
         query_answer = measure_query({'strength': link['strength'], 'named_type': link_type})
