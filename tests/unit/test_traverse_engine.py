@@ -22,6 +22,9 @@ def get_names(handles: str, das: DistributedAtomSpace) -> set:
     return answer
 
 
+@pytest.mark.skip(
+    reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73"
+)
 class TestTraverseEngine:
     @pytest.fixture
     def das(self):

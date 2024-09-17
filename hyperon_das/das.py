@@ -386,9 +386,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_link_handles(link_filter)
 
-    def get_incoming_links(
-        self, atom_handle: str, **kwargs
-    ) -> tuple[int | None, IncomingLinksT | Iterator]:
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
         """
         Retrieve all links which has the passed handle as one of its targets.
 
@@ -396,10 +394,6 @@ class DistributedAtomSpace:
             atom_handle (str): Atom's handle
 
         Keyword Args:
-            no_iterator (bool, optional): Set False to return an iterator otherwise it will return a list of Dict[str, Any].
-                If the query_engine is set to 'remote' it always return an iterator.
-                Defaults to True.
-            cursor (int, optional): Cursor position in the iterator, starts retrieving links from redis at the cursor position. Defaults to 0.
             handles_only (bool, optional): Returns a list of links handles.
 
         Returns:

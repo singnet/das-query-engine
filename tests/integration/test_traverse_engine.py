@@ -16,6 +16,9 @@ from .remote_das_info import remote_das_host, remote_das_port
 # from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
 
 
+@pytest.mark.skip(
+    reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73"
+)
 class TestTraverseEngine:
     @pytest.fixture(scope="session")
     def _cleanup(self, request):

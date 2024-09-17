@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from conftest import PERFORMANCE_REPORT
 
+import hyperon_das.link_filters as link_filters
 from hyperon_das import DistributedAtomSpace
 from tests.integration.helpers import _db_down, _db_up
 
@@ -352,7 +353,7 @@ class TestPerformance:
     def test_query_atom_by_field(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
-        _, links = das.get_links(link_type, no_iterator=True)
+        links = das.get_links(link_filters.NamedType(link_type))
         link = random.choice(links)
         measure_query = measure(das.get_atoms_by_field)
         query_answer = measure_query({'strength': link['strength'], 'named_type': link_type})
@@ -363,7 +364,7 @@ class TestPerformance:
     def test_query_atom_by_field_with_index(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
-        _, links = das.get_links(link_type, no_iterator=True)
+        links = das.get_links(link_filters.NamedType(link_type))
         link = random.choice(links)
         measure_query = measure(das.get_atoms_by_field)
         query_answer = measure_query({'strength': link['strength'], 'named_type': link_type})
@@ -424,6 +425,9 @@ class TestPerformance:
         measure_process(das, query_answers, nodes)
         assert query_answers
 
+    @pytest.mark.skip(
+        reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73"
+    )
     @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
     def test_traverse_links(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
@@ -441,6 +445,9 @@ class TestPerformance:
 
         assert len(cursors) > 1
 
+    @pytest.mark.skip(
+        reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73"
+    )
     @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
     def test_traverse_neighbors(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')

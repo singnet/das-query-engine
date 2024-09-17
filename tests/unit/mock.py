@@ -307,9 +307,9 @@ class DatabaseMock(AtomDB):
     def add_node(self, node_params: NodeParamsT) -> NodeT | None:
         raise NotImplementedError()
 
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> tuple[int | None, IncomingLinksT]:
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
         links = self.incoming_set.get(atom_handle) or []
-        return kwargs.get('cursor'), links
+        return links
 
     def get_atom_type(self, handle: str) -> str | None:
         raise NotImplementedError()
