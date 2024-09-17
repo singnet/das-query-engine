@@ -100,20 +100,12 @@ class FunctionsClient:
 
     def get_links(
         self,
-        link_type: str,
-        target_types: List[str] = None,
-        link_targets: List[str] = None,
-        **kwargs,
+        link_filter_dict: dict = {},
     ) -> Union[List[str], List[Dict]]:
         payload = {
             'action': 'get_links',
-            'input': {'link_type': link_type, 'kwargs': kwargs},
+            "input": {"link_filter": link_filter_dict},
         }
-        if target_types:
-            payload['input']['target_types'] = target_types
-
-        if link_targets:
-            payload['input']['link_targets'] = link_targets
         try:
             return self._send_request(payload)
         except HTTPError as e:
