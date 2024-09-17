@@ -4,7 +4,6 @@ import pytest
 from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
-from hyperon_das.cache import RemoteIncomingLinks
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.exceptions import GetTraversalCursorException, InvalidQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
@@ -43,9 +42,7 @@ class TestDistributedAtomSpace:
         with mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
             das_remote = DistributedAtomSpaceMock('remote', host='test', port=8080)
 
-        with mock.patch(
-            'hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[]
-        ):
+        with mock.patch('hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[]):
             links = das_remote.get_incoming_links('<Concept: human>')
         assert len(links) == 7
 

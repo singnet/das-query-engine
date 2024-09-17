@@ -81,7 +81,7 @@ class RemoteQueryEngine(QueryEngine):
         # TODO Implement get_link_handles() in faas client
         return [link['handle'] for link in self.get_links(link_filter)]
 
-    def get_incoming_links( self, atom_handle: str, **kwargs) -> IncomingLinksT:
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
         links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
         remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
         kwargs['backend'] = self.remote_das

@@ -1,13 +1,8 @@
-from typing import Union
-
 import pytest
 
 from hyperon_das import DistributedAtomSpace
 from hyperon_das.cache import QueryAnswerIterator
-from hyperon_das.cache.iterators import (
-    CustomQuery,
-    TraverseNeighborsIterator,
-)
+from hyperon_das.cache.iterators import CustomQuery, TraverseNeighborsIterator
 from tests.integration.helpers import (
     _db_down,
     _db_up,
@@ -48,7 +43,9 @@ def das_remote_fixture():
     yield DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
 
 
-@pytest.mark.skip(reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73")
+@pytest.mark.skip(
+    reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73"
+)
 class TestTraverseLinks:
     @pytest.fixture(scope="session")
     def _cleanup(self, request):
@@ -128,7 +125,9 @@ class TestTraverseLinks:
         self._check_asserts(das, iterator)
 
 
-@pytest.mark.skip(reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73")
+@pytest.mark.skip(
+    reason="Waiting for integration with cache sub-module https://github.com/singnet/das/issues/73"
+)
 class TestTraverseNeighbors:
     @pytest.fixture(scope="session")
     def _cleanup(self, request):

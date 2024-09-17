@@ -1,21 +1,29 @@
 import pytest
+
 from hyperon_das import DistributedAtomSpace
+
+from .helpers import (
+    MettaAnimalBaseHandlesCollection,
+    _db_down,
+    _db_up,
+    cleanup,
+    load_metta_animals_base,
+    mongo_port,
+    redis_port,
+)
 from .remote_das_info import remote_das_host, remote_das_port
-from .helpers import _db_down, _db_up, cleanup, mongo_port, redis_port, load_metta_animals_base, MettaAnimalBaseHandlesCollection
 
 das_instance = {}
 
+
 class TestDASQueryAPI:
     """Test uqeyr methods in DAS API with integration of DAS and its various AtomDB adapters"""
-
 
     @classmethod
     def setup_class(cls):
         _db_up()
 
-        das_instance["local_ram"] = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='ram')
+        das_instance["local_ram"] = DistributedAtomSpace(query_engine='local', atomdb='ram')
         load_metta_animals_base(das_instance["local_ram"])
 
         das_instance["local_redis_mongo"] = DistributedAtomSpace(
@@ -26,14 +34,14 @@ class TestDASQueryAPI:
             mongo_password='dassecret',
             redis_port=redis_port,
             redis_cluster=False,
-            redis_ssl=False)
+            redis_ssl=False,
+        )
         load_metta_animals_base(das_instance["local_redis_mongo"])
         das_instance["local_redis_mongo"].commit_changes()
 
         das_instance["remote"] = DistributedAtomSpace(
-            query_engine='remote', 
-            host=remote_das_host, 
-            port=remote_das_port)
+            query_engine='remote', host=remote_das_host, port=remote_das_port
+        )
 
     @classmethod
     def teardown_class(cls):

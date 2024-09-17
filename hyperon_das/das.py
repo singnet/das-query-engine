@@ -386,9 +386,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_link_handles(link_filter)
 
-    def get_incoming_links(
-        self, atom_handle: str, **kwargs
-    ) -> IncomingLinksT | Iterator:
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT | Iterator:
         """
         Retrieve all links which has the passed handle as one of its targets.
 

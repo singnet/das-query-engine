@@ -196,7 +196,7 @@ class MettaAnimalBaseHandlesCollection:
     typedef_mark = AtomDB.node_handle('Symbol', ':')
     typedef2_mark = AtomDB.node_handle('Symbol', '<:')
 
-    node_handles = [ 
+    node_handles = [
         Concept, Similarity, Inheritance, Symbol, Type, Expression, human, monkey, chimp,
         mammal, ent, animal, reptile, dinosaur, triceratops, rhino, earthworm, snake, vine,
         plant, typedef_mark, typedef2_mark]
