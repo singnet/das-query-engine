@@ -27,7 +27,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def get_atoms(self, handles: List[str]) -> List[Dict[str, Any]]:
+    def get_atoms(self, handles: List[str], **kwargs) -> List[Dict[str, Any]]:
         """
         Retrieves atoms from the database using their unique handles.
 

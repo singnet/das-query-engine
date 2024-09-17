@@ -1,0 +1,65 @@
+import pytest
+from hyperon_das import DistributedAtomSpace
+from .remote_das_info import remote_das_host, remote_das_port
+from .helpers import _db_down, _db_up, cleanup, mongo_port, redis_port, load_metta_animals_base, MettaAnimalBaseHandlesCollection
+
+das_instance = {}
+
+class TestDASQueryAPI:
+    """Test uqeyr methods in DAS API with integration of DAS and its various AtomDB adapters"""
+
+
+    @classmethod
+    def setup_class(cls):
+        _db_up()
+
+        das_instance["local_ram"] = DistributedAtomSpace(
+            query_engine='local',
+            atomdb='ram')
+        load_metta_animals_base(das_instance["local_ram"])
+
+        das_instance["local_redis_mongo"] = DistributedAtomSpace(
+            query_engine='local',
+            atomdb='redis_mongo',
+            mongo_port=mongo_port,
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
+            redis_port=redis_port,
+            redis_cluster=False,
+            redis_ssl=False)
+        load_metta_animals_base(das_instance["local_redis_mongo"])
+        das_instance["local_redis_mongo"].commit_changes()
+
+        das_instance["remote"] = DistributedAtomSpace(
+            query_engine='remote', 
+            host=remote_das_host, 
+            port=remote_das_port)
+
+    @classmethod
+    def teardown_class(cls):
+        _db_down()
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _cleanup(self, request):
+        return cleanup(request)
+
+    def test_count_atoms(self):
+        for key, das in das_instance.items():
+            count = das.count_atoms({})
+            assert count["atom_count"] == 66
+
+    def test_get_atom(self):
+        for key, das in das_instance.items():
+            node_list = []
+            for handle in MettaAnimalBaseHandlesCollection.node_handles:
+                atom = das.get_atom(handle)
+                assert atom["handle"] == handle
+                node_list.append(atom)
+            link_list = []
+            for handle in MettaAnimalBaseHandlesCollection.link_handles:
+                atom = das.get_atom(handle)
+                assert atom["handle"] == handle
+                link_list.append(atom)
+            if key != "remote":
+                assert node_list == das.get_atoms(MettaAnimalBaseHandlesCollection.node_handles)
+                assert link_list == das.get_atoms(MettaAnimalBaseHandlesCollection.link_handles)

@@ -88,7 +88,7 @@ def load_metta_animals_base(das: DistributedAtomSpace) -> None:
     das.add_node({"type": "Symbol", "name": 'Inheritance', "is_literal": False})
     das.add_node({"type": "Symbol", "name": 'Symbol', "is_literal": False})
     das.add_node({"type": "Symbol", "name": 'Type', "is_literal": False})
-    # das.add_node({"type": "Symbol", "name": 'MettaType', "is_literal": False})
+    das.add_node({"type": "Symbol", "name": 'MettaType', "is_literal": False})
     das.add_node({"type": "Symbol", "name": 'Expression', "is_literal": False})
     das.add_node({"type": "Symbol", "name": 'Concept', "is_literal": False})
     das.add_node({"type": "Symbol", "name": '"human"', "is_literal": True})
@@ -104,7 +104,6 @@ def load_metta_animals_base(das: DistributedAtomSpace) -> None:
     das.add_node({"type": "Symbol", "name": '"vine"', "is_literal": True})
     das.add_node({"type": "Symbol", "name": '"ent"', "is_literal": True})
     das.add_node({"type": "Symbol", "name": '"animal"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"plant"', "is_literal": True})
     das.add_node({"type": "Symbol", "name": '"plant"', "is_literal": True})
     das.add_node({"type": "Symbol", "name": ':', "is_literal": False})
     das.add_node({"type": "Symbol", "name": '<:', "is_literal": False})
@@ -197,6 +196,11 @@ class MettaAnimalBaseHandlesCollection:
     typedef_mark = AtomDB.node_handle('Symbol', ':')
     typedef2_mark = AtomDB.node_handle('Symbol', '<:')
 
+    node_handles = [ 
+        Concept, Similarity, Inheritance, Symbol, Type, Expression, human, monkey, chimp,
+        mammal, ent, animal, reptile, dinosaur, triceratops, rhino, earthworm, snake, vine,
+        plant, typedef_mark, typedef2_mark]
+
     human_typedef = AtomDB.link_handle('Expression', [typedef_mark, human, Concept])
     monkey_typedef = AtomDB.link_handle('Expression', [typedef_mark, monkey, Concept])
     chimp_typedef = AtomDB.link_handle('Expression', [typedef_mark, chimp, Concept])
@@ -241,6 +245,20 @@ class MettaAnimalBaseHandlesCollection:
     similarity_triceratops_rhino = AtomDB.link_handle('Expression', [Similarity, triceratops, rhino])
     similarity_vine_snake = AtomDB.link_handle('Expression', [Similarity, vine, snake])
     similarity_ent_human = AtomDB.link_handle('Expression', [Similarity, ent, human])
+
+    link_handles = [
+        human_typedef, monkey_typedef, chimp_typedef, snake_typedef, earthworm_typedef,
+        rhino_typedef, triceratops_typedef, vine_typedef, ent_typedef, mammal_typedef,
+        animal_typedef, reptile_typedef, dinosaur_typedef, plant_typedef, similarity_typedef,
+        inheritance_typedef, concept_typedef, similarity_human_monkey, similarity_human_chimp,
+        similarity_chimp_monkey, similarity_snake_earthworm, similarity_rhino_triceratops,
+        similarity_snake_vine, similarity_human_ent, inheritance_human_mammal,
+        inheritance_monkey_mammal, inheritance_chimp_mammal, inheritance_mammal_animal,
+        inheritance_reptile_animal, inheritance_snake_reptile, inheritance_dinosaur_reptile,
+        inheritance_triceratops_dinosaur, inheritance_earthworm_animal, inheritance_rhino_mammal,
+        inheritance_vine_plant, inheritance_ent_plant, similarity_monkey_human,
+        similarity_chimp_human, similarity_monkey_chimp, similarity_earthworm_snake,
+        similarity_triceratops_rhino, similarity_vine_snake, similarity_ent_human]
 # fmt: on
 
 
