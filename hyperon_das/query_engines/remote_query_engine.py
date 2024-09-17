@@ -84,8 +84,6 @@ class RemoteQueryEngine(QueryEngine):
     def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
         links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
         remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
-        kwargs['backend'] = self.remote_das
-        kwargs['atom_handle'] = atom_handle
         links.extend(remote_links)
         if (
             links

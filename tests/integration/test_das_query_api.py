@@ -17,7 +17,7 @@ das_instance = {}
 
 
 class TestDASQueryAPI:
-    """Test uqeyr methods in DAS API with integration of DAS and its various AtomDB adapters"""
+    """Test query methods in DAS API with integration of DAS and its various AtomDB adapters"""
 
     @classmethod
     def setup_class(cls):
