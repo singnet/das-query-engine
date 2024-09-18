@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from requests import exceptions
 
+import hyperon_das.link_filters as link_filter
 from hyperon_das.client import FunctionsClient
 from hyperon_das.exceptions import FunctionsConnectionError, FunctionsTimeoutError, RequestError
 from hyperon_das.utils import serialize
@@ -71,12 +72,16 @@ class TestFunctionsClient:
         expected_request_data = {
             "action": "get_links",
             "input": {
-                "link_type": "Inheritance",
-                "kwargs": {},
-                "link_targets": [
-                    "4e8e26e3276af8a5c2ac2cc2dc95c6d2",
-                    "80aff30094874e75028033a38ce677bb",
-                ],
+                "link_filter": {
+                    "filter_type": link_filter.LinkFilterType.TARGETS,
+                    "toplevel_only": False,
+                    "link_type": "Inheritance",
+                    "target_types": [],
+                    "targets": [
+                        "4e8e26e3276af8a5c2ac2cc2dc95c6d2",
+                        "80aff30094874e75028033a38ce677bb",
+                    ],
+                }
             },
         }
         expected_response = [
@@ -92,8 +97,10 @@ class TestFunctionsClient:
         mock_request.return_value.content = serialize(expected_response)
 
         result = client.get_links(
-            link_type='Inheritance',
-            link_targets=['4e8e26e3276af8a5c2ac2cc2dc95c6d2', '80aff30094874e75028033a38ce677bb'],
+            link_filter.Targets(
+                ['4e8e26e3276af8a5c2ac2cc2dc95c6d2', '80aff30094874e75028033a38ce677bb'],
+                'Inheritance',
+            )
         )
 
         mock_request.assert_called_with(
