@@ -1,6 +1,7 @@
 import pytest
 
 from hyperon_das.client import FunctionsClient
+import hyperon_das.link_filters as link_filter
 
 from .helpers import metta_animal_base_handles
 from .remote_das_info import remote_das_host, remote_das_port
@@ -32,10 +33,10 @@ class TestVultrClientIntegration:
         ]
 
     def test_get_links(self, server: FunctionsClient):
-        links1 = server.get_links(
-            link_type='Expression', target_types=['Symbol', 'Symbol', 'Symbol']
-        )
-        links2 = server.get_links(link_type='Expression')
+        links1 = server.get_links(link_filter.FlatTypeTemplate(
+            ['Symbol', 'Symbol', 'Symbol'],
+            'Expression'))
+        links2 = server.get_links(link_filter.NamedType('Expression'))
         assert len(links1) == 43
         assert len(links2) == 43
 
@@ -44,7 +45,6 @@ class TestVultrClientIntegration:
         assert ret == {'atom_count': 66}
 
     def test_query(self, server: FunctionsClient):
-        server.get_links('Expression', no_iterator=True)
         answer = server.query(
             {
                 "atom_type": "link",
@@ -116,10 +116,9 @@ class TestVultrClientIntegration:
                 targets_document.append(server.get_atom(target))
             expected_atoms_targets.append([atom, targets_document])
 
-        cursor, response_handles = server.get_incoming_links(
+        response_handles = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=True
         )
-        assert cursor is None
         assert all(isinstance(handle, str) for handle in response_handles)
         assert len(response_handles) == 8
         # response_handles has an extra link (named_type == MettaType) defining
@@ -127,36 +126,32 @@ class TestVultrClientIntegration:
         # response_handles has an extra link (named_type == Expression) defining
         #     the metta expression (: "human" Type)
         # assert len(set(response_handles).difference(set(expected_handles))) == 1
-        cursor, response_handles = server.get_incoming_links(
+        response_handles = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=True
         )
-        assert cursor is None
         assert all(isinstance(handle, str) for handle in response_handles)
         assert len(response_handles) == 8
         # assert len(set(response_handles).difference(set(expected_handles))) == 1
 
-        cursor, response_atoms = server.get_incoming_links(
+        response_atoms = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=False
         )
-        assert cursor is None
         assert len(response_atoms) == 8
         for atom in response_atoms:
             assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
-        cursor, response_atoms = server.get_incoming_links(metta_animal_base_handles.human)
-        assert cursor is None
+        response_atoms = server.get_incoming_links(metta_animal_base_handles.human)
         assert len(response_atoms) == 8
         for atom in response_atoms:
             assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"
             if len(atom["targets"]) == 3:
                 assert atom in expected_atoms
 
-        cursor, response_atoms_targets = server.get_incoming_links(
+        response_atoms_targets = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=False
         )
-        assert cursor is None
         assert len(response_atoms_targets) == 8
         for atom in response_atoms_targets:
             assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"

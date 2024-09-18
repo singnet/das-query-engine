@@ -126,7 +126,7 @@ class TestRemoteDistributedAtomSpace:
 
         expected_atoms = [remote_das.get_atom(handle) for handle in expected_handles]
 
-        _, response_atoms = remote_das.get_incoming_links(
+        response_atoms = remote_das.get_incoming_links(
             metta_animal_base_handles.vine, handles_only=False
         )
         for atom in response_atoms:

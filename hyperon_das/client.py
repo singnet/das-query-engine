@@ -2,6 +2,7 @@ import contextlib
 import pickle
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
+from hyperon_das.link_filters import LinkFilter
 from hyperon_das_atomdb import AtomDoesNotExist
 from hyperon_das_atomdb.database import IncomingLinksT
 from requests import exceptions, sessions
@@ -98,13 +99,18 @@ class FunctionsClient:
             else:
                 raise e
 
-    def get_links(
-        self,
-        link_filter_dict: dict = {},
-    ) -> Union[List[str], List[Dict]]:
+    def get_links(self, link_filter: LinkFilter) -> Union[List[str], List[Dict]]:
         payload = {
             'action': 'get_links',
-            "input": {"link_filter": link_filter_dict},
+            "input": {
+                "link_filter": {
+                    "filter_type": link_filter.filter_type,
+                    "toplevel_only": link_filter.toplevel_only,
+                    "link_type": link_filter.link_type or "",
+                    "target_types": link_filter.target_types or [],
+                    "targets": link_filter.targets or []
+                }
+            }
         }
         try:
             return self._send_request(payload)

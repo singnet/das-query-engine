@@ -133,7 +133,7 @@ class LocalQueryEngine(QueryEngine):
 
     def _process_link(self, query: dict) -> List[dict]:
         target_handles = self._generate_target_handles(query['targets'])
-        _, matched_links = self.local_backend.get_matched_links(
+        matched_links = self.local_backend.get_matched_links(
             link_type=query["type"], target_handles=target_handles
         )
         unique_handles = set()

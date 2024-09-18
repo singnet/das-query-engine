@@ -63,17 +63,7 @@ class RemoteQueryEngine(QueryEngine):
 
     def get_links(self, link_filter: LinkFilter) -> List[LinkT]:
         links = self.local_query_engine.get_links(link_filter)
-        kwargs = {}
-        kwargs['cursor'] = 0
-        kwargs['toplevel_only'] = link_filter.toplevel_only
-        remote_links = self.remote_das.get_links(
-            link_type=link_filter.link_type,
-            target_types=link_filter.target_types,
-            link_targets=link_filter.targets,
-            **kwargs,
-        )
-        if isinstance(remote_links, tuple):
-            cursor, remote_links = remote_links
+        remote_links = self.remote_das.get_links(link_filter)
         links.extend(remote_links)
         return links
 
