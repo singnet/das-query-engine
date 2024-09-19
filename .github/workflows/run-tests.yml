@@ -114,6 +114,7 @@ jobs:
 
   benchmark:
     runs-on: ubuntu-22.04
+    if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
