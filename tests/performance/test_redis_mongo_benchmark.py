@@ -214,6 +214,8 @@ class TestPerformance:
                 das.add_node(node)
             node_list.append(node)
             node_names.add(node['name'])
+            print(f"Node {len(node_list)} created.")
+
         return node_list
 
     @staticmethod
@@ -316,12 +318,14 @@ class TestPerformance:
         if not TestPerformance.is_database_loaded:
             node_list: list[dict[str, Any]]
             node_list = self.generate_nodes(das)
+            print(f"\nGenerating {len(node_list)} nodes...")
             das.commit_changes()
             links_word = self.generate_links_word(node_list)
             self.link_word_count = len(links_word)
             self.add_links(
                 das, links_word, node_list, 'TokenSimilarity', strength_divisor=self.word_count
             )
+            print(f"Generating {len(links_word)} word links...")
             links_letter = self.generate_links_letter(node_list)
             self.link_letter_count = len(links_letter)
             self.add_links(
@@ -331,6 +335,7 @@ class TestPerformance:
                 'Similarity',
                 strength_divisor=self.word_length * self.word_count,
             )
+            print(f"Generating {len(links_letter)} letter links...")
             count_atoms_links_nodes: dict[str, int] = self.count_atoms(das, {'precise': True})
             self.count_atoms(das)
             TestPerformance.is_database_loaded = True
