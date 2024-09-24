@@ -137,8 +137,8 @@ jobs:
       - name: Install hyperon-das
         run: pip install $(find ./dist -name *.whl)
 
-      - name: Perform Benchmark
-        run: |
+      - name: Execute Performance Tests
+        run: | 
           output=$(make performance-tests 2>&1)
           real_time=$(echo "$output" | grep "^real" | awk 'NR==2 {print $2}')
 
@@ -149,3 +149,6 @@ jobs:
 
           echo "FAILURE!"
           exit 1
+
+      - name: Perform Benchmark
+        run: make benchmark-tests
