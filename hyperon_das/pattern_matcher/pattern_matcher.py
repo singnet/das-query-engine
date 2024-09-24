@@ -1,16 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional
 
-from hyperon_das_atomdb import WILDCARD, AtomDB
+from hyperon_das_atomdb import AtomDB
 
 
 class PatternMatchingAnswer:
-
     def __init__(self):
         pass
 
-class LogicalExpression(ABC):
 
+class LogicalExpression(ABC):
     @abstractmethod
     def matched(
         self,
@@ -20,8 +19,8 @@ class LogicalExpression(ABC):
     ) -> bool:
         pass
 
-class Atom(LogicalExpression, ABC):
 
+class Atom(LogicalExpression, ABC):
     def __init__(self, atom_type: str):
         pass
 
@@ -31,7 +30,6 @@ class Atom(LogicalExpression, ABC):
 
 
 class Node(Atom):
-
     def __init__(self, node_type: str, node_name: str):
         pass
 
@@ -48,7 +46,6 @@ class Node(Atom):
 
 
 class Link(Atom):
-
     def __init__(self, link_type: str, targets: List[Atom], ordered: bool):
         pass
 
@@ -62,6 +59,7 @@ class Link(Atom):
         extra_parameters: Optional[Dict[str, Any]] = None,
     ) -> bool:
         return True
+
 
 class Variable(Atom):
     def __init__(self, variable_name: str):
@@ -78,8 +76,8 @@ class Variable(Atom):
     ) -> bool:
         return True
 
-class Not(LogicalExpression):
 
+class Not(LogicalExpression):
     def __init__(self, term: LogicalExpression):
         pass
 
@@ -93,7 +91,6 @@ class Not(LogicalExpression):
 
 
 class Or(LogicalExpression):
-
     def __init__(self, terms: List[LogicalExpression]):
         pass
 
@@ -107,7 +104,6 @@ class Or(LogicalExpression):
 
 
 class And(LogicalExpression):
-
     def __init__(self, terms: List[LogicalExpression]):
         pass
 
