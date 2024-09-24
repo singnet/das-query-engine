@@ -4,12 +4,7 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Union
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
-from hyperon_das_atomdb.database import (
-    AtomT,
-    HandleListT,
-    IncomingLinksT,
-    LinkT,
-)
+from hyperon_das_atomdb.database import AtomT, HandleListT, IncomingLinksT, LinkT
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController

@@ -134,7 +134,7 @@ class TestLocalDASRedisMongo:
             redis_port=redis_port,
             redis_cluster=False,
             redis_ssl=False,
-            system_parameters={"running_on_server": True}
+            system_parameters={"running_on_server": True},
         )
         assert das.count_atoms() == {'atom_count': 0}
         load_animals_base(das)
@@ -157,6 +157,7 @@ class TestLocalDASRedisMongo:
         )
         assert len(documents) == 9
         _db_down()
+
 
 class TestLocalDASRamOnly:
     def test_fetch_atoms_local_das_ram_only(self):
