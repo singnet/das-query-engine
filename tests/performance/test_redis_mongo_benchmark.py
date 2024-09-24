@@ -184,6 +184,8 @@ class TestPerformance:
                 strength = self.compare_words(v['name'], node_list[j]['name'])
                 if strength > 0:
                     links_dict_word[f'{i}->{j}'] = strength
+                    print(f"Word Link {len(links_dict_word.items())} created.")
+        print("Word links successfuly generated.")
         return links_dict_word
 
     @measure
@@ -216,6 +218,8 @@ class TestPerformance:
             node_names.add(node['name'])
             print(f"Node {len(node_list)} created.")
 
+
+        print("Nodes successfuly generated.")
         return node_list
 
     @staticmethod
@@ -263,6 +267,8 @@ class TestPerformance:
                 strength = TestPerformance.compare_str(node_list[i]['name'], node_list[j]['name'])
                 if strength > 0:
                     links_letter[key] = strength
+                    print(f"Letter Link {len(links_letter.items())} created.")
+        print("Letter links successfuly generated.")
         return links_letter
 
     @staticmethod
