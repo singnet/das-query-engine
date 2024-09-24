@@ -7,11 +7,10 @@ from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.database import (
     AtomT,
     FieldIndexType,
+    HandleListT,
     IncomingLinksT,
     LinkParamsT,
     LinkT,
-    MatchedLinksResultT,
-    MatchedTypesResultT,
     NodeParamsT,
     NodeT,
 )
@@ -210,30 +209,25 @@ class DatabaseMock(AtomDB):
 
     def get_matched_links(
         self, link_type: str, target_handles: list[str], **kwargs
-    ) -> MatchedLinksResultT:
+    ) -> HandleListT:
         answer = []
         for link in self.all_links:
             if len(target_handles) == (len(link) - 1) and link[0] == link_type:
                 if link[0] == 'Similarity' or link[0] == 'Set':
                     if all(target == WILDCARD or target in link[1:] for target in target_handles):
                         link_target_handles = link[1:]
-                        answer.append(
-                            [
-                                _build_link_handle(link[0], link[1:]),
-                                link_target_handles,
-                            ]
-                        )
+                        answer.append(_build_link_handle(link[0], link[1:]))
                 elif link[0] == 'Inheritance' or link[0] == 'List':
                     for i in range(0, len(target_handles)):
                         if target_handles[i] != WILDCARD and target_handles[i] != link[i + 1]:
                             break
                     else:
-                        answer.append([_build_link_handle(link[0], link[1:]), link[1:]])
+                        answer.append(_build_link_handle(link[0], []))
                 elif link[0] == 'Evaluation':
                     answer.append('test')
                 else:
                     raise ValueError(f"Invalid link type: {link[0]}")
-        return kwargs.get('cursor'), answer
+        return answer
 
     def get_all_nodes(self, node_type: str, names: bool = False) -> list[str]:
         return self.all_nodes if node_type == 'Concept' else []
@@ -241,9 +235,9 @@ class DatabaseMock(AtomDB):
     def get_all_links(self, link_type: str, **kwargs) -> tuple[int | None, list[str]]:
         raise NotImplementedError()
 
-    def get_matched_type_template(self, template: list[Any], **kwargs) -> MatchedTypesResultT:
+    def get_matched_type_template(self, template: list[Any], **kwargs) -> HandleListT:
         assert len(template) == 3
-        return kwargs.get('cursor'), self.template_index.get(str(template), [])
+        return self.template_index.get(str(template))
 
     def get_node_name(self, node_handle: str) -> str:
         _, name = _split_node_handle(node_handle)
@@ -258,7 +252,7 @@ class DatabaseMock(AtomDB):
                     answer.append(node)
         return answer
 
-    def get_matched_type(self, link_type: str, **kwargs) -> MatchedTypesResultT:
+    def get_matched_type(self, link_type: str, **kwargs) -> HandleListT:
         raise NotImplementedError()
 
     def get_atom_as_dict(self, handle: str, arity: int | None = 0) -> dict[str, Any]:

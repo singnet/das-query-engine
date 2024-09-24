@@ -90,7 +90,7 @@ class TestLocalDASRedisMongo:
 
         _db_down()
 
-    def test_fetch_atoms(self):
+    def test_fetch_atoms_from_remote_server(self):
         _db_up()
         das = DistributedAtomSpace(
             query_engine='local',
@@ -123,6 +123,40 @@ class TestLocalDASRedisMongo:
         }
         _db_down()
 
+    def test_fetch_atoms(self):
+        _db_up()
+        das = DistributedAtomSpace(
+            query_engine='local',
+            atomdb='redis_mongo',
+            mongo_port=mongo_port,
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
+            redis_port=redis_port,
+            redis_cluster=False,
+            redis_ssl=False,
+            system_parameters={"running_on_server": True}
+        )
+        assert das.count_atoms() == {'atom_count': 0}
+        load_animals_base(das)
+        das.commit_changes()
+        assert das.count_atoms() == {'atom_count': 40}
+        assert das.count_atoms({'precise': True}) == {
+            'atom_count': 40,
+            'node_count': 14,
+            'link_count': 26,
+        }
+        documents = das.fetch(
+            query={
+                "atom_type": "link",
+                "type": "Inheritance",
+                "targets": [
+                    {"atom_type": "variable", "name": "v1"},
+                    {"atom_type": "node", "type": "Concept", "name": "mammal"},
+                ],
+            },
+        )
+        assert len(documents) == 9
+        _db_down()
 
 class TestLocalDASRamOnly:
     def test_fetch_atoms_local_das_ram_only(self):

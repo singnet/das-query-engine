@@ -2,7 +2,6 @@ import contextlib
 import pickle
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
-from hyperon_das.link_filters import LinkFilter
 from hyperon_das_atomdb import AtomDoesNotExist
 from hyperon_das_atomdb.database import IncomingLinksT
 from requests import exceptions, sessions
@@ -13,6 +12,7 @@ from hyperon_das.exceptions import (
     HTTPError,
     RequestError,
 )
+from hyperon_das.link_filters import LinkFilter
 from hyperon_das.logger import logger
 from hyperon_das.type_alias import Query
 from hyperon_das.utils import connect_to_server, das_error, deserialize, serialize
@@ -108,9 +108,9 @@ class FunctionsClient:
                     "toplevel_only": link_filter.toplevel_only,
                     "link_type": link_filter.link_type or "",
                     "target_types": link_filter.target_types or [],
-                    "targets": link_filter.targets or []
+                    "targets": link_filter.targets or [],
                 }
-            }
+            },
         }
         try:
             return self._send_request(payload)
