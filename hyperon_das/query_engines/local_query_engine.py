@@ -4,14 +4,7 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Union
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
-from hyperon_das_atomdb.database import (
-    AtomT,
-    HandleListT,
-    IncomingLinksT,
-    LinkT,
-    MatchedLinksResultT,
-    MatchedTargetsListT,
-)
+from hyperon_das_atomdb.database import AtomT, HandleListT, IncomingLinksT, LinkT
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController
@@ -89,23 +82,13 @@ class LocalQueryEngine(QueryEngine):
                 )
             )
 
-    def _to_link_dict_list(self, db_answer: HandleListT | MatchedTargetsListT) -> List[Dict]:
-        if not db_answer:
-            return []
-        flat_handle = isinstance(db_answer[0], str)
-        answer = []
-        for atom in db_answer:
-            handle = atom if flat_handle else atom[0]
-            answer.append(self.local_backend.get_atom(handle))
-        return answer
-
     def _get_related_links(
         self,
         link_type: str,
         target_types: list[str] | None = None,
         link_targets: list[str] | None = None,
         **kwargs,
-    ) -> MatchedLinksResultT:
+    ) -> HandleListT:
         if link_type != WILDCARD and target_types is not None:
             return self.local_backend.get_matched_type_template(
                 [link_type, *target_types], **kwargs
@@ -139,12 +122,8 @@ class LocalQueryEngine(QueryEngine):
         unique_handles = set()
         result = []
 
-        for link in matched_links:
-            if isinstance(link, str):  # single link
-                link_handle = link
-                link_targets = target_handles
-            else:
-                link_handle, link_targets = link
+        for link_handle in matched_links:
+            link_targets = self.get_atom(link_handle)["targets"]
 
             if link_handle not in unique_handles:
                 unique_handles.add(link_handle)
@@ -231,9 +210,10 @@ class LocalQueryEngine(QueryEngine):
 
     def get_links(self, link_filter: LinkFilter) -> List[LinkT]:
         handles = self.get_link_handles(link_filter)
-        if not handles:
+        if handles:
+            return [self.get_atom(handle) for handle in handles]
+        else:
             return []
-        return self._to_link_dict_list(handles)
 
     def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
         return self.local_backend.get_incoming_links(atom_handle, **kwargs)
