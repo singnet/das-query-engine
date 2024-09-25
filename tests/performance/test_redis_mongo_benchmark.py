@@ -177,6 +177,7 @@ class TestPerformance:
     @measure
     def generate_links_word(self, node_list: list[dict[str, Any]]) -> dict[str, Any]:
         links_dict_word: dict[str, Any] = {}
+        total_links=0
         for i, v in enumerate(node_list):
             for j in range(i + 1, len(node_list)):
                 if random.random() > self.word_link_percentage:
@@ -184,7 +185,8 @@ class TestPerformance:
                 strength = self.compare_words(v['name'], node_list[j]['name'])
                 if strength > 0:
                     links_dict_word[f'{i}->{j}'] = strength
-                    print(f"Word Link {len(links_dict_word.items())} created.")
+                    total_links+=1
+                    print(f"Word Link {total_links} created.")
         print("Word links successfuly generated.")
         return links_dict_word
 
@@ -205,6 +207,7 @@ class TestPerformance:
         """
         node_list = []
         node_names = set()
+        total_nodes = 0
 
         for _ in range(self.node_count):
             word_list = [self._create_word() for _ in range(self.word_count)]
@@ -216,7 +219,8 @@ class TestPerformance:
                 das.add_node(node)
             node_list.append(node)
             node_names.add(node['name'])
-            print(f"Node {len(node_list)} created.")
+            total_nodes += 1
+            print(f"Node {total_nodes} created.")
 
 
         print("Nodes successfuly generated.")
@@ -259,6 +263,7 @@ class TestPerformance:
 
         """
         links_letter = {}
+        total_links = 0
         for i, _ in enumerate(node_list):
             for j in range(i + 1, len(node_list)):
                 if random.random() > self.letter_link_percentage:
@@ -267,7 +272,8 @@ class TestPerformance:
                 strength = TestPerformance.compare_str(node_list[i]['name'], node_list[j]['name'])
                 if strength > 0:
                     links_letter[key] = strength
-                    print(f"Letter Link {len(links_letter.items())} created.")
+                    total_links += 1
+                    print(f"Letter Link {total_links} created.")
         print("Letter links successfuly generated.")
         return links_letter
 
