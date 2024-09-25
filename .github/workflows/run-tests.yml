@@ -6,10 +6,15 @@ on:
 
   pull_request:
     branches:
-      - develop
       - master
 
   workflow_dispatch:
+    inputs:
+      benchmark:
+        type: boolean
+        required: false
+        description: 'Run the benchmark tests'
+        default: true
 
 jobs:
   lint:
@@ -114,7 +119,7 @@ jobs:
 
   benchmark:
     runs-on: ubuntu-22.04
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.event.inputs.benchmark == true }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -137,7 +142,7 @@ jobs:
       - name: Install hyperon-das
         run: pip install $(find ./dist -name *.whl)
 
-      - name: Perform Benchmark
+      - name: Execute Performance Tests
         run: |
           output=$(make performance-tests 2>&1)
           real_time=$(echo "$output" | grep "^real" | awk 'NR==2 {print $2}')
