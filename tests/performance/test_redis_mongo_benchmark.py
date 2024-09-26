@@ -183,10 +183,9 @@ class TestPerformance:
                 if random.random() > self.word_link_percentage:
                     continue
                 strength = self.compare_words(v['name'], node_list[j]['name'])
-                if strength > 0:
-                    links_dict_word[f'{i}->{j}'] = strength
-                    total_links+=1
-                    print(f"Word Link {total_links} created.")
+                links_dict_word[f'{i}->{j}'] = strength
+                total_links+=1
+                print(f"Word Link {total_links} created.")
         print("Word links successfuly generated.")
         return links_dict_word
 
@@ -270,10 +269,9 @@ class TestPerformance:
                     continue
                 key = f'{min(i, j)}->{max(i, j)}'
                 strength = TestPerformance.compare_str(node_list[i]['name'], node_list[j]['name'])
-                if strength > 0:
-                    links_letter[key] = strength
-                    total_links += 1
-                    print(f"Letter Link {total_links} created.")
+                links_letter[key] = strength
+                total_links += 1
+                print(f"Letter Link {total_links} created.")
         print("Letter links successfuly generated.")
         return links_letter
 
