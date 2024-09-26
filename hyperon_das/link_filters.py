@@ -41,6 +41,7 @@ class FlatTypeTemplate(LinkFilter):
     def __init__(
         self, target_types: list[str], link_type: str = WILDCARD, toplevel_only: bool = False
     ):
+
         self.filter_type = LinkFilterType.FLAT_TYPE_TEMPLATE
         self.link_type = link_type
         self.target_types = target_types
