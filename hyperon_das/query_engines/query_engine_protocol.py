@@ -45,7 +45,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def get_links(link_filter: LinkFilter) -> List[LinkT]:
+    def get_links(self, link_filter: LinkFilter) -> List[LinkT]:
         """
         Retrieves all links that match the passed filtering criteria.
 
@@ -58,7 +58,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def get_link_handles(link_filter: LinkFilter) -> List[LinkT]:
+    def get_link_handles(self, link_filter: LinkFilter) -> List[LinkT]:
         """
         Retrieve the handle of all links that match the passed filtering criteria.
 

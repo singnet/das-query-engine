@@ -23,7 +23,7 @@ class FunctionsClient:
         if not host and not port:
             das_error(ValueError("'host' and 'port' are mandatory parameters"))
         self.name = name if name else f'client_{host}:{port}'
-        self.url = connect_to_server(host, port)
+        self.status_code, self.url = connect_to_server(host, port)
 
     def _send_request(self, payload) -> Any:
         try:
@@ -164,9 +164,7 @@ class FunctionsClient:
             else:
                 raise e
 
-    def get_incoming_links(
-        self, atom_handle: str, **kwargs
-    ) -> tuple[int | None, IncomingLinksT | Iterator]:
+    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT | Iterator:
         payload = {
             'action': 'get_incoming_links',
             'input': {'atom_handle': atom_handle, 'kwargs': kwargs},
@@ -175,7 +173,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             logger().debug(f'Error during `get_incoming_links` request on remote Das: {str(e)}')
-            return None, []
+            return []
 
     def create_field_index(
         self,

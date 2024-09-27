@@ -89,10 +89,9 @@ class RemoteQueryEngine(QueryEngine):
         kwargs.pop('no_iterator', None)
         if kwargs.get('cursor') is None:
             kwargs['cursor'] = 0
-        cursor, answer = self.remote_das.custom_query(index_id, query=query, **kwargs)
+        answer = self.remote_das.custom_query(index_id, query=query, **kwargs)
         kwargs['backend'] = self.remote_das
         kwargs['index_id'] = index_id
-        kwargs['cursor'] = cursor
         kwargs['is_remote'] = True
         return CustomQuery(ListIterator(answer), **kwargs)
 
@@ -147,8 +146,8 @@ class RemoteQueryEngine(QueryEngine):
     def commit(self, **kwargs) -> None:
         if self.__mode == 'read-write':
             if self.local_query_engine.has_buffer():
-                return self.remote_das.commit_changes(buffer=self.local_query_engine.buffer)
-            return self.remote_das.commit_changes()
+                self.remote_das.commit_changes(buffer=self.local_query_engine.buffer)
+            self.remote_das.commit_changes()
         elif self.__mode == 'read-only':
             das_error(PermissionError("Commit can't be executed in read mode"))
         else:

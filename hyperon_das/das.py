@@ -218,13 +218,6 @@ class DistributedAtomSpace:
         Args:
             handle (str): Atom's handle.
 
-        Keyword Args:
-            no_target_format (bool, optional): If True, a list of target handles is returned in
-                link's `targets` field. If False, a list with actual target documents is returned
-                instead. Defaults to False.
-            targets_document (bool, optional): Set this parameter to True to return a tuple containing the document as first element
-                and the targets as second element. Defaults to False.
-
         Returns:
             Dict: A Python dict with all atom data.
 
@@ -802,7 +795,7 @@ class DistributedAtomSpace:
 
         A TraverseEngine is like a cursor which points to an atom in the hypergraph and
         can be used to probe for links and neighboring atoms and then move on by
-        following links. It's functioning is closely tied to the cache system in order
+        following links. Its functioning is closely tied to the cache system in order
         to optimize the order in which atoms are presented to the caller when probing
         the neighborhood and to use cache's "atom paging" capabilities to minimize
         latency when used in remote DAS.

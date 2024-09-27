@@ -16,7 +16,7 @@ def test_retry_successful_connection(logger_mock):
 
     result = successful_function({}, 'localhost', 80)
 
-    assert result == 'Success'
+    assert result == (200, 'Success')
 
 
 @patch('hyperon_das.logger')

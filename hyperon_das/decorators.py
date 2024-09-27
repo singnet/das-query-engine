@@ -24,7 +24,7 @@ def retry(attempts: int, timeout_seconds: int):
                         logger().debug(
                             f'{retry_count + 1} successful connection attempt at [host={args[1]}]'
                         )
-                        return response
+                        return status, response
                 except Exception as e:
                     raise RetryConnectionError(
                         message="An error occurs while connecting to the server",
