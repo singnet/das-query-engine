@@ -2,7 +2,15 @@ from typing import Any, Dict, Iterator, List, Optional, Type, Union
 
 from hyperon_das_atomdb import AtomDB, AtomDoesNotExist
 from hyperon_das_atomdb.adapters import InMemoryDB, RedisMongoDB
-from hyperon_das_atomdb.database import AtomT, IncomingLinksT, LinkT, NodeT
+from hyperon_das_atomdb.database import (
+    AtomT,
+    HandleListT,
+    HandleSetT,
+    HandleT,
+    IncomingLinksT,
+    LinkT,
+    NodeT,
+)
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.cache.cache_controller import CacheController
@@ -27,49 +35,51 @@ class DistributedAtomSpace:
 
     def __init__(self, system_parameters: Dict[str, Any] = {}, **kwargs) -> None:
         """
-        Creates a new DAS object.
-        A DAS client can run locally or locally and remote, connecting to remote DASs instances to query remote atoms,
-        if there're different versions of the same atom in local and one of the remote DASs, the local version is returned.
-        When running along a remote DAS a host and port is mandatory, by default local instances of the DBs are created,
-        remote instances can be configured using kwargs options.
-
+        Creates a new DAS object. A DAS client can run locally or locally and remote,
+        connecting to remote DAS instances to query remote atoms. If there are different
+        versions of the same atom in local and one of the remote DAS instances, the local
+        version is returned. When running along a remote DAS, a host and port is mandatory.
+        By default, local instances of the DBs are created, remote instances can be configured
+        using kwargs options.
 
         Args:
             system_parameters (Dict[str, Any]): Sets the system parameters. Defaults to {
-                'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname': 'localhost',
-                'attention_broker_port': 27000}.
+                'running_on_server': False, 'cache_enabled': False, 'attention_broker_hostname':
+                'localhost', 'attention_broker_port': 27000}.
 
         Keyword Args:
-            atomdb (str, optional): AtomDB type supported values are 'ram' and 'redis_mongo'. Defaults to 'ram'.
-            query_engine (str, optional): Set the type of connection for the query engine, values are 'remote' or
-                'local'.
-                When this arg is set to 'remote', additional kwargs are required as host and port to connect
-                to the remote query engine
-                and the arg mode is used to configure the read/write privileges.
-                Defaults to 'local'
-            host (str, optional): Sets the host for the remote query engine, it's mandatory
-                when the query_engine is equal to 'remote'.
-            port (str, optional): Sets the port for the remote query engine, it's mandatory
-                when the query_engine is equal to 'remote'.
-            mode (str, optional): Set query engine's ACL privileges, only available
-                when the query_engine is set to 'remote', accepts 'read-only' or 'read-write'.
-                Defaults to 'read-only'
-            mongo_hostname (str, optional): MongoDB's hostname, the local or remote query engine can
-                connect to a remote server or run locally.
-                Defaults to 'localhost'
-            mongo_port (int, optional): MongoDB port, set this arg if the port is not the standard. Defaults to 27017.
-            mongo_username (str, optional): Username used for authentication in the MongoDB database.
-                Defaults to 'mongo'.
-            mongo_password (str, optional): Password used for authentication in the MongoDB database.
-                Defaults to 'mongo'.
+            atomdb (str, optional): AtomDB type supported values are 'ram' and 'redis_mongo'.
+                Defaults to 'ram'.
+            query_engine (str, optional): Set the type of connection for the query engine,
+                values are 'remote' or 'local'. When this arg is set to 'remote', additional
+                kwargs are required as host and port to connect to the remote query engine and
+                the arg mode is used to configure the read/write privileges. Defaults to 'local'.
+            host (str, optional): Sets the host for the remote query engine, it's mandatory when
+                the query_engine is equal to 'remote'.
+            port (str, optional): Sets the port for the remote query engine, it's mandatory when
+                the query_engine is equal to 'remote'.
+            mode (str, optional): Set query engine's ACL privileges, only available when the
+                query_engine is set to 'remote', accepts 'read-only' or 'read-write'. Defaults
+                to 'read-only'.
+            mongo_hostname (str, optional): MongoDB's hostname, the local or remote query engine
+                can connect to a remote server or run locally. Defaults to 'localhost'.
+            mongo_port (int, optional): MongoDB port, set this arg if the port is not the
+                standard. Defaults to 27017.
+            mongo_username (str, optional): Username used for authentication in the MongoDB
+                database. Defaults to 'mongo'.
+            mongo_password (str, optional): Password used for authentication in the MongoDB
+                database. Defaults to 'mongo'.
             mongo_tls_ca_file (Any, optional): Full system path to the TLS certificate.
-            redis_hostname (str, optional): Redis hostname, the local or remote query engine can connect
-                to a remote server or run locally. Defaults to 'localhost'
-            redis_port (int, optional): Redis port, set this arg if the port is not the standard. Defaults to 6379.
-            redis_username (str, optional): Username used for authentication in the Redis database,
-                no credentials (username/password) are needed when running locally.
-            redis_password (str, optional): Password used for authentication in the Redis database.
-            redis_cluster (bool, optional): Indicates whether Redis is configured in cluster mode. Defaults to True.
+            redis_hostname (str, optional): Redis hostname, the local or remote query engine can
+                connect to a remote server or run locally. Defaults to 'localhost'.
+            redis_port (int, optional): Redis port, set this arg if the port is not the
+                standard. Defaults to 6379.
+            redis_username (str, optional): Username used for authentication in the Redis
+                database, no credentials (username/password) are needed when running locally.
+            redis_password (str, optional): Password used for authentication in the Redis
+                database.
+            redis_cluster (bool, optional): Indicates whether Redis is configured in cluster
+                mode. Defaults to True.
             redis_ssl (bool, optional): Set Redis to encrypt the connection. Defaults to True.
         """
         self.system_parameters = system_parameters
@@ -160,7 +170,7 @@ class DistributedAtomSpace:
         Computes the handle of a node, given its type and name.
 
         Note that this is a static method which don't actually query the stored atomspace
-        in order to compute the handle. Instead, it just run a MD5 hashing algorithm on
+        in order to compute the handle. Instead, it just runs an MD5 hashing algorithm on
         the parameters that uniquely identify nodes (i.e. type and name) This means e.g.
         that two nodes with the same type and the same name are considered to be the exact
         same entity as they will have the same handle.
@@ -181,19 +191,19 @@ class DistributedAtomSpace:
         return AtomDB.node_handle(node_type, node_name)
 
     @staticmethod
-    def compute_link_handle(link_type: str, link_targets: List[str]) -> str:
+    def compute_link_handle(link_type: str, link_targets: HandleListT) -> str:
         """
         Computes the handle of a link, given its type and targets' handles.
 
         Note that this is a static method which don't actually query the stored atomspace
-        in order to compute the handle. Instead, it just run a MD5 hashing algorithm on
+        in order to compute the handle. Instead, it just runs an MD5 hashing algorithm on
         the parameters that uniquely identify links (i.e. type and list of targets) This
         means e.g. that two links with the same type and the same targets are considered
         to be the exact same entity as they will have the same handle.
 
         Args:
             link_type (str): Link type.
-            link_targets (List[str]): List with the target handles.
+            link_targets (HandleListT): List with the target handles.
 
         Returns:
            str: Link's handle.
@@ -209,21 +219,15 @@ class DistributedAtomSpace:
         """
         return AtomDB.link_handle(link_type, link_targets)
 
-    def get_atom(self, handle: str) -> AtomT:
+    def get_atom(self, handle: HandleT) -> AtomT:
         """
         Retrieve an atom given its handle.
 
-        A handle is a MD5 hash of a node in the graph. It cam be computed using `compute_node_handle()' or `compute_link_handle()`.
+        A handle is a MD5 hash of a node in the graph. It can be computed using
+        `compute_node_handle()' or `compute_link_handle()`.
 
         Args:
-            handle (str): Atom's handle.
-
-        Keyword Args:
-            no_target_format (bool, optional): If True, a list of target handles is returned in
-                link's `targets` field. If False, a list with actual target documents is returned
-                instead. Defaults to False.
-            targets_document (bool, optional): Set this parameter to True to return a tuple containing the document as first element
-                and the targets as second element. Defaults to False.
+            handle (HandleT): Atom's handle.
 
         Returns:
             Dict: A Python dict with all atom data.
@@ -245,11 +249,11 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_atom(handle, no_target_format=True)
 
-    def get_atoms(self, handles: List[str]) -> List[AtomT]:
+    def get_atoms(self, handles: HandleListT) -> List[AtomT]:
         """
         Retrieve atoms given a list of handles.
 
-        A handle is a MD5 hash of a node in the graph. It cam be computed using
+        A handle is a MD5 hash of a node in the graph. It can be computed using
         `compute_node_handle()' or `compute_link_handle()`.
 
         It is preferable to call get atoms() passing a list of handles rather than
@@ -257,7 +261,7 @@ class DistributedAtomSpace:
         most one remote request, if necessary.
 
         Args:
-            handles (List[str]): List with Atom's handles.
+            handles (HandleListT): List with Atom's handles.
 
         Returns:
             Dict: A list of Python dicts with all atom data.
@@ -318,14 +322,14 @@ class DistributedAtomSpace:
         node_handle = self.backend.node_handle(node_type, node_name)
         return self.get_atom(node_handle)
 
-    def get_link(self, link_type: str, link_targets: List[str]) -> LinkT:
+    def get_link(self, link_type: str, link_targets: HandleListT) -> LinkT:
         """
         Retrieve a link given its type and list of targets.
         Targets are hashes of the nodes these hashes or handles can be created using the function 'compute_node_handle'.
 
         Args:
             link_type (str): Link type
-            link_targets (List[str]): List of target handles.
+            link_targets (HandleListT): List of target handles.
 
         Returns:
             Dict: A Python dict with all link data.
@@ -374,7 +378,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.get_links(link_filter)
 
-    def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
+    def get_link_handles(self, link_filter: LinkFilter) -> HandleSetT:
         """
         Retrieve the handle of all links that match the passed filtering criteria.
 
@@ -382,16 +386,16 @@ class DistributedAtomSpace:
             link_filter (LinkFilter): Filtering criteria to be used to select links
 
         Returns:
-            List[str]: A list of link handles
+            HandleSetT: Link handles
         """
         return self.query_engine.get_link_handles(link_filter)
 
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
+    def get_incoming_links(self, atom_handle: HandleT, **kwargs) -> IncomingLinksT:
         """
         Retrieve all links which has the passed handle as one of its targets.
 
         Args:
-            atom_handle (str): Atom's handle
+            atom_handle (HandleT): Atom's handle
 
         Keyword Args:
             handles_only (bool, optional): Returns a list of links handles.
@@ -574,7 +578,7 @@ class DistributedAtomSpace:
             index_id, [{'field': k, 'value': v} for k, v in query.items()], **kwargs
         )
 
-    def get_atoms_by_field(self, query: Query) -> List[str]:
+    def get_atoms_by_field(self, query: Query) -> HandleListT:
         """
         Search for the atoms containing field and value, performance is improved if an index was
         previously created.
@@ -585,7 +589,7 @@ class DistributedAtomSpace:
                 eg: {'name': 'human'}
 
         Returns:
-            List[str]: List of atom's ids
+            HandleListT: List of atom's ids
         """
 
         return self.query_engine.get_atoms_by_field(
@@ -594,7 +598,7 @@ class DistributedAtomSpace:
 
     def get_atoms_by_text_field(
         self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
-    ) -> List[str]:
+    ) -> HandleListT:
         """
         Performs a text search, if a text index is previously created performance a token index search,
         otherwise will perform a regex search using binary tree and the argument 'field' is mandatory.
@@ -606,11 +610,11 @@ class DistributedAtomSpace:
             field (Optional[str]): Field to check the text_value
             text_index_id (Optional[str]): Text index
         Returns:
-            List[str]: List of atom's ids
+            HandleListT: List of atom's ids
         """
         return self.query_engine.get_atoms_by_text_field(text_value, field, text_index_id)
 
-    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> HandleListT:
         """
         Performs a search in the nodes names searchin for a node starting with the 'startswith'
         value.
@@ -619,7 +623,7 @@ class DistributedAtomSpace:
             node_type (str): Node type
             startswith (str): String to search for
         Returns:
-            List[str]: List of atom's ids
+            HandleListT: List of atom's ids
         """
         return self.query_engine.get_node_by_name_starting_with(node_type, startswith)
 
@@ -634,7 +638,7 @@ class DistributedAtomSpace:
 
             This is called a "Remote DAS" in the documentation. Remote DAS is
             connected to a remote DAS Server which is used to make queries,
-            traversing, etc but it also keeps a local Atomspace in RAM which is
+            traversing, etc. but it also keeps a local Atomspace in RAM which is
             used as a cache. Atom changes are made initially in this local cache.
             When commit_changes() is called in this type of DAS, these changes are
             propagated to the remote DAS Server.
@@ -658,7 +662,7 @@ class DistributedAtomSpace:
         Adds a node to DAS.
 
         A node is represented by a Python dict which may contain any number of keys associated to
-        values of any type (including lists, sets, nested dicts, etc) , which are all
+        values of any type (including lists, sets, nested dicts, etc.), which are all
         recorded with the node, but must contain at least the keys "type" and "name"
         mapping to strings which define the node uniquely, i.e. two nodes with the same
         "type" and "name" are considered to be the same entity.
@@ -690,7 +694,7 @@ class DistributedAtomSpace:
         Adds a link to DAS.
 
         A link is represented by a Python dict which may contain any number of keys associated to
-        values of any type (including lists, sets, nested dicts, etc) , which are all
+        values of any type (including lists, sets, nested dicts, etc.), which are all
         recorded with the link, but must contain at least the keys "type" and "targets".
         "type" should map to a string and "targets" to a list of Python dict, each of them being
         itself a representation of either a node or a nested link. "type" and "targets" define the
@@ -802,7 +806,7 @@ class DistributedAtomSpace:
 
         A TraverseEngine is like a cursor which points to an atom in the hypergraph and
         can be used to probe for links and neighboring atoms and then move on by
-        following links. It's functioning is closely tied to the cache system in order
+        following links. Its functioning is closely tied to the cache system in order
         to optimize the order in which atoms are presented to the caller when probing
         the neighborhood and to use cache's "atom paging" capabilities to minimize
         latency when used in remote DAS.

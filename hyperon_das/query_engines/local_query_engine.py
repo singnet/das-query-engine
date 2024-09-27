@@ -4,7 +4,14 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Union
 
 from hyperon_das_atomdb import WILDCARD, AtomDB
 from hyperon_das_atomdb.adapters import InMemoryDB
-from hyperon_das_atomdb.database import AtomT, HandleListT, IncomingLinksT, LinkT
+from hyperon_das_atomdb.database import (
+    AtomT,
+    HandleListT,
+    HandleSetT,
+    HandleT,
+    IncomingLinksT,
+    LinkT,
+)
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController
@@ -86,9 +93,9 @@ class LocalQueryEngine(QueryEngine):
         self,
         link_type: str,
         target_types: list[str] | None = None,
-        link_targets: list[str] | None = None,
+        link_targets: HandleListT | None = None,
         **kwargs,
-    ) -> HandleListT:
+    ) -> HandleSetT:
         if link_type != WILDCARD and target_types is not None:
             return self.local_backend.get_matched_type_template(
                 [link_type, *target_types], **kwargs
@@ -97,7 +104,7 @@ class LocalQueryEngine(QueryEngine):
             try:
                 return self.local_backend.get_matched_links(link_type, link_targets, **kwargs)
             except AtomDoesNotExist:
-                return None, []
+                return set()
         elif link_type != WILDCARD:
             return self.local_backend.get_all_links(link_type, **kwargs)
         else:
@@ -145,10 +152,11 @@ class LocalQueryEngine(QueryEngine):
 
     def _generate_target_handles(
         self, targets: List[Dict[str, Any]]
-    ) -> list[str | list[str] | list[Any]]:  # multiple levels of nested lists due to recursion
-        targets_hash: list[str | list[str] | list[Any]] = []
+    ) -> list[HandleT | HandleListT | list[Any]]:  # multiple levels of nested lists due to
+        # recursion
+        targets_hash: list[HandleT | HandleListT | list[Any]] = []
         for target in targets:
-            handle: str | list[str] | None = None
+            handle: HandleT | HandleListT | None = None
             if target["atom_type"] == "node":
                 handle = self.local_backend.node_handle(target["type"], target["name"])
             elif target["atom_type"] == "link":
@@ -190,7 +198,7 @@ class LocalQueryEngine(QueryEngine):
     def get_atoms(self, handles: str, **kwargs) -> List[Dict[str, Any]]:
         return [self.local_backend.get_atom(handle, **kwargs) for handle in handles]
 
-    def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
+    def get_link_handles(self, link_filter: LinkFilter) -> HandleSetT:
         if link_filter.filter_type == LinkFilterType.FLAT_TYPE_TEMPLATE:
             return self.local_backend.get_matched_type_template(
                 [link_filter.link_type, *link_filter.target_types],
@@ -201,10 +209,9 @@ class LocalQueryEngine(QueryEngine):
                 link_filter.link_type, link_filter.targets, toplevel_only=link_filter.toplevel_only
             )
         elif link_filter.filter_type == LinkFilterType.NAMED_TYPE:
-            _, answer = self.local_backend.get_all_links(
+            return self.local_backend.get_all_links(
                 link_filter.link_type, toplevel_only=link_filter.toplevel_only
             )
-            return answer
         else:
             das_error(ValueError("Invalid LinkFilterType: {link_filter.filter_type}"))
 
@@ -318,13 +325,13 @@ class LocalQueryEngine(QueryEngine):
     ) -> Context:  # type: ignore
         das_error(NotImplementedError("Contexts are not implemented for non-server local DAS"))
 
-    def get_atoms_by_field(self, query: list[OrderedDict[str, str]]) -> List[str]:
+    def get_atoms_by_field(self, query: list[OrderedDict[str, str]]) -> HandleListT:
         return self.local_backend.get_atoms_by_field(query)
 
     def get_atoms_by_text_field(
         self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
-    ) -> List[str]:
+    ) -> HandleListT:
         return self.local_backend.get_atoms_by_text_field(text_value, field, text_index_id)
 
-    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> HandleListT:
         return self.local_backend.get_node_by_name_starting_with(node_type, startswith)
