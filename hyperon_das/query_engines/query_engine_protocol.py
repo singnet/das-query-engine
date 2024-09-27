@@ -1,7 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-from hyperon_das_atomdb.database import IncomingLinksT, LinkT
+from hyperon_das_atomdb.database import (
+    AtomT,
+    HandleListT,
+    HandleSetT,
+    HandleT,
+    IncomingLinksT,
+    LinkT,
+)
 
 from hyperon_das.context import Context
 from hyperon_das.link_filters import LinkFilter
@@ -11,7 +18,7 @@ from hyperon_das.utils import QueryAnswer
 
 class QueryEngine(ABC):
     @abstractmethod
-    def get_atom(self, handle: str) -> Dict[str, Any]:
+    def get_atom(self, handle: HandleT) -> AtomT:
         """
         Retrieves an atom from the database using its unique handle.
 
@@ -19,15 +26,15 @@ class QueryEngine(ABC):
         the atom's data as a dictionary. If no atom with the given handle exists, an exception is thrown.
 
         Args:
-            handle (str): The unique handle of the atom to retrieve.
+            handle (HandleT): The unique handle of the atom to retrieve.
 
         Returns:
-            Dict[str, Any]: A dictionary containing the atom's data.
+            AtomT: A dictionary containing the atom's data.
         """
         ...
 
     @abstractmethod
-    def get_atoms(self, handles: List[str], **kwargs) -> List[Dict[str, Any]]:
+    def get_atoms(self, handles: HandleListT, **kwargs) -> List[AtomT]:
         """
         Retrieves atoms from the database using their unique handles.
 
@@ -37,10 +44,10 @@ class QueryEngine(ABC):
         Remote query engines do a single request to remote DAS in order to get all the requested atoms.
 
         Args:
-            handles (List[str]): Unique handle of the atoms to retrieve.
+            handles (HandleListT): List of atoms handles to retrieve.
 
         Returns:
-            List[Dict[str, Any]]: List with requested atoms.
+            List[AtomT]: List with requested atoms.
         """
         ...
 
@@ -58,7 +65,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def get_link_handles(self, link_filter: LinkFilter) -> List[LinkT]:
+    def get_link_handles(self, link_filter: LinkFilter) -> HandleSetT:
         """
         Retrieve the handle of all links that match the passed filtering criteria.
 
@@ -66,12 +73,12 @@ class QueryEngine(ABC):
             link_filter (LinkFilter): Filtering criteria to be used to select links
 
         Returns:
-            List[str]: A list of link handles
+            HandleSetT: Link handles
         """
         ...
 
     @abstractmethod
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
+    def get_incoming_links(self, atom_handle: HandleT, **kwargs) -> IncomingLinksT:
         """
         Retrieves incoming links for a specified atom handle.
 
@@ -81,7 +88,7 @@ class QueryEngine(ABC):
         implementation and the provided keyword arguments.
 
         Args:
-            atom_handle (str): The unique handle of the atom for which incoming links are to be
+            atom_handle (HandleT): The unique handle of the atom for which incoming links are to be
                                retrieved.
 
         Keyword Args:
@@ -291,7 +298,7 @@ class QueryEngine(ABC):
         ...
 
     @abstractmethod
-    def get_atoms_by_field(self, query: Query) -> List[str]:
+    def get_atoms_by_field(self, query: Query) -> HandleListT:
         """
         Retrieves a list of atom handles based on a specified field query.
 
@@ -303,14 +310,14 @@ class QueryEngine(ABC):
             query (Query): The query specifying the field and value(s) to filter atoms by.
 
         Returns:
-            List[str]: A list of atom handles that match the query criteria.
+            HandleListT: A list of atom handles that match the query criteria.
         """
         ...
 
     @abstractmethod
     def get_atoms_by_text_field(
         self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
-    ) -> List[str]:
+    ) -> HandleListT:
         """
         Retrieves a list of atom handles based on a text field value, with optional field and index ID.
 
@@ -326,12 +333,12 @@ class QueryEngine(ABC):
                                            optimize the search process if provided. Defaults to None.
 
         Returns:
-            List[str]: A list of atom handles that match the search criteria.
+            HandleListT: A list of atom handles that match the search criteria.
         """
         ...
 
     @abstractmethod
-    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> HandleListT:
         """
         Retrieves a list of node handles where the node name starts with a specified string.
 
@@ -343,6 +350,6 @@ class QueryEngine(ABC):
             startswith (str): The initial string of the node names to match.
 
         Returns:
-            List[str]: A list of handles for the nodes that match the search criteria.
+            HandleListT: A list of handles for the nodes that match the search criteria.
         """
         ...

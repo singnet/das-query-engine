@@ -1,7 +1,14 @@
 from enum import Enum
 from typing import Any, Dict, Iterator, List, Optional
 
-from hyperon_das_atomdb.database import IncomingLinksT, LinkT
+from hyperon_das_atomdb.database import (
+    AtomT,
+    HandleListT,
+    HandleSetT,
+    HandleT,
+    IncomingLinksT,
+    LinkT,
+)
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
 from hyperon_das.cache.cache_controller import CacheController
@@ -46,7 +53,7 @@ class RemoteQueryEngine(QueryEngine):
     def mode(self):
         return self.__mode
 
-    def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
+    def get_atom(self, handle: HandleT, **kwargs) -> AtomT:
         atom = self.cache_controller.get_atom(handle)
         if atom is None:
             try:
@@ -58,7 +65,7 @@ class RemoteQueryEngine(QueryEngine):
                     das_error(exception)
         return atom
 
-    def get_atoms(self, handles: List[str], **kwargs) -> List[Dict[str, Any]]:
+    def get_atoms(self, handles: HandleListT, **kwargs) -> List[AtomT]:
         return self.cache_controller.get_atoms(handles)
 
     def get_links(self, link_filter: LinkFilter) -> List[LinkT]:
@@ -67,11 +74,11 @@ class RemoteQueryEngine(QueryEngine):
         links.extend(remote_links)
         return links
 
-    def get_link_handles(self, link_filter: LinkFilter) -> List[str]:
+    def get_link_handles(self, link_filter: LinkFilter) -> HandleSetT:
         # TODO Implement get_link_handles() in faas client
-        return [link['handle'] for link in self.get_links(link_filter)]
+        return {link['handle'] for link in self.get_links(link_filter)}
 
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
+    def get_incoming_links(self, atom_handle: HandleT, **kwargs) -> IncomingLinksT:
         links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
         remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
         links.extend(remote_links)
@@ -188,13 +195,13 @@ class RemoteQueryEngine(QueryEngine):
     ) -> Context:
         return self.remote_das.create_context(name, queries)
 
-    def get_atoms_by_field(self, query: Query) -> List[str]:
+    def get_atoms_by_field(self, query: Query) -> HandleListT:
         return self.remote_das.get_atoms_by_field(query)
 
     def get_atoms_by_text_field(
         self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
-    ) -> List[str]:
+    ) -> HandleListT:
         return self.remote_das.get_atoms_by_text_field(text_value, field, text_index_id)
 
-    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> List[str]:
+    def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> HandleListT:
         return self.remote_das.get_node_by_name_starting_with(node_type, startswith)
