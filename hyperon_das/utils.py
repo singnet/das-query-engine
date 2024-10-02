@@ -196,8 +196,7 @@ def check_server_connection(url: str) -> Tuple[int, str]:
                 timeout=10,
             )
 
-        if response.status_code != HTTPStatus.OK:
-            response.raise_for_status()
+        response.raise_for_status()
 
         remote_data = deserialize(response.content)
         remote_das_version = remote_data.get("das", {}).get("version")
