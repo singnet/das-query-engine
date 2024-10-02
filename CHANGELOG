@@ -2,3 +2,4 @@
 [das-atom-db#216] Removed cursor from api of get_matched*() and get_incoming_links()
 [HOTFIX] Fixes after DAS api change in atom-db/#216
 [das/#106] Change patterns and templates indexes to store handles only rather than handles+targets
+[#333] Move handshake validation to the client-side. The server will now only send the expected library versions.

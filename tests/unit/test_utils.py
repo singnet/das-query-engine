@@ -1,7 +1,14 @@
 import pytest
 
 from hyperon_das.exceptions import InvalidAssignment
-from hyperon_das.utils import Assignment, QueryAnswer
+from hyperon_das.utils import (
+    Assignment,
+    QueryAnswer,
+    compare_major_versions,
+    compare_minor_versions,
+    compare_patch_versions,
+    get_version_components,
+)
 
 
 def _build_assignment(mappings):
@@ -155,54 +162,109 @@ class TestQueryAnswer:
     def test_get_handle_stats(self):
         self._check_handle_set(None, set([]), [])
 
-        self._check_handle_set({'handle': 'h1'}, ['h1'], [1])
+        self._check_handle_set({"handle": "h1"}, ["h1"], [1])
 
         self._check_handle_set(
             {
-                'handle': 'h1',
-                'targets': [
-                    {'handle': 'h2'},
-                    {'handle': 'h3'},
+                "handle": "h1",
+                "targets": [
+                    {"handle": "h2"},
+                    {"handle": "h3"},
                 ],
             },
-            ['h1', 'h2', 'h3'],
+            ["h1", "h2", "h3"],
             [1, 1, 1],
         )
 
         self._check_handle_set(
             {
-                'handle': 'h1',
-                'targets': [
-                    {'handle': 'h2'},
-                    {'handle': 'h1'},
+                "handle": "h1",
+                "targets": [
+                    {"handle": "h2"},
+                    {"handle": "h1"},
                 ],
             },
-            ['h1', 'h2'],
+            ["h1", "h2"],
             [2, 1],
         )
 
         self._check_handle_set(
             {
-                'handle': 'h1',
-                'targets': [
-                    {'handle': 'h2'},
+                "handle": "h1",
+                "targets": [
+                    {"handle": "h2"},
                     {
-                        'handle': 'h2',
-                        'targets': [
-                            {'handle': 'h4'},
-                            {'handle': 'h1'},
+                        "handle": "h2",
+                        "targets": [
+                            {"handle": "h4"},
+                            {"handle": "h1"},
                         ],
                     },
                     {
-                        'handle': 'h5',
-                        'targets': [
-                            {'handle': 'h1'},
-                            {'handle': 'h6'},
+                        "handle": "h5",
+                        "targets": [
+                            {"handle": "h1"},
+                            {"handle": "h6"},
                         ],
                     },
-                    {'handle': 'h3'},
+                    {"handle": "h3"},
                 ],
             },
-            ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+            ["h1", "h2", "h3", "h4", "h5", "h6"],
             [3, 2, 1, 1, 1, 1],
         )
+
+
+@pytest.mark.parametrize(
+    "version_string, expected",
+    [
+        ("1.2.3", (1, 2, 3)),
+        ("10.20.30", (10, 20, 30)),
+        ("0.0.0", (0, 0, 0)),
+        ("invalid", None),
+        ("1.2", None),
+        ("1.2.3.4", None),
+    ],
+)
+def test_get_version_components(version_string, expected):
+    assert get_version_components(version_string) == expected
+
+
+@pytest.mark.parametrize(
+    "version1, version2, expected",
+    [
+        ("1.8.0", "1.8.1", True),
+        ("1.8.0", "1.9.0", False),
+        ("1.8.0", "2.8.0", False),
+        ("1.8.0", "1.8.0", True),
+        ("1.8", "1.8.0", None),
+    ],
+)
+def test_compare_minor_versions(version1, version2, expected):
+    assert compare_minor_versions(version1, version2) == expected
+
+
+@pytest.mark.parametrize(
+    "version1, version2, expected",
+    [
+        ("1.8.0", "1.8.1", False),
+        ("1.8.0", "1.8.0", True),
+        ("2.8.0", "1.8.0", False),
+        ("1.8", "1.8.0", None),
+    ],
+)
+def test_compare_patch_versions(version1, version2, expected):
+    assert compare_patch_versions(version1, version2) == expected
+
+
+@pytest.mark.parametrize(
+    "version1, version2, expected",
+    [
+        ("1.8.0", "1.8.1", True),
+        ("1.8.0", "2.8.0", False),
+        ("1.8.0", "1.7.0", True),
+        ("invalid", "1.8.0", None),
+    ],
+)
+def test_compare_major_versions(version1, version2, expected):
+    assert compare_major_versions(version1, version2) == expected
