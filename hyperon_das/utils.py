@@ -215,9 +215,9 @@ def check_server_connection(url: str) -> Tuple[int, str]:
         )
 
         if not is_atomdb_compatible or not is_das_compatible:
-            local_versions = f"das: {das_version}, atom_db: {atom_db_version}"
+            local_versions = f"hyperon-das: {das_version}, hypern-das-atomdb: {atom_db_version}"
             remote_versions = (
-                f"das: {remote_das_version}, atom_db: {remote_atomdb_version}"
+                f"hyperon-das: {remote_das_version}, hyperon-das-atomdb: {remote_atomdb_version}"
             )
             error_message = (
                 f"Version mismatch. Local: {local_versions}. "
