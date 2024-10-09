@@ -1,5 +1,5 @@
 from _pytest.terminal import TerminalReporter
-
+import random
 PERFORMANCE_REPORT: list[str] = []
 
 
@@ -19,7 +19,9 @@ def pytest_addoption(parser):
         default=0.1,
         help="Percentage of links with same letters, eg: 0.1",
     )
-    parser.addoption("--seed", default=11, help="Randon number seed")
+
+    # TODO review bounds
+    parser.addoption("--seed", default=random.randint(0,10000), help="Randon number seed")
 
     parser.addoption(
         "--mongo_host_port",
