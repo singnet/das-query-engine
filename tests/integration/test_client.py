@@ -1,7 +1,7 @@
 import pytest
 
-from hyperon_das.client import FunctionsClient
 import hyperon_das.link_filters as link_filter
+from hyperon_das.client import FunctionsClient
 
 from .helpers import metta_animal_base_handles
 from .remote_das_info import remote_das_host, remote_das_port
@@ -33,9 +33,9 @@ class TestVultrClientIntegration:
         ]
 
     def test_get_links(self, server: FunctionsClient):
-        links1 = server.get_links(link_filter.FlatTypeTemplate(
-            ['Symbol', 'Symbol', 'Symbol'],
-            'Expression'))
+        links1 = server.get_links(
+            link_filter.FlatTypeTemplate(['Symbol', 'Symbol', 'Symbol'], 'Expression')
+        )
         links2 = server.get_links(link_filter.NamedType('Expression'))
         assert len(links1) == 43
         assert len(links2) == 43

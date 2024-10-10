@@ -10,7 +10,6 @@ from typing import Any
 import pytest
 from conftest import PERFORMANCE_REPORT
 
-import hyperon_das.link_filters as link_filters
 from hyperon_das import DistributedAtomSpace
 from tests.integration.helpers import _db_down, _db_up
 
@@ -175,14 +174,14 @@ class TestPerformance:
     @measure
     def generate_links_word(self, node_list: list[dict[str, Any]]) -> dict[str, Any]:
         links_dict_word: dict[str, Any] = {}
-        total_links=0
+        total_links = 0
         for i, v in enumerate(node_list):
             for j in range(i + 1, len(node_list)):
                 if random.random() > self.word_link_percentage:
                     continue
                 strength = self.compare_words(v['name'], node_list[j]['name'])
                 links_dict_word[f'{i}->{j}'] = strength
-                total_links+=1
+                total_links += 1
                 print(f"Word Link {total_links} created.")
         print("Word links successfuly generated.")
         return links_dict_word
@@ -218,7 +217,6 @@ class TestPerformance:
             node_names.add(node['name'])
             total_nodes += 1
             print(f"Node {total_nodes} created.")
-
 
         print("Nodes successfuly generated.")
         return node_list
@@ -301,12 +299,12 @@ class TestPerformance:
             targets = [node_list[int(i)] for i in k.split('->')]
             keyword = keyword_gen()
             link = {
-                    'type': link_type,
-                    'targets': targets,
-                    'strength': v / strength_divisor,
-                    'keyword': keyword,
-                    'indexed_keyword': keyword
-                }
+                'type': link_type,
+                'targets': targets,
+                'strength': v / strength_divisor,
+                'keyword': keyword,
+                'indexed_keyword': keyword,
+            }
             das.add_link(link)
         das.commit_changes()
 
@@ -336,7 +334,12 @@ class TestPerformance:
             links_word = self.generate_links_word(node_list)
             self.link_word_count = len(links_word)
             self.add_links(
-                das, links_word, node_list, 'TokenSimilarity',  self._create_word, strength_divisor=self.word_count
+                das,
+                links_word,
+                node_list,
+                'TokenSimilarity',
+                self._create_word,
+                strength_divisor=self.word_count,
             )
             print(f"Generating {len(links_word)} word links...")
             links_letter = self.generate_links_letter(node_list)

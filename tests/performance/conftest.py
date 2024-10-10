@@ -1,5 +1,7 @@
-from _pytest.terminal import TerminalReporter
 import random
+
+from _pytest.terminal import TerminalReporter
+
 PERFORMANCE_REPORT: list[str] = []
 
 
@@ -21,7 +23,7 @@ def pytest_addoption(parser):
     )
 
     # TODO review bounds
-    parser.addoption("--seed", default=random.randint(0,10000), help="Randon number seed")
+    parser.addoption("--seed", default=random.randint(0, 10000), help="Randon number seed")
 
     parser.addoption(
         "--mongo_host_port",
