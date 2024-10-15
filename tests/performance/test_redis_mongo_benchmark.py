@@ -16,6 +16,7 @@ from tests.integration.helpers import _db_down, _db_up
 # pylint: disable=attribute-defined-outside-init,disable=too-many-instance-attributes
 # pylint: disable=unused-argument,too-many-arguments,missing-function-docstring,too-many-locals
 
+NS_TO_S = 1000000000
 
 def measure(func):
     def wrapper(*args, **kwargs):
@@ -128,10 +129,10 @@ class TestPerformance:
         for k, v in self.test_duration.items():
             if len(v) > 1:
                 PERFORMANCE_REPORT.append(
-                    f'{k}\tAverage: {statistics.mean(v) / 1000000000}\tSTDEV: {statistics.stdev(v) / 1000000000}'
+                    f'{k}\tAverage: {statistics.mean(v) / NS_TO_S}\tSTDEV: {statistics.stdev(v) / NS_TO_S}'
                 )
             else:
-                PERFORMANCE_REPORT.append(f'{k}\tExecution Time: {v[0] / 1000000000}')
+                PERFORMANCE_REPORT.append(f'{k}\tExecution Time: {v[0] / NS_TO_S}')
 
     @pytest.fixture
     def measurement(self, repeat, request):
