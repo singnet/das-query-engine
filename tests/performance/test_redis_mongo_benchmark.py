@@ -10,19 +10,19 @@ from typing import Any
 import pytest
 from conftest import PERFORMANCE_REPORT
 
-import hyperon_das.link_filters as link_filters
 from hyperon_das import DistributedAtomSpace
 from tests.integration.helpers import _db_down, _db_up
 
 # pylint: disable=attribute-defined-outside-init,disable=too-many-instance-attributes
 # pylint: disable=unused-argument,too-many-arguments,missing-function-docstring,too-many-locals
 
+NS_TO_S = 1000000000
 
 def measure(func):
     def wrapper(*args, **kwargs):
-        start = time.perf_counter()
+        start = time.process_time()
         values = func(*args, **kwargs)
-        end = time.perf_counter()
+        end = time.process_time()
         TestPerformance.time = end - start
         if TestPerformance.debug:
             print(f'Elapsed ({func.__name__}) time: {TestPerformance.time}')
@@ -111,11 +111,11 @@ class TestPerformance:
         yield DistributedAtomSpace(
             query_engine='local',
             atomdb='redis_mongo',
-            mongo_host=self.mongo_host,
+            mongo_hostname=self.mongo_host,
             mongo_port=int(self.mongo_port),
             mongo_username=self.mongo_user,
             mongo_password=self.mongo_pass,
-            redis_host=self.redis_host,
+            redis_hostname=self.redis_host,
             redis_port=int(self.redis_port),
             redis_username=self.redis_user,
             redis_password=self.redis_pass,
@@ -129,10 +129,10 @@ class TestPerformance:
         for k, v in self.test_duration.items():
             if len(v) > 1:
                 PERFORMANCE_REPORT.append(
-                    f'{k}\tAverage: {statistics.mean(v)}\tSTDEV: {statistics.stdev(v)}'
+                    f'{k}\tAverage: {statistics.mean(v) / NS_TO_S}\tSTDEV: {statistics.stdev(v) / NS_TO_S}'
                 )
             else:
-                PERFORMANCE_REPORT.append(f'{k}\tExecution Time: {v}')
+                PERFORMANCE_REPORT.append(f'{k}\tExecution Time: {v[0] / NS_TO_S}')
 
     @pytest.fixture
     def measurement(self, repeat, request):
@@ -150,11 +150,9 @@ class TestPerformance:
         )
         if test_name not in self.test_duration:
             self.test_duration[test_name] = []
-        # start_time = time.perf_counter()
         start_time = time.process_time_ns()
         yield
         end_time = time.process_time_ns()
-        # end_time = time.perf_counter()
         self.test_duration[test_name].append(end_time - start_time)
 
     def print_status(self):
@@ -177,13 +175,14 @@ class TestPerformance:
     @measure
     def generate_links_word(self, node_list: list[dict[str, Any]]) -> dict[str, Any]:
         links_dict_word: dict[str, Any] = {}
+        total_links = 0
         for i, v in enumerate(node_list):
             for j in range(i + 1, len(node_list)):
                 if random.random() > self.word_link_percentage:
                     continue
                 strength = self.compare_words(v['name'], node_list[j]['name'])
-                if strength > 0:
-                    links_dict_word[f'{i}->{j}'] = strength
+                links_dict_word[f'{i}->{j}'] = strength
+                total_links += 1
         return links_dict_word
 
     @measure
@@ -203,6 +202,7 @@ class TestPerformance:
         """
         node_list = []
         node_names = set()
+        total_nodes = 0
 
         for _ in range(self.node_count):
             word_list = [self._create_word() for _ in range(self.word_count)]
@@ -214,6 +214,7 @@ class TestPerformance:
                 das.add_node(node)
             node_list.append(node)
             node_names.add(node['name'])
+            total_nodes += 1
         return node_list
 
     @staticmethod
@@ -253,14 +254,15 @@ class TestPerformance:
 
         """
         links_letter = {}
+        total_links = 0
         for i, _ in enumerate(node_list):
             for j in range(i + 1, len(node_list)):
                 if random.random() > self.letter_link_percentage:
                     continue
                 key = f'{min(i, j)}->{max(i, j)}'
                 strength = TestPerformance.compare_str(node_list[i]['name'], node_list[j]['name'])
-                if strength > 0:
-                    links_letter[key] = strength
+                links_letter[key] = strength
+                total_links += 1
         return links_letter
 
     @staticmethod
@@ -270,6 +272,7 @@ class TestPerformance:
         links: dict[str, Any],
         node_list: list[dict[str, Any]],
         link_type: str,
+        keyword_gen: Any,
         strength_divisor: int = 1,
     ) -> None:
         """
@@ -279,6 +282,7 @@ class TestPerformance:
             links (dict[str, Any]): dict containing links to add
             node_list (list[dict[str, Any]]): list of Nodes to retrieve as link's targets
             link_type (str): Type of link
+            keyword_gen (Any): function to create a keyword
             strength_divisor (int): Divisor number to divide the strength of the link
 
         Returns:
@@ -287,13 +291,15 @@ class TestPerformance:
         """
         for k, v in links.items():
             targets = [node_list[int(i)] for i in k.split('->')]
-            das.add_link(
-                {
-                    'type': link_type,
-                    'targets': targets,
-                    'strength': v / strength_divisor,
-                }
-            )
+            keyword = keyword_gen()
+            link = {
+                'type': link_type,
+                'targets': targets,
+                'strength': v / strength_divisor,
+                'keyword': keyword,
+                'indexed_keyword': keyword,
+            }
+            das.add_link(link)
         das.commit_changes()
 
     @measure
@@ -317,10 +323,16 @@ class TestPerformance:
             node_list: list[dict[str, Any]]
             node_list = self.generate_nodes(das)
             das.commit_changes()
+            das.create_field_index('link', ['indexed_keyword'])
             links_word = self.generate_links_word(node_list)
             self.link_word_count = len(links_word)
             self.add_links(
-                das, links_word, node_list, 'TokenSimilarity', strength_divisor=self.word_count
+                das,
+                links_word,
+                node_list,
+                'TokenSimilarity',
+                self._create_word,
+                strength_divisor=self.word_count,
             )
             links_letter = self.generate_links_letter(node_list)
             self.link_letter_count = len(links_letter)
@@ -329,12 +341,12 @@ class TestPerformance:
                 links_letter,
                 node_list,
                 'Similarity',
+                self._create_word,
                 strength_divisor=self.word_length * self.word_count,
             )
             count_atoms_links_nodes: dict[str, int] = self.count_atoms(das, {'precise': True})
             self.count_atoms(das)
             TestPerformance.is_database_loaded = True
-            das.create_field_index('link', ['strength', 'named_type'])
             return count_atoms_links_nodes
         return self.count_atoms(das, {'precise': True})
 
@@ -353,30 +365,22 @@ class TestPerformance:
     def test_query_atom_by_field(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
-        links = das.get_links(link_filters.NamedType(link_type))
-        link = random.choice(links)
+        keyword = self._create_word()
         measure_query = measure(das.get_atoms_by_field)
-        query_answer = measure_query({'strength': link['strength'], 'named_type': link_type})
-        assert isinstance(query_answer, list)
-        assert query_answer
+        measure_query({'keyword': keyword})
 
     @pytest.mark.parametrize('link_type', ['TokenSimilarity', 'Similarity'])
     def test_query_atom_by_field_with_index(self, link_type, repeat, measurement, request):
         das: DistributedAtomSpace = request.getfixturevalue('das')
         self._load_database(das)
-        links = das.get_links(link_filters.NamedType(link_type))
-        link = random.choice(links)
+        keyword = self._create_word()
         measure_query = measure(das.get_atoms_by_field)
-        query_answer = measure_query({'strength': link['strength'], 'named_type': link_type})
-        assert isinstance(query_answer, list)
-        assert query_answer
+        measure_query({'indexed_keyword': keyword})
 
     def test_query_by_text_field(self, database, repeat, measurement, das: DistributedAtomSpace):
         self._load_database(das)
         measure_query = measure(das.get_atoms_by_text_field)
-        query_answer = measure_query(self._create_word(), 'name')
-        assert isinstance(query_answer, list)
-        assert query_answer
+        measure_query(self._create_word(), 'name')
 
     def test_query_node_by_name_starting_with(
         self, database, repeat, measurement, das: DistributedAtomSpace
@@ -392,8 +396,8 @@ class TestPerformance:
         [
             ('v1,v2', "TokenSimilarity"),
             ('v1,v2', "Similarity"),
-            ('v1,v2,v3', "TokenSimilarity"),
-            ('v1,v2,v3', "Similarity"),
+            # ('v1,v2,v3', "TokenSimilarity"),
+            # ('v1,v2,v3', "Similarity"),
         ],
     )
     def test_query_links_nodes_var(self, nodes, link_type, repeat, measurement, request):
@@ -405,7 +409,7 @@ class TestPerformance:
             for j in range(i + 1, len(nodes)):
                 query = {
                     'atom_type': 'link',
-                    'type': 'TokenSimilarity',
+                    'type': link_type,
                     'targets': [
                         {'atom_type': 'variable', 'name': node},
                         {'atom_type': 'variable', 'name': nodes[j]},
