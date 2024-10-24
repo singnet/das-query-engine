@@ -3,13 +3,14 @@ import subprocess
 from typing import Type
 
 from hyperon_das_atomdb import AtomDB
+from hyperon_das_atomdb.database import LinkT, NodeT
 
-DistributedAtomSpace = Type['DistributedAtomSpace']
+DistributedAtomSpace = Type["DistributedAtomSpace"]
 
 redis_port = "15926"
 mongo_port = "15927"
 scripts_path = "./tests/integration/scripts/"
-devnull = open(os.devnull, 'w')
+devnull = open(os.devnull, "w")
 
 DAS_MONGODB_HOSTNAME = os.environ.get("DAS_MONGODB_HOSTNAME")
 DAS_MONGODB_PORT = os.environ.get("DAS_MONGODB_PORT")
@@ -66,109 +67,117 @@ def cleanup(request):
 
 def _db_up():
     subprocess.call(
-        ["bash", f"{scripts_path}/redis-up.sh", redis_port], stdout=devnull, stderr=devnull
+        ["bash", f"{scripts_path}/redis-up.sh", redis_port],
+        stdout=devnull,
+        stderr=devnull,
     )
     subprocess.call(
-        ["bash", f"{scripts_path}/mongo-up.sh", mongo_port], stdout=devnull, stderr=devnull
+        ["bash", f"{scripts_path}/mongo-up.sh", mongo_port],
+        stdout=devnull,
+        stderr=devnull,
     )
 
 
 def _db_down():
     subprocess.call(
-        ["bash", f"{scripts_path}/redis-down.sh", redis_port], stdout=devnull, stderr=devnull
+        ["bash", f"{scripts_path}/redis-down.sh", redis_port],
+        stdout=devnull,
+        stderr=devnull,
     )
     subprocess.call(
-        ["bash", f"{scripts_path}/mongo-down.sh", mongo_port], stdout=devnull, stderr=devnull
+        ["bash", f"{scripts_path}/mongo-down.sh", mongo_port],
+        stdout=devnull,
+        stderr=devnull,
     )
 
 
 # fmt: off
 def load_metta_animals_base(das: DistributedAtomSpace) -> None:
-    das.add_node({"type": "Symbol", "name": 'Similarity', "is_literal": False})
-    das.add_node({"type": "Symbol", "name": 'Inheritance', "is_literal": False})
-    das.add_node({"type": "Symbol", "name": 'Symbol', "is_literal": False})
-    das.add_node({"type": "Symbol", "name": 'Type', "is_literal": False})
-    das.add_node({"type": "Symbol", "name": 'MettaType', "is_literal": False})
-    das.add_node({"type": "Symbol", "name": 'Expression', "is_literal": False})
-    das.add_node({"type": "Symbol", "name": 'Concept', "is_literal": False})
-    das.add_node({"type": "Symbol", "name": '"human"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"monkey"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"chimp"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"mammal"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"reptile"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"snake"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"dinosaur"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"triceratops"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"earthworm"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"rhino"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"vine"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"ent"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"animal"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": '"plant"', "is_literal": True})
-    das.add_node({"type": "Symbol", "name": ':', "is_literal": False})
-    das.add_node({"type": "Symbol", "name": '<:', "is_literal": False})
+    das.add_node(NodeT(**{"type": "Symbol", "name": 'Similarity'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": 'Inheritance'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": 'Symbol'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": 'Type'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": 'MettaType'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": 'Expression'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": 'Concept'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"human"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"monkey"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"chimp"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"mammal"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"reptile"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"snake"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"dinosaur"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"triceratops"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"earthworm"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"rhino"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"vine"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"ent"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"animal"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '"plant"'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": ':'}))
+    das.add_node(NodeT(**{"type": "Symbol", "name": '<:'}))
 
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"monkey"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"chimp"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"mammal"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"reptile"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"snake"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"dinosaur"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"triceratops"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"earthworm"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"rhino"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"vine"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"ent"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"animal"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": '"plant"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": 'Concept', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": ':', "is_literal": False}, {"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"human"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"monkey"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"chimp"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"mammal"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"reptile"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"snake"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"dinosaur"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"triceratops"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"earthworm"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"rhino"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"vine"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"ent"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"animal"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": '"plant"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": 'Type'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": 'Concept'}), NodeT(**{"type": "Symbol", "name": 'Type'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": ':'}), NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": 'Type'})]}))
 
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": '"monkey"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": '"chimp"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"chimp"', "is_literal": True}, {"type": "Symbol", "name": '"monkey"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"snake"', "is_literal": True}, {"type": "Symbol", "name": '"earthworm"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"rhino"', "is_literal": True}, {"type": "Symbol", "name": '"triceratops"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"snake"', "is_literal": True}, {"type": "Symbol", "name": '"vine"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": '"ent"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"monkey"', "is_literal": True}, {"type": "Symbol", "name": '"human"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"chimp"', "is_literal": True}, {"type": "Symbol", "name": '"human"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"monkey"', "is_literal": True}, {"type": "Symbol", "name": '"chimp"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"earthworm"', "is_literal": True}, {"type": "Symbol", "name": '"snake"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"triceratops"', "is_literal": True}, {"type": "Symbol", "name": '"rhino"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"vine"', "is_literal": True}, {"type": "Symbol", "name": '"snake"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": '"ent"', "is_literal": True}, {"type": "Symbol", "name": '"human"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": '"mammal"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"monkey"', "is_literal": True}, {"type": "Symbol", "name": '"mammal"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"chimp"', "is_literal": True}, {"type": "Symbol", "name": '"mammal"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"mammal"', "is_literal": True}, {"type": "Symbol", "name": '"animal"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"reptile"', "is_literal": True}, {"type": "Symbol", "name": '"animal"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"snake"', "is_literal": True}, {"type": "Symbol", "name": '"reptile"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"dinosaur"', "is_literal": True}, {"type": "Symbol", "name": '"reptile"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"triceratops"', "is_literal": True}, {"type": "Symbol", "name": '"dinosaur"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"earthworm"', "is_literal": True}, {"type": "Symbol", "name": '"animal"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"rhino"', "is_literal": True}, {"type": "Symbol", "name": '"mammal"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"vine"', "is_literal": True}, {"type": "Symbol", "name": '"plant"', "is_literal": True}]})
-    das.add_link({"type": "Expression", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": '"ent"', "is_literal": True}, {"type": "Symbol", "name": '"plant"', "is_literal": True}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": 'Similarity', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": 'Concept', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": 'Inheritance', "is_literal": False}, {"type": "Symbol", "name": 'Type', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"human"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"monkey"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"chimp"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"snake"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"earthworm"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"rhino"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"triceratops"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"vine"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"ent"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"mammal"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"animal"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"reptile"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"dinosaur"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
-    # das.add_link({"type": "MettaType", "targets": [{"type": "Symbol", "name": '"plant"', "is_literal": True}, {"type": "Symbol", "name": 'Concept', "is_literal": False}]})
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"human"'}), NodeT(**{"type": "Symbol", "name": '"monkey"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"human"'}), NodeT(**{"type": "Symbol", "name": '"chimp"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"chimp"'}), NodeT(**{"type": "Symbol", "name": '"monkey"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"snake"'}), NodeT(**{"type": "Symbol", "name": '"earthworm"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"rhino"'}), NodeT(**{"type": "Symbol", "name": '"triceratops"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"snake"'}), NodeT(**{"type": "Symbol", "name": '"vine"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"human"'}), NodeT(**{"type": "Symbol", "name": '"ent"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"monkey"'}), NodeT(**{"type": "Symbol", "name": '"human"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"chimp"'}), NodeT(**{"type": "Symbol", "name": '"human"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"monkey"'}), NodeT(**{"type": "Symbol", "name": '"chimp"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"earthworm"'}), NodeT(**{"type": "Symbol", "name": '"snake"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"triceratops"'}), NodeT(**{"type": "Symbol", "name": '"rhino"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"vine"'}), NodeT(**{"type": "Symbol", "name": '"snake"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": '"ent"'}), NodeT(**{"type": "Symbol", "name": '"human"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"human"'}), NodeT(**{"type": "Symbol", "name": '"mammal"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"monkey"'}), NodeT(**{"type": "Symbol", "name": '"mammal"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"chimp"'}), NodeT(**{"type": "Symbol", "name": '"mammal"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"mammal"'}), NodeT(**{"type": "Symbol", "name": '"animal"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"reptile"'}), NodeT(**{"type": "Symbol", "name": '"animal"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"snake"'}), NodeT(**{"type": "Symbol", "name": '"reptile"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"dinosaur"'}), NodeT(**{"type": "Symbol", "name": '"reptile"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"triceratops"'}), NodeT(**{"type": "Symbol", "name": '"dinosaur"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"earthworm"'}), NodeT(**{"type": "Symbol", "name": '"animal"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"rhino"'}), NodeT(**{"type": "Symbol", "name": '"mammal"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"vine"'}), NodeT(**{"type": "Symbol", "name": '"plant"'})]}))
+    das.add_link(LinkT(**{"type": "Expression", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": '"ent"'}), NodeT(**{"type": "Symbol", "name": '"plant"'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": 'Similarity'}), NodeT(**{"type": "Symbol", "name": 'Type'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": 'Concept'}), NodeT(**{"type": "Symbol", "name": 'Type'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": 'Inheritance'}), NodeT(**{"type": "Symbol", "name": 'Type'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"human"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"monkey"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"chimp"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"snake"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"earthworm"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"rhino"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"triceratops"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"vine"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"ent"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"mammal"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"animal"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"reptile"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"dinosaur"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
+    # das.add_link(LinkT(**{"type": "MettaType", "targets": [NodeT(**{"type": "Symbol", "name": '"plant"'}), NodeT(**{"type": "Symbol", "name": 'Concept'})]}))
 
 
 class MettaAnimalBaseHandlesCollection:

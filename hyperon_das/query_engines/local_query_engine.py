@@ -1,4 +1,3 @@
-import re
 from collections import OrderedDict
 from typing import Any, Dict, Iterator, List, Optional, Set, Union
 
@@ -11,6 +10,7 @@ from hyperon_das_atomdb.database import (
     HandleT,
     IncomingLinksT,
     LinkT,
+    NodeT,
 )
 from hyperon_das_atomdb.exceptions import AtomDoesNotExist
 
@@ -114,14 +114,14 @@ class LocalQueryEngine(QueryEngine):
                 )
             )
 
-    def _process_node(self, query: dict) -> List[dict]:
+    def _process_node(self, query: dict) -> List[NodeT]:
         try:
             handle = self.local_backend.node_handle(query["type"], query["name"])
             return [self.local_backend.get_atom(handle, no_target_format=True)]
         except AtomDoesNotExist:
             return []
 
-    def _process_link(self, query: dict) -> List[dict]:
+    def _process_link(self, query: dict) -> List[LinkT]:
         target_handles = self._generate_target_handles(query['targets'])
         matched_links = self.local_backend.get_matched_links(
             link_type=query["type"], target_handles=target_handles
@@ -130,7 +130,7 @@ class LocalQueryEngine(QueryEngine):
         result = []
 
         for link_handle in matched_links:
-            link_targets = self.get_atom(link_handle)["targets"]
+            link_targets = self.get_atom(link_handle).targets
 
             if link_handle not in unique_handles:
                 unique_handles.add(link_handle)
@@ -140,12 +140,12 @@ class LocalQueryEngine(QueryEngine):
                 atoms = self._handle_to_atoms(target)
                 if isinstance(atoms, list):
                     for atom in atoms:
-                        if atom['_id'] not in unique_handles:
-                            unique_handles.add(atom['_id'])
+                        if atom.id not in unique_handles:
+                            unique_handles.add(atom.id)
                             result.append(atom)
                 else:
-                    if atoms['_id'] not in unique_handles:
-                        unique_handles.add(atoms['_id'])
+                    if atoms.id not in unique_handles:
+                        unique_handles.add(atoms.id)
                         result.append(atoms)
 
         return result
@@ -166,19 +166,18 @@ class LocalQueryEngine(QueryEngine):
             targets_hash.append(handle)
         return targets_hash
 
-    def _handle_to_atoms(self, handle: str) -> Union[List[dict], dict]:
+    def _handle_to_atoms(self, handle: str) -> Union[List[AtomT], AtomT]:
         try:
             atom = self.local_backend.get_atom(handle, no_target_format=True)
         except AtomDoesNotExist:
             return []
 
-        if 'name' in atom:  # node
+        if isinstance(atom, NodeT):
             return atom
         else:  # link
             answer = [atom]
-            for key, value in atom.items():
-                if re.search(AtomDB.key_pattern, key):
-                    answer.append(self._handle_to_atoms(value))
+            for target in atom.targets:
+                answer.append(self._handle_to_atoms(target))
             return answer
 
     def has_buffer(self) -> bool:
@@ -223,7 +222,9 @@ class LocalQueryEngine(QueryEngine):
             return []
 
     def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
-        return self.local_backend.get_incoming_links(atom_handle, **kwargs)
+        if kwargs.get("handles_only", False):
+            return self.local_backend.get_incoming_links_handles(atom_handle, **kwargs)
+        return self.local_backend.get_incoming_links_atoms(atom_handle, **kwargs)
 
     def query(
         self,

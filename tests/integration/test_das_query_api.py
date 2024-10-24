@@ -61,13 +61,19 @@ class TestDASQueryAPI:
             node_list = []
             for handle in MettaAnimalBaseHandlesCollection.node_handles:
                 atom = das.get_atom(handle)
-                assert atom["handle"] == handle
-                node_list.append(atom)
+                assert atom.handle == handle
+                node_list.append(atom.to_dict())
             link_list = []
             for handle in MettaAnimalBaseHandlesCollection.link_handles:
                 atom = das.get_atom(handle)
-                assert atom["handle"] == handle
-                link_list.append(atom)
+                assert atom.handle == handle
+                link_list.append(atom.to_dict())
             if key != "remote":
-                assert node_list == das.get_atoms(MettaAnimalBaseHandlesCollection.node_handles)
-                assert link_list == das.get_atoms(MettaAnimalBaseHandlesCollection.link_handles)
+                assert node_list == [
+                    atom.to_dict()
+                    for atom in das.get_atoms(MettaAnimalBaseHandlesCollection.node_handles)
+                ]
+                assert link_list == [
+                    atom.to_dict()
+                    for atom in das.get_atoms(MettaAnimalBaseHandlesCollection.link_handles)
+                ]

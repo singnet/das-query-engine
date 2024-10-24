@@ -1,3 +1,4 @@
+from hyperon_das_atomdb.database import LinkT, NodeT
 from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
 
 from hyperon_das import DistributedAtomSpace
@@ -6,8 +7,8 @@ from hyperon_das import DistributedAtomSpace
 def _check_node(das: DistributedAtomSpace, handle: str, node_type: str, node_name: str):
     assert handle == ExpressionHasher.terminal_hash(node_type, node_name)
     symbol = das.get_atom(handle)
-    assert symbol["type"] == node_type
-    assert symbol["name"] == node_name
+    assert symbol.named_type == node_type
+    assert symbol.name == node_name
 
 
 class TestMettaAPI:
@@ -16,32 +17,36 @@ class TestMettaAPI:
             das = DistributedAtomSpace()
 
             das.add_link(
-                {
-                    "type": "Expression",
-                    "targets": [
-                        {"type": "Symbol", "name": "Test"},
-                        {
-                            "type": "Expression",
-                            "targets": [
-                                {"type": "Symbol", "name": "Test"},
-                                {"type": "Symbol", "name": "2"},
-                            ],
-                        },
-                    ],
-                }
+                LinkT(
+                    **{
+                        "type": "Expression",
+                        "targets": [
+                            NodeT(**{"type": "Symbol", "name": "Test"}),
+                            LinkT(
+                                **{
+                                    "type": "Expression",
+                                    "targets": [
+                                        NodeT(**{"type": "Symbol", "name": "Test"}),
+                                        NodeT(**{"type": "Symbol", "name": "2"}),
+                                    ],
+                                }
+                            ),
+                        ],
+                    }
+                )
             )
 
             query_1 = {
-                'atom_type': 'link',
-                'type': 'Expression',
-                'targets': [
-                    {'atom_type': 'variable', 'name': '$v1'},
+                "atom_type": "link",
+                "type": "Expression",
+                "targets": [
+                    {"atom_type": "variable", "name": "$v1"},
                     {
-                        'atom_type': 'link',
-                        'type': 'Expression',
-                        'targets': [
-                            {'atom_type': 'node', 'type': 'Symbol', 'name': 'Test'},
-                            {'atom_type': 'node', 'type': 'Symbol', 'name': '2'},
+                        "atom_type": "link",
+                        "type": "Expression",
+                        "targets": [
+                            {"atom_type": "node", "type": "Symbol", "name": "Test"},
+                            {"atom_type": "node", "type": "Symbol", "name": "2"},
                         ],
                     },
                 ],
@@ -64,29 +69,29 @@ class TestMettaAPI:
             }
 
             query_3 = {
-                'atom_type': 'link',
-                'type': 'Expression',
-                'targets': [
-                    {'atom_type': 'node', 'type': 'Symbol', 'name': 'Test'},
-                    {'atom_type': 'variable', 'name': '$v2'},
+                "atom_type": "link",
+                "type": "Expression",
+                "targets": [
+                    {"atom_type": "node", "type": "Symbol", "name": "Test"},
+                    {"atom_type": "variable", "name": "$v2"},
                 ],
             }
 
             query_4 = [
                 {
-                    'atom_type': 'link',
-                    'type': 'Expression',
-                    'targets': [
-                        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Best'},
-                        {'atom_type': 'variable', 'name': '$x'},
+                    "atom_type": "link",
+                    "type": "Expression",
+                    "targets": [
+                        {"atom_type": "node", "type": "Symbol", "name": "Best"},
+                        {"atom_type": "variable", "name": "$x"},
                     ],
                 },
                 {
-                    'atom_type': 'link',
-                    'type': 'Expression',
-                    'targets': [
-                        {'atom_type': 'variable', 'name': '$v'},
-                        {'atom_type': 'variable', 'name': '$x'},
+                    "atom_type": "link",
+                    "type": "Expression",
+                    "targets": [
+                        {"atom_type": "variable", "name": "$v"},
+                        {"atom_type": "variable", "name": "$x"},
                     ],
                 },
             ]
@@ -117,32 +122,36 @@ class TestMettaAPI:
                     ],
                 )
                 atom = das.get_atom(handle)
-                if atom["type"] == "Symbol":
-                    assert atom["name"] == "2"
-                elif atom["type"] == "Expression":
-                    symbol1 = das.get_atom(atom["targets"][0])
-                    assert symbol1["type"] == "Symbol"
-                    assert symbol1["name"] == "Test"
-                    symbol2 = das.get_atom(atom["targets"][1])
-                    assert symbol2["type"] == "Symbol"
-                    assert symbol2["name"] == "2"
+                if atom.named_type == "Symbol":
+                    assert atom.name == "2"
+                elif atom.named_type == "Expression":
+                    symbol1 = das.get_atom(atom.targets[0])
+                    assert symbol1.named_type == "Symbol"
+                    assert symbol1.name == "Test"
+                    symbol2 = das.get_atom(atom.targets[1])
+                    assert symbol2.named_type == "Symbol"
+                    assert symbol2.name == "2"
                 else:
                     assert False
 
             das.add_link(
-                {
-                    "type": "Expression",
-                    "targets": [
-                        {"type": "Symbol", "name": "Best"},
-                        {
-                            "type": "Expression",
-                            "targets": [
-                                {"type": "Symbol", "name": "Test"},
-                                {"type": "Symbol", "name": "2"},
-                            ],
-                        },
-                    ],
-                }
+                LinkT(
+                    **{
+                        "type": "Expression",
+                        "targets": [
+                            NodeT(**{"type": "Symbol", "name": "Best"}),
+                            LinkT(
+                                **{
+                                    "type": "Expression",
+                                    "targets": [
+                                        NodeT(**{"type": "Symbol", "name": "Test"}),
+                                        NodeT(**{"type": "Symbol", "name": "2"}),
+                                    ],
+                                }
+                            ),
+                        ],
+                    }
+                )
             )
 
             answer = [query_answer for query_answer in das.query(query_4)]
@@ -151,8 +160,8 @@ class TestMettaAPI:
                 handle = qa.assignment.mapping["$v"]
                 if handle == das.compute_node_handle("Symbol", "Test"):
                     symbol = das.get_atom(handle)
-                    assert symbol["type"] == "Symbol"
-                    assert symbol["name"] == "Test"
+                    assert symbol.named_type == "Symbol"
+                    assert symbol.name == "Test"
                     handle = answer[0].assignment.mapping["$x"]
                     assert handle == das.compute_link_handle(
                         "Expression",
@@ -162,17 +171,17 @@ class TestMettaAPI:
                         ],
                     )
                     symbol = das.get_atom(handle)
-                    assert symbol["type"] == "Expression"
-                    symbol1 = das.get_atom(symbol["targets"][0])
-                    assert symbol1["type"] == "Symbol"
-                    assert symbol1["name"] == "Test"
-                    symbol2 = das.get_atom(symbol["targets"][1])
-                    assert symbol2["type"] == "Symbol"
-                    assert symbol2["name"] == "2"
+                    assert symbol.named_type == "Expression"
+                    symbol1 = das.get_atom(symbol.targets[0])
+                    assert symbol1.named_type == "Symbol"
+                    assert symbol1.name == "Test"
+                    symbol2 = das.get_atom(symbol.targets[1])
+                    assert symbol2.named_type == "Symbol"
+                    assert symbol2.name == "2"
                 elif handle == das.compute_node_handle("Symbol", "Best"):
                     symbol = das.get_atom(handle)
-                    assert symbol["type"] == "Symbol"
-                    assert symbol["name"] == "Best"
+                    assert symbol.named_type == "Symbol"
+                    assert symbol.name == "Best"
                     handle = answer[1].assignment.mapping["$x"]
                     assert handle == das.compute_link_handle(
                         "Expression",
@@ -182,13 +191,13 @@ class TestMettaAPI:
                         ],
                     )
                     symbol = das.get_atom(handle)
-                    assert symbol["type"] == "Expression"
-                    symbol1 = das.get_atom(symbol["targets"][0])
-                    assert symbol1["type"] == "Symbol"
-                    assert symbol1["name"] == "Test"
-                    symbol2 = das.get_atom(symbol["targets"][1])
-                    assert symbol2["type"] == "Symbol"
-                    assert symbol2["name"] == "2"
+                    assert symbol.named_type == "Expression"
+                    symbol1 = das.get_atom(symbol.targets[0])
+                    assert symbol1.named_type == "Symbol"
+                    assert symbol1.name == "Test"
+                    symbol2 = das.get_atom(symbol.targets[1])
+                    assert symbol2.named_type == "Symbol"
+                    assert symbol2.name == "2"
                 else:
                     assert False
 
@@ -196,38 +205,62 @@ class TestMettaAPI:
             das = DistributedAtomSpace()
 
             das.add_link(
-                {
-                    "type": "Expression",
-                    "targets": [
-                        {"type": "Symbol", "name": "outter_expression"},
-                        {
-                            "type": "Expression",
-                            "targets": [
-                                {"type": "Symbol", "name": "inner_expression"},
-                                {"type": "Symbol", "name": "symbol1"},
-                            ],
-                        },
-                        {
-                            "type": "Expression",
-                            "targets": [
-                                {"type": "Symbol", "name": "inner_expression"},
-                                {"type": "Symbol", "name": "symbol2"},
-                            ],
-                        },
-                    ],
-                }
+                LinkT(
+                    **{
+                        "type": "Expression",
+                        "targets": [
+                            NodeT(**{"type": "Symbol", "name": "outter_expression"}),
+                            LinkT(
+                                **{
+                                    "type": "Expression",
+                                    "targets": [
+                                        NodeT(
+                                            **{
+                                                "type": "Symbol",
+                                                "name": "inner_expression",
+                                            }
+                                        ),
+                                        NodeT(**{"type": "Symbol", "name": "symbol1"}),
+                                    ],
+                                }
+                            ),
+                            LinkT(
+                                **{
+                                    "type": "Expression",
+                                    "targets": [
+                                        NodeT(
+                                            **{
+                                                "type": "Symbol",
+                                                "name": "inner_expression",
+                                            }
+                                        ),
+                                        NodeT(**{"type": "Symbol", "name": "symbol2"}),
+                                    ],
+                                }
+                            ),
+                        ],
+                    }
+                )
             )
 
             query = {
                 "atom_type": "link",
                 "type": "Expression",
                 "targets": [
-                    {"atom_type": "node", "type": "Symbol", "name": "outter_expression"},
+                    {
+                        "atom_type": "node",
+                        "type": "Symbol",
+                        "name": "outter_expression",
+                    },
                     {
                         "atom_type": "link",
                         "type": "Expression",
                         "targets": [
-                            {"atom_type": "node", "type": "Symbol", "name": "inner_expression"},
+                            {
+                                "atom_type": "node",
+                                "type": "Symbol",
+                                "name": "inner_expression",
+                            },
                             {"atom_type": "variable", "name": "$v1"},
                         ],
                     },
@@ -235,7 +268,11 @@ class TestMettaAPI:
                         "atom_type": "link",
                         "type": "Expression",
                         "targets": [
-                            {"atom_type": "node", "type": "Symbol", "name": "inner_expression"},
+                            {
+                                "atom_type": "node",
+                                "type": "Symbol",
+                                "name": "inner_expression",
+                            },
                             {"atom_type": "node", "type": "Symbol", "name": "symbol2"},
                         ],
                     },

@@ -95,7 +95,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise AtomDoesNotExist(message='Nonexistent atom')
+                raise AtomDoesNotExist('Nonexistent atom')
             else:
                 raise e
 
@@ -116,7 +116,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise AtomDoesNotExist(message='Nonexistent atom')
+                raise AtomDoesNotExist('Nonexistent atom')
             elif e.status_code == 400:
                 raise ValueError(str(e))
             else:

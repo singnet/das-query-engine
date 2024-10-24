@@ -9,9 +9,7 @@ from hyperon_das_atomdb.database import (
     FieldIndexType,
     HandleListT,
     IncomingLinksT,
-    LinkParamsT,
     LinkT,
-    NodeParamsT,
     NodeT,
 )
 
@@ -50,77 +48,86 @@ class DistributedAtomSpaceMock(DistributedAtomSpace):
 
 class DatabaseMock(AtomDB):
     def __init__(self):
-        human = _build_node_handle('Concept', 'human')
-        monkey = _build_node_handle('Concept', 'monkey')
-        chimp = _build_node_handle('Concept', 'chimp')
-        snake = _build_node_handle('Concept', 'snake')
-        earthworm = _build_node_handle('Concept', 'earthworm')
-        rhino = _build_node_handle('Concept', 'rhino')
-        triceratops = _build_node_handle('Concept', 'triceratops')
-        vine = _build_node_handle('Concept', 'vine')
-        ent = _build_node_handle('Concept', 'ent')
-        mammal = _build_node_handle('Concept', 'mammal')
-        animal = _build_node_handle('Concept', 'animal')
-        reptile = _build_node_handle('Concept', 'reptile')
-        dinosaur = _build_node_handle('Concept', 'dinosaur')
-        plant = _build_node_handle('Concept', 'plant')
-
-        self.all_nodes: list[str] = [
-            human,
-            monkey,
-            chimp,
-            snake,
-            earthworm,
-            rhino,
-            triceratops,
-            vine,
-            ent,
-            mammal,
-            animal,
-            reptile,
-            dinosaur,
-            plant,
+        super().__init__()
+        self.node_names = [
+            "human",
+            "monkey",
+            "chimp",
+            "snake",
+            "earthworm",
+            "rhino",
+            "triceratops",
+            "vine",
+            "ent",
+            "mammal",
+            "animal",
+            "reptile",
+            "dinosaur",
+            "plant",
         ]
+        self.node_type = "Concept"
+        self.all_nodes: dict[str, dict[str, str]] = {
+            _build_node_handle(self.node_type, name): {
+                "type": self.node_type,
+                "name": name,
+            }
+            for name in self.node_names
+        }
+
+        self.human = _build_node_handle(self.node_type, 'human')
+        self.monkey = _build_node_handle(self.node_type, 'monkey')
+        self.chimp = _build_node_handle(self.node_type, 'chimp')
+        self.snake = _build_node_handle(self.node_type, 'snake')
+        self.earthworm = _build_node_handle(self.node_type, 'earthworm')
+        self.rhino = _build_node_handle(self.node_type, 'rhino')
+        self.triceratops = _build_node_handle(self.node_type, 'triceratops')
+        self.vine = _build_node_handle(self.node_type, 'vine')
+        self.ent = _build_node_handle(self.node_type, 'ent')
+        self.mammal = _build_node_handle(self.node_type, 'mammal')
+        self.animal = _build_node_handle(self.node_type, 'animal')
+        self.reptile = _build_node_handle(self.node_type, 'reptile')
+        self.dinosaur = _build_node_handle(self.node_type, 'dinosaur')
+        self.plant = _build_node_handle(self.node_type, 'plant')
 
         self.all_links: list[list[str]] = [
-            ['Similarity', human, monkey],
-            ['Similarity', human, chimp],
-            ['Similarity', chimp, monkey],
-            ['Similarity', snake, earthworm],
-            ['Similarity', rhino, triceratops],
-            ['Similarity', snake, vine],
-            ['Similarity', human, ent],
-            ['Inheritance', human, mammal],
-            ['Inheritance', monkey, mammal],
-            ['Inheritance', chimp, mammal],
-            ['Inheritance', mammal, animal],
-            ['Inheritance', reptile, animal],
-            ['Inheritance', snake, reptile],
-            ['Inheritance', dinosaur, reptile],
-            ['Inheritance', triceratops, dinosaur],
-            ['Inheritance', earthworm, animal],
-            ['Inheritance', rhino, mammal],
-            ['Inheritance', vine, plant],
-            ['Inheritance', ent, plant],
+            ['Similarity', self.human, self.monkey],
+            ['Similarity', self.human, self.chimp],
+            ['Similarity', self.chimp, self.monkey],
+            ['Similarity', self.snake, self.earthworm],
+            ['Similarity', self.rhino, self.triceratops],
+            ['Similarity', self.snake, self.vine],
+            ['Similarity', self.human, self.ent],
+            ['Inheritance', self.human, self.mammal],
+            ['Inheritance', self.monkey, self.mammal],
+            ['Inheritance', self.chimp, self.mammal],
+            ['Inheritance', self.mammal, self.animal],
+            ['Inheritance', self.reptile, self.animal],
+            ['Inheritance', self.snake, self.reptile],
+            ['Inheritance', self.dinosaur, self.reptile],
+            ['Inheritance', self.triceratops, self.dinosaur],
+            ['Inheritance', self.earthworm, self.animal],
+            ['Inheritance', self.rhino, self.mammal],
+            ['Inheritance', self.vine, self.plant],
+            ['Inheritance', self.ent, self.plant],
             [
                 'List',
-                _build_link_handle('Inheritance', [dinosaur, reptile]),
-                _build_link_handle('Inheritance', [triceratops, dinosaur]),
+                _build_link_handle('Inheritance', [self.dinosaur, self.reptile]),
+                _build_link_handle('Inheritance', [self.triceratops, self.dinosaur]),
             ],
             [
                 'Set',
-                _build_link_handle('Inheritance', [dinosaur, reptile]),
-                _build_link_handle('Inheritance', [triceratops, dinosaur]),
+                _build_link_handle('Inheritance', [self.dinosaur, self.reptile]),
+                _build_link_handle('Inheritance', [self.triceratops, self.dinosaur]),
             ],
-            ['List', human, ent, monkey, chimp],
-            ['List', human, mammal, triceratops, vine],
-            ['List', human, monkey, chimp],
-            ['List', triceratops, ent, monkey, snake],
-            ['Set', triceratops, vine, monkey, snake],
-            ['Set', triceratops, ent, monkey, snake],
-            ['Set', human, ent, monkey, chimp],
-            ['Set', mammal, monkey, human, chimp],
-            ['Set', human, monkey, chimp],
+            ['List', self.human, self.ent, self.monkey, self.chimp],
+            ['List', self.human, self.mammal, self.triceratops, self.vine],
+            ['List', self.human, self.monkey, self.chimp],
+            ['List', self.triceratops, self.ent, self.monkey, self.snake],
+            ['Set', self.triceratops, self.vine, self.monkey, self.snake],
+            ['Set', self.triceratops, self.ent, self.monkey, self.snake],
+            ['Set', self.human, self.ent, self.monkey, self.chimp],
+            ['Set', self.mammal, self.monkey, self.human, self.chimp],
+            ['Set', self.human, self.monkey, self.chimp],
         ]
 
         self.template_index: dict[str, list[tuple[str, tuple[str, ...]]]] = {}
@@ -139,8 +146,8 @@ class DatabaseMock(AtomDB):
 
         nested_link = [
             'Evaluation',
-            human,
-            ['Evaluation', human, _build_link_handle('Set', [monkey, mammal])],
+            self.human,
+            ['Evaluation', self.human, _build_link_handle('Set', [self.monkey, self.mammal])],
         ]
         self.all_links.append(nested_link)  # type: ignore
 
@@ -226,8 +233,15 @@ class DatabaseMock(AtomDB):
                     raise ValueError(f"Invalid link type: {link[0]}")
         return answer
 
-    def get_all_nodes(self, node_type: str, names: bool = False) -> list[str]:
-        return self.all_nodes if node_type == 'Concept' else []
+    def get_all_nodes_handles(self, node_type: str) -> list[str]:
+        return self.all_nodes.keys() if node_type == self.node_type else []
+
+    def get_all_nodes_names(self, node_type: str) -> list[str]:
+        return (
+            [node["name"] for node in self.all_nodes.values()]
+            if node_type == self.node_type
+            else []
+        )
 
     def get_all_links(self, link_type: str, **kwargs) -> tuple[int | None, list[str]]:
         raise NotImplementedError()
@@ -242,7 +256,7 @@ class DatabaseMock(AtomDB):
 
     def _get_matched_node_name(self, node_type: str, substring: str) -> list[str]:
         answer = []
-        if node_type == 'Concept':
+        if node_type == self.node_type:
             for node in self.all_nodes:
                 _, name = _split_node_handle(node)
                 if substring in name:
@@ -292,15 +306,19 @@ class DatabaseMock(AtomDB):
     def clear_database(self):
         raise NotImplementedError()
 
-    def add_link(self, link_params: LinkParamsT, toplevel: bool = True) -> LinkT | None:
+    def add_link(self, link_params: LinkT, toplevel: bool = True) -> LinkT | None:
         raise NotImplementedError()
 
-    def add_node(self, node_params: NodeParamsT) -> NodeT | None:
+    def add_node(self, node_params: NodeT) -> NodeT | None:
         raise NotImplementedError()
 
-    def get_incoming_links(self, atom_handle: str, **kwargs) -> IncomingLinksT:
+    def get_incoming_links_handles(self, atom_handle: str, **kwargs) -> IncomingLinksT:
         links = self.incoming_set.get(atom_handle) or []
         return links
+
+    def get_incoming_links_atoms(self, atom_handle: str, **kwargs) -> IncomingLinksT:
+        links = self.incoming_set.get(atom_handle) or []
+        return [self._get_atom(link) for link in links]
 
     def get_atom_type(self, handle: str) -> str | None:
         raise NotImplementedError()
@@ -341,7 +359,7 @@ class DatabaseMock(AtomDB):
                     return True
             return False
 
-        for atom in self.all_nodes + self.all_links:
+        for atom in list(self.all_nodes.keys()) + self.all_links:
             if isinstance(atom, str):
                 named_type, name = _split_node_handle(atom)
                 if _append_atom(atom, named_type, name):
@@ -370,7 +388,7 @@ class DatabaseMock(AtomDB):
         text_index_id: str | None = None,
     ) -> list[str]:
         answer = []
-        for atom in self.all_nodes + self.all_links:
+        for atom in list(self.all_nodes.keys()) + self.all_links:
             if isinstance(atom, str):
                 named_type, name = _split_node_handle(atom)
                 if text_value in name:
@@ -385,7 +403,7 @@ class DatabaseMock(AtomDB):
 
     def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> list[str]:
         answer = []
-        if node_type == 'Concept':
+        if node_type == self.node_type:
             for node in self.all_nodes:
                 _, name = _split_node_handle(node)
                 if name.startswith(startswith):
@@ -398,65 +416,35 @@ class DatabaseMock(AtomDB):
 
 class DatabaseAnimals(DatabaseMock):
     def __init__(self):
-        human = _build_node_handle('Concept', 'human')
-        monkey = _build_node_handle('Concept', 'monkey')
-        chimp = _build_node_handle('Concept', 'chimp')
-        snake = _build_node_handle('Concept', 'snake')
-        earthworm = _build_node_handle('Concept', 'earthworm')
-        rhino = _build_node_handle('Concept', 'rhino')
-        triceratops = _build_node_handle('Concept', 'triceratops')
-        vine = _build_node_handle('Concept', 'vine')
-        ent = _build_node_handle('Concept', 'ent')
-        mammal = _build_node_handle('Concept', 'mammal')
-        animal = _build_node_handle('Concept', 'animal')
-        reptile = _build_node_handle('Concept', 'reptile')
-        dinosaur = _build_node_handle('Concept', 'dinosaur')
-        plant = _build_node_handle('Concept', 'plant')
-
-        self.all_nodes = [
-            human,
-            monkey,
-            chimp,
-            snake,
-            earthworm,
-            rhino,
-            triceratops,
-            vine,
-            ent,
-            mammal,
-            animal,
-            reptile,
-            dinosaur,
-            plant,
-        ]
+        super().__init__()
 
         self.all_links = [
-            ['Similarity', human, monkey],
-            ['Similarity', human, chimp],
-            ['Similarity', chimp, monkey],
-            ['Similarity', snake, earthworm],
-            ['Similarity', rhino, triceratops],
-            ['Similarity', snake, vine],
-            ['Similarity', human, ent],
-            ['Inheritance', human, mammal],
-            ['Inheritance', monkey, mammal],
-            ['Inheritance', chimp, mammal],
-            ['Inheritance', mammal, animal],
-            ['Inheritance', reptile, animal],
-            ['Inheritance', snake, reptile],
-            ['Inheritance', dinosaur, reptile],
-            ['Inheritance', triceratops, dinosaur],
-            ['Inheritance', earthworm, animal],
-            ['Inheritance', rhino, mammal],
-            ['Inheritance', vine, plant],
-            ['Inheritance', ent, plant],
-            ['Similarity', monkey, human],
-            ['Similarity', chimp, human],
-            ['Similarity', monkey, chimp],
-            ['Similarity', earthworm, snake],
-            ['Similarity', triceratops, rhino],
-            ['Similarity', vine, snake],
-            ['Similarity', ent, human],
+            ['Similarity', self.human, self.monkey],
+            ['Similarity', self.human, self.chimp],
+            ['Similarity', self.chimp, self.monkey],
+            ['Similarity', self.snake, self.earthworm],
+            ['Similarity', self.rhino, self.triceratops],
+            ['Similarity', self.snake, self.vine],
+            ['Similarity', self.human, self.ent],
+            ['Inheritance', self.human, self.mammal],
+            ['Inheritance', self.monkey, self.mammal],
+            ['Inheritance', self.chimp, self.mammal],
+            ['Inheritance', self.mammal, self.animal],
+            ['Inheritance', self.reptile, self.animal],
+            ['Inheritance', self.snake, self.reptile],
+            ['Inheritance', self.dinosaur, self.reptile],
+            ['Inheritance', self.triceratops, self.dinosaur],
+            ['Inheritance', self.earthworm, self.animal],
+            ['Inheritance', self.rhino, self.mammal],
+            ['Inheritance', self.vine, self.plant],
+            ['Inheritance', self.ent, self.plant],
+            ['Similarity', self.monkey, self.human],
+            ['Similarity', self.chimp, self.human],
+            ['Similarity', self.monkey, self.chimp],
+            ['Similarity', self.earthworm, self.snake],
+            ['Similarity', self.triceratops, self.rhino],
+            ['Similarity', self.vine, self.snake],
+            ['Similarity', self.ent, self.human],
         ]
 
         self.incoming_set = {}
@@ -464,7 +452,7 @@ class DatabaseAnimals(DatabaseMock):
         for link in self.all_links:
             self._add_incoming_set(str(link), link[1:])
 
-    def add_link(self, link_params: LinkParamsT, toplevel: bool = True) -> LinkT | None:
+    def add_link(self, link_params: LinkT, toplevel: bool = True) -> LinkT | None:
         if link_params in self.all_links:
             index = self.all_links.index(link_params)
             self.all_links[index] = link_params

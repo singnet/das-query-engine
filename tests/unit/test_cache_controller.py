@@ -1,6 +1,7 @@
 from typing import Set
 
 import pytest
+from hyperon_das_atomdb.database import NodeT
 
 from hyperon_das.cache.attention_broker_gateway import AttentionBrokerGateway
 from hyperon_das.cache.cache_controller import CacheController
@@ -49,8 +50,10 @@ class TestCacheController:
 
     def test_add_context(self):
         controller = self._build_controller()
+        node = NodeT(type='Context', name='blah')
+        node.handle = node._id = 'h1'
         context = Context(
-            {'name': 'blah', '_id': 'h1'},
+            node,
             [
                 [QueryAnswer({'handle': 'h1'}, None), QueryAnswer({'handle': 'h2'}, None)],
                 [QueryAnswer({'handle': 'h1'}, None), QueryAnswer({'handle': 'h3'}, None)],

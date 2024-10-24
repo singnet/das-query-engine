@@ -112,7 +112,7 @@ class DistributedAtomSpace:
                     message="'redis_mongo' AtomDB requires local query engine (i.e. 'query_engine=local')"
                 )
         else:
-            raise InvalidAtomDB(message="Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
+            raise InvalidAtomDB("Invalid AtomDB type. Choose either 'ram' or 'redis_mongo'")
 
     def _set_query_engine(self, **kwargs) -> None:
         if self.query_engine_type == 'local':
@@ -143,7 +143,7 @@ class DistributedAtomSpace:
         name: str,
         queries: List[Query] = [],
     ) -> Context:
-        context_node = self.add_node({'type': Context.CONTEXT_NODE_TYPE, 'name': name})
+        context_node = self.add_node(NodeT(type=Context.CONTEXT_NODE_TYPE, name=name))
         query_answer = [self.query(query, {'no_iterator': True}) for query in queries]
         context = Context(context_node, query_answer)
         self.cache_controller.add_context(context)
@@ -657,77 +657,83 @@ class DistributedAtomSpace:
         """
         self.query_engine.commit(**kwargs)
 
-    def add_node(self, node_params: Dict[str, Any]) -> Dict[str, Any]:
+    def add_node(self, node_params: NodeT) -> NodeT:
         """
         Adds a node to DAS.
 
-        A node is represented by a Python dict which may contain any number of keys associated to
-        values of any type (including lists, sets, nested dicts, etc.), which are all
-        recorded with the node, but must contain at least the keys "type" and "name"
-        mapping to strings which define the node uniquely, i.e. two nodes with the same
-        "type" and "name" are considered to be the same entity.
+        A node is represented by a dataclass which must contain at least the attributes `type` and
+        `name` mapping to strings which define the node uniquely, i.e. two nodes with the same
+        `type` and `name` are considered to be the same entity.
 
         Args:
-            node_params (Dict[str, Any]): A dictionary with node data. The following keys are mandatory:
-                - 'type': Node type
-                - 'name': Node name
+            node_params (NodeT): A dataclass with basic node data.
+                The following attributes are mandatory:
+                - `type`: Node type
+                - `name`: Node name
+                Optional attribute:
+                - `custom_attributes`: A dictionary with custom attributes, where keys are strings
+                                       and values can be [str | int | float | bool].
 
         Returns:
-            Dict[str, Any]: The information about the added node, including its unique handle and
-            other fields used internally in DAS.
+            NodeT: The complete dataclass representing the added node, including its unique handle
+            and other fields used internally in DAS.
 
         Raises:
-            AddNodeException: If 'type' or 'name' fields are missing or invalid somehow.
+            AddNodeException: If `type` or `name` fields are missing or invalid somehow.
 
         Examples:
             >>> das = DistributedAtomSpace()
-            >>> node_params = {
-                    'type': 'Reactome',
-                    'name': 'Reactome:R-HSA-164843',
-                }
+            >>> node_params = NodeT(
+                    type='Reactome',
+                    name='Reactome:R-HSA-164843',
+                    custom_attributes={'created_at': '2021-09-01'},  # Optional
+                )
             >>> das.add_node(node_params)
         """
         return self.backend.add_node(node_params)
 
-    def add_link(self, link_params: Dict[str, Any]) -> Dict[str, Any]:
+    def add_link(self, link_params: LinkT) -> LinkT:
         """
         Adds a link to DAS.
 
-        A link is represented by a Python dict which may contain any number of keys associated to
-        values of any type (including lists, sets, nested dicts, etc.), which are all
-        recorded with the link, but must contain at least the keys "type" and "targets".
-        "type" should map to a string and "targets" to a list of Python dict, each of them being
-        itself a representation of either a node or a nested link. "type" and "targets" define the
-        link uniquely, i.e. two links with the same "type" and "targets" are considered to be the
-        same entity.
+        A link is represented by a dataclass which must contain at least the attributes `type` and
+        `targets`. Where `type` should map to a string and `targets` to a list of NodeT or LinkT
+        dataclasses, each of them being itself a representation of either a node or a nested link.
+        `type` and `targets` define the link uniquely, i.e. two links with the same `type` and
+        `targets` are considered to be the same entity.
 
         Args:
-            link_params (Dict[str, Any]): A dictionary with link data. The following keys are mandatory:
-                - 'type': The type of the link.
-                - 'targets': A list of target elements.
+            link_params (LinkT): A dataclass with the link data.
+                The following keys are mandatory:
+                - `type`: The type of the link.
+                - `targets`: A list of target elements of type NodeT or LinkT.
+                Optional attribute:
+                - `custom_attributes`: A dictionary with custom attributes, where keys are strings
+                                       and values can be [str | int | float | bool].
 
         Returns:
-            Dict[str, Any]: The information about the added link, including its unique handle and
+            LinkT: The information about the added link, including its unique handle and
             other fields used internally in DAS.
 
         Raises:
-            AddLinkException: If the 'type' or 'targets' fields are missing or invalid somehow.
+            AddLinkException: If the `type` or `targets` fields are missing or invalid somehow.
 
         Examples:
             >>> das = DistributedAtomSpace()
-            >>> link_params = {
-                    'type': 'Evaluation',
-                    'targets': [
-                        {'type': 'Predicate', 'name': 'Predicate:has_name'},
-                        {
-                            'type': 'Set',
-                            'targets': [
-                                {'type': 'Reactome', 'name': 'Reactome:R-HSA-164843'},
-                                {'type': 'Concept', 'name': 'Concept:2-LTR circle formation'},
+            >>> link_params = LinkT(
+                    type='Evaluation',
+                    targets=[
+                        NodeT(type='Predicate', name='Predicate:has_name'),
+                        LinkT(
+                            type='Set',
+                            targets=[
+                                NodeT(type='Reactome', name='Reactome:R-HSA-164843'),
+                                NodeT(type='Concept', name='Concept:2-LTR circle formation'),
                             ],
-                        },
+                        ),
                     ],
-                }
+                    custom_attributes={'confidence': 0.9},  # Optional
+                )
             >>> das.add_link(link_params)
         """
         return self.backend.add_link(link_params)
