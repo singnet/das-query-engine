@@ -188,13 +188,13 @@ class LocalQueryEngine(QueryEngine):
             return bool(atoms)
         return False
 
-    def get_atom(self, handle: str, **kwargs) -> Dict[str, Any]:
+    def get_atom(self, handle: str, **kwargs) -> AtomT:
         try:
             return self.local_backend.get_atom(handle, **kwargs)
         except AtomDoesNotExist as exception:
             das_error(exception)
 
-    def get_atoms(self, handles: str, **kwargs) -> List[Dict[str, Any]]:
+    def get_atoms(self, handles: str, **kwargs) -> List[AtomT]:
         return [self.local_backend.get_atom(handle, **kwargs) for handle in handles]
 
     def get_link_handles(self, link_filter: LinkFilter) -> HandleSetT:
@@ -230,7 +230,7 @@ class LocalQueryEngine(QueryEngine):
         self,
         query: Query,
         parameters: dict[str, Any] | None = None,
-    ) -> Iterator[QueryAnswer] | list[dict[str, Any]]:
+    ) -> Iterator[QueryAnswer] | list[AtomT]:
         no_iterator = parameters.get("no_iterator", False) if parameters else False
         if no_iterator:
             logger().debug(

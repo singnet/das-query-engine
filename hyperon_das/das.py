@@ -230,7 +230,7 @@ class DistributedAtomSpace:
             handle (HandleT): Atom's handle.
 
         Returns:
-            Dict: A Python dict with all atom data.
+            AtomT: A dataclass instance representing an atom.
 
         Raises:
             AtomDoesNotExist: If the corresponding atom doesn't exist.
@@ -238,18 +238,19 @@ class DistributedAtomSpace:
         Examples:
             >>> das = DistributedAtomSpace()
             >>> human_handle = das.compute_node_handle(node_type='Concept', node_name='human')
-            >>> result = das.get_atom(human_handle)
-            >>> print(result)
-            {
-                'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
-                'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
-                'name': 'human',
-                'named_type': 'Concept'
-            }
+            >>> node = das.get_atom(human_handle)
+            >>> print(node)
+            Node(_id: 'af12f10f9ae2002a1607ba0b47ba8407', handle: 'af12f10f9ae2002a1607ba0b47ba8407',
+            composite_type_hash: 'd99a604c79ce3c2e76a2f43488d5d4c3', named_type: 'Concept',
+            custom_attributes: {}, name: 'human')
+            >>> print(node.to_dict())
+            {'_id': 'af12f10f9ae2002a1607ba0b47ba8407', 'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
+            'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3', 'named_type': 'Concept',
+            'custom_attributes': {}, 'name': 'human'}
         """
         return self.query_engine.get_atom(handle, no_target_format=True)
 
-    def get_atoms(self, handles: HandleListT) -> List[AtomT]:
+    def get_atoms(self, handles: HandleListT) -> list[AtomT]:
         """
         Retrieve atoms given a list of handles.
 
@@ -264,7 +265,7 @@ class DistributedAtomSpace:
             handles (HandleListT): List with Atom's handles.
 
         Returns:
-            Dict: A list of Python dicts with all atom data.
+            list[AtomT]: A list of Atom instances with all atom data.
 
         Raises:
             AtomDoesNotExist: If some of the atoms doesn't exist.
@@ -275,19 +276,13 @@ class DistributedAtomSpace:
             >>> animal_handle = das.compute_node_handle(node_type='Concept', node_name='monkey')
             >>> result = das.get_atoms([human_handle, animal_handle])
             >>> print(result[0])
+            Node(_id: 'af12f10f9ae2002a1607ba0b47ba8407', handle: 'af12f10f9ae2002a1607ba0b47ba8407',
+            composite_type_hash: 'd99a604c79ce3c2e76a2f43488d5d4c3', named_type: 'Concept',
+            custom_attributes: {}, name: 'human')
             >>> print(result[1])
-            {
-                'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
-                'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
-                'name': 'human',
-                'named_type': 'Concept'
-            }
-            {
-                'handle': '1cdffc6b0b89ff41d68bec237481d1e1'
-                'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
-                'name': 'monkey',
-                'named_type': 'Concept'
-            }
+            Node(_id: '1cdffc6b0b89ff41d68bec237481d1e1', handle: '1cdffc6b0b89ff41d68bec237481d1e1',
+            composite_type_hash: 'd99a604c79ce3c2e76a2f43488d5d4c3', named_type: 'Concept',
+            custom_attributes: {}, name: 'monkey')
         """
         return self.query_engine.get_atoms(handles, no_target_format=True)
 
@@ -300,24 +295,22 @@ class DistributedAtomSpace:
             node_name (str): Node name
 
         Returns:
-            Dict: A Python dict with all node data.
+            NodeT: A dataclass instance representing the node.
 
         Raises:
             AtomDoesNotExist: If the corresponding node doesn't exist.
 
         Examples:
             >>> das = DistributedAtomSpace()
-            >>> result = das.get_node(
-                    node_type='Concept',
-                    node_name='human'
-                )
-            >>> print(result)
-            {
-                'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
-                'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3',
-                'name': 'human',
-                'named_type': 'Concept'
-            }
+            >>> node = das.get_node(node_type='Concept', node_name='human')
+            >>> print(node)
+            Node(_id: 'af12f10f9ae2002a1607ba0b47ba8407', handle: 'af12f10f9ae2002a1607ba0b47ba8407',
+            composite_type_hash: 'd99a604c79ce3c2e76a2f43488d5d4c3', named_type: 'Concept',
+            custom_attributes: {}, name: 'human')
+            >>> print(node.to_dict())
+            {'_id': 'af12f10f9ae2002a1607ba0b47ba8407', 'handle': 'af12f10f9ae2002a1607ba0b47ba8407',
+            'composite_type_hash': 'd99a604c79ce3c2e76a2f43488d5d4c3', 'named_type': 'Concept',
+            'custom_attributes': {}, 'name': 'human'}
         """
         node_handle = self.backend.node_handle(node_type, node_name)
         return self.get_atom(node_handle)
@@ -325,14 +318,14 @@ class DistributedAtomSpace:
     def get_link(self, link_type: str, link_targets: HandleListT) -> LinkT:
         """
         Retrieve a link given its type and list of targets.
-        Targets are hashes of the nodes these hashes or handles can be created using the function 'compute_node_handle'.
+        Targets are hashes (aka handles) of other atoms, like nodes or links.
 
         Args:
             link_type (str): Link type
             link_targets (HandleListT): List of target handles.
 
         Returns:
-            Dict: A Python dict with all link data.
+            LinkT: A dataclass instance representing the link.
 
         Raises:
             AtomDoesNotExist: If the corresponding link doesn't exist.
@@ -346,22 +339,13 @@ class DistributedAtomSpace:
                     link_targets=[human_handle, monkey_handle],
                 )
             >>> print(result)
-            {
-                'handle': 'bad7472f41a0e7d601ca294eb4607c3a',
-                'composite_type_hash': 'ed73ea081d170e1d89fc950820ce1cee',
-                'is_toplevel': True,
-                'composite_type': [
-                    'a9dea78180588431ec64d6bc4872fdbc',
-                    'd99a604c79ce3c2e76a2f43488d5d4c3',
-                    'd99a604c79ce3c2e76a2f43488d5d4c3'
-                ],
-                'named_type': 'Similarity',
-                'named_type_hash': 'a9dea78180588431ec64d6bc4872fdbc',
-                'targets': [
-                    'af12f10f9ae2002a1607ba0b47ba8407',
-                    '1cdffc6b0b89ff41d68bec237481d1e1'
-                ]
-            }
+            Link(_id: 'bad7472f41a0e7d601ca294eb4607c3a', handle: 'bad7472f41a0e7d601ca294eb4607c3a',
+            composite_type_hash: 'ed73ea081d170e1d89fc950820ce1cee', named_type: 'Similarity',
+            custom_attributes: {}, composite_type: ['a9dea78180588431ec64d6bc4872fdbc',
+            'd99a604c79ce3c2e76a2f43488d5d4c3', 'd99a604c79ce3c2e76a2f43488d5d4c3'],
+            named_type_hash: 'a9dea78180588431ec64d6bc4872fdbc',
+            targets: ['af12f10f9ae2002a1607ba0b47ba8407', '1cdffc6b0b89ff41d68bec237481d1e1'],
+            is_toplevel: true, targets_documents: [])
         """
         link_handle = self.backend.link_handle(link_type, link_targets)
         return self.get_atom(link_handle)
@@ -374,7 +358,7 @@ class DistributedAtomSpace:
             link_filter (LinkFilter): Filtering criteria to be used to select links
 
         Returns:
-            List[LinkT]: A list of link documents
+            List[LinkT]: A list of Links.
         """
         return self.query_engine.get_links(link_filter)
 
@@ -401,15 +385,16 @@ class DistributedAtomSpace:
             handles_only (bool, optional): Returns a list of links handles.
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries containing detailed information of the atoms
-            or a list of strings containing the atom handles
+            List[str] (when `handles_only` is True): A list of strings containing the link handles.
+            List[LinkT] (when `handdles_only` is False or omitted): A list of Link instances
+                holding detailed information about the incoming links.
 
         Examples:
             >>> das = DistributedAtomSpace()
             >>> rhino = das.compute_node_handle('Concept', 'rhino')
             >>> links = das.get_incoming_links(rhino)
             >>> for link in links:
-            >>>     print(link['type'], link['targets'])
+            >>>     print(link.type, link.targets)
             Similarity ['d03e59654221c1e8fcda404fd5c8d6cb', '99d18c702e813b07260baf577c60c455']
             Similarity ['99d18c702e813b07260baf577c60c455', 'd03e59654221c1e8fcda404fd5c8d6cb']
             Inheritance ['99d18c702e813b07260baf577c60c455', 'bdfe4e7a431f73386f37c6448afe5840']
@@ -480,19 +465,21 @@ class DistributedAtomSpace:
 
         Examples:
 
-            >>> das.add_link({
-                "type": "Expression",
-                "targets": [
-                    {"type": "Symbol", "name": "Test"},
-                    {
-                        "type": "Expression",
-                        "targets": [
-                            {"type": "Symbol", "name": "Test"},
-                            {"type": "Symbol", "name": "2"}
+            >>> das.add_link(
+                    LinkT(
+                        type="Expression",
+                        targets=[
+                            NodeT(type="Symbol", name="Test"),
+                            LinkT(
+                                type="Expression",
+                                targets=[
+                                    NodeT(type="Symbol", name="Test"),
+                                    NodeT(type="Symbol", name="2"),
+                                ]
+                            )
                         ]
-                    }
-                ]
-            })
+                    )
+                )
             >>> query_params = {"toplevel_only": False}
             >>> q1 = {
                 "atom_type": "link",
@@ -537,9 +524,7 @@ class DistributedAtomSpace:
         """
         return self.query_engine.query(query, parameters)
 
-    def custom_query(
-        self, index_id: str, query: Query, **kwargs
-    ) -> Union[Iterator, List[Dict[str, Any]]]:
+    def custom_query(self, index_id: str, query: Query, **kwargs) -> Union[Iterator, List[AtomT]]:
         """
         Perform a query using a previously created custom index.
 
@@ -565,7 +550,7 @@ class DistributedAtomSpace:
             NotImplementedError: If called from Local DAS in RAM only.
 
         Returns:
-            Union[Iterator, List[Dict[str, Any]]]: An iterator or list of dict containing atom data.
+            Iterator | List[AtomT]: An iterator or a list of Atom instances (Nodes or Links).
 
         Examples:
             >>> das.custom_query(index_id='index_123', query={'tag': 'DAS'})
@@ -589,7 +574,7 @@ class DistributedAtomSpace:
                 eg: {'name': 'human'}
 
         Returns:
-            HandleListT: List of atom's ids
+            HandleListT: List of atoms handles
         """
 
         return self.query_engine.get_atoms_by_field(
@@ -610,7 +595,7 @@ class DistributedAtomSpace:
             field (Optional[str]): Field to check the text_value
             text_index_id (Optional[str]): Text index
         Returns:
-            HandleListT: List of atom's ids
+            HandleListT: List of atom handles
         """
         return self.query_engine.get_atoms_by_text_field(text_value, field, text_index_id)
 
@@ -623,7 +608,7 @@ class DistributedAtomSpace:
             node_type (str): Node type
             startswith (str): String to search for
         Returns:
-            HandleListT: List of atom's ids
+            HandleListT: List of atoms handles
         """
         return self.query_engine.get_node_by_name_starting_with(node_type, startswith)
 
@@ -894,7 +879,7 @@ class DistributedAtomSpace:
         host: Optional[str] = None,
         port: Optional[int] = None,
         **kwargs,
-    ) -> Union[None, List[dict]]:
+    ) -> Union[None, List[AtomT]]:
         """
         Fetch, from a DAS Server, all atoms that match the passed query or
         all atoms in the server if None is passed as query.
@@ -913,8 +898,8 @@ class DistributedAtomSpace:
         allowed as well.
 
         Args:
-            query (Optional[Union[List[dict], dict]]): A pattern described as a link (possibly with nested links)
-                with nodes and variables used to query the knowledge base. Defaults to None
+            query (Optional[Union[List[dict], dict]]): A pattern described as a link (possibly with
+                nested links) with nodes and variables used to query the knowledge base. Defaults to None
             host (Optional[str], optional): Address to remote server. Defaults to None.
             port (Optional[int], optional): Port to remote server. Defaults to None.
 
@@ -922,8 +907,8 @@ class DistributedAtomSpace:
             ValueError: If parameters ar somehow invalid.
 
         Returns:
-            Union[None, List[dict]]: Returns None.
-            If runing on the server returns a list of dictionaries containing detailed information of the atoms.
+            Union[None, List[AtomT]]: Returns None.
+            If running on the server returns a list of Atom instances.
 
         Examples:
             >>> query = {
