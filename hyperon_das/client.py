@@ -3,7 +3,7 @@ import pickle
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from hyperon_das_atomdb import AtomDoesNotExist
-from hyperon_das_atomdb.database import IncomingLinksT
+from hyperon_das_atomdb.database import AtomT, IncomingLinksT
 from requests import exceptions, sessions
 
 from hyperon_das.exceptions import (
@@ -95,7 +95,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise AtomDoesNotExist(message='Nonexistent atom')
+                raise AtomDoesNotExist('Nonexistent atom')
             else:
                 raise e
 
@@ -116,7 +116,7 @@ class FunctionsClient:
             return self._send_request(payload)
         except HTTPError as e:
             if e.status_code == 404:
-                raise AtomDoesNotExist(message='Nonexistent atom')
+                raise AtomDoesNotExist('Nonexistent atom')
             elif e.status_code == 400:
                 raise ValueError(str(e))
             else:
@@ -126,7 +126,7 @@ class FunctionsClient:
         self,
         query: Dict[str, Any],
         parameters: Optional[Dict[str, Any]] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[AtomT]:
         try:
             payload = {
                 'action': 'query',
@@ -201,7 +201,7 @@ class FunctionsClient:
             else:
                 raise e
 
-    def custom_query(self, index_id: str, query: Query, **kwargs) -> List[Dict[str, Any]]:
+    def custom_query(self, index_id: str, query: Query, **kwargs) -> List[AtomT]:
         payload = {
             'action': 'custom_query',
             'input': {

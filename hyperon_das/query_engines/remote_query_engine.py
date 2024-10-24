@@ -82,14 +82,6 @@ class RemoteQueryEngine(QueryEngine):
         links = self.local_query_engine.get_incoming_links(atom_handle, **kwargs)
         remote_links = self.remote_das.get_incoming_links(atom_handle, **kwargs)
         links.extend(remote_links)
-        if (
-            links
-            and kwargs.get('targets_document')
-            and isinstance(links, list)
-            and isinstance(links[0], dict)
-            and 'targets_document' in links[0]
-        ):
-            links = [(link, link.pop('targets_document', [])) for link in links]
         return links
 
     def custom_query(self, index_id: str, query: Query, **kwargs) -> Iterator:

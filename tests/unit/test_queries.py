@@ -1,3 +1,5 @@
+from hyperon_das_atomdb.database import LinkT, NodeT
+
 from hyperon_das.constants import QueryOutputFormat
 from hyperon_das.das import DistributedAtomSpace
 
@@ -23,7 +25,7 @@ def _print_query_answer(query_answer, typed=False):
 def _check_query_answer(query_answer, expected_answer):
     assert len(query_answer) == len(expected_answer)
     for answer in query_answer:
-        handles = [link["handle"] for link in answer[1]]
+        handles = [link.handle for link in answer[1]]
         for expected in expected_answer:
             if len(expected) != len(handles):
                 continue
@@ -36,256 +38,308 @@ def _check_query_answer(query_answer, expected_answer):
 class TestQueries:
     def setup_animals_kb(self, das: DistributedAtomSpace):
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "human"},
-                    {"type": "Concept", "name": "monkey"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "human"}),
+                        NodeT(**{"type": "Concept", "name": "monkey"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "human"},
-                    {"type": "Concept", "name": "chimp"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "human"}),
+                        NodeT(**{"type": "Concept", "name": "chimp"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "chimp"},
-                    {"type": "Concept", "name": "monkey"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "chimp"}),
+                        NodeT(**{"type": "Concept", "name": "monkey"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "snake"},
-                    {"type": "Concept", "name": "earthworm"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "snake"}),
+                        NodeT(**{"type": "Concept", "name": "earthworm"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "rhino"},
-                    {"type": "Concept", "name": "triceratops"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "rhino"}),
+                        NodeT(**{"type": "Concept", "name": "triceratops"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "snake"},
-                    {"type": "Concept", "name": "vine"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "snake"}),
+                        NodeT(**{"type": "Concept", "name": "vine"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "human"},
-                    {"type": "Concept", "name": "ent"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "human"}),
+                        NodeT(**{"type": "Concept", "name": "ent"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "monkey"},
-                    {"type": "Concept", "name": "human"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "monkey"}),
+                        NodeT(**{"type": "Concept", "name": "human"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "chimp"},
-                    {"type": "Concept", "name": "human"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "chimp"}),
+                        NodeT(**{"type": "Concept", "name": "human"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "monkey"},
-                    {"type": "Concept", "name": "chimp"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "monkey"}),
+                        NodeT(**{"type": "Concept", "name": "chimp"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "earthworm"},
-                    {"type": "Concept", "name": "snake"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "earthworm"}),
+                        NodeT(**{"type": "Concept", "name": "snake"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "triceratops"},
-                    {"type": "Concept", "name": "rhino"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "triceratops"}),
+                        NodeT(**{"type": "Concept", "name": "rhino"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "vine"},
-                    {"type": "Concept", "name": "snake"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "vine"}),
+                        NodeT(**{"type": "Concept", "name": "snake"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Similarity",
-                "targets": [
-                    {"type": "Concept", "name": "ent"},
-                    {"type": "Concept", "name": "human"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Similarity",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "ent"}),
+                        NodeT(**{"type": "Concept", "name": "human"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "human"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "human"}),
+                        NodeT(**{"type": "Concept", "name": "mammal"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "monkey"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "monkey"}),
+                        NodeT(**{"type": "Concept", "name": "mammal"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "chimp"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "chimp"}),
+                        NodeT(**{"type": "Concept", "name": "mammal"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "mammal"},
-                    {"type": "Concept", "name": "animal"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "mammal"}),
+                        NodeT(**{"type": "Concept", "name": "animal"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "reptile"},
-                    {"type": "Concept", "name": "animal"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "reptile"}),
+                        NodeT(**{"type": "Concept", "name": "animal"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "snake"},
-                    {"type": "Concept", "name": "reptile"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "snake"}),
+                        NodeT(**{"type": "Concept", "name": "reptile"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "dinosaur"},
-                    {"type": "Concept", "name": "reptile"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "dinosaur"}),
+                        NodeT(**{"type": "Concept", "name": "reptile"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "triceratops"},
-                    {"type": "Concept", "name": "dinosaur"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "triceratops"}),
+                        NodeT(**{"type": "Concept", "name": "dinosaur"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "earthworm"},
-                    {"type": "Concept", "name": "animal"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "earthworm"}),
+                        NodeT(**{"type": "Concept", "name": "animal"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "rhino"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "rhino"}),
+                        NodeT(**{"type": "Concept", "name": "mammal"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "vine"},
-                    {"type": "Concept", "name": "plant"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "vine"}),
+                        NodeT(**{"type": "Concept", "name": "plant"}),
+                    ],
+                }
+            )
         )
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "ent"},
-                    {"type": "Concept", "name": "plant"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "ent"}),
+                        NodeT(**{"type": "Concept", "name": "plant"}),
+                    ],
+                }
+            )
         )
 
     def test_nested_pattern(self):
         das = DistributedAtomSpace()
         das.add_link(
-            {
-                "type": "Expression",
-                "targets": [
-                    {"type": "Symbol", "name": "Test"},
-                    {
-                        "type": "Expression",
-                        "targets": [
-                            {"type": "Symbol", "name": "Test"},
-                            {"type": "Symbol", "name": "2"},
+            LinkT(
+                type="Expression",
+                targets=[
+                    NodeT(type="Symbol", name="Test"),
+                    LinkT(
+                        type="Expression",
+                        targets=[
+                            NodeT(type="Symbol", name="Test"),
+                            NodeT(type="Symbol", name="2"),
                         ],
-                    },
+                    ),
                 ],
-            }
+            )
         )
         query_params = {
             "toplevel_only": False,
@@ -309,7 +363,7 @@ class TestQueries:
         }
         answer = das.query(q1, query_params)
         assert len(answer) == 1
-        assert answer[0].subgraph["handle"] == "dbcf1c7b610a5adea335bf08f6509978"
+        assert answer[0].subgraph.handle == "dbcf1c7b610a5adea335bf08f6509978"
 
     def test_conjunction(self):
         das = DistributedAtomSpace()
@@ -382,5 +436,5 @@ class TestQueries:
         for query_answer in das.query_engine._recursive_query(exp):
             link = query_answer.subgraph
             assignment = query_answer.assignment
-            assert assignment.mapping["v1"] == link["targets"][0]["handle"]
-            assert assignment.mapping["v2"] == link["targets"][1]["handle"]
+            assert assignment.mapping["v1"] == link.targets_documents[0].handle
+            assert assignment.mapping["v2"] == link.targets_documents[1].handle

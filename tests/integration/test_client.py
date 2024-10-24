@@ -1,4 +1,5 @@
 import pytest
+from hyperon_das_atomdb.database import LinkT
 
 import hyperon_das.link_filters as link_filter
 from hyperon_das.client import FunctionsClient
@@ -14,19 +15,19 @@ class TestVultrClientIntegration:
 
     def test_get_atom(self, server: FunctionsClient):
         result = server.get_atom(handle=metta_animal_base_handles.human)
-        assert result['handle'] == metta_animal_base_handles.human
-        assert result['name'] == '"human"'
-        assert result['named_type'] == 'Symbol'
+        assert result.handle == metta_animal_base_handles.human
+        assert result.name == '"human"'
+        assert result.named_type == 'Symbol'
 
         result = server.get_atom(handle=metta_animal_base_handles.monkey)
-        assert result['handle'] == metta_animal_base_handles.monkey
-        assert result['name'] == '"monkey"'
-        assert result['named_type'] == 'Symbol'
+        assert result.handle == metta_animal_base_handles.monkey
+        assert result.name == '"monkey"'
+        assert result.named_type == 'Symbol'
 
         result = server.get_atom(handle=metta_animal_base_handles.similarity_human_monkey)
-        assert result['handle'] == metta_animal_base_handles.similarity_human_monkey
-        assert result['named_type'] == 'Expression'
-        assert result['targets'] == [
+        assert result.handle == metta_animal_base_handles.similarity_human_monkey
+        assert result.named_type == 'Expression'
+        assert result.targets == [
             metta_animal_base_handles.Similarity,
             metta_animal_base_handles.human,
             metta_animal_base_handles.monkey,
@@ -61,10 +62,10 @@ class TestVultrClientIntegration:
         assert len(answer) == 12
 
         for link in answer:
-            if link.subgraph['handle'] == metta_animal_base_handles.inheritance_human_mammal:
+            if link.subgraph.handle == metta_animal_base_handles.inheritance_human_mammal:
                 break
 
-        handles = [target['handle'] for target in link.subgraph['targets']]
+        handles = [target.handle for target in link.subgraph.targets_documents]
 
         assert len(handles) == 3
         assert handles[1] == metta_animal_base_handles.human
@@ -86,10 +87,10 @@ class TestVultrClientIntegration:
         assert len(answer) == 14
 
         for link in answer:
-            if link.subgraph['handle'] == metta_animal_base_handles.similarity_human_monkey:
+            if link.subgraph.handle == metta_animal_base_handles.similarity_human_monkey:
                 break
 
-        handles = [target['handle'] for target in link.subgraph['targets']]
+        handles = [target.handle for target in link.subgraph.targets_documents]
 
         assert len(handles) == 3
         assert handles[1] == metta_animal_base_handles.human
@@ -109,12 +110,12 @@ class TestVultrClientIntegration:
 
         expected_atoms = [server.get_atom(handle) for handle in expected_handles]
 
-        expected_atoms_targets = []
+        expected_atoms_targets: dict[str, tuple[dict, list[dict]]] = {}
         for atom in expected_atoms:
-            targets_document = []
-            for target in atom['targets']:
-                targets_document.append(server.get_atom(target))
-            expected_atoms_targets.append([atom, targets_document])
+            targets_documents: list[dict] = []
+            for target in atom.targets:
+                targets_documents.append(server.get_atom(target).to_dict())
+            expected_atoms_targets[atom.handle] = (atom.to_dict(), targets_documents)
 
         response_handles = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=True
@@ -138,23 +139,31 @@ class TestVultrClientIntegration:
         )
         assert len(response_atoms) == 8
         for atom in response_atoms:
-            assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"
-            if len(atom["targets"]) == 3:
-                assert atom in expected_atoms
+            assert isinstance(
+                atom, LinkT
+            ), f"Each item in body must be a LinkT instance. Received: {atom}"
+            assert len(atom.targets) == 3
+            assert atom.handle in [a.handle for a in expected_atoms]
 
         response_atoms = server.get_incoming_links(metta_animal_base_handles.human)
         assert len(response_atoms) == 8
         for atom in response_atoms:
-            assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"
-            if len(atom["targets"]) == 3:
-                assert atom in expected_atoms
+            assert isinstance(
+                atom, LinkT
+            ), f"Each item in body must be a LinkT instance. Received: {atom}"
+            assert len(atom.targets) == 3
+            assert atom.handle in [a.handle for a in expected_atoms]
 
         response_atoms_targets = server.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=False
         )
         assert len(response_atoms_targets) == 8
         for atom in response_atoms_targets:
-            assert isinstance(atom, dict), f"Each item in body must be a dict. Received: {atom}"
-            atom_targets = atom.pop('targets_document')
-            if len(atom_targets) == 3:
-                assert [atom, atom_targets] in expected_atoms_targets
+            assert isinstance(
+                atom, LinkT
+            ), f"Each item in body must be a LinkT instance. Received: {atom}"
+            atom_targets = [a.to_dict() for a in atom.targets_documents]
+            assert len(atom_targets) == 3
+            assert atom.handle in expected_atoms_targets
+            for target in expected_atoms_targets[atom.handle][1]:
+                assert target in atom_targets

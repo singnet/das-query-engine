@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from hyperon_das_atomdb import AtomDoesNotExist
+from hyperon_das_atomdb.database import AtomT, NodeT
 
 import hyperon_das.link_filters as link_filters
 from hyperon_das import DistributedAtomSpace
@@ -12,11 +13,12 @@ from .helpers import metta_animal_base_handles
 from .remote_das_info import remote_das_host, remote_das_port
 
 
-def _check_docs(actual, expected):
+def _check_docs(actual: list[AtomT], expected: list[dict]):
     assert len(actual) == len(expected)
-    for dict1, dict2 in zip(actual, expected):
-        for key in dict2.keys():
-            assert dict1[key] == dict2[key]
+    for doc1, doc2 in zip(actual, expected):
+        doc1_as_dict = doc1.to_dict()
+        for key in doc2.keys():
+            assert doc1_as_dict[key] == doc2[key]
     return True
 
 
@@ -53,14 +55,14 @@ class TestRemoteDistributedAtomSpace:
 
     def test_get_atom(self, remote_das: DistributedAtomSpace):
         result = remote_das.get_atom(handle=metta_animal_base_handles.human)
-        assert result['handle'] == metta_animal_base_handles.human
-        assert result['name'] == '"human"'
-        assert result['named_type'] == 'Symbol'
+        assert result.handle == metta_animal_base_handles.human
+        assert result.name == '"human"'
+        assert result.named_type == 'Symbol'
 
         result = remote_das.get_atom(handle=metta_animal_base_handles.inheritance_dinosaur_reptile)
-        assert result['handle'] == metta_animal_base_handles.inheritance_dinosaur_reptile
-        assert result['named_type'] == 'Expression'
-        assert result['targets'] == [
+        assert result.handle == metta_animal_base_handles.inheritance_dinosaur_reptile
+        assert result.named_type == 'Expression'
+        assert result.targets == [
             metta_animal_base_handles.Inheritance,
             metta_animal_base_handles.dinosaur,
             metta_animal_base_handles.reptile,
@@ -89,8 +91,8 @@ class TestRemoteDistributedAtomSpace:
         links = remote_das.get_links(link_filters.NamedType('Expression'))
         inheritance_links = []
         for link in links:
-            if metta_animal_base_handles.Inheritance in link['targets']:
-                inheritance_links.append(link['handle'])
+            if metta_animal_base_handles.Inheritance in link.targets:
+                inheritance_links.append(link.handle)
         assert len(inheritance_links) == 13
         assert sorted(inheritance_links) == sorted(all_inheritance)
 
@@ -99,8 +101,8 @@ class TestRemoteDistributedAtomSpace:
         )
         inheritance_links = []
         for link in links:
-            if metta_animal_base_handles.Inheritance in link['targets']:
-                inheritance_links.append(link['handle'])
+            if metta_animal_base_handles.Inheritance in link.targets:
+                inheritance_links.append(link.handle)
         assert len(inheritance_links) == 13
         assert sorted(inheritance_links) == sorted(all_inheritance)
 
@@ -114,7 +116,7 @@ class TestRemoteDistributedAtomSpace:
                 'Expression',
             )
         )
-        assert link[0]['handle'] == metta_animal_base_handles.inheritance_earthworm_animal
+        assert link[0].handle == metta_animal_base_handles.inheritance_earthworm_animal
 
     def test_get_incoming_links(self, remote_das: DistributedAtomSpace):
         expected_handles = [
@@ -124,14 +126,14 @@ class TestRemoteDistributedAtomSpace:
             metta_animal_base_handles.vine_typedef,
         ]
 
-        expected_atoms = [remote_das.get_atom(handle) for handle in expected_handles]
+        expected_atoms = [remote_das.get_atom(handle).to_dict() for handle in expected_handles]
 
         response_atoms = remote_das.get_incoming_links(
             metta_animal_base_handles.vine, handles_only=False
         )
         for atom in response_atoms:
-            if len(atom["targets"]) == 3:
-                assert atom in expected_atoms
+            if len(atom.targets) == 3:
+                assert atom.to_dict() in expected_atoms
 
     def test_count_atoms(self, remote_das: DistributedAtomSpace):
         response = remote_das.count_atoms(parameters={})
@@ -165,87 +167,87 @@ class TestRemoteDistributedAtomSpace:
         assert len(answer) == 4
 
         for _, link in answer:
-            assert link['handle'] in all_inheritance_mammal
-            if link['handle'] == metta_animal_base_handles.inheritance_chimp_mammal:
+            assert link.handle in all_inheritance_mammal
+            if link.handle == metta_animal_base_handles.inheritance_chimp_mammal:
                 assert _check_docs(
-                    link['targets'],
+                    link.targets_documents,
                     [
                         {
                             'handle': metta_animal_base_handles.Inheritance,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': "Inheritance",
                         },
                         {
                             'handle': metta_animal_base_handles.chimp,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': '"chimp"',
                         },
                         {
                             'handle': metta_animal_base_handles.mammal,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': '"mammal"',
                         },
                     ],
                 )
-            elif link['handle'] == metta_animal_base_handles.inheritance_human_mammal:
+            elif link.handle == metta_animal_base_handles.inheritance_human_mammal:
                 assert _check_docs(
-                    link['targets'],
+                    link.targets_documents,
                     [
                         {
                             'handle': metta_animal_base_handles.Inheritance,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': "Inheritance",
                         },
                         {
                             'handle': metta_animal_base_handles.human,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': '"human"',
                         },
                         {
                             'handle': metta_animal_base_handles.mammal,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': '"mammal"',
                         },
                     ],
                 )
-            elif link['handle'] == metta_animal_base_handles.inheritance_monkey_mammal:
+            elif link.handle == metta_animal_base_handles.inheritance_monkey_mammal:
                 assert _check_docs(
-                    link['targets'],
+                    link.targets_documents,
                     [
                         {
                             'handle': metta_animal_base_handles.Inheritance,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': "Inheritance",
                         },
                         {
                             'handle': metta_animal_base_handles.monkey,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': '"monkey"',
                         },
                         {
                             'handle': metta_animal_base_handles.mammal,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': '"mammal"',
                         },
                     ],
                 )
-            elif link['handle'] == metta_animal_base_handles.inheritance_rhino_mammal:
+            elif link.handle == metta_animal_base_handles.inheritance_rhino_mammal:
                 assert _check_docs(
-                    link['targets'],
+                    link.targets_documents,
                     [
                         {
                             'handle': metta_animal_base_handles.Inheritance,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': "Inheritance",
                         },
                         {
                             'handle': metta_animal_base_handles.rhino,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': '"rhino"',
                         },
                         {
                             'handle': metta_animal_base_handles.mammal,
-                            'type': 'Symbol',
+                            'named_type': 'Symbol',
                             'name': '"mammal"',
                         },
                     ],
@@ -253,14 +255,14 @@ class TestRemoteDistributedAtomSpace:
 
     def test_get_traversal_cursor(self, remote_das: DistributedAtomSpace):
         cursor = remote_das.get_traversal_cursor(metta_animal_base_handles.human)
-        assert cursor.get()['handle'] == metta_animal_base_handles.human
+        assert cursor.get().handle == metta_animal_base_handles.human
         with pytest.raises(GetTraversalCursorException):
             remote_das.get_traversal_cursor('fake_handle')
 
     @pytest.mark.skip(reason="Disabled. Waiting for https://github.com/singnet/das/issues/73")
     def test_traverse_engine_methods(self, remote_das: DistributedAtomSpace):
         cursor: TraverseEngine = self.traversal(remote_das, metta_animal_base_handles.dinosaur)
-        assert cursor.get()['handle'] == metta_animal_base_handles.dinosaur
+        assert cursor.get().handle == metta_animal_base_handles.dinosaur
 
         def is_expression_link(link):
             return True if link['type'] == 'Expression' else False
@@ -340,10 +342,11 @@ class TestRemoteDistributedAtomSpace:
     def test_commit_changes(self, remote_das: DistributedAtomSpace):
         node = remote_das.get_atom(handle=metta_animal_base_handles.human)
         assert hasattr(node, 'test_key') is False
-        remote_das.add_node({'type': 'Symbol', 'name': '"human"'})
+        assert 'test_key' not in node.custom_attributes
+        remote_das.add_node(NodeT(**{'type': 'Symbol', 'name': '"human"'}))
         remote_das.commit_changes()
         node = remote_das.get_atom(handle=metta_animal_base_handles.human)
-        assert node['test_key'] == 'test_value'
+        assert node.custom_attributes['test_key'] == 'test_value'
 
     def test_commit_changes_method_with_mode_parameter(self):
         das = DistributedAtomSpace(

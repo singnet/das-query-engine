@@ -1,4 +1,5 @@
 import pytest
+from hyperon_das_atomdb.database import LinkT, NodeT
 
 from hyperon_das import DistributedAtomSpace
 from tests.integration.remote_das_info import remote_das_host, remote_das_port
@@ -15,77 +16,79 @@ class TestLocalDASRedisMongo:
     def test_queries(self):
         _db_up()
         das = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='redis_mongo',
+            query_engine="local",
+            atomdb="redis_mongo",
             mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
+            mongo_username="dbadmin",
+            mongo_password="dassecret",
             redis_port=redis_port,
             redis_cluster=False,
             redis_ssl=False,
         )
-        assert das.count_atoms() == {'atom_count': 0}
+        assert das.count_atoms() == {"atom_count": 0}
         load_animals_base(das)
-        assert das.count_atoms() == {'atom_count': 0}
+        assert das.count_atoms() == {"atom_count": 0}
         das.commit_changes()
-        assert das.count_atoms() == {'atom_count': 40}
-        assert das.count_atoms({'precise': True}) == {
-            'atom_count': 40,
-            'node_count': 14,
-            'link_count': 26,
+        assert das.count_atoms() == {"atom_count": 40}
+        assert das.count_atoms({"precise": True}) == {
+            "atom_count": 40,
+            "node_count": 14,
+            "link_count": 26,
         }
         _db_down()
 
     def test_add_atom_persistence(self):
         _db_up()
         das = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='redis_mongo',
+            query_engine="local",
+            atomdb="redis_mongo",
             mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
+            mongo_username="dbadmin",
+            mongo_password="dassecret",
             redis_port=redis_port,
             redis_cluster=False,
             redis_ssl=False,
         )
-        assert das.count_atoms() == {'atom_count': 0}
+        assert das.count_atoms() == {"atom_count": 0}
         load_animals_base(das)
-        assert das.count_atoms() == {'atom_count': 0}
+        assert das.count_atoms() == {"atom_count": 0}
         das.commit_changes()
-        assert das.count_atoms() == {'atom_count': 40}
-        assert das.count_atoms({'context': 'remote'}) == {}
+        assert das.count_atoms() == {"atom_count": 40}
+        assert das.count_atoms({"context": "remote"}) == {}
 
-        das.add_node({"type": "Concept", "name": "dog"})
+        das.add_node(NodeT(**{"type": "Concept", "name": "dog"}))
         das.add_link(
-            {
-                "type": "Inheritance",
-                "targets": [
-                    {"type": "Concept", "name": "dog"},
-                    {"type": "Concept", "name": "mammal"},
-                ],
-            }
+            LinkT(
+                **{
+                    "type": "Inheritance",
+                    "targets": [
+                        NodeT(**{"type": "Concept", "name": "dog"}),
+                        NodeT(**{"type": "Concept", "name": "mammal"}),
+                    ],
+                }
+            )
         )
         das.commit_changes()
-        assert das.count_atoms({'precise': True}) == {
-            'atom_count': 42,
-            'node_count': 15,
-            'link_count': 27,
+        assert das.count_atoms({"precise": True}) == {
+            "atom_count": 42,
+            "node_count": 15,
+            "link_count": 27,
         }
 
         das2 = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='redis_mongo',
+            query_engine="local",
+            atomdb="redis_mongo",
             mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
+            mongo_username="dbadmin",
+            mongo_password="dassecret",
             redis_port=redis_port,
             redis_cluster=False,
             redis_ssl=False,
         )
-        assert das2.count_atoms({'precise': True}) == {
-            'atom_count': 42,
-            'node_count': 15,
-            'link_count': 27,
+        assert das2.count_atoms({"precise": True}) == {
+            "atom_count": 42,
+            "node_count": 15,
+            "link_count": 27,
         }
 
         _db_down()
@@ -93,16 +96,16 @@ class TestLocalDASRedisMongo:
     def test_fetch_atoms_from_remote_server(self):
         _db_up()
         das = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='redis_mongo',
+            query_engine="local",
+            atomdb="redis_mongo",
             mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
+            mongo_username="dbadmin",
+            mongo_password="dassecret",
             redis_port=redis_port,
             redis_cluster=False,
             redis_ssl=False,
         )
-        assert das.count_atoms() == {'atom_count': 0}
+        assert das.count_atoms() == {"atom_count": 0}
         das.fetch(
             query={
                 "atom_type": "link",
@@ -116,34 +119,34 @@ class TestLocalDASRedisMongo:
             host=remote_das_host,
             port=remote_das_port,
         )
-        assert das.count_atoms({'precise': True}) == {
-            'atom_count': 10,
-            'node_count': 6,
-            'link_count': 4,
+        assert das.count_atoms({"precise": True}) == {
+            "atom_count": 10,
+            "node_count": 6,
+            "link_count": 4,
         }
         _db_down()
 
     def test_fetch_atoms(self):
         _db_up()
         das = DistributedAtomSpace(
-            query_engine='local',
-            atomdb='redis_mongo',
+            query_engine="local",
+            atomdb="redis_mongo",
             mongo_port=mongo_port,
-            mongo_username='dbadmin',
-            mongo_password='dassecret',
+            mongo_username="dbadmin",
+            mongo_password="dassecret",
             redis_port=redis_port,
             redis_cluster=False,
             redis_ssl=False,
             system_parameters={"running_on_server": True},
         )
-        assert das.count_atoms() == {'atom_count': 0}
+        assert das.count_atoms() == {"atom_count": 0}
         load_animals_base(das)
         das.commit_changes()
-        assert das.count_atoms() == {'atom_count': 40}
-        assert das.count_atoms({'precise': True}) == {
-            'atom_count': 40,
-            'node_count': 14,
-            'link_count': 26,
+        assert das.count_atoms() == {"atom_count": 40}
+        assert das.count_atoms({"precise": True}) == {
+            "atom_count": 40,
+            "node_count": 14,
+            "link_count": 26,
         }
         documents = das.fetch(
             query={
@@ -162,7 +165,7 @@ class TestLocalDASRedisMongo:
 class TestLocalDASRamOnly:
     def test_fetch_atoms_local_das_ram_only(self):
         das = DistributedAtomSpace()
-        assert das.count_atoms() == {'atom_count': 0, 'link_count': 0, 'node_count': 0}
+        assert das.count_atoms() == {"atom_count": 0, "link_count": 0, "node_count": 0}
         das.fetch(
             query={
                 "atom_type": "link",
@@ -176,8 +179,8 @@ class TestLocalDASRamOnly:
             host=remote_das_host,
             port=remote_das_port,
         )
-        assert das.count_atoms({'precise': True}) == {
-            'atom_count': 10,
-            'node_count': 6,
-            'link_count': 4,
+        assert das.count_atoms({"precise": True}) == {
+            "atom_count": 10,
+            "node_count": 6,
+            "link_count": 4,
         }
