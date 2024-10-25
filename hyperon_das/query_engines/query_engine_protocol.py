@@ -130,9 +130,7 @@ class QueryEngine(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def custom_query(
-        self, index_id: str, query: Query, **kwargs
-    ) -> Union[Iterator, List[Dict[str, Any]]]:
+    def custom_query(self, index_id: str, query: Query, **kwargs) -> Union[Iterator, List[AtomT]]:
         """
         Executes a custom query based on a specific index ID and query parameters.
 

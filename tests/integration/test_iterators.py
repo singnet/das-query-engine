@@ -322,6 +322,9 @@ class TestCustomQuery:
             next(iterator)
         return handles
 
+    @pytest.mark.skip(
+        "Requires Mongo indices to be updated with the new custom attributes. See https://github.com/singnet/das-query-engine/issues/357"
+    )
     def test_custom_query_with_local_das_redis_mongo(
         self, _cleanup, database_fixture, das_local_fixture
     ):

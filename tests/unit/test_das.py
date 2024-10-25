@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 from hyperon_das_atomdb.adapters import InMemoryDB
+from hyperon_das_atomdb.database import LinkT, NodeT
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
 
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
@@ -66,7 +67,7 @@ class TestDistributedAtomSpace:
 
     def test_get_traversal_cursor(self):
         das = DistributedAtomSpace()
-        das.add_node({'type': 'Concept', 'name': 'human'})
+        das.add_node(NodeT(type='Concept', name='human'))
         human = das.compute_node_handle('Concept', 'human')
 
         cursor = das.get_traversal_cursor(human)
@@ -81,19 +82,19 @@ class TestDistributedAtomSpace:
     def test_get_atom(self):
         das = DistributedAtomSpace()
         das.add_link(
-            {
-                'type': 'expression',
-                'targets': [
-                    {'type': 'symbol', 'name': 'a'},
-                    {
-                        'type': 'expression',
-                        'targets': [
-                            {'type': 'symbol', 'name': 'b'},
-                            {'type': 'symbol', 'name': 'c'},
+            LinkT(
+                type='expression',
+                targets=[
+                    NodeT(type='symbol', name='a'),
+                    LinkT(
+                        type='expression',
+                        targets=[
+                            NodeT(type='symbol', name='b'),
+                            NodeT(type='symbol', name='c'),
                         ],
-                    },
+                    ),
                 ],
-            }
+            )
         )
 
         handle = {}
@@ -107,19 +108,19 @@ class TestDistributedAtomSpace:
 
         for n in ['a', 'b', 'c']:
             document = das.get_atom(handle[n])
-            assert document['type'] == 'symbol'
-            assert document['name'] == n
-            assert document['handle'] == handle[n]
+            assert document.named_type == 'symbol'
+            assert document.name == n
+            assert document.handle == handle[n]
 
         document = das.get_atom(handle['internal_link'])
-        assert document['type'] == 'expression'
-        assert document['handle'] == handle['internal_link']
-        assert document['targets'] == [handle['b'], handle['c']]
+        assert document.named_type == 'expression'
+        assert document.handle == handle['internal_link']
+        assert document.targets == [handle['b'], handle['c']]
 
         document = das.get_atom(handle['external_link'])
-        assert document['type'] == 'expression'
-        assert document['handle'] == handle['external_link']
-        assert document['targets'] == [handle['a'], handle['internal_link']]
+        assert document.named_type == 'expression'
+        assert document.handle == handle['external_link']
+        assert document.targets == [handle['a'], handle['internal_link']]
 
         assert das.get_atoms([handle['a'], handle['external_link'], handle['c']]) == [
             das.get_atom(handle['a']),

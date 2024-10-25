@@ -6,6 +6,7 @@ from threading import Semaphore, Thread
 from typing import Any, Dict, Iterator, List
 
 from hyperon_das_atomdb import WILDCARD
+from hyperon_das_atomdb.database import LinkT
 
 import hyperon_das.link_filters as link_filters
 from hyperon_das.query_engines.query_engine_protocol import QueryEngine
@@ -95,15 +96,15 @@ class LazyQueryEvaluator(ProductIterator):
         self.query_engine = query_engine
         self.buffered_answer = None
 
-    def _replace_target_handles(self, link: Dict[str, Any]) -> Dict[str, Any]:
-        targets = []
-        for target_handle in link["targets"]:
+    def _replace_target_handles(self, link: LinkT) -> Dict[str, Any]:
+        targets_documents = []
+        for target_handle in link.targets:
             atom = self.query_engine.get_atom(target_handle)
-            if atom.get("targets", None) is not None:
+            if isinstance(atom, LinkT):
                 atom = self._replace_target_handles(atom)
-            targets.append(atom)
+            targets_documents.append(atom)
         answer = copy.deepcopy(link)
-        answer["targets"] = targets
+        answer.targets_documents = targets_documents
         return answer
 
     def __next__(self):
@@ -120,11 +121,11 @@ class LazyQueryEvaluator(ProductIterator):
                 target = query_answer_target.subgraph
                 if query_answer_target.assignment:
                     wildcard_flag = True
-                if target.get("atom_type", None) == "variable":
+                if isinstance(target, dict) and target.get("atom_type", None) == "variable":
                     target_handle.append(WILDCARD)
                     wildcard_flag = True
                 else:
-                    target_handle.append(target["handle"])
+                    target_handle.append(target.handle)
             das_query_answer = self.query_engine.get_links(
                 link_filters.Targets(target_handle, self.link_type)
             )
@@ -134,9 +135,9 @@ class LazyQueryEvaluator(ProductIterator):
                 if wildcard_flag:
                     assignment = Assignment()
                     assignment_failed = False
-                    for query_answer_target, handle in zip(target_info, answer["targets"]):
+                    for query_answer_target, handle in zip(target_info, answer.targets):
                         target = query_answer_target.subgraph
-                        if target.get("atom_type", None) == "variable":
+                        if isinstance(target, dict) and target.get("atom_type", None) == "variable":
                             if not assignment.assign(target["name"], handle):
                                 assignment_failed = True
                         else:
