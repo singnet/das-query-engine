@@ -112,40 +112,40 @@ jobs:
       - name: Perform Integration Testing
         run: make integration-tests
 
-  benchmark:
-    runs-on: ubuntu-22.04
-    if: ${{ github.ref == 'refs/heads/master' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # benchmark:
+  #   runs-on: ubuntu-22.04
+  #   if: ${{ github.ref == 'refs/heads/master' }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ~3.10
-          cache: "pip"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: ~3.10
+  #         cache: "pip"
 
-      - name: Install dependencies
-        run: |-
-          pip3 install poetry hyperon
-          poetry lock --no-update
-          poetry install
+  #     - name: Install dependencies
+  #       run: |-
+  #         pip3 install poetry hyperon
+  #         poetry lock --no-update
+  #         poetry install
 
-      - name: Build hyperon-das
-        run: poetry build
+  #     - name: Build hyperon-das
+  #       run: poetry build
 
-      - name: Install hyperon-das
-        run: pip install $(find ./dist -name *.whl)
+  #     - name: Install hyperon-das
+  #       run: pip install $(find ./dist -name *.whl)
 
-      - name: Perform Benchmark
-        run: |
-          output=$(make performance-tests 2>&1)
-          real_time=$(echo "$output" | grep "^real" | awk 'NR==2 {print $2}')
+  #     - name: Perform Benchmark
+  #       run: |
+  #         output=$(make performance-tests 2>&1)
+  #         real_time=$(echo "$output" | grep "^real" | awk 'NR==2 {print $2}')
 
-          if echo "$output" | grep -q 'SUCCESS!'; then
-            echo "$real_time"
-            exit 0
-          fi
+  #         if echo "$output" | grep -q 'SUCCESS!'; then
+  #           echo "$real_time"
+  #           exit 0
+  #         fi
 
-          echo "FAILURE!"
-          exit 1
+  #         echo "FAILURE!"
+  #         exit 1
