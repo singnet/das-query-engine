@@ -18,7 +18,6 @@ from tests.integration.helpers import _db_down, _db_up
 
 NS_TO_S = 1000000000
 
-
 def measure(func):
     def wrapper(*args, **kwargs):
         start = time.process_time()
