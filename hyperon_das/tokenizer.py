@@ -153,6 +153,10 @@ sample_query = {
 }
 
 print(DictQueryTokenizer.tokenize(sample_query))
+'''
+Output:
+LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1
+'''
 
 sample_tokens = """
     LINK_TEMPLATE Expression 3
@@ -164,3 +168,22 @@ sample_tokens = """
 """
 
 print(DictQueryTokenizer.untokenize(sample_tokens))
+'''
+Output:
+{
+  'atom_type': 'link',
+  'type': 'Expression',
+  'targets': [
+    {'atom_type': 'node', 'type': 'Symbol', 'name': 'Similarity'},
+    {
+      'atom_type': 'link',
+      'type': 'Expression',
+      'targets': [
+        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Concept'},
+        {'atom_type': 'node', 'type': 'Symbol', 'name': '"human"'}
+      ]
+    },
+    {'atom_type': 'variable', 'name': 'v1'}
+  ]
+}
+'''
