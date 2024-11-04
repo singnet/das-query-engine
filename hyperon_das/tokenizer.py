@@ -14,14 +14,12 @@ class Node:
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "Node"]:
-        match tokens[cursor]:
-            case "NODE":
-                cursor += 1  # Skip the "NODE" token
-                node = Node(type=tokens[cursor], name=tokens[cursor + 1])
-                cursor += 2  # Skip the type and name tokens
-                return cursor, node
-            case _:
-                raise ValueError(f"Unsupported token: {tokens[cursor:]}")
+        if tokens[cursor] == "NODE":
+            cursor += 1  # Skip the "NODE" token
+            node = Node(type=tokens[cursor], name=tokens[cursor + 1])
+            cursor += 2  # Skip the type and name tokens
+            return cursor, node
+        raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
 @dataclasses.dataclass
@@ -33,14 +31,12 @@ class Variable:
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "Variable"]:
-        match tokens[cursor]:
-            case "VARIABLE":
-                cursor += 1  # Skip the "VARIABLE" token
-                variable = Variable(name=tokens[cursor])
-                cursor += 1  # Skip the name token
-                return cursor, variable
-            case _:
-                raise ValueError(f"Unsupported token: {tokens[cursor:]}")
+        if tokens[cursor] == "VARIABLE":
+            cursor += 1  # Skip the "VARIABLE" token
+            variable = Variable(name=tokens[cursor])
+            cursor += 1  # Skip the name token
+            return cursor, variable
+        raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
 @dataclasses.dataclass
@@ -59,42 +55,38 @@ class Link:
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "Link"]:
-        match tokens[cursor]:
-            case "LINK" | "LINK_TEMPLATE":
-                link_tag = tokens[cursor]
-                cursor += 1  # Skip the "LINK" or "LINK_TEMPLATE" token
-                link = Link(type=tokens[cursor])
-                cursor += 1  # Skip the type token
-                target_count = int(tokens[cursor])
-                cursor += 1  # Skip the target count token
-                for _ in range(target_count):
-                    match tokens[cursor]:
-                        case "NODE":
-                            cursor, target = Node.from_tokens(tokens, cursor)
-                        case "VARIABLE":
-                            link.is_template = True
-                            cursor, target = Variable.from_tokens(tokens, cursor)
-                        case "LINK" | "LINK_TEMPLATE":
-                            cursor, target = Link.from_tokens(tokens, cursor)
-                        case _:
-                            raise ValueError(f"Unsupported token: {tokens[cursor:]}")
-                    link.targets.append(target)
-
-                if link_tag == "LINK_TEMPLATE" and not link.is_template:
-                    raise ValueError("Template link without variables")
-                elif link_tag == "LINK" and link.is_template:
-                    raise ValueError("Non-template link with variables")
-
-                return cursor, link
-            case _:
-                raise ValueError(f"Unsupported token: {tokens[cursor:]}")
+        if tokens[cursor] in {"LINK", "LINK_TEMPLATE"}:
+            link_tag = tokens[cursor]
+            cursor += 1  # Skip the "LINK" or "LINK_TEMPLATE" token
+            link = Link(type=tokens[cursor])
+            cursor += 1  # Skip the type token
+            target_count = int(tokens[cursor])
+            cursor += 1  # Skip the target count token
+            for _ in range(target_count):
+                match tokens[cursor]:
+                    case "NODE":
+                        cursor, target = Node.from_tokens(tokens, cursor)
+                    case "VARIABLE":
+                        link.is_template = True
+                        cursor, target = Variable.from_tokens(tokens, cursor)
+                    case "LINK" | "LINK_TEMPLATE":
+                        cursor, target = Link.from_tokens(tokens, cursor)
+                    case _:
+                        raise ValueError(f"Unsupported token: {tokens[cursor:]}")
+                link.targets.append(target)
+            if link_tag == "LINK_TEMPLATE" and not link.is_template:
+                raise ValueError("Template link without variables")
+            elif link_tag == "LINK" and link.is_template:
+                raise ValueError("Non-template link with variables")
+            return cursor, link
+        raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
 class DictQueryTokenizer:
     Query: TypeAlias = dict[str, Any]
 
     @staticmethod
-    def tokenize(_query: Query) -> str:
+    def tokenize(query: Query) -> str:
         def _tokenize(
             _query: DictQueryTokenizer.Query, _parent: Link | None = None
         ) -> Link | Node | Variable:
@@ -111,27 +103,24 @@ class DictQueryTokenizer:
                 case _:
                     raise ValueError(f"Unsupported query: {_query}")
 
-        return TOKENS_DELIMITER.join(_tokenize(_query).to_tokens())
+        return TOKENS_DELIMITER.join(_tokenize(query).to_tokens())
 
     @staticmethod
     def untokenize(tokens: str) -> Query:
-        _, link = Link.from_tokens(tokens.split())
-
         def _untokenize(_atom: Link | Node | Variable) -> DictQueryTokenizer.Query:
-            match _atom:
-                case Link(type, targets):
-                    return {
-                        "atom_type": "link",
-                        "type": type,
-                        "targets": [_untokenize(target) for target in targets],
-                    }
-                case Node(type, name):
-                    return {"atom_type": "node", "type": type, "name": name}
-                case Variable(name):
-                    return {"atom_type": "variable", "name": name}
-                case _:
-                    raise ValueError(f"Unsupported element: {_atom}")
+            if isinstance(_atom, Link):
+                return {
+                    "atom_type": "link",
+                    "type": _atom.type,
+                    "targets": [_untokenize(target) for target in _atom.targets],
+                }
+            elif isinstance(_atom, Node):
+                return {"atom_type": "node", "type": _atom.type, "name": _atom.name}
+            elif isinstance(_atom, Variable):
+                return {"atom_type": "variable", "name": _atom.name}
+            raise ValueError(f"Unsupported element: {_atom}")
 
+        _, link = Link.from_tokens(tokens.split())
         return _untokenize(link)
 
 
