@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, TypeAlias
+from typing import Any, Callable, Type, TypeAlias
 
 TOKENS_DELIMITER = " "
 
@@ -85,6 +85,25 @@ class Link:
 class DictQueryTokenizer:
     Query: TypeAlias = dict[str, Any]
 
+    to_query_dict: dict[Type[Node | Variable | Link], Callable[[Node | Variable | Link], Query]] = {
+        Node: lambda node: {
+            "atom_type": "node",
+            "type": node.type,
+            "name": node.name,
+        },
+        Variable: lambda variable: {
+            "atom_type": "variable",
+            "name": variable.name,
+        },
+        Link: lambda link: {
+            "atom_type": "link",
+            "type": link.type,
+            "targets": [
+                DictQueryTokenizer.to_query_dict[type(target)](target) for target in link.targets
+            ],
+        },
+    }
+
     @staticmethod
     def tokenize(query: Query) -> str:
         def _tokenize(
@@ -107,21 +126,11 @@ class DictQueryTokenizer:
 
     @staticmethod
     def untokenize(tokens: str) -> Query:
-        def _untokenize(_atom: Link | Node | Variable) -> DictQueryTokenizer.Query:
-            if isinstance(_atom, Link):
-                return {
-                    "atom_type": "link",
-                    "type": _atom.type,
-                    "targets": [_untokenize(target) for target in _atom.targets],
-                }
-            elif isinstance(_atom, Node):
-                return {"atom_type": "node", "type": _atom.type, "name": _atom.name}
-            elif isinstance(_atom, Variable):
-                return {"atom_type": "variable", "name": _atom.name}
-            raise ValueError(f"Unsupported element: {_atom}")
-
         _, link = Link.from_tokens(tokens.split())
-        return _untokenize(link)
+        try:
+            return DictQueryTokenizer.to_query_dict[type(link)](link)
+        except KeyError as ex:
+            raise ValueError(f"Unsupported element: {link}, key error: {ex}")
 
 
 sample_query = {
