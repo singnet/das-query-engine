@@ -77,6 +77,9 @@ class ElementBuilder:
 
         Returns:
             tuple[int, Any]: A tuple containing the updated cursor position and the created instance.
+
+        Raises:
+            ValueError: If the tokens do not represent a valid Element.
         """
         if element := ElementBuilder.elements_mapping.get(tokens[cursor]):
             return element.from_tokens(tokens, cursor)
@@ -98,30 +101,10 @@ class Node(Element):
     name: str
 
     def to_tokens(self) -> list[str]:
-        """
-        Convert the Node to a list of tokens.
-
-        Returns:
-            list[str]: A list of string tokens representing the Node.
-        """
         return ["NODE", self.type, self.name]
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "Node"]:
-        """
-        Create a Node instance from a list of tokens.
-
-        Args:
-            tokens (list[str]): The list of tokens to parse.
-            cursor (int, optional): The starting position in the token list. Defaults to 0.
-
-        Returns:
-            tuple[int, Node]: A tuple containing the updated cursor position and the created Node
-                              instance.
-
-        Raises:
-            ValueError: If the tokens do not represent a valid Node.
-        """
         if tokens[cursor] == "NODE":
             cursor += 1  # Skip the "NODE" token
             node = Node(type=tokens[cursor], name=tokens[cursor + 1])
@@ -143,30 +126,10 @@ class Variable(Element):
     name: str
 
     def to_tokens(self) -> list[str]:
-        """
-        Convert the variable to a list of tokens.
-
-        Returns:
-            list[str]: A list of string tokens representing the variable.
-        """
         return ["VARIABLE", self.name]
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "Variable"]:
-        """
-        Create a Variable instance from a list of tokens.
-
-        Args:
-            tokens (list[str]): The list of tokens to parse.
-            cursor (int, optional): The starting position in the token list. Defaults to 0.
-
-        Returns:
-            tuple[int, Variable]: A tuple containing the updated cursor position and the created
-                                  Variable instance.
-
-        Raises:
-            ValueError: If the tokens do not represent a valid Variable.
-        """
         if tokens[cursor] == "VARIABLE":
             cursor += 1  # Skip the "VARIABLE" token
             variable = Variable(name=tokens[cursor])
@@ -192,12 +155,6 @@ class Link(Element):
     is_template: bool = False
 
     def to_tokens(self) -> list[str]:
-        """
-        Convert the link to a list of tokens.
-
-        Returns:
-            list[str]: A list of string tokens representing the link.
-        """
         self.is_template = any(isinstance(target, Variable) for target in self.targets)
         return [
             "LINK_TEMPLATE" if self.is_template else "LINK",
@@ -208,20 +165,6 @@ class Link(Element):
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "Link"]:
-        """
-        Create a Link instance from a list of tokens.
-
-        Args:
-            tokens (list[str]): The list of tokens to parse.
-            cursor (int, optional): The starting position in the token list. Defaults to 0.
-
-        Returns:
-            tuple[int, Link]: A tuple containing the updated cursor position and the created Link
-                              instance.
-
-        Raises:
-            ValueError: If the tokens do not represent a valid Link.
-        """
         if tokens[cursor] in ("LINK", "LINK_TEMPLATE"):
             link_tag = tokens[cursor]
             cursor += 1  # Skip the "LINK" or "LINK_TEMPLATE" token
@@ -264,18 +207,12 @@ class OrOperator(Element):
     A class representing an OR operator in the tokenizer.
 
     Attributes:
-        operands (list[Link]): A list of operands associated with the OR operator.
+        operands (list[Element]): A list of operands associated with the OR operator.
     """
 
-    operands: list[Link] = dataclasses.field(default_factory=list)
+    operands: list[Element] = dataclasses.field(default_factory=list)
 
     def to_tokens(self) -> list[str]:
-        """
-        Convert the OR operator to a list of tokens.
-
-        Returns:
-            list[str]: A list of string tokens representing the OR operator.
-        """
         return [
             "OR",
             str(len(self.operands)),
@@ -284,20 +221,6 @@ class OrOperator(Element):
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "OrOperator"]:
-        """
-        Create an OrOperator instance from a list of tokens.
-
-        Args:
-            tokens (list[str]): The list of tokens to parse.
-            cursor (int, optional): The starting position in the token list. Defaults to 0.
-
-        Returns:
-            tuple[int, OrOperator]: A tuple containing the updated cursor position and the created
-                                    OrOperator instance.
-
-        Raises:
-            ValueError: If the tokens do not represent a valid OrOperator.
-        """
         if tokens[cursor] == "OR":
             cursor += 1  # Skip the "OR" token
             operator = OrOperator()
@@ -319,18 +242,12 @@ class AndOperator(Element):
     A class representing an AND operator in the tokenizer.
 
     Attributes:
-        operands (list[Link]): A list of operands associated with the AND operator.
+        operands (list[Element]): A list of operands associated with the AND operator.
     """
 
-    operands: list[Link] = dataclasses.field(default_factory=list)
+    operands: list[Element] = dataclasses.field(default_factory=list)
 
     def to_tokens(self) -> list[str]:
-        """
-        Convert the AND operator to a list of tokens.
-
-        Returns:
-            list[str]: A list of string tokens representing the AND operator.
-        """
         return [
             "AND",
             str(len(self.operands)),
@@ -339,20 +256,6 @@ class AndOperator(Element):
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "AndOperator"]:
-        """
-        Create an AndOperator instance from a list of tokens.
-
-        Args:
-            tokens (list[str]): The list of tokens to parse.
-            cursor (int, optional): The starting position in the token list. Defaults to 0.
-
-        Returns:
-            tuple[int, AndOperator]: A tuple containing the updated cursor position and the created
-                                     AndOperator instance.
-
-        Raises:
-            ValueError: If the tokens do not represent a valid AndOperator.
-        """
         if tokens[cursor] == "AND":
             cursor += 1  # Skip the "AND" token
             operator = AndOperator()
@@ -374,36 +277,16 @@ class NotOperator(Element):
     A class representing a NOT operator in the tokenizer.
 
     Attributes:
-        operand (Link): The operand associated with the NOT operator.
+        operand (Element): The operand associated with the NOT operator.
     """
 
-    operand: Link
+    operand: Element
 
     def to_tokens(self) -> list[str]:
-        """
-        Convert the NOT operator to a list of tokens.
-
-        Returns:
-            list[str]: A list of string tokens representing the NOT operator.
-        """
         return ["NOT", *self.operand.to_tokens()]
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "NotOperator"]:
-        """
-        Create a NotOperator instance from a list of tokens.
-
-        Args:
-            tokens (list[str]): The list of tokens to parse.
-            cursor (int, optional): The starting position in the token list. Defaults to 0.
-
-        Returns:
-            tuple[int, NotOperator]: A tuple containing the updated cursor position and the created
-                                     NotOperator instance.
-
-        Raises:
-            ValueError: If the tokens do not represent a valid NotOperator.
-        """
         if tokens[cursor] == "NOT":
             cursor += 1  # Skip the "NOT" token
             cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
