@@ -354,12 +354,12 @@ class AndOperator(Element):
             ValueError: If the tokens do not represent a valid AndOperator.
         """
         if tokens[cursor] == "AND":
-            cursor += 1
+            cursor += 1  # Skip the "AND" token
             operator = AndOperator()
             operand_count = int(tokens[cursor])
             if operand_count < 2:
                 raise ValueError("AND operator requires at least two operands")
-            cursor += 1
+            cursor += 1  # Skip the operand count token
             for _ in range(operand_count):
                 cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
                 operator.operands.append(operand)
@@ -405,8 +405,7 @@ class NotOperator(Element):
             ValueError: If the tokens do not represent a valid NotOperator.
         """
         if tokens[cursor] == "NOT":
-            cursor += 1
+            cursor += 1  # Skip the "NOT" token
             cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
             return cursor, NotOperator(operand)
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
-
