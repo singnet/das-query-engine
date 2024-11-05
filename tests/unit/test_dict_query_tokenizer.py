@@ -9,21 +9,43 @@ class TestDictQueryTokenizer(unittest.TestCase):
             "atom_type": "link",
             "type": "Expression",
             "targets": [
-                {"atom_type": "node", "type": "Symbol", "name": "TestNode"},
-                {"atom_type": "variable", "name": "TestVariable"},
+                {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
+                {
+                    "atom_type": "link",
+                    "type": "Expression",
+                    "targets": [
+                        {"atom_type": "node", "type": "Symbol", "name": "Concept"},
+                        {"atom_type": "node", "type": "Symbol", "name": '"human"'},
+                    ],
+                },
+                {"atom_type": "variable", "name": "v1"},
             ],
         }
-        expected_tokens = "LINK_TEMPLATE Expression 2 NODE Symbol TestNode VARIABLE TestVariable"
+        expected_tokens = (
+            'LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 '
+            'NODE Symbol Concept NODE Symbol "human" VARIABLE v1'
+        )
         assert DictQueryTokenizer.tokenize(query) == expected_tokens
 
     def test_untokenize_link(self):
-        tokens = "LINK_TEMPLATE Expression 2 NODE Symbol TestNode VARIABLE TestVariable"
+        tokens = (
+            'LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 '
+            'NODE Symbol Concept NODE Symbol "human" VARIABLE v1'
+        )
         expected_query = {
             "atom_type": "link",
             "type": "Expression",
             "targets": [
-                {"atom_type": "node", "type": "Symbol", "name": "TestNode"},
-                {"atom_type": "variable", "name": "TestVariable"},
+                {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
+                {
+                    "atom_type": "link",
+                    "type": "Expression",
+                    "targets": [
+                        {"atom_type": "node", "type": "Symbol", "name": "Concept"},
+                        {"atom_type": "node", "type": "Symbol", "name": '"human"'},
+                    ],
+                },
+                {"atom_type": "variable", "name": "v1"},
             ],
         }
         assert DictQueryTokenizer.untokenize(tokens) == expected_query
@@ -62,7 +84,7 @@ class TestDictQueryTokenizer(unittest.TestCase):
                     "type": "Expression",
                     "targets": [
                         {"atom_type": "node", "type": "Symbol", "name": "TestNode1"},
-                        {"atom_type": "variable", "name": "TestVariable1"},
+                        {"atom_type": "node", "type": "Symbol", "name": "TestNode2"},
                     ],
                 },
                 {
@@ -77,7 +99,7 @@ class TestDictQueryTokenizer(unittest.TestCase):
         }
         expected_tokens = (
             "AND 2 "
-            "LINK_TEMPLATE Expression 2 NODE Symbol TestNode1 VARIABLE TestVariable1 "
+            "LINK Expression 2 NODE Symbol TestNode1 NODE Symbol TestNode2 "
             "LINK_TEMPLATE Expression 2 NODE Symbol TestNode2 VARIABLE TestVariable2"
         )
         assert DictQueryTokenizer.tokenize(query) == expected_tokens
@@ -85,7 +107,7 @@ class TestDictQueryTokenizer(unittest.TestCase):
     def test_untokenize_and_operator(self):
         tokens = (
             "AND 2 "
-            "LINK_TEMPLATE Expression 2 NODE Symbol TestNode1 VARIABLE TestVariable1 "
+            "LINK Expression 2 NODE Symbol TestNode1 NODE Symbol TestNode2 "
             "LINK_TEMPLATE Expression 2 NODE Symbol TestNode2 VARIABLE TestVariable2"
         )
         expected_query = {
@@ -95,7 +117,7 @@ class TestDictQueryTokenizer(unittest.TestCase):
                     "type": "Expression",
                     "targets": [
                         {"atom_type": "node", "type": "Symbol", "name": "TestNode1"},
-                        {"atom_type": "variable", "name": "TestVariable1"},
+                        {"atom_type": "node", "type": "Symbol", "name": "TestNode2"},
                     ],
                 },
                 {
