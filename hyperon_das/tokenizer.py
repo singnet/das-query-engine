@@ -60,10 +60,41 @@ from typing import Any, Callable, Type, TypeAlias
 
 TOKENS_DELIMITER = " "
 
-FromTokensDictKey: TypeAlias = str
-FromTokensDictValue: TypeAlias = Callable[[list[str], int], tuple[int, Any]]
-FROM_TOKENS_DICT: dict[FromTokensDictKey, FromTokensDictValue] = {}
-"""A mapping of tokens tags to functions that create instances of the corresponding types from tokens."""
+
+class TokenObjectBuilder:
+    """A class for creating instances of classes from tokens."""
+
+    FromTokensMappingKey: TypeAlias = str
+    FromTokensMappingValue: TypeAlias = Callable[[list[str], int], tuple[int, Any]]
+    from_tokens_mapping: dict[FromTokensMappingKey, FromTokensMappingValue] = {}
+    """A mapping of tokens tags to functions that create instances of the corresponding types from tokens."""
+
+    @classmethod
+    def register_from_tokens(cls, tag: str, from_tokens: FromTokensMappingValue) -> None:
+        """
+        Register a function for creating instances of a class from tokens.
+
+        Args:
+            tag (str): The tag associated with the class.
+            from_tokens (FromTokensDictValue): The function for creating instances of the class from tokens.
+        """
+        cls.from_tokens_mapping[tag] = from_tokens
+
+    @staticmethod
+    def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, Any]:
+        """
+        Create an instance of a class from a list of tokens.
+
+        Args:
+            tokens (list[str]): The list of tokens to parse.
+            cursor (int, optional): The starting position in the token list. Defaults to 0.
+
+        Returns:
+            tuple[int, Any]: A tuple containing the updated cursor position and the created instance.
+        """
+        if from_tokens_callback := TokenObjectBuilder.from_tokens_mapping.get(tokens[cursor]):
+            return from_tokens_callback(tokens, cursor)
+        raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
 @dataclasses.dataclass
@@ -111,7 +142,7 @@ class Node:
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-FROM_TOKENS_DICT["NODE"] = Node.from_tokens
+TokenObjectBuilder.register_from_tokens("NODE", Node.from_tokens)
 
 
 @dataclasses.dataclass
@@ -157,7 +188,7 @@ class Variable:
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-FROM_TOKENS_DICT["VARIABLE"] = Variable.from_tokens
+TokenObjectBuilder.register_from_tokens("VARIABLE", Variable.from_tokens)
 
 
 @dataclasses.dataclass
@@ -212,13 +243,10 @@ class Link:
             target_count = int(tokens[cursor])
             cursor += 1  # Skip the target count token
             for _ in range(target_count):
-                try:
-                    cursor, target = FROM_TOKENS_DICT[tokens[cursor]](tokens, cursor)
-                    if isinstance(target, Variable):
-                        link.is_template = True
-                    link.targets.append(target)
-                except KeyError as ex:
-                    raise ValueError(f"Unsupported token: {tokens[cursor:]}, key error: {ex}")
+                cursor, target = TokenObjectBuilder.from_tokens(tokens, cursor)
+                if isinstance(target, Variable):
+                    link.is_template = True
+                link.targets.append(target)
             if link_tag == "LINK_TEMPLATE" and not link.is_template:
                 raise ValueError("Template link without variables")
             elif link_tag == "LINK" and link.is_template:
@@ -227,7 +255,8 @@ class Link:
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-FROM_TOKENS_DICT["LINK"] = FROM_TOKENS_DICT["LINK_TEMPLATE"] = Link.from_tokens
+TokenObjectBuilder.register_from_tokens("LINK", Link.from_tokens)
+TokenObjectBuilder.register_from_tokens("LINK_TEMPLATE", Link.from_tokens)
 
 
 @dataclasses.dataclass
@@ -276,13 +305,13 @@ class OrOperator:
             operand_count = int(tokens[cursor])
             cursor += 1  # Skip the operand count token
             for _ in range(operand_count):
-                cursor, operand = FROM_TOKENS_DICT[tokens[cursor]](tokens, cursor)
+                cursor, operand = TokenObjectBuilder.from_tokens(tokens, cursor)
                 operator.operands.append(operand)
             return cursor, operator
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor-1:]}")
 
 
-FROM_TOKENS_DICT["OR"] = OrOperator.from_tokens
+TokenObjectBuilder.register_from_tokens("OR", OrOperator.from_tokens)
 
 
 @dataclasses.dataclass
@@ -331,13 +360,13 @@ class AndOperator:
             operand_count = int(tokens[cursor])
             cursor += 1
             for _ in range(operand_count):
-                cursor, operand = FROM_TOKENS_DICT[tokens[cursor]](tokens, cursor)
+                cursor, operand = TokenObjectBuilder.from_tokens(tokens, cursor)
                 operator.operands.append(operand)
             return cursor, operator
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-FROM_TOKENS_DICT["AND"] = AndOperator.from_tokens
+TokenObjectBuilder.register_from_tokens("AND", AndOperator.from_tokens)
 
 
 @dataclasses.dataclass
@@ -378,12 +407,12 @@ class NotOperator:
         """
         if tokens[cursor] == "NOT":
             cursor += 1
-            cursor, operand = FROM_TOKENS_DICT[tokens[cursor]](tokens, cursor)
+            cursor, operand = TokenObjectBuilder.from_tokens(tokens, cursor)
             return cursor, NotOperator(operand)
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-FROM_TOKENS_DICT["NOT"] = NotOperator.from_tokens
+TokenObjectBuilder.register_from_tokens("NOT", NotOperator.from_tokens)
 
 
 class DictQueryTokenizer:
@@ -391,14 +420,14 @@ class DictQueryTokenizer:
 
     Query: TypeAlias = dict[str, Any]  # type alias for a dictionary representing a query
 
-    ToQueryDictKey: TypeAlias = Type[
+    ToQueryMappingKey: TypeAlias = Type[
         Node | Variable | Link | OrOperator | AndOperator | NotOperator
     ]
-    ToQueryDictValue: TypeAlias = Callable[
+    ToQueryMappingValue: TypeAlias = Callable[
         [Node | Variable | Link | OrOperator | AndOperator | NotOperator],
         Query,
     ]
-    to_query_dict: dict[ToQueryDictKey, ToQueryDictValue] = {
+    to_query_mapping: dict[ToQueryMappingKey, ToQueryMappingValue] = {
         # A mapping of types to functions that convert instances of those types to query dictionaries.
         Node: lambda node: {
             "atom_type": "node",
@@ -413,23 +442,23 @@ class DictQueryTokenizer:
             "atom_type": "link",
             "type": link.type,
             "targets": [
-                DictQueryTokenizer.to_query_dict[type(target)](target) for target in link.targets
+                DictQueryTokenizer.to_query_mapping[type(target)](target) for target in link.targets
             ],
         },
         OrOperator: lambda operator: {
             "or": [
-                DictQueryTokenizer.to_query_dict[type(operand)](operand)
+                DictQueryTokenizer.to_query_mapping[type(operand)](operand)
                 for operand in operator.operands
             ],
         },
         AndOperator: lambda operator: {
             "and": [
-                DictQueryTokenizer.to_query_dict[type(operand)](operand)
+                DictQueryTokenizer.to_query_mapping[type(operand)](operand)
                 for operand in operator.operands
             ],
         },
         NotOperator: lambda operator: {
-            "not": DictQueryTokenizer.to_query_dict[type(operator.operand)](operator.operand),
+            "not": DictQueryTokenizer.to_query_mapping[type(operator.operand)](operator.operand),
         },
     }
 
@@ -486,16 +515,16 @@ class DictQueryTokenizer:
         Raises:
             ValueError: If the tokens cannot be untokenized into a valid query.
         """
-        tokens = query_tokens.split()
         cursor = 0
-        try:
-            cursor, query = FROM_TOKENS_DICT[tokens[cursor]](tokens, cursor)
-            return DictQueryTokenizer.to_query_dict[type(query)](query)
-        except KeyError as ex:
-            raise ValueError(f"Unsupported element: {tokens[cursor:]}, key error: {ex}")
+        tokens = query_tokens.split()
+        cursor, query = TokenObjectBuilder.from_tokens(tokens, cursor)
+        if to_query_callback := DictQueryTokenizer.to_query_mapping.get(type(query)):
+            return to_query_callback(query)
+        raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
+
 
 # EXAMPLES OF USE:
-#
+
 # sample_query = {
 #     "and": [
 #         {
