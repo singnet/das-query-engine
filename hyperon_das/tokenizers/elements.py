@@ -1,73 +1,13 @@
-"""
-Example usage of DictQueryTokenizer:
-
-Sample query dictionary:
-    >>> sample_query = {
-    >>>     "atom_type": "link",
-    >>>     "type": "Expression",
-    >>>     "targets": [
-    >>>         {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
-    >>>         {
-    >>>             "atom_type": "link",
-    >>>             "type": "Expression",
-    >>>             "targets": [
-    >>>                 {"atom_type": "node", "type": "Symbol", "name": "Concept"},
-    >>>                 {"atom_type": "node", "type": "Symbol", "name": '"human"'},
-    >>>             ],
-    >>>         },
-    >>>         {"atom_type": "variable", "name": "v1"},
-    >>>     ],
-    >>> }
-
-Tokenizing the sample query:
-    >>> print(DictQueryTokenizer.tokenize(sample_query))
-    Output:
-    LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1
-
-Sample tokenized string:
-    >>> sample_tokens = '''
-    >>>     LINK_TEMPLATE Expression 3
-    >>>         NODE Symbol Similarity
-    >>>         LINK Expression 2
-    >>>             NODE Symbol Concept
-    >>>             NODE Symbol "human"
-    >>>         VARIABLE v1
-    >>> '''
-
-Untokenizing the sample tokens:
-    >>> print(DictQueryTokenizer.untokenize(sample_tokens))
-    Output:
-    {
-      'atom_type': 'link',
-      'type': 'Expression',
-      'targets': [
-        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Similarity'},
-        {
-          'atom_type': 'link',
-          'type': 'Expression',
-          'targets': [
-            {'atom_type': 'node', 'type': 'Symbol', 'name': 'Concept'},
-            {'atom_type': 'node', 'type': 'Symbol', 'name': '"human"'}
-          ]
-        },
-        {'atom_type': 'variable', 'name': 'v1'}
-      ]
-    }
-"""
-
 from abc import ABC, abstractmethod
 import dataclasses
-from typing import Any, Callable, Type, TypeAlias
+from typing import Any, Type, TypeAlias
 
 TOKENS_DELIMITER = " "
 
 
 @dataclasses.dataclass
 class Element(ABC):
-    """
-    An abstract class representing an element in the tokenizer.
-
-    """
+    """An abstract class representing an element in the tokenizer."""
 
     @abstractmethod
     def to_tokens(self) -> list[str]:
@@ -90,7 +30,8 @@ class Element(ABC):
             cursor (int, optional): The starting position in the token list. Defaults to 0.
 
         Returns:
-            tuple[int, Element]: A tuple containing the updated cursor position and the created Element instance.
+            tuple[int, Element]: A tuple containing the updated cursor position and the created
+                                 Element instance.
 
         Raises:
             ValueError: If the tokens do not represent a valid Element.
@@ -107,15 +48,22 @@ class ElementBuilder:
     """A mapping of tokens tags to Element types."""
 
     @classmethod
-    def register_element(cls, tag: str, element_type: Type[Element]) -> None:
+    def register_tag(cls, tag: str) -> TypeAlias:
         """
-        Register an element type with a specific tag.
+        A decorator for registering an element type with a specific tag.
 
         Args:
             tag (str): The tag associated with the element type.
-            element_type (Type[Element]): The element type to register.
+
+        Returns:
+            TypeAlias: The decorated element type.
         """
-        cls.elements_mapping[tag] = element_type
+
+        def decorator(element_type: Type[Element]) -> Type[Element]:
+            cls.elements_mapping[tag] = element_type
+            return element_type
+
+        return decorator
 
     @staticmethod
     def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, Element]:
@@ -136,6 +84,7 @@ class ElementBuilder:
 
 
 @dataclasses.dataclass
+@ElementBuilder.register_tag("NODE")
 class Node(Element):
     """
     A class representing a node in the tokenizer.
@@ -167,7 +116,8 @@ class Node(Element):
             cursor (int, optional): The starting position in the token list. Defaults to 0.
 
         Returns:
-            tuple[int, Node]: A tuple containing the updated cursor position and the created Node instance.
+            tuple[int, Node]: A tuple containing the updated cursor position and the created Node
+                              instance.
 
         Raises:
             ValueError: If the tokens do not represent a valid Node.
@@ -181,6 +131,7 @@ class Node(Element):
 
 
 @dataclasses.dataclass
+@ElementBuilder.register_tag("VARIABLE")
 class Variable(Element):
     """
     A class representing a variable in the tokenizer.
@@ -210,7 +161,8 @@ class Variable(Element):
             cursor (int, optional): The starting position in the token list. Defaults to 0.
 
         Returns:
-            tuple[int, Variable]: A tuple containing the updated cursor position and the created Variable instance.
+            tuple[int, Variable]: A tuple containing the updated cursor position and the created
+                                  Variable instance.
 
         Raises:
             ValueError: If the tokens do not represent a valid Variable.
@@ -224,6 +176,7 @@ class Variable(Element):
 
 
 @dataclasses.dataclass
+@ElementBuilder.register_tag("LINK")
 class Link(Element):
     """
     A class representing a link in the tokenizer.
@@ -245,6 +198,7 @@ class Link(Element):
         Returns:
             list[str]: A list of string tokens representing the link.
         """
+        self.is_template = any(isinstance(target, Variable) for target in self.targets)
         return [
             "LINK_TEMPLATE" if self.is_template else "LINK",
             self.type,
@@ -262,7 +216,8 @@ class Link(Element):
             cursor (int, optional): The starting position in the token list. Defaults to 0.
 
         Returns:
-            tuple[int, Link]: A tuple containing the updated cursor position and the created Link instance.
+            tuple[int, Link]: A tuple containing the updated cursor position and the created Link
+                              instance.
 
         Raises:
             ValueError: If the tokens do not represent a valid Link.
@@ -273,6 +228,8 @@ class Link(Element):
             link = Link(type=tokens[cursor])
             cursor += 1  # Skip the type token
             target_count = int(tokens[cursor])
+            if target_count < 2:
+                raise ValueError("Link requires at least two targets")
             cursor += 1  # Skip the target count token
             for _ in range(target_count):
                 cursor, target = ElementBuilder.from_tokens(tokens, cursor)
@@ -288,6 +245,17 @@ class Link(Element):
 
 
 @dataclasses.dataclass
+@ElementBuilder.register_tag("LINK_TEMPLATE")
+class LinkTemplate(Link):
+    """
+    A class representing a template link in the tokenizer.
+
+    Inherits from the Link class and is used to denote links that are templates.
+    """
+
+
+@dataclasses.dataclass
+@ElementBuilder.register_tag("OR")
 class OrOperator(Element):
     """
     A class representing an OR operator in the tokenizer.
@@ -331,6 +299,8 @@ class OrOperator(Element):
             cursor += 1  # Skip the "OR" token
             operator = OrOperator()
             operand_count = int(tokens[cursor])
+            if operand_count < 2:
+                raise ValueError("OR operator requires at least two operands")
             cursor += 1  # Skip the operand count token
             for _ in range(operand_count):
                 cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
@@ -340,6 +310,7 @@ class OrOperator(Element):
 
 
 @dataclasses.dataclass
+@ElementBuilder.register_tag("AND")
 class AndOperator(Element):
     """
     A class representing an AND operator in the tokenizer.
@@ -383,6 +354,8 @@ class AndOperator(Element):
             cursor += 1
             operator = AndOperator()
             operand_count = int(tokens[cursor])
+            if operand_count < 2:
+                raise ValueError("AND operator requires at least two operands")
             cursor += 1
             for _ in range(operand_count):
                 cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
@@ -392,6 +365,7 @@ class AndOperator(Element):
 
 
 @dataclasses.dataclass
+@ElementBuilder.register_tag("NOT")
 class NotOperator(Element):
     """
     A class representing a NOT operator in the tokenizer.
@@ -433,198 +407,3 @@ class NotOperator(Element):
             return cursor, NotOperator(operand)
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
-
-ElementBuilder.register_element("NODE", Node)
-ElementBuilder.register_element("VARIABLE", Variable)
-ElementBuilder.register_element("LINK", Link)
-ElementBuilder.register_element("LINK_TEMPLATE", Link)
-ElementBuilder.register_element("OR", OrOperator)
-ElementBuilder.register_element("AND", AndOperator)
-ElementBuilder.register_element("NOT", NotOperator)
-
-
-class DictQueryTokenizer:
-    """A class for tokenizing dictionary queries."""
-
-    Query: TypeAlias = dict[str, Any]  # type alias for a dictionary representing a query
-
-    ToQueryMappingKey: TypeAlias = Type[
-        Node | Variable | Link | OrOperator | AndOperator | NotOperator
-    ]
-    ToQueryMappingValue: TypeAlias = Callable[
-        [Node | Variable | Link | OrOperator | AndOperator | NotOperator],
-        Query,
-    ]
-    to_query_mapping: dict[ToQueryMappingKey, ToQueryMappingValue] = {
-        # A mapping of types to functions that convert instances of those types to query dictionaries.
-        Node: lambda node: {
-            "atom_type": "node",
-            "type": node.type,
-            "name": node.name,
-        },
-        Variable: lambda variable: {
-            "atom_type": "variable",
-            "name": variable.name,
-        },
-        Link: lambda link: {
-            "atom_type": "link",
-            "type": link.type,
-            "targets": [
-                DictQueryTokenizer.to_query_mapping[type(target)](target) for target in link.targets
-            ],
-        },
-        OrOperator: lambda operator: {
-            "or": [
-                DictQueryTokenizer.to_query_mapping[type(operand)](operand)
-                for operand in operator.operands
-            ],
-        },
-        AndOperator: lambda operator: {
-            "and": [
-                DictQueryTokenizer.to_query_mapping[type(operand)](operand)
-                for operand in operator.operands
-            ],
-        },
-        NotOperator: lambda operator: {
-            "not": DictQueryTokenizer.to_query_mapping[type(operator.operand)](operator.operand),
-        },
-    }
-
-    @staticmethod
-    def tokenize(query: Query) -> str:
-        """
-        Convert a query dictionary into a tokenized string.
-
-        Args:
-            query (Query): The query dictionary to tokenize.
-
-        Returns:
-            str: A tokenized string representation of the query.
-
-        Raises:
-            ValueError: If the query cannot be tokenized.
-        """
-
-        def _tokenize(
-            _query: DictQueryTokenizer.Query, _parent: Link | None = None
-        ) -> Link | Node | Variable | OrOperator | AndOperator:
-            match _query:
-                case {"or": list()}:
-                    return OrOperator(operands=[_tokenize(o) for o in _query["or"]])
-                case {"and": list()}:
-                    return AndOperator(operands=[_tokenize(o) for o in _query["and"]])
-                case {"not": dict()}:
-                    return NotOperator(_tokenize(_query["not"]))
-                case {"atom_type": "link", "type": str(), "targets": list()}:
-                    link = Link(_query["type"])
-                    link.targets += [_tokenize(t, _parent=link) for t in _query["targets"]]
-                    return link
-                case {"atom_type": "node", "type": str(), "name": str()}:
-                    return Node(_query["type"], _query["name"])
-                case {"atom_type": "variable", "name": str()}:
-                    _parent.is_template = True
-                    return Variable(_query["name"])
-                case _:
-                    raise ValueError(f"Unsupported query: {_query}")
-
-        return TOKENS_DELIMITER.join(_tokenize(query).to_tokens())
-
-    @staticmethod
-    def untokenize(query_tokens: str) -> Query:
-        """
-        Convert a tokenized string back into a query dictionary.
-
-        Args:
-            query_tokens (str): The tokenized string to untokenize.
-
-        Returns:
-            Query: A dictionary representation of the query.
-
-        Raises:
-            ValueError: If the tokens cannot be untokenized into a valid query.
-        """
-        cursor = 0
-        tokens = query_tokens.split()
-        cursor, query = ElementBuilder.from_tokens(tokens, cursor)
-        if to_query_callback := DictQueryTokenizer.to_query_mapping.get(type(query)):
-            return to_query_callback(query)
-        raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
-
-
-# EXAMPLES OF USE:
-
-sample_query = {
-    "and": [
-        {
-            "not": {
-                "atom_type": "link",
-                "type": "Expression",
-                "targets": [
-                    {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
-                    {
-                        "atom_type": "link",
-                        "type": "Expression",
-                        "targets": [
-                            {"atom_type": "node", "type": "Symbol", "name": "Concept"},
-                            {"atom_type": "node", "type": "Symbol", "name": '"human"'},
-                        ],
-                    },
-                    {"atom_type": "variable", "name": "v1"},
-                ],
-            },
-        },
-        {
-            'atom_type': 'link',
-            'type': 'Expression',
-            'targets': [
-                {'not': {'atom_type': 'node', 'type': 'Symbol', 'name': 'Similarity'}},
-                {
-                    'atom_type': 'link',
-                    'type': 'Expression',
-                    'targets': [
-                        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Concept'},
-                        {'atom_type': 'node', 'type': 'Symbol', 'name': '"human"'},
-                    ],
-                },
-                {'atom_type': 'variable', 'name': 'v1'},
-            ],
-        },
-    ],
-}
-
-print(DictQueryTokenizer.tokenize(sample_query))
-"""
-Output:
-LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1
-"""
-
-sample_tokens = """
-    LINK_TEMPLATE Expression 3
-        NOT NODE Symbol Similarity
-        LINK Expression 2
-            NODE Symbol Concept
-            NODE Symbol "human"
-        VARIABLE v1
-"""
-# sample_tokens = """AND 2 NOT LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1 LINK_TEMPLATE Expression 3 NOT NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1"""
-
-print(DictQueryTokenizer.untokenize(sample_tokens))
-"""
-Output:
-{
-  'atom_type': 'link',
-  'type': 'Expression',
-  'targets': [
-    {'atom_type': 'node', 'type': 'Symbol', 'name': 'Similarity'},
-    {
-      'atom_type': 'link',
-      'type': 'Expression',
-      'targets': [
-        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Concept'},
-        {'atom_type': 'node', 'type': 'Symbol', 'name': '"human"'}
-      ]
-    },
-    {'atom_type': 'variable', 'name': 'v1'}
-  ]
-}
-"""
