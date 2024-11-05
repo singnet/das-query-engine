@@ -55,50 +55,88 @@ Untokenizing the sample tokens:
     }
 """
 
+from abc import ABC, abstractmethod
 import dataclasses
 from typing import Any, Callable, Type, TypeAlias
 
 TOKENS_DELIMITER = " "
 
 
-class TokenObjectBuilder:
-    """A class for creating instances of classes from tokens."""
+@dataclasses.dataclass
+class Element(ABC):
+    """
+    An abstract class representing an element in the tokenizer.
 
-    FromTokensMappingKey: TypeAlias = str
-    FromTokensMappingValue: TypeAlias = Callable[[list[str], int], tuple[int, Any]]
-    from_tokens_mapping: dict[FromTokensMappingKey, FromTokensMappingValue] = {}
-    """A mapping of tokens tags to functions that create instances of the corresponding types from tokens."""
+    """
 
-    @classmethod
-    def register_from_tokens(cls, tag: str, from_tokens: FromTokensMappingValue) -> None:
+    @abstractmethod
+    def to_tokens(self) -> list[str]:
         """
-        Register a function for creating instances of a class from tokens.
+        Convert the element to a list of tokens.
 
-        Args:
-            tag (str): The tag associated with the class.
-            from_tokens (FromTokensDictValue): The function for creating instances of the class from tokens.
+        Returns:
+            list[str]: A list of string tokens representing the element.
         """
-        cls.from_tokens_mapping[tag] = from_tokens
+        raise NotImplementedError
 
     @staticmethod
-    def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, Any]:
+    @abstractmethod
+    def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, "Element"]:
         """
-        Create an instance of a class from a list of tokens.
+        Create an Element instance from a list of tokens.
 
         Args:
             tokens (list[str]): The list of tokens to parse.
             cursor (int, optional): The starting position in the token list. Defaults to 0.
 
         Returns:
+            tuple[int, Element]: A tuple containing the updated cursor position and the created Element instance.
+
+        Raises:
+            ValueError: If the tokens do not represent a valid Element.
+        """
+        raise NotImplementedError
+
+
+class ElementBuilder:
+    """A class for creating instances of Elements from tokens."""
+
+    ElementsMappingKey: TypeAlias = str
+    ElementsMappingValue: TypeAlias = Type[Element]
+    elements_mapping: dict[ElementsMappingKey, ElementsMappingValue] = {}
+    """A mapping of tokens tags to Element types."""
+
+    @classmethod
+    def register_element(cls, tag: str, element_type: Type[Element]) -> None:
+        """
+        Register an element type with a specific tag.
+
+        Args:
+            tag (str): The tag associated with the element type.
+            element_type (Type[Element]): The element type to register.
+        """
+        cls.elements_mapping[tag] = element_type
+
+    @staticmethod
+    def from_tokens(tokens: list[str], cursor: int = 0) -> tuple[int, Element]:
+        """
+        Create an instance of a class from a list of tokens.
+
+        Args:
+            tokens (list[str]): The list of tokens to parse, where the first token (the one at the
+                `cursor` position) is supposed to be a registered tag.
+            cursor (int, optional): The starting position in the token list. Defaults to 0.
+
+        Returns:
             tuple[int, Any]: A tuple containing the updated cursor position and the created instance.
         """
-        if from_tokens_callback := TokenObjectBuilder.from_tokens_mapping.get(tokens[cursor]):
-            return from_tokens_callback(tokens, cursor)
+        if element := ElementBuilder.elements_mapping.get(tokens[cursor]):
+            return element.from_tokens(tokens, cursor)
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
 @dataclasses.dataclass
-class Node:
+class Node(Element):
     """
     A class representing a node in the tokenizer.
 
@@ -142,11 +180,8 @@ class Node:
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-TokenObjectBuilder.register_from_tokens("NODE", Node.from_tokens)
-
-
 @dataclasses.dataclass
-class Variable:
+class Variable(Element):
     """
     A class representing a variable in the tokenizer.
 
@@ -188,11 +223,8 @@ class Variable:
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-TokenObjectBuilder.register_from_tokens("VARIABLE", Variable.from_tokens)
-
-
 @dataclasses.dataclass
-class Link:
+class Link(Element):
     """
     A class representing a link in the tokenizer.
 
@@ -243,7 +275,7 @@ class Link:
             target_count = int(tokens[cursor])
             cursor += 1  # Skip the target count token
             for _ in range(target_count):
-                cursor, target = TokenObjectBuilder.from_tokens(tokens, cursor)
+                cursor, target = ElementBuilder.from_tokens(tokens, cursor)
                 if isinstance(target, Variable):
                     link.is_template = True
                 link.targets.append(target)
@@ -255,12 +287,8 @@ class Link:
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-TokenObjectBuilder.register_from_tokens("LINK", Link.from_tokens)
-TokenObjectBuilder.register_from_tokens("LINK_TEMPLATE", Link.from_tokens)
-
-
 @dataclasses.dataclass
-class OrOperator:
+class OrOperator(Element):
     """
     A class representing an OR operator in the tokenizer.
 
@@ -305,17 +333,14 @@ class OrOperator:
             operand_count = int(tokens[cursor])
             cursor += 1  # Skip the operand count token
             for _ in range(operand_count):
-                cursor, operand = TokenObjectBuilder.from_tokens(tokens, cursor)
+                cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
                 operator.operands.append(operand)
             return cursor, operator
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor-1:]}")
 
 
-TokenObjectBuilder.register_from_tokens("OR", OrOperator.from_tokens)
-
-
 @dataclasses.dataclass
-class AndOperator:
+class AndOperator(Element):
     """
     A class representing an AND operator in the tokenizer.
 
@@ -360,17 +385,14 @@ class AndOperator:
             operand_count = int(tokens[cursor])
             cursor += 1
             for _ in range(operand_count):
-                cursor, operand = TokenObjectBuilder.from_tokens(tokens, cursor)
+                cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
                 operator.operands.append(operand)
             return cursor, operator
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-TokenObjectBuilder.register_from_tokens("AND", AndOperator.from_tokens)
-
-
 @dataclasses.dataclass
-class NotOperator:
+class NotOperator(Element):
     """
     A class representing a NOT operator in the tokenizer.
 
@@ -407,12 +429,18 @@ class NotOperator:
         """
         if tokens[cursor] == "NOT":
             cursor += 1
-            cursor, operand = TokenObjectBuilder.from_tokens(tokens, cursor)
+            cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
             return cursor, NotOperator(operand)
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
-TokenObjectBuilder.register_from_tokens("NOT", NotOperator.from_tokens)
+ElementBuilder.register_element("NODE", Node)
+ElementBuilder.register_element("VARIABLE", Variable)
+ElementBuilder.register_element("LINK", Link)
+ElementBuilder.register_element("LINK_TEMPLATE", Link)
+ElementBuilder.register_element("OR", OrOperator)
+ElementBuilder.register_element("AND", AndOperator)
+ElementBuilder.register_element("NOT", NotOperator)
 
 
 class DictQueryTokenizer:
@@ -517,7 +545,7 @@ class DictQueryTokenizer:
         """
         cursor = 0
         tokens = query_tokens.split()
-        cursor, query = TokenObjectBuilder.from_tokens(tokens, cursor)
+        cursor, query = ElementBuilder.from_tokens(tokens, cursor)
         if to_query_callback := DictQueryTokenizer.to_query_mapping.get(type(query)):
             return to_query_callback(query)
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
@@ -525,78 +553,78 @@ class DictQueryTokenizer:
 
 # EXAMPLES OF USE:
 
-# sample_query = {
-#     "and": [
-#         {
-#             "not": {
-#                 "atom_type": "link",
-#                 "type": "Expression",
-#                 "targets": [
-#                     {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
-#                     {
-#                         "atom_type": "link",
-#                         "type": "Expression",
-#                         "targets": [
-#                             {"atom_type": "node", "type": "Symbol", "name": "Concept"},
-#                             {"atom_type": "node", "type": "Symbol", "name": '"human"'},
-#                         ],
-#                     },
-#                     {"atom_type": "variable", "name": "v1"},
-#                 ],
-#             },
-#         },
-#         {
-#             'atom_type': 'link',
-#             'type': 'Expression',
-#             'targets': [
-#                 {'not': {'atom_type': 'node', 'type': 'Symbol', 'name': 'Similarity'}},
-#                 {
-#                     'atom_type': 'link',
-#                     'type': 'Expression',
-#                     'targets': [
-#                         {'atom_type': 'node', 'type': 'Symbol', 'name': 'Concept'},
-#                         {'atom_type': 'node', 'type': 'Symbol', 'name': '"human"'},
-#                     ],
-#                 },
-#                 {'atom_type': 'variable', 'name': 'v1'},
-#             ],
-#         },
-#     ],
-# }
+sample_query = {
+    "and": [
+        {
+            "not": {
+                "atom_type": "link",
+                "type": "Expression",
+                "targets": [
+                    {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
+                    {
+                        "atom_type": "link",
+                        "type": "Expression",
+                        "targets": [
+                            {"atom_type": "node", "type": "Symbol", "name": "Concept"},
+                            {"atom_type": "node", "type": "Symbol", "name": '"human"'},
+                        ],
+                    },
+                    {"atom_type": "variable", "name": "v1"},
+                ],
+            },
+        },
+        {
+            'atom_type': 'link',
+            'type': 'Expression',
+            'targets': [
+                {'not': {'atom_type': 'node', 'type': 'Symbol', 'name': 'Similarity'}},
+                {
+                    'atom_type': 'link',
+                    'type': 'Expression',
+                    'targets': [
+                        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Concept'},
+                        {'atom_type': 'node', 'type': 'Symbol', 'name': '"human"'},
+                    ],
+                },
+                {'atom_type': 'variable', 'name': 'v1'},
+            ],
+        },
+    ],
+}
 
-# print(DictQueryTokenizer.tokenize(sample_query))
-# """
-# Output:
-# LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1
-# """
+print(DictQueryTokenizer.tokenize(sample_query))
+"""
+Output:
+LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1
+"""
 
-# sample_tokens = """
-#     LINK_TEMPLATE Expression 3
-#         NOT NODE Symbol Similarity
-#         LINK Expression 2
-#             NODE Symbol Concept
-#             NODE Symbol "human"
-#         VARIABLE v1
-# """
+sample_tokens = """
+    LINK_TEMPLATE Expression 3
+        NOT NODE Symbol Similarity
+        LINK Expression 2
+            NODE Symbol Concept
+            NODE Symbol "human"
+        VARIABLE v1
+"""
 # sample_tokens = """AND 2 NOT LINK_TEMPLATE Expression 3 NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1 LINK_TEMPLATE Expression 3 NOT NODE Symbol Similarity LINK Expression 2 NODE Symbol Concept NODE Symbol "human" VARIABLE v1"""
 
-# print(DictQueryTokenizer.untokenize(sample_tokens))
-# """
-# Output:
-# {
-#   'atom_type': 'link',
-#   'type': 'Expression',
-#   'targets': [
-#     {'atom_type': 'node', 'type': 'Symbol', 'name': 'Similarity'},
-#     {
-#       'atom_type': 'link',
-#       'type': 'Expression',
-#       'targets': [
-#         {'atom_type': 'node', 'type': 'Symbol', 'name': 'Concept'},
-#         {'atom_type': 'node', 'type': 'Symbol', 'name': '"human"'}
-#       ]
-#     },
-#     {'atom_type': 'variable', 'name': 'v1'}
-#   ]
-# }
-# """
+print(DictQueryTokenizer.untokenize(sample_tokens))
+"""
+Output:
+{
+  'atom_type': 'link',
+  'type': 'Expression',
+  'targets': [
+    {'atom_type': 'node', 'type': 'Symbol', 'name': 'Similarity'},
+    {
+      'atom_type': 'link',
+      'type': 'Expression',
+      'targets': [
+        {'atom_type': 'node', 'type': 'Symbol', 'name': 'Concept'},
+        {'atom_type': 'node', 'type': 'Symbol', 'name': '"human"'}
+      ]
+    },
+    {'atom_type': 'variable', 'name': 'v1'}
+  ]
+}
+"""
