@@ -489,7 +489,7 @@ class DictQueryTokenizer:
         tokens = query_tokens.split()
         cursor = 0
         try:
-            cursor, query = FROM_TOKENS_DICT[tokens[cursor]](tokens)
+            cursor, query = FROM_TOKENS_DICT[tokens[cursor]](tokens, cursor)
             return DictQueryTokenizer.to_query_dict[type(query)](query)
         except KeyError as ex:
             raise ValueError(f"Unsupported element: {tokens[cursor:]}, key error: {ex}")
