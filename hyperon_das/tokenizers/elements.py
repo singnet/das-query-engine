@@ -222,7 +222,7 @@ class Link(Element):
         Raises:
             ValueError: If the tokens do not represent a valid Link.
         """
-        if tokens[cursor] in {"LINK", "LINK_TEMPLATE"}:
+        if tokens[cursor] in ("LINK", "LINK_TEMPLATE"):
             link_tag = tokens[cursor]
             cursor += 1  # Skip the "LINK" or "LINK_TEMPLATE" token
             link = Link(type=tokens[cursor])
@@ -252,6 +252,9 @@ class LinkTemplate(Link):
 
     Inherits from the Link class and is used to denote links that are templates.
     """
+
+    def __init__(self, type: str, targets: list[Any] = []) -> None:
+        super().__init__(type, targets, is_template=True)
 
 
 @dataclasses.dataclass
