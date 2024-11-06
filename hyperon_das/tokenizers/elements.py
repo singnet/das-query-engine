@@ -232,7 +232,7 @@ class OrOperator(Element):
                 cursor, operand = ElementBuilder.from_tokens(tokens, cursor)
                 operator.operands.append(operand)
             return cursor, operator
-        raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor-1:]}")
+        raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
 
 
 @dataclasses.dataclass
