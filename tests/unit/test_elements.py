@@ -1,13 +1,15 @@
 import unittest
+
 import pytest
+
 from hyperon_das.tokenizers.elements import (
-    Node,
-    Variable,
-    Link,
-    OrOperator,
     AndOperator,
-    NotOperator,
     ElementBuilder,
+    Link,
+    Node,
+    NotOperator,
+    OrOperator,
+    Variable,
 )
 
 

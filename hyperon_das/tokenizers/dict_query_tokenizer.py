@@ -1,14 +1,14 @@
 from typing import Any, Callable, Type, TypeAlias
 
 from hyperon_das.tokenizers.elements import (
-    ElementBuilder,
-    Node,
-    Variable,
-    Link,
-    OrOperator,
-    AndOperator,
-    NotOperator,
     TOKENS_DELIMITER,
+    AndOperator,
+    ElementBuilder,
+    Link,
+    Node,
+    NotOperator,
+    OrOperator,
+    Variable,
 )
 
 
@@ -188,6 +188,6 @@ class DictQueryTokenizer:
             if to_query_callback := DictQueryTokenizer.to_query_mapping.get(type(element)):
                 query = to_query_callback(element)
                 if cursor != len(tokens):
-                    raise ValueError(f"Wrong elements count")
+                    raise ValueError("Wrong elements count")
                 return query
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")
