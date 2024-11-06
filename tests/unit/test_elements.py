@@ -37,33 +37,15 @@ class TestElements(unittest.TestCase):
 
     def test_link_to_tokens(self):
         node = Node(type="Symbol", name="TestNode")
-        variable = Variable(name="TestVariable")
+        variable = Variable(name="V1")
         link = Link(type="Expression", targets=[node, variable])
         self.assertEqual(
             link.to_tokens(),
-            [
-                "LINK_TEMPLATE",
-                "Expression",
-                "2",
-                "NODE",
-                "Symbol",
-                "TestNode",
-                "VARIABLE",
-                "TestVariable",
-            ],
+            "LINK_TEMPLATE Expression 2 NODE Symbol TestNode VARIABLE V1".split(),
         )
 
     def test_link_from_tokens(self):
-        tokens = [
-            "LINK_TEMPLATE",
-            "Expression",
-            "2",
-            "NODE",
-            "Symbol",
-            "TestNode",
-            "VARIABLE",
-            "TestVariable",
-        ]
+        tokens = "LINK_TEMPLATE Expression 2 NODE Symbol TestNode VARIABLE V1".split()
         cursor, link = Link.from_tokens(tokens)
         self.assertIsInstance(link, Link)
         self.assertEqual(cursor, len(tokens))
@@ -73,10 +55,29 @@ class TestElements(unittest.TestCase):
         self.assertIsInstance(link.targets[0], Node)
         self.assertIsInstance(link.targets[1], Variable)
 
+    def test_wrong_items_count(self):
+        tokens = [
+            "LINK_TEMPLATE",
+            "Expression",
+            "3",  # Wrong target count - should be 2
+            *["NODE", "Symbol", "TestNode", "VARIABLE", "TestVariable"],
+        ]
+        with pytest.raises(IndexError, match="list index out of range"):
+            Link.from_tokens(tokens)
+        tokens = [
+            "OR",
+            "4",  # Wrong operand count - should be 3
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode1 VARIABLE V1".split()),
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode2 VARIABLE V2".split()),
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode3 VARIABLE V3".split()),
+        ]
+        with pytest.raises(IndexError, match="list index out of range"):
+            OrOperator.from_tokens(tokens)
+
     def test_or_operator_to_tokens(self):
         node1 = Node(type="Symbol", name="TestNode1")
         node2 = Node(type="Symbol", name="TestNode2")
-        variable = Variable(name="TestVariable")
+        variable = Variable(name="V1")
         link1 = Link(type="Expression", targets=[node1, variable])
         link2 = Link(type="Expression", targets=[node2, variable])
         or_operator = OrOperator(operands=[link1, link2])
@@ -85,22 +86,8 @@ class TestElements(unittest.TestCase):
             [
                 "OR",
                 "2",
-                "LINK_TEMPLATE",
-                "Expression",
-                "2",
-                "NODE",
-                "Symbol",
-                "TestNode1",
-                "VARIABLE",
-                "TestVariable",
-                "LINK_TEMPLATE",
-                "Expression",
-                "2",
-                "NODE",
-                "Symbol",
-                "TestNode2",
-                "VARIABLE",
-                "TestVariable",
+                *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode1 VARIABLE V1".split()),
+                *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode2 VARIABLE V1".split()),
             ],
         )
 
@@ -108,22 +95,8 @@ class TestElements(unittest.TestCase):
         tokens = [
             "OR",
             "2",
-            "LINK_TEMPLATE",
-            "Expression",
-            "2",
-            "NODE",
-            "Symbol",
-            "TestNode1",
-            "VARIABLE",
-            "TestVariable",
-            "LINK_TEMPLATE",
-            "Expression",
-            "2",
-            "NODE",
-            "Symbol",
-            "TestNode2",
-            "VARIABLE",
-            "TestVariable",
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode1 VARIABLE V1".split()),
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode2 VARIABLE V1".split()),
         ]
         cursor, or_operator = OrOperator.from_tokens(tokens)
         self.assertEqual(cursor, len(tokens))
@@ -134,7 +107,7 @@ class TestElements(unittest.TestCase):
     def test_and_operator_to_tokens(self):
         node1 = Node(type="Symbol", name="TestNode1")
         node2 = Node(type="Symbol", name="TestNode2")
-        variable = Variable(name="TestVariable")
+        variable = Variable(name="V1")
         link1 = Link(type="Expression", targets=[node1, variable])
         link2 = Link(type="Expression", targets=[node2, variable])
         and_operator = AndOperator(operands=[link1, link2])
@@ -143,22 +116,8 @@ class TestElements(unittest.TestCase):
             [
                 "AND",
                 "2",
-                "LINK_TEMPLATE",
-                "Expression",
-                "2",
-                "NODE",
-                "Symbol",
-                "TestNode1",
-                "VARIABLE",
-                "TestVariable",
-                "LINK_TEMPLATE",
-                "Expression",
-                "2",
-                "NODE",
-                "Symbol",
-                "TestNode2",
-                "VARIABLE",
-                "TestVariable",
+                *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode1 VARIABLE V1".split()),
+                *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode2 VARIABLE V1".split()),
             ],
         )
 
@@ -166,22 +125,8 @@ class TestElements(unittest.TestCase):
         tokens = [
             "AND",
             "2",
-            "LINK_TEMPLATE",
-            "Expression",
-            "2",
-            "NODE",
-            "Symbol",
-            "TestNode1",
-            "VARIABLE",
-            "TestVariable",
-            "LINK_TEMPLATE",
-            "Expression",
-            "2",
-            "NODE",
-            "Symbol",
-            "TestNode2",
-            "VARIABLE",
-            "TestVariable",
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode1 VARIABLE V1".split()),
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode2 VARIABLE V1".split()),
         ]
         cursor, and_operator = AndOperator.from_tokens(tokens)
         self.assertEqual(cursor, len(tokens))
@@ -191,35 +136,21 @@ class TestElements(unittest.TestCase):
 
     def test_not_operator_to_tokens(self):
         node = Node(type="Symbol", name="TestNode")
-        variable = Variable(name="TestVariable")
+        variable = Variable(name="V1")
         link = Link(type="Expression", targets=[node, variable])
         not_operator = NotOperator(operand=link)
         self.assertEqual(
             not_operator.to_tokens(),
             [
                 "NOT",
-                "LINK_TEMPLATE",
-                "Expression",
-                "2",
-                "NODE",
-                "Symbol",
-                "TestNode",
-                "VARIABLE",
-                "TestVariable",
+                *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode VARIABLE V1".split()),
             ],
         )
 
     def test_not_operator_from_tokens(self):
         tokens = [
             "NOT",
-            "LINK_TEMPLATE",
-            "Expression",
-            "2",
-            "NODE",
-            "Symbol",
-            "TestNode",
-            "VARIABLE",
-            "TestVariable",
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode VARIABLE V1".split()),
         ]
         cursor, not_operator = NotOperator.from_tokens(tokens)
         self.assertEqual(cursor, len(tokens))
@@ -248,9 +179,7 @@ class TestElements(unittest.TestCase):
             "LINK_TEMPLATE",
             "Expression",
             "1",  # Invalid target count (less than 2)
-            "NODE",
-            "Symbol",
-            "TestNode",
+            *["NODE", "Symbol", "TestNode"],
         ]
         with pytest.raises(ValueError, match="Link requires at least two targets"):
             Link.from_tokens(tokens)
@@ -259,14 +188,7 @@ class TestElements(unittest.TestCase):
         tokens = [
             "OR",
             "1",  # Invalid operand count (less than 2)
-            "LINK_TEMPLATE",
-            "Expression",
-            "2",
-            "NODE",
-            "Symbol",
-            "TestNode",
-            "VARIABLE",
-            "TestVariable",
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode VARIABLE V1".split()),
         ]
         with pytest.raises(ValueError, match="OR operator requires at least two operands"):
             OrOperator.from_tokens(tokens)
@@ -275,14 +197,7 @@ class TestElements(unittest.TestCase):
         tokens = [
             "AND",
             "1",  # Invalid operand count (less than 2)
-            "LINK_TEMPLATE",
-            "Expression",
-            "2",
-            "NODE",
-            "Symbol",
-            "TestNode",
-            "VARIABLE",
-            "TestVariable",
+            *("LINK_TEMPLATE Expression 2 NODE Symbol TestNode VARIABLE V1".split()),
         ]
         with pytest.raises(ValueError, match="AND operator requires at least two operands"):
             AndOperator.from_tokens(tokens)
@@ -293,11 +208,7 @@ class TestElements(unittest.TestCase):
             "INVALID",
             "Expression",
             "2",  # Invalid operand type
-            "NODE",
-            "Symbol",
-            "TestNode",
-            "VARIABLE",
-            "TestVariable",
+            *["NODE", "Symbol", "TestNode", "VARIABLE", "TestVariable"],
         ]
         with pytest.raises(ValueError, match="Unsupported sequence of tokens:"):
             NotOperator.from_tokens(tokens)

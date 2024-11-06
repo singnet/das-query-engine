@@ -183,8 +183,11 @@ class DictQueryTokenizer:
         """
         cursor = 0
         tokens = query_tokens.split()
-        if len(tokens) > 0 and tokens[0] in ("AND", "OR", "NOT", "LINK_TEMPLATE", "LINK"):
-            cursor, query = ElementBuilder.from_tokens(tokens, cursor)
-            if to_query_callback := DictQueryTokenizer.to_query_mapping.get(type(query)):
-                return to_query_callback(query)
+        if len(tokens) > 0 and tokens[0] in ("AND", "OR", "NOT", "LINK_TEMPLATE"):
+            cursor, element = ElementBuilder.from_tokens(tokens, cursor)
+            if to_query_callback := DictQueryTokenizer.to_query_mapping.get(type(element)):
+                query = to_query_callback(element)
+                if cursor != len(tokens):
+                    raise ValueError(f"Wrong elements count")
+                return query
         raise ValueError(f"Unsupported sequence of tokens: {tokens[cursor:]}")

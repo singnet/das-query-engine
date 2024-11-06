@@ -58,8 +58,32 @@ class TestDictQueryTokenizer(unittest.TestCase):
             DictQueryTokenizer.tokenize(query)
 
     def test_untokenize_invalid_tokens(self):
+        # Unknown token
         tokens = "UNKNOWN InvalidQuery"
         with pytest.raises(ValueError, match="Unsupported sequence of tokens:"):
+            DictQueryTokenizer.untokenize(tokens)
+        # LINK cannot be the first token
+        tokens = "LINK Expression 2 NODE Symbol Similarity NODE Symbol Anything"
+        with pytest.raises(ValueError, match="Unsupported sequence of tokens:"):
+            DictQueryTokenizer.untokenize(tokens)
+
+    def test_untokenize_wrong_elements_count(self):
+        tokens = (
+            "LINK_TEMPLATE Expression "
+            "3"  # Wrong target count - should be 2
+            " NODE Symbol TestNode VARIABLE TestVariable"
+        )
+        with pytest.raises(IndexError, match="list index out of range"):
+            DictQueryTokenizer.untokenize(tokens)
+
+        tokens = (
+            "OR "
+            "2"  # Wrong target count - should be 3
+            " LINK_TEMPLATE Expression 2 NODE Symbol N1 VARIABLE V1"
+            " LINK_TEMPLATE Expression 2 NODE Symbol N2 VARIABLE V2"
+            " LINK_TEMPLATE Expression 2 NODE Symbol N3 VARIABLE V3"
+        )
+        with pytest.raises(ValueError, match="Wrong elements count"):
             DictQueryTokenizer.untokenize(tokens)
 
     def test_tokenize_invalid_start_node(self):
