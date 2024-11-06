@@ -70,7 +70,7 @@ class TestDictQueryTokenizer(unittest.TestCase):
     def test_untokenize_wrong_elements_count(self):
         tokens = (
             "LINK_TEMPLATE Expression "
-            "3"  # Wrong target count - should be 2
+            "3"  # Wrong targets count - should be 2
             " NODE Symbol TestNode VARIABLE TestVariable"
         )
         with pytest.raises(IndexError, match="list index out of range"):
@@ -78,7 +78,7 @@ class TestDictQueryTokenizer(unittest.TestCase):
 
         tokens = (
             "OR "
-            "2"  # Wrong target count - should be 3
+            "2"  # Wrong operands count - should be 3
             " LINK_TEMPLATE Expression 2 NODE Symbol N1 VARIABLE V1"
             " LINK_TEMPLATE Expression 2 NODE Symbol N2 VARIABLE V2"
             " LINK_TEMPLATE Expression 2 NODE Symbol N3 VARIABLE V3"
