@@ -1,30 +1,28 @@
-import pytest
+# flake8: noqa F811
+
 from hyperon_das_atomdb.database import LinkT
 
 import hyperon_das.link_filters as link_filter
 from hyperon_das.client import FunctionsClient
-
-from .helpers import metta_animal_base_handles
-from .remote_das_info import remote_das_host, remote_das_port
+from tests.integration.helpers import fass_fixture, metta_animal_base_handles
 
 
 class TestVultrClientIntegration:
-    @pytest.fixture()
-    def server(self):
-        return FunctionsClient(host=remote_das_host, port=remote_das_port)
-
-    def test_get_atom(self, server: FunctionsClient):
-        result = server.get_atom(handle=metta_animal_base_handles.human)
+    def test_get_atom(
+        self,
+        fass_fixture: FunctionsClient,
+    ):
+        result = fass_fixture.get_atom(handle=metta_animal_base_handles.human)
         assert result.handle == metta_animal_base_handles.human
         assert result.name == '"human"'
         assert result.named_type == 'Symbol'
 
-        result = server.get_atom(handle=metta_animal_base_handles.monkey)
+        result = fass_fixture.get_atom(handle=metta_animal_base_handles.monkey)
         assert result.handle == metta_animal_base_handles.monkey
         assert result.name == '"monkey"'
         assert result.named_type == 'Symbol'
 
-        result = server.get_atom(handle=metta_animal_base_handles.similarity_human_monkey)
+        result = fass_fixture.get_atom(handle=metta_animal_base_handles.similarity_human_monkey)
         assert result.handle == metta_animal_base_handles.similarity_human_monkey
         assert result.named_type == 'Expression'
         assert result.targets == [
@@ -33,20 +31,20 @@ class TestVultrClientIntegration:
             metta_animal_base_handles.monkey,
         ]
 
-    def test_get_links(self, server: FunctionsClient):
-        links1 = server.get_links(
+    def test_get_links(self, fass_fixture: FunctionsClient):  # noqa: F811
+        links1 = fass_fixture.get_links(
             link_filter.FlatTypeTemplate(['Symbol', 'Symbol', 'Symbol'], 'Expression')
         )
-        links2 = server.get_links(link_filter.NamedType('Expression'))
+        links2 = fass_fixture.get_links(link_filter.NamedType('Expression'))
         assert len(links1) == 43
         assert len(links2) == 43
 
-    def test_count_atoms(self, server: FunctionsClient):
-        ret = server.count_atoms()
+    def test_count_atoms(self, fass_fixture: FunctionsClient):
+        ret = fass_fixture.count_atoms()
         assert ret == {'atom_count': 66}
 
-    def test_query(self, server: FunctionsClient):
-        answer = server.query(
+    def test_query(self, fass_fixture: FunctionsClient):
+        answer = fass_fixture.query(
             {
                 "atom_type": "link",
                 "type": "Expression",
@@ -71,7 +69,7 @@ class TestVultrClientIntegration:
         assert handles[1] == metta_animal_base_handles.human
         assert handles[2] == metta_animal_base_handles.mammal
 
-        answer = server.query(
+        answer = fass_fixture.query(
             {
                 "atom_type": "link",
                 "type": "Expression",
@@ -96,7 +94,7 @@ class TestVultrClientIntegration:
         assert handles[1] == metta_animal_base_handles.human
         assert handles[2] == metta_animal_base_handles.monkey
 
-    def test_get_incoming_links(self, server: FunctionsClient):
+    def test_get_incoming_links(self, fass_fixture: FunctionsClient):
         expected_handles = [
             metta_animal_base_handles.similarity_human_monkey,
             metta_animal_base_handles.similarity_human_chimp,
@@ -108,16 +106,16 @@ class TestVultrClientIntegration:
             metta_animal_base_handles.human_typedef,
         ]
 
-        expected_atoms = [server.get_atom(handle) for handle in expected_handles]
+        expected_atoms = [fass_fixture.get_atom(handle) for handle in expected_handles]
 
         expected_atoms_targets: dict[str, tuple[dict, list[dict]]] = {}
         for atom in expected_atoms:
             targets_documents: list[dict] = []
             for target in atom.targets:
-                targets_documents.append(server.get_atom(target).to_dict())
+                targets_documents.append(fass_fixture.get_atom(target).to_dict())
             expected_atoms_targets[atom.handle] = (atom.to_dict(), targets_documents)
 
-        response_handles = server.get_incoming_links(
+        response_handles = fass_fixture.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=True
         )
         assert all(isinstance(handle, str) for handle in response_handles)
@@ -127,14 +125,14 @@ class TestVultrClientIntegration:
         # response_handles has an extra link (named_type == Expression) defining
         #     the metta expression (: "human" Type)
         # assert len(set(response_handles).difference(set(expected_handles))) == 1
-        response_handles = server.get_incoming_links(
+        response_handles = fass_fixture.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=True
         )
         assert all(isinstance(handle, str) for handle in response_handles)
         assert len(response_handles) == 8
         # assert len(set(response_handles).difference(set(expected_handles))) == 1
 
-        response_atoms = server.get_incoming_links(
+        response_atoms = fass_fixture.get_incoming_links(
             metta_animal_base_handles.human, targets_document=False, handles_only=False
         )
         assert len(response_atoms) == 8
@@ -145,7 +143,7 @@ class TestVultrClientIntegration:
             assert len(atom.targets) == 3
             assert atom.handle in [a.handle for a in expected_atoms]
 
-        response_atoms = server.get_incoming_links(metta_animal_base_handles.human)
+        response_atoms = fass_fixture.get_incoming_links(metta_animal_base_handles.human)
         assert len(response_atoms) == 8
         for atom in response_atoms:
             assert isinstance(
@@ -154,7 +152,7 @@ class TestVultrClientIntegration:
             assert len(atom.targets) == 3
             assert atom.handle in [a.handle for a in expected_atoms]
 
-        response_atoms_targets = server.get_incoming_links(
+        response_atoms_targets = fass_fixture.get_incoming_links(
             metta_animal_base_handles.human, targets_document=True, handles_only=False
         )
         assert len(response_atoms_targets) == 8

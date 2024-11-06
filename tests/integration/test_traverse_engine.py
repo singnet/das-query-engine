@@ -1,17 +1,17 @@
 import pytest
 
 from hyperon_das.das import DistributedAtomSpace
-
-from .helpers import (
+from tests.integration.helpers import (
     _db_down,
     _db_up,
     cleanup,
+    get_remote_das_port,
     load_metta_animals_base,
     metta_animal_base_handles,
     mongo_port,
     redis_port,
+    remote_das_host,
 )
-from .remote_das_info import remote_das_host, remote_das_port
 
 # from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
 
@@ -209,6 +209,6 @@ class TestTraverseEngine:
 
     def test_traverse_engine_with_remote_das(self):
         das = DistributedAtomSpace(
-            query_engine='remote', host=remote_das_host, port=remote_das_port
+            query_engine='remote', host=remote_das_host, port=get_remote_das_port()
         )
         self._check_asserts(das)

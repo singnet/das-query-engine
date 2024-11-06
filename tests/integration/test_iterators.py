@@ -1,3 +1,5 @@
+# flake8: noqa F811
+
 import pytest
 
 from hyperon_das import DistributedAtomSpace
@@ -7,40 +9,15 @@ from tests.integration.helpers import (
     _db_down,
     _db_up,
     cleanup,
+    das_local_fixture_class,
+    das_remote_fixture_module,
+    get_remote_das_port,
     load_metta_animals_base,
     metta_animal_base_handles,
     mongo_port,
     redis_port,
+    remote_das_host,
 )
-from tests.integration.remote_das_info import remote_das_host, remote_das_port
-
-# from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher as hasher
-
-
-@pytest.fixture
-def database_fixture():
-    _db_up()
-    yield
-    _db_down()
-
-
-@pytest.fixture
-def das_local_fixture():
-    yield DistributedAtomSpace(
-        query_engine='local',
-        atomdb='redis_mongo',
-        mongo_port=mongo_port,
-        mongo_username='dbadmin',
-        mongo_password='dassecret',
-        redis_port=redis_port,
-        redis_cluster=False,
-        redis_ssl=False,
-    )
-
-
-@pytest.fixture
-def das_remote_fixture():
-    yield DistributedAtomSpace(query_engine='remote', host=remote_das_host, port=remote_das_port)
 
 
 @pytest.mark.skip(
@@ -116,10 +93,10 @@ class TestTraverseLinks:
         self._check_asserts(das, iterator)
         _db_down()
 
-    def test_traverse_links_with_remote_das(self, human_handle):
-        das = DistributedAtomSpace(
-            query_engine='remote', host=remote_das_host, port=remote_das_port
-        )
+    def test_traverse_links_with_remote_das(
+        self, human_handle, das_remote_fixture: DistributedAtomSpace
+    ):
+        das = das_remote_fixture
         traverse = das.get_traversal_cursor(human_handle)
         iterator = traverse.get_links(filter=self._is_expression_atom)
         self._check_asserts(das, iterator)
@@ -192,10 +169,10 @@ class TestTraverseNeighbors:
         self._check_asserts(das, iterator)
         _db_down()
 
-    def test_traverse_neighbors_with_remote_das(self, human_handle):
-        das = DistributedAtomSpace(
-            query_engine='remote', host=remote_das_host, port=remote_das_port
-        )
+    def test_traverse_neighbors_with_remote_das(
+        self, human_handle, das_remote_fixture: DistributedAtomSpace
+    ):
+        das = das_remote_fixture
         traverse = das.get_traversal_cursor(human_handle)
         iterator = traverse.get_neighbors(filters=(None, self._is_literal_atom))
         self._check_asserts(das, iterator)
@@ -325,10 +302,8 @@ class TestCustomQuery:
     @pytest.mark.skip(
         "Requires Mongo indices to be updated with the new custom attributes. See https://github.com/singnet/das-query-engine/issues/357"
     )
-    def test_custom_query_with_local_das_redis_mongo(
-        self, _cleanup, database_fixture, das_local_fixture
-    ):
-        das = das_local_fixture
+    def test_custom_query_with_local_das_redis_mongo(self, _cleanup, das_local_fixture_class):
+        das = das_local_fixture_class
         load_metta_animals_base(das)
         das.commit_changes()
         self._asserts(das)
@@ -336,24 +311,24 @@ class TestCustomQuery:
     @pytest.mark.skip("Waiting fix")
     def test_custom_query_with_remote_das(self):
         das = DistributedAtomSpace(
-            query_engine='remote', host=remote_das_host, port=remote_das_port
+            query_engine='remote', host=remote_das_host, port=get_remote_das_port()
         )
         self._asserts(das)
 
-    def test_get_atom_by_field_local(self, database_fixture, das_local_fixture):
-        das = das_local_fixture
+    def test_get_atom_by_field_local(self, das_local_fixture_class):
+        das = das_local_fixture_class
         load_metta_animals_base(das)
         das.commit_changes()
         atom_field = das.get_atoms_by_field({'name': '"chimp"'})
         assert atom_field
 
-    def test_get_atoms_by_field_remote(self, das_remote_fixture):
-        das = das_remote_fixture
+    def test_get_atoms_by_field_remote(self, das_remote_fixture_module):
+        das = das_remote_fixture_module
         atom_field = das.get_atoms_by_field({'name': '"chimp"'})
         assert atom_field
 
-    def test_get_atoms_by_text_field_local(self, database_fixture, das_local_fixture):
-        das = das_local_fixture
+    def test_get_atoms_by_text_field_local(self, das_local_fixture_class):
+        das = das_local_fixture_class
         load_metta_animals_base(das)
         das.commit_changes()
         with pytest.raises(Exception, match=r'text index required for \$text query'):
@@ -361,19 +336,19 @@ class TestCustomQuery:
         atom_text_field = das.get_atoms_by_text_field(text_value='"chim', field='name')
         assert atom_text_field
 
-    def test_get_atoms_by_text_field_remote(self, das_remote_fixture):
-        das = das_remote_fixture
+    def test_get_atoms_by_text_field_remote(self, das_remote_fixture_module):
+        das = das_remote_fixture_module
         atom_text_field = das.get_atoms_by_text_field(text_value='"chim', field='name')
         assert atom_text_field
 
-    def test_get_atoms_starting_local(self, database_fixture, das_local_fixture):
-        das = das_local_fixture
+    def test_get_atoms_starting_local(self, das_local_fixture_class):
+        das = das_local_fixture_class
         load_metta_animals_base(das)
         das.commit_changes()
         atom_starting_with = das.get_node_by_name_starting_with('Symbol', '"mon')
         assert atom_starting_with
 
-    def test_get_atoms_starting_remote(self, das_remote_fixture):
-        das = das_remote_fixture
+    def test_get_atoms_starting_remote(self, das_remote_fixture_module):
+        das = das_remote_fixture_module
         atom_starting_with = das.get_node_by_name_starting_with('Symbol', '"mon')
         assert atom_starting_with
