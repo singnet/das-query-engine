@@ -56,9 +56,7 @@ class Assignment:
         return self.hashcode < other.hashcode
 
     def __repr__(self) -> str:
-        return str(
-            [tuple([label, self.mapping[label]]) for label in sorted(self.labels)]
-        )
+        return str([tuple([label, self.mapping[label]]) for label in sorted(self.labels)])
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -220,8 +218,7 @@ def check_server_connection(url: str) -> Tuple[int, str]:
                 f"hyperon-das: {remote_das_version}, hyperon-das-atomdb: {remote_atomdb_version}"
             )
             error_message = (
-                f"Version mismatch. Local: {local_versions}. "
-                f"Remote: {remote_versions}."
+                f"Version mismatch. Local: {local_versions}. " f"Remote: {remote_versions}."
             )
             logger().error(error_message)
             raise Exception(error_message)
@@ -254,13 +251,14 @@ def compare_versions(version1: str, version2: str, component_index: int) -> Unio
     components2 = get_version_components(version2)
 
     if components1 is None or components2 is None:
-        return None 
+        return None
 
     for i in range(component_index + 1):
         if components1[i] != components2[i]:
             return False
 
     return True
+
 
 def compare_major_versions(version1: str, version2: str) -> Union[int, None]:
     return compare_versions(version1, version2, 0)
