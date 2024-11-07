@@ -114,8 +114,18 @@ make benchmark-tests-metta-file OPTIONS="--word_link_percentage=0.01"
 
 You can do the same to run integration tests
 
+Arguments allowed in OPTIONS:
+- `--no-destroy` (default: False): Prevents the test container from being destroyed after the test ends, 
+allowing for faster subsequent runs by reusing the same container.
+- `--build` (default: False): Rebuilds the container image, use only if the Dockerfile has changed, as rebuilding the 
+container image can take a significant amount of time.
+
 ```bash
 make integration-tests
+```
+or
+```bash
+make integration-tests OPTIONS="--no-destroy"
 ```
 
 The integration tests use a remote testing server hosted on Vultr, at the address `45.63.85.59`, port `8080`. The loaded knowledge base is the animal base, which contains the Nodes and Links listed below:

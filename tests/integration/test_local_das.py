@@ -1,30 +1,23 @@
-import pytest
+# flake8: noqa F811
+
 from hyperon_das_atomdb.database import LinkT, NodeT
 
 from hyperon_das import DistributedAtomSpace
-from tests.integration.remote_das_info import remote_das_host, remote_das_port
+from tests.integration.helpers import (
+    das_local_custom_fixture,
+    das_local_fixture,
+    das_remote_fixture_module,
+    get_remote_das_port,
+    mongo_port,
+    redis_port,
+    remote_das_host,
+)
 from tests.utils import load_animals_base
-
-from .helpers import _db_down, _db_up, cleanup, mongo_port, redis_port
 
 
 class TestLocalDASRedisMongo:
-    @pytest.fixture(scope="session", autouse=True)
-    def _cleanup(self, request):
-        return cleanup(request)
-
-    def test_queries(self):
-        _db_up()
-        das = DistributedAtomSpace(
-            query_engine="local",
-            atomdb="redis_mongo",
-            mongo_port=mongo_port,
-            mongo_username="dbadmin",
-            mongo_password="dassecret",
-            redis_port=redis_port,
-            redis_cluster=False,
-            redis_ssl=False,
-        )
+    def test_queries(self, das_local_fixture: DistributedAtomSpace):
+        das = das_local_fixture
         assert das.count_atoms() == {"atom_count": 0}
         load_animals_base(das)
         assert das.count_atoms() == {"atom_count": 0}
@@ -35,20 +28,9 @@ class TestLocalDASRedisMongo:
             "node_count": 14,
             "link_count": 26,
         }
-        _db_down()
 
-    def test_add_atom_persistence(self):
-        _db_up()
-        das = DistributedAtomSpace(
-            query_engine="local",
-            atomdb="redis_mongo",
-            mongo_port=mongo_port,
-            mongo_username="dbadmin",
-            mongo_password="dassecret",
-            redis_port=redis_port,
-            redis_cluster=False,
-            redis_ssl=False,
-        )
+    def test_add_atom_persistence(self, das_local_fixture: DistributedAtomSpace):
+        das = das_local_fixture
         assert das.count_atoms() == {"atom_count": 0}
         load_animals_base(das)
         assert das.count_atoms() == {"atom_count": 0}
@@ -91,20 +73,11 @@ class TestLocalDASRedisMongo:
             "link_count": 27,
         }
 
-        _db_down()
-
-    def test_fetch_atoms_from_remote_server(self):
-        _db_up()
-        das = DistributedAtomSpace(
-            query_engine="local",
-            atomdb="redis_mongo",
-            mongo_port=mongo_port,
-            mongo_username="dbadmin",
-            mongo_password="dassecret",
-            redis_port=redis_port,
-            redis_cluster=False,
-            redis_ssl=False,
-        )
+    def test_fetch_atoms_from_remote_server(
+        self, das_local_fixture: DistributedAtomSpace, das_remote_fixture_module
+    ):
+        das = das_local_fixture
+        _ = das_remote_fixture_module
         assert das.count_atoms() == {"atom_count": 0}
         das.fetch(
             query={
@@ -117,23 +90,21 @@ class TestLocalDASRedisMongo:
                 ],
             },
             host=remote_das_host,
-            port=remote_das_port,
+            port=get_remote_das_port(),
         )
         assert das.count_atoms({"precise": True}) == {
             "atom_count": 10,
             "node_count": 6,
             "link_count": 4,
         }
-        _db_down()
 
-    def test_fetch_atoms(self):
-        _db_up()
-        das = DistributedAtomSpace(
-            query_engine="local",
-            atomdb="redis_mongo",
+    def test_fetch_atoms(self, das_local_custom_fixture):
+        das = das_local_custom_fixture(
+            query_engine='local',
+            atomdb='redis_mongo',
             mongo_port=mongo_port,
-            mongo_username="dbadmin",
-            mongo_password="dassecret",
+            mongo_username='dbadmin',
+            mongo_password='dassecret',
             redis_port=redis_port,
             redis_cluster=False,
             redis_ssl=False,
@@ -159,12 +130,12 @@ class TestLocalDASRedisMongo:
             },
         )
         assert len(documents) == 9
-        _db_down()
 
 
 class TestLocalDASRamOnly:
-    def test_fetch_atoms_local_das_ram_only(self):
+    def test_fetch_atoms_local_das_ram_only(self, das_remote_fixture_module):
         das = DistributedAtomSpace()
+        _ = das_remote_fixture_module
         assert das.count_atoms() == {"atom_count": 0, "link_count": 0, "node_count": 0}
         das.fetch(
             query={
@@ -177,7 +148,7 @@ class TestLocalDASRamOnly:
                 ],
             },
             host=remote_das_host,
-            port=remote_das_port,
+            port=get_remote_das_port(),
         )
         assert das.count_atoms({"precise": True}) == {
             "atom_count": 10,

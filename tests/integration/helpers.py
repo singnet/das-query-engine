@@ -2,14 +2,20 @@ import os
 import subprocess
 from typing import Type
 
+import pytest
 from hyperon_das_atomdb import AtomDB
 from hyperon_das_atomdb.database import LinkT, NodeT
+
+from hyperon_das.client import FunctionsClient
+from hyperon_das.das import DistributedAtomSpace as DAS
 
 DistributedAtomSpace = Type["DistributedAtomSpace"]
 
 redis_port = "15926"
 mongo_port = "15927"
 scripts_path = "./tests/integration/scripts/"
+remote_das_port = None
+remote_das_host = "0.0.0.0"
 devnull = open(os.devnull, "w")
 
 DAS_MONGODB_HOSTNAME = os.environ.get("DAS_MONGODB_HOSTNAME")
@@ -33,6 +39,11 @@ os.environ["DAS_REDIS_USERNAME"] = ""
 os.environ["DAS_REDIS_PASSWORD"] = ""
 os.environ["DAS_USE_REDIS_CLUSTER"] = "false"
 os.environ["DAS_USE_REDIS_SSL"] = "false"
+
+
+def get_remote_das_port():
+    global remote_das_port
+    return remote_das_port
 
 
 def cleanup(request):
@@ -63,6 +74,80 @@ def cleanup(request):
 
     request.addfinalizer(restore_environment)
     request.addfinalizer(enforce_containers_removal)
+
+
+@pytest.fixture(scope="module")
+def das_remote_fixture_module(environment_manager):
+    yield DAS(query_engine='remote', host=remote_das_host, port=remote_das_port)
+
+
+@pytest.fixture(scope="class")
+def das_local_fixture_class():
+    _db_up()
+    yield DAS(
+        query_engine='local',
+        atomdb='redis_mongo',
+        mongo_port=mongo_port,
+        mongo_username='dbadmin',
+        mongo_password='dassecret',
+        redis_port=redis_port,
+        redis_cluster=False,
+        redis_ssl=False,
+    )
+    _db_down()
+
+
+@pytest.fixture
+def das_local_fixture():
+    _db_up()
+    yield DAS(
+        query_engine='local',
+        atomdb='redis_mongo',
+        mongo_port=mongo_port,
+        mongo_username='dbadmin',
+        mongo_password='dassecret',
+        redis_port=redis_port,
+        redis_cluster=False,
+        redis_ssl=False,
+    )
+    _db_down()
+
+
+@pytest.fixture
+def das_local_custom_fixture():
+    _db_up()
+    yield DAS
+    _db_down()
+
+
+@pytest.fixture(scope="module")
+def fass_fixture(environment_manager):
+    yield FunctionsClient(host=remote_das_host, port=remote_das_port)
+
+
+def remote_up(build):
+    global remote_das_port
+    args = "--build" if build else ""
+    s = subprocess.run(
+        f"bash {scripts_path}/env_up.sh {args}".split(),
+        capture_output=True,
+        text=True,
+    )
+    if s.returncode != 0:
+        raise Exception(f"Failed to start remote DAS: ({s.stdout})")
+    else:
+        remote_das_port = int(s.stdout)
+
+
+def remote_down(no_destroy):
+    args = "--no-destroy" if no_destroy else ""
+    s = subprocess.run(
+        f"bash {scripts_path}/env_down.sh {args}".split(),
+        capture_output=True,
+        text=True,
+    )
+    if s.returncode != 0:
+        raise Exception(f"Failed to stop/remove remote DAS: ({s.stderr})")
 
 
 def _db_up():

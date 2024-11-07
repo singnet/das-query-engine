@@ -1,6 +1,7 @@
 import pytest
 
 from hyperon_das import DistributedAtomSpace
+from tests.integration.helpers import get_remote_das_port, remote_das_host
 
 from .helpers import (
     MettaAnimalBaseHandlesCollection,
@@ -11,7 +12,6 @@ from .helpers import (
     mongo_port,
     redis_port,
 )
-from .remote_das_info import remote_das_host, remote_das_port
 
 das_instance = {}
 
@@ -40,7 +40,7 @@ class TestDASQueryAPI:
         das_instance["local_redis_mongo"].commit_changes()
 
         das_instance["remote"] = DistributedAtomSpace(
-            query_engine='remote', host=remote_das_host, port=remote_das_port
+            query_engine='remote', host=remote_das_host, port=get_remote_das_port()
         )
 
     @classmethod
