@@ -20,7 +20,7 @@ using namespace std;
  */
 pair<size_t, string> _tokenize(const string& expression, size_t cursor = 0) {
     string output;
-    string header = "LINK Expression ";
+    string header = "LINK Expression";
     int target_count = 0;
     string token;
     char ch;
@@ -32,13 +32,13 @@ pair<size_t, string> _tokenize(const string& expression, size_t cursor = 0) {
         if (ch == '(') {
             if (cursor > start) {
                 tie(cursor, token) = _tokenize(expression, cursor);
-                output += token;
+                output += " " + token;
                 target_count++;
             }
             continue;
 
         } else if (ch == ')') {
-            return make_pair(cursor, header + to_string(target_count) + " " + output);
+            return make_pair(cursor, header + " " + to_string(target_count) + output);
 
         } else if (isspace(ch)) {
             continue;
@@ -56,11 +56,11 @@ pair<size_t, string> _tokenize(const string& expression, size_t cursor = 0) {
             --cursor;
 
             if (token[0] == '$') {
-                header = "LINK_TEMPLATE Expression ";
-                output += "VARIABLE " + token.substr(1) + " ";
+                header = "LINK_TEMPLATE Expression";
+                output += " VARIABLE " + token.substr(1);
                 target_count++;
             } else {
-                output += "NODE Symbol " + token + " ";
+                output += " NODE Symbol " + token;
                 target_count++;
             }
         }
