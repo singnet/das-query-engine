@@ -40,7 +40,8 @@ class DASNodeQueryEngine(QueryEngine):
     def query(
         self, query: Query, parameters: dict[str, Any] | None = None
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
-        if parameters and parameters.get("tokenize"):
+        tokenize = parameters.get("tokenize") if parameters else True
+        if tokenize:
             query = DictQueryTokenizer.tokenize(query).split()
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
         start = time.time()

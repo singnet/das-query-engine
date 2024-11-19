@@ -45,7 +45,7 @@ class TestNodeDAS:
         # pytest.skip("skip")
         das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
         count = 0
-        for q in das.query(query):
+        for q in das.query(query, {"tokenize": False}):
             assert isinstance(q, list)
             assert len(q) > 0
             count += 1
@@ -65,7 +65,7 @@ class TestNodeDAS:
     def test_node_das_query_og(self, query, expected):
         das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
         count = 0
-        for q in das.query(query, {"tokenize": True}):
+        for q in das.query(query):
             assert isinstance(q, list)
             assert len(q) > 0
             count += 1
