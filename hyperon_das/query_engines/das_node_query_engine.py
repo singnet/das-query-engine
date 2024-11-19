@@ -19,7 +19,6 @@ from hyperon_das.das_node.query_answer import QueryAnswer
 
 class DASNodeQueryEngine(QueryEngine):
 
-
     def __init__(self, host, port, timeout=60):
         self.next_query_port =  randint(60000, 61999)
         self.timeout = timeout
@@ -27,34 +26,23 @@ class DASNodeQueryEngine(QueryEngine):
         self.host = host
         self.port = port
         self.remote_das_node = ":".join([self.host, str(self.port)])
-        # self.das_node = DASNode(node_id=self)
-        print(self.id)
         self.requestor = DASNode(self.id, self.remote_das_node)
-        # self.requestor = SimpleNodeClient(self.id, self.remote_das_node)
-        # self.requestor2 = SimpleNodeServer(self.remote_das_node)
-        # self.requestor2.join_network()
-        # self.requestor.join_network()
+
 
 
     def query(
         self, query: Query, parameters: dict[str, Any] | None = None
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
-        # qs = self.requestor.send("pattern_matching_query", query, self.remote_das_node)
-        # print("aaa", qs)
-        # assert qs
-        # assert False
-        qs: QueryAnswer = None
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
         start = time.time()
         while not response.finished():
-            while (qs := response.pop()) == None:
+            while (qs := response.pop()) is None:
+                if time.time() - start > self.timeout:
+                    raise Exception("Timeout")
                 if response.finished():
                     break
                 else:
-                    print("sleep")
-                    sleep(5)
-                if time.time() - start > self.timeout:
-                    raise Exception("Timeout")
+                    sleep(1)
             if qs is not None:
                 yield qs
 

@@ -42,9 +42,17 @@ services:
 
   metta-parser:
 #    image: trueagi/das:latest-metta-parser
-    image: trueagi/das:0.5.3-metta-parser
+#    image: trueagi/das:0.5.3-metta-parser
+    image: trueagi/das:0.5.4-metta-parser
+#    build:
+#      context: https://github.com/singnet/das-metta-parser.git#master:docker
+#    build: docker_metta_parser
     container_name: test-das-metta-parser
+    working_dir: /opt/das-metta-parser
     command: db_loader /tmp/animals.metta
+#    command: sleep infinity
+    network_mode: "host"
+
     volumes:
       - ./examples/data:/tmp
     environment:
@@ -83,7 +91,7 @@ services:
 #    command: ./bin 35700
 #    command: ./query_broker 35700
     command: sleep infinity
-    network_mode: "host"
+    network_mode: host
     ports:
       - 35700:35700
     depends_on:
@@ -92,9 +100,9 @@ services:
       - metta-parser
     environment:
       DAS_MONGODB_NAME: das
-      DAS_MONGODB_HOSTNAME: test-das-mongodb
+      DAS_MONGODB_HOSTNAME: localhost
       DAS_MONGODB_PORT: 27017
-      DAS_REDIS_HOSTNAME: test-das-redis
+      DAS_REDIS_HOSTNAME: localhost
       DAS_REDIS_PORT: 6379
       DAS_MONGODB_USERNAME: root
       DAS_MONGODB_PASSWORD: root

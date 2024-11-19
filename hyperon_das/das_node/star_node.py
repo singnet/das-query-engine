@@ -11,17 +11,15 @@ class StarNode(AtomSpaceNode):
             self.server_id = server_id
             self.is_server = False
             self.add_peer(server_id)
-            print(server_id)
         else:
             # If no server_id, this is a server node
             self.is_server = True
 
-        print(self.is_server)
         # Join the network regardless of server/client
         self.join_network()
 
     def node_joined_network(self, node_id: str):
-        print("join", node_id)
+        # print("join", node_id)
         if self.is_server:
             self.add_peer(node_id)
 

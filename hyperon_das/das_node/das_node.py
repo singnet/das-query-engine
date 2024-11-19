@@ -14,9 +14,7 @@ class DASNode(StarNode):
         super().__init__(node_id, server_id)
         self.initialize()
 
-    def __del__(self):
-        # Destructor (although Python handles memory management automatically)
-        pass
+
 
     def pattern_matcher_query(self, tokens: list, context: str = ""):
         if self.is_server:
@@ -25,13 +23,8 @@ class DASNode(StarNode):
         # TODO: Update this when requestor is set in basic Message
         query_id = self.next_query_id()
         # print(query_id, tokens)
-        args = [query_id, context] + tokens
-        print(self.server_id)
-        print(args)
+        args = [query_id] + tokens
         self.send(DASNode.PATTERN_MATCHING_QUERY, args, self.server_id)
-
-
-        print('send')
         return RemoteIterator(query_id)
 
     def next_query_id(self) -> str:
@@ -51,11 +44,12 @@ class DASNode(StarNode):
         return query_id
 
     def message_factory(self, command: str, args: list) -> Message:
+        # print("DASNode", "message_factory")
         message = super().message_factory(command, args)
         if message:
             return message
-        if command == DASNode.PATTERN_MATCHING_QUERY:
-            return PatternMatchingQuery(command, args)
+        # if command == DASNode.PATTERN_MATCHING_QUERY:
+        #     return PatternMatchingQuery(command, args)
         return None
 
     def initialize(self):

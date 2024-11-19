@@ -14,9 +14,6 @@ class Assignment:
         self.labels = [None] * MAX_NUMBER_OF_VARIABLES_IN_QUERY
         self.values = [None] * MAX_NUMBER_OF_VARIABLES_IN_QUERY
 
-    def __del__(self):
-        # Destructor logic if needed
-        pass
 
     def assign(self, label: str, value: str) -> bool:
         for i in range(self.size):
@@ -92,9 +89,9 @@ class QueryAnswer:
         if handle:
             self.add_handle(handle)
 
-    def __del__(self):
-        # Destructor logic if needed
-        pass
+    # def __del__(self):
+    #     # Destructor logic if needed
+    #     pass
 
     def add_handle(self, handle: str):
         self.handles[self.handles_size] = handle
@@ -162,3 +159,6 @@ class QueryAnswer:
     def to_string(self) -> str:
         handles_str = ", ".join(self.handles[:self.handles_size])
         return f"QueryAnswer<{self.handles_size},{self.assignment.variable_count()}> [{handles_str}] {self.assignment.to_string()}"
+
+    def __str__(self):
+        return self.to_string()

@@ -26,14 +26,17 @@ class QueryNode(AtomSpaceNode):
         self.graceful_shutdown()
 
     def message_factory(self, command: str, args: List[str]) -> Optional[Message]:
-        print(command, args)
+        # print(command, args)
         message = super().message_factory(command, args)
         if message:
             return message
         if command == QueryNode.QUERY_ANSWER_FLOW_COMMAND:
             return QueryAnswerFlow(command, args)
         elif command == QueryNode.QUERY_ANSWER_TOKENS_FLOW_COMMAND:
+            # print("QUERY_ANSWER_TOKENS_FLOW_COMMAND")
             return QueryAnswerTokensFlow(command, args)
+            # print("QUERY_ANSWER_TOKENS_FLOW_COMMAND", 2)
+
         elif command == QueryNode.QUERY_ANSWERS_FINISHED_COMMAND:
             return QueryAnswersFinished(command, args)
         return None
@@ -65,6 +68,7 @@ class QueryNode(AtomSpaceNode):
         self.query_answer_queue.enqueue(query_answer)
 
     def pop_query_answer(self) -> QueryAnswer:
+        # print("pop_query_answer")
         return self.query_answer_queue.dequeue()
 
     def is_query_answers_empty(self) -> bool:
@@ -100,35 +104,38 @@ class QueryNodeServer(QueryNode):
 class QueryAnswerFlow(Message):
 
     def __init__(self, command: str, args: List[str]):
+        super().__init__()
         self.query_answers = [QueryAnswer(pointer) for pointer in args]
 
     def act(self, arg, *args, **kwargs):
-        print(arg, *args, **kwargs)
-        # query_node = node  # Assuming dynamic_pointer_cast logic is handled here
-        # for query_answer in self.query_answers:
-        #     query_node.add_query_answer(query_answer)
+        query_node = arg  # Assuming dynamic_pointer_cast logic is handled here
+        for query_answer in self.query_answers:
+            query_node.add_query_answer(query_answer)
 
 
 class QueryAnswerTokensFlow(Message):
 
     def __init__(self, command: str, args: List[str]):
+        super().__init__()
+        # print("QueryAnswerTokensFlow")
         self.query_answers_tokens = args
+        # print(args)
 
     def act(self,  arg, *args, **kwargs):
-        print(arg, *args, **kwargs)
-        # query_node = node  # Assuming dynamic_pointer_cast logic is handled here
-        # for tokens in self.query_answers_tokens:
-        #     query_answer = QueryAnswer()
-        #     query_answer.untokenize(tokens)
-        #     query_node.add_query_answer(query_answer)
+        # print("QueryAnswerTokensFlow", "act", arg, *args, **kwargs)
+        # print("QueryAnswerTokensFlow", "act")
+        query_node = arg  # Assuming dynamic_pointer_cast logic is handled here
+        for tokens in self.query_answers_tokens:
+            query_answer = QueryAnswer()
+            query_answer.untokenize(tokens)
+            query_node.add_query_answer(query_answer)
 
 
 class QueryAnswersFinished(Message):
 
     def __init__(self, command: str, args: List[str]):
-        pass
+        super().__init__()
 
     def act(self,arg, *args, **kwargs):
-        print(arg, *args, **kwargs)
-        # query_node = node  # Assuming dynamic_pointer_cast logic is handled here
-        # query_node.query_answers_finished()
+        query_node = arg  # Assuming dynamic_pointer_cast logic is handled here
+        query_node.query_answers_finished()
