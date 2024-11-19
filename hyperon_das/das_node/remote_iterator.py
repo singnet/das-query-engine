@@ -24,9 +24,4 @@ class RemoteIterator(QueryElement):
                 self.remote_input_buffer.is_query_answers_empty())
 
     def pop(self) -> QueryAnswer:
-        # print("pop")
-        qa =  self.remote_input_buffer.pop_query_answer()
-        # print(qa)
-        # print("pop_end")
-
-        return qa
+        return self.remote_input_buffer.pop_query_answer()

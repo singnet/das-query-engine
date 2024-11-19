@@ -122,9 +122,7 @@ class QueryAnswerTokensFlow(Message):
         # print(args)
 
     def act(self,  arg, *args, **kwargs):
-        # print("QueryAnswerTokensFlow", "act", arg, *args, **kwargs)
-        # print("QueryAnswerTokensFlow", "act")
-        query_node = arg  # Assuming dynamic_pointer_cast logic is handled here
+        query_node = arg
         for tokens in self.query_answers_tokens:
             query_answer = QueryAnswer()
             query_answer.untokenize(tokens)

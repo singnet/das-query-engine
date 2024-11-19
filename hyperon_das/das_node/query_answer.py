@@ -1,11 +1,7 @@
-import copy
-import math
-
-
-MAX_NUMBER_OF_VARIABLES_IN_QUERY = 100  # Set to appropriate value
-MAX_VARIABLE_NAME_SIZE = 64  # Set to appropriate value
-HANDLE_HASH_SIZE = 64  # Set to appropriate value
-MAX_NUMBER_OF_OPERATION_CLAUSES = 10  # Set to appropriate value
+MAX_NUMBER_OF_VARIABLES_IN_QUERY = 100
+MAX_VARIABLE_NAME_SIZE = 64
+HANDLE_HASH_SIZE = 64
+MAX_NUMBER_OF_OPERATION_CLAUSES = 10
 
 
 class Assignment:
@@ -89,9 +85,6 @@ class QueryAnswer:
         if handle:
             self.add_handle(handle)
 
-    # def __del__(self):
-    #     # Destructor logic if needed
-    #     pass
 
     def add_handle(self, handle: str):
         self.handles[self.handles_size] = handle
@@ -160,5 +153,7 @@ class QueryAnswer:
         handles_str = ", ".join(self.handles[:self.handles_size])
         return f"QueryAnswer<{self.handles_size},{self.assignment.variable_count()}> [{handles_str}] {self.assignment.to_string()}"
 
+    def get_handles(self):
+        return self.handles[:self.handles_size]
     def __str__(self):
         return self.to_string()

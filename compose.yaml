@@ -74,23 +74,14 @@ services:
         condition: service_healthy
     restart: on-failure
 
-
-  das-node:
+  das-attention-broker:
     # How to build:
     # Clone the das-node repository
     # Run:
     # ./scripts/docker_image_build.sh
-#    image: das-node-builder
     build: ./docker_das_node
-#    build: https://github.com/singnet/das-attention-broker.git#master:docker
-#    build:
-#      context: https://raw.githubusercontent.com/singnet/das-attention-broker/refs/heads/master/docker/Dockerfile
-    container_name: test-das-node
-#    working_dir: /opt/das-attention-broker
-#    command: ./query_broker 35700
-#    command: ./bin 35700
-#    command: ./query_broker 35700
-    command: sleep infinity
+    container_name: test-das-attention-broker
+    command: ./bin/attention_broker 37007
     network_mode: host
     ports:
       - 35700:35700
@@ -98,6 +89,7 @@ services:
       - mongodb
       - redis
       - metta-parser
+    restart: on-failure
     environment:
       DAS_MONGODB_NAME: das
       DAS_MONGODB_HOSTNAME: localhost
@@ -106,10 +98,32 @@ services:
       DAS_REDIS_PORT: 6379
       DAS_MONGODB_USERNAME: root
       DAS_MONGODB_PASSWORD: root
-#      DAS_DATABASE_USERNAME: root
-#      DAS_DATABASE_PASSWORD: root
-#    command: sleep infinity
-    #    command: bash -c "cd src && ../scripts/bazel_build.sh && cd .. && pip install . && python3 -i examples/docker_server.py"
+
+  das-node:
+    # How to build:
+    # Clone the das-node repository
+    # Run:
+    # ./scripts/docker_image_build.sh
+    build: ./docker_das_node
+    container_name: test-das-node
+    command: ./bin/query_broker 35700
+    network_mode: host
+    ports:
+      - 35700:35700
+    restart: on-failure
+    depends_on:
+      - mongodb
+      - redis
+      - metta-parser
+      - das-attention-broker
+    environment:
+      DAS_MONGODB_NAME: das
+      DAS_MONGODB_HOSTNAME: localhost
+      DAS_MONGODB_PORT: 27017
+      DAS_REDIS_HOSTNAME: localhost
+      DAS_REDIS_PORT: 6379
+      DAS_MONGODB_USERNAME: root
+      DAS_MONGODB_PASSWORD: root
 
   fass:
 #    image: trueagi/openfaas:query-engine-1.14.12

@@ -44,12 +44,9 @@ class DASNode(StarNode):
         return query_id
 
     def message_factory(self, command: str, args: list) -> Message:
-        # print("DASNode", "message_factory")
         message = super().message_factory(command, args)
         if message:
             return message
-        # if command == DASNode.PATTERN_MATCHING_QUERY:
-        #     return PatternMatchingQuery(command, args)
         return None
 
     def initialize(self):
