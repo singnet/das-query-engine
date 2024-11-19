@@ -1,5 +1,3 @@
-from dns.resolver import query
-
 from hyperon_das.query_engines.das_node_query_engine import DASNodeQueryEngine
 
 class TestNodeDAS:
