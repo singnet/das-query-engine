@@ -1,0 +1,40 @@
+from hyperon_das_node import AtomSpaceNode, MessageBrokerType, LeadershipBrokerType
+
+
+class StarNode(AtomSpaceNode):
+    def __init__(self, node_id: str = None, server_id: str = None,
+                 messaging_backend: MessageBrokerType = MessageBrokerType.GRPC):
+        # Call the parent constructor (AtomSpaceNode)
+        super().__init__(node_id or server_id, LeadershipBrokerType.SINGLE_MASTER_SERVER, messaging_backend)
+        if server_id:
+            # If server_id is provided, this is a client node
+            self.server_id = server_id
+            self.is_server = False
+            self.add_peer(server_id)
+            print(server_id)
+        else:
+            # If no server_id, this is a server node
+            self.is_server = True
+
+        print(self.is_server)
+        # Join the network regardless of server/client
+        self.join_network()
+
+    def node_joined_network(self, node_id: str):
+        print("join", node_id)
+        if self.is_server:
+            self.add_peer(node_id)
+
+    def cast_leadership_vote(self) -> str:
+        if self.is_server:
+            return self.node_id()
+        else:
+            return self.server_id
+
+    def __del__(self):
+        # Destructor equivalent in Python (called when the object is deleted)
+        pass
+
+    # Protected attributes
+    is_server: bool
+    server_id: str
