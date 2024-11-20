@@ -25,7 +25,7 @@ from hyperon_das.type_alias import Query
 class DASNodeQueryEngine(QueryEngine):
     def __init__(self, backend, cache_controller, system_parameters: Dict[str, Any], **kwargs):
         self.next_query_port = randint(60000, 61999)
-        self.timeout = system_parameters.get("timeout", 5)
+        self.timeout = system_parameters.get("timeout", 0)
         self.id = "localhost:" + str(self.next_query_port)
         self.host = system_parameters.get("hostname", "localhost")
         self.port = system_parameters.get("port", 35700)
@@ -37,13 +37,17 @@ class DASNodeQueryEngine(QueryEngine):
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         tokenize = parameters.get("untokenize") if parameters else True
         if tokenize:
+            if isinstance(query, list):
+                query = {"and": query}
+                print(query)
             query = DictQueryTokenizer.tokenize(query).split()
+        print(query)
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
         start = time.time()
         try:
             while not response.finished():
                 while (qs := response.pop()) is None:
-                    if time.time() - start > self.timeout:
+                    if 0 < self.timeout < time.time() - start:
                         raise Exception("Timeout")
                     if response.finished():
                         break
