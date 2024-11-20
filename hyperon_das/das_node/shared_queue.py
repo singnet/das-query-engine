@@ -1,5 +1,6 @@
 # import threading
-from queue import  Queue
+from queue import Queue
+
 
 class SharedQueue:
     def __init__(self, initial_size: int = 1000):

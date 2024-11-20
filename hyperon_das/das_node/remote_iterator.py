@@ -1,7 +1,9 @@
-from hyperon_das.das_node.query_element import QueryElement
 from hyperon_das_node import MessageBrokerType
+
 from hyperon_das.das_node.query_answer import QueryAnswer
+from hyperon_das.das_node.query_element import QueryElement
 from hyperon_das.das_node.query_node import QueryNodeServer
+
 
 class RemoteIterator(QueryElement):
     def __init__(self, local_id: str):
@@ -20,8 +22,10 @@ class RemoteIterator(QueryElement):
         self.remote_input_buffer = QueryNodeServer(self.local_id, MessageBrokerType.GRPC)
 
     def finished(self) -> bool:
-        return (self.remote_input_buffer.is_query_answers_finished() and
-                self.remote_input_buffer.is_query_answers_empty())
+        return (
+            self.remote_input_buffer.is_query_answers_finished()
+            and self.remote_input_buffer.is_query_answers_empty()
+        )
 
     def pop(self) -> QueryAnswer:
         return self.remote_input_buffer.pop_query_answer()

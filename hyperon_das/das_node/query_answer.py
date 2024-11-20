@@ -10,21 +10,19 @@ class Assignment:
         self.labels = [None] * MAX_NUMBER_OF_VARIABLES_IN_QUERY
         self.values = [None] * MAX_NUMBER_OF_VARIABLES_IN_QUERY
 
-
     def assign(self, label: str, value: str) -> bool:
         for i in range(self.size):
-            # If label is already present, return True iff its value is the same
             if label == self.labels[i]:
                 return value == self.values[i]
 
-        # Label is not present, so make the assignment and return true
         self.labels[self.size] = label
         self.values[self.size] = value
         self.size += 1
 
         if self.size == MAX_NUMBER_OF_VARIABLES_IN_QUERY:
             raise ValueError(
-                f"Assignment size exceeds the maximal number of allowed variables: {MAX_NUMBER_OF_VARIABLES_IN_QUERY}")
+                f"Assignment size exceeds the maximal number of allowed variables: {MAX_NUMBER_OF_VARIABLES_IN_QUERY}"
+            )
 
         return True
 
@@ -62,7 +60,11 @@ class Assignment:
         return self.size
 
     def to_string(self) -> str:
-        return "{" + ", ".join([f"({self.labels[i]}: {self.values[i]})" for i in range(self.size)]) + "}"
+        return (
+            "{"
+            + ", ".join([f"({self.labels[i]}: {self.values[i]})" for i in range(self.size)])
+            + "}"
+        )
 
     @staticmethod
     def read_token(token_string: str, cursor: int, token_size: int) -> str:
@@ -85,7 +87,6 @@ class QueryAnswer:
         if handle:
             self.add_handle(handle)
 
-
     def add_handle(self, handle: str):
         self.handles[self.handles_size] = handle
         self.handles_size += 1
@@ -97,7 +98,7 @@ class QueryAnswer:
                 self.importance = max(self.importance, other.importance)
                 for j in range(other.handles_size):
                     if self.handles_size < MAX_NUMBER_OF_OPERATION_CLAUSES:
-                        if other.handles[j] not in self.handles[:self.handles_size]:
+                        if other.handles[j] not in self.handles[: self.handles_size]:
                             self.handles[self.handles_size] = other.handles[j]
                             self.handles_size += 1
             return True
@@ -108,7 +109,7 @@ class QueryAnswer:
     def copy(base):
         new_copy = QueryAnswer(importance=base.importance)
         new_copy.assignment.copy_from(base.assignment)
-        new_copy.handles = base.handles[:base.handles_size]
+        new_copy.handles = base.handles[: base.handles_size]
         new_copy.handles_size = base.handles_size
         return new_copy
 
@@ -116,7 +117,7 @@ class QueryAnswer:
         importance_str = f"{self.importance:.10f}"
         token_representation = f"{importance_str} {self.handles_size} "
 
-        token_representation += " ".join(self.handles[:self.handles_size]) + " "
+        token_representation += " ".join(self.handles[: self.handles_size]) + " "
         token_representation += f"{self.assignment.size} "
 
         for i in range(self.assignment.size):
@@ -136,7 +137,7 @@ class QueryAnswer:
         self.handles_size = num_handles
         cursor += 1
 
-        self.handles = token_string[cursor:cursor + num_handles]
+        self.handles = token_string[cursor : cursor + num_handles]
         cursor += num_handles
 
         num_assignments = int(token_string[cursor])
@@ -150,10 +151,11 @@ class QueryAnswer:
             cursor += 2
 
     def to_string(self) -> str:
-        handles_str = ", ".join(self.handles[:self.handles_size])
+        handles_str = ", ".join(self.handles[: self.handles_size])
         return f"QueryAnswer<{self.handles_size},{self.assignment.variable_count()}> [{handles_str}] {self.assignment.to_string()}"
 
     def get_handles(self):
-        return self.handles[:self.handles_size]
+        return self.handles[: self.handles_size]
+
     def __str__(self):
         return self.to_string()

@@ -1,6 +1,7 @@
 import threading
 from abc import ABC, abstractmethod
 
+
 class QueryElement(ABC):
     def __init__(self):
         self.id = ""
@@ -8,10 +9,6 @@ class QueryElement(ABC):
         self.flow_finished = False
         self.is_terminal = False
         self.flow_finished_lock = threading.Lock()
-
-    def __del__(self):
-        # Destructor logic (if necessary)
-        pass
 
     @abstractmethod
     def setup_buffers(self):

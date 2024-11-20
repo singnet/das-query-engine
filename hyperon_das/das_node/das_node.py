@@ -1,20 +1,19 @@
-from typing import List, Optional, Dict
-import uuid
-from hyperon_das.das_node.star_node import StarNode
-from hyperon_das.das_node.remote_iterator import RemoteIterator
-from hyperon_das_node import Message, MessageFactory
-from hyperon_das.das_node.query_element import QueryElement
+from hyperon_das_node import Message
 
+from hyperon_das.das_node.remote_iterator import RemoteIterator
+from hyperon_das.das_node.star_node import StarNode
 
 
 class DASNode(StarNode):
+    local_host: str
+    next_query_port: int
+    first_query_port: int
+    last_query_port: int
     PATTERN_MATCHING_QUERY = "pattern_matching_query"
 
     def __init__(self, node_id: str = None, server_id: str = None):
         super().__init__(node_id, server_id)
         self.initialize()
-
-
 
     def pattern_matcher_query(self, tokens: list, context: str = ""):
         if self.is_server:
@@ -57,9 +56,3 @@ class DASNode(StarNode):
             self.next_query_port = self.first_query_port
         else:
             self.next_query_port = (self.first_query_port + self.last_query_port) // 2
-
-    # Private attributes (Python doesn't have access specifiers, but this is by convention)
-    local_host: str
-    next_query_port: int
-    first_query_port: int
-    last_query_port: int

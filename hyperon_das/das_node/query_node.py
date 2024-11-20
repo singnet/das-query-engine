@@ -1,15 +1,18 @@
 import threading
 import time
 from typing import List, Optional
+
+from hyperon_das_node import AtomSpaceNode, LeadershipBrokerType, Message, MessageBrokerType
+
 from hyperon_das.das_node.query_answer import QueryAnswer
 from hyperon_das.das_node.shared_queue import SharedQueue
-from hyperon_das_node import MessageFactory, Message, AtomSpaceNode, MessageBrokerType, LeadershipBrokerType
+
 
 class QueryNode(AtomSpaceNode):
     QUERY_ANSWER_FLOW_COMMAND = "query_answer_flow"
     QUERY_ANSWER_TOKENS_FLOW_COMMAND = "query_answer_tokens_flow"
     QUERY_ANSWERS_FINISHED_COMMAND = "query_answers_finished"
-    # query_answer_queue = SharedQueue()
+
     def __init__(self, node_id: str, is_server: bool, messaging_backend: MessageBrokerType):
         super().__init__(node_id, LeadershipBrokerType.SINGLE_MASTER_SERVER, messaging_backend)
         self.is_server = is_server
@@ -26,16 +29,13 @@ class QueryNode(AtomSpaceNode):
         self.graceful_shutdown()
 
     def message_factory(self, command: str, args: List[str]) -> Optional[Message]:
-        # print(command, args)
         message = super().message_factory(command, args)
         if message:
             return message
         if command == QueryNode.QUERY_ANSWER_FLOW_COMMAND:
             return QueryAnswerFlow(command, args)
         elif command == QueryNode.QUERY_ANSWER_TOKENS_FLOW_COMMAND:
-            # print("QUERY_ANSWER_TOKENS_FLOW_COMMAND")
             return QueryAnswerTokensFlow(command, args)
-            # print("QUERY_ANSWER_TOKENS_FLOW_COMMAND", 2)
 
         elif command == QueryNode.QUERY_ANSWERS_FINISHED_COMMAND:
             return QueryAnswersFinished(command, args)
@@ -68,7 +68,6 @@ class QueryNode(AtomSpaceNode):
         self.query_answer_queue.enqueue(query_answer)
 
     def pop_query_answer(self) -> QueryAnswer:
-        # print("pop_query_answer")
         return self.query_answer_queue.dequeue()
 
     def is_query_answers_empty(self) -> bool:
@@ -79,7 +78,6 @@ class QueryNode(AtomSpaceNode):
 
 
 class QueryNodeServer(QueryNode):
-
     def __init__(self, node_id: str, messaging_backend: MessageBrokerType = MessageBrokerType.RAM):
         super().__init__(node_id, is_server=True, messaging_backend=messaging_backend)
 
@@ -102,26 +100,22 @@ class QueryNodeServer(QueryNode):
 
 
 class QueryAnswerFlow(Message):
-
     def __init__(self, command: str, args: List[str]):
         super().__init__()
         self.query_answers = [QueryAnswer(pointer) for pointer in args]
 
     def act(self, arg, *args, **kwargs):
-        query_node = arg  # Assuming dynamic_pointer_cast logic is handled here
+        query_node = arg
         for query_answer in self.query_answers:
             query_node.add_query_answer(query_answer)
 
 
 class QueryAnswerTokensFlow(Message):
-
     def __init__(self, command: str, args: List[str]):
         super().__init__()
-        # print("QueryAnswerTokensFlow")
         self.query_answers_tokens = args
-        # print(args)
 
-    def act(self,  arg, *args, **kwargs):
+    def act(self, arg, *args, **kwargs):
         query_node = arg
         for tokens in self.query_answers_tokens:
             query_answer = QueryAnswer()
@@ -130,10 +124,9 @@ class QueryAnswerTokensFlow(Message):
 
 
 class QueryAnswersFinished(Message):
-
     def __init__(self, command: str, args: List[str]):
         super().__init__()
 
-    def act(self,arg, *args, **kwargs):
-        query_node = arg  # Assuming dynamic_pointer_cast logic is handled here
+    def act(self, arg, *args, **kwargs):
+        query_node = arg
         query_node.query_answers_finished()

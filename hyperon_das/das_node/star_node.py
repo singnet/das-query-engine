@@ -1,11 +1,20 @@
-from hyperon_das_node import AtomSpaceNode, MessageBrokerType, LeadershipBrokerType
+from hyperon_das_node import AtomSpaceNode, LeadershipBrokerType, MessageBrokerType
 
 
 class StarNode(AtomSpaceNode):
-    def __init__(self, node_id: str = None, server_id: str = None,
-                 messaging_backend: MessageBrokerType = MessageBrokerType.GRPC):
+    is_server: bool
+    server_id: str
+
+    def __init__(
+        self,
+        node_id: str = None,
+        server_id: str = None,
+        messaging_backend: MessageBrokerType = MessageBrokerType.GRPC,
+    ):
         # Call the parent constructor (AtomSpaceNode)
-        super().__init__(node_id or server_id, LeadershipBrokerType.SINGLE_MASTER_SERVER, messaging_backend)
+        super().__init__(
+            node_id or server_id, LeadershipBrokerType.SINGLE_MASTER_SERVER, messaging_backend
+        )
         if server_id:
             # If server_id is provided, this is a client node
             self.server_id = server_id
@@ -28,11 +37,3 @@ class StarNode(AtomSpaceNode):
             return self.node_id()
         else:
             return self.server_id
-
-    def __del__(self):
-        # Destructor equivalent in Python (called when the object is deleted)
-        pass
-
-    # Protected attributes
-    is_server: bool
-    server_id: str

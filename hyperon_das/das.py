@@ -23,10 +23,9 @@ from hyperon_das.exceptions import (
 )
 from hyperon_das.link_filters import LinkFilter
 from hyperon_das.logger import logger
+from hyperon_das.query_engines.das_node_query_engine import DASNodeQueryEngine
 from hyperon_das.query_engines.local_query_engine import LocalQueryEngine
 from hyperon_das.query_engines.remote_query_engine import RemoteQueryEngine
-from hyperon_das.query_engines.das_node_query_engine import DASNodeQueryEngine
-
 from hyperon_das.traverse_engines import TraverseEngine
 from hyperon_das.type_alias import Query
 from hyperon_das.utils import QueryAnswer, get_package_version
