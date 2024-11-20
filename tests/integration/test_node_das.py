@@ -1,4 +1,5 @@
 import pytest
+from pymongo import timeout
 
 from hyperon_das.das import DistributedAtomSpace
 
@@ -119,8 +120,6 @@ class TestNodeDAS:
 
         for qq in query_answers:
             print(qq)
-            # for nn in n:
-            #     d.get_atom(qq.assignment.mapping[nn])
 
     @pytest.mark.parametrize("query", [
         {'atom_type': 'link',
@@ -151,7 +150,7 @@ class TestNodeDAS:
                      {'atom_type': 'node', 'type': 'Symbol', 'name': '"Abd-B"'}]}
     ])
     def test_node_das_query_test(self, query):
-        das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
+        das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700, timeout=5)
         count = 0
         try:
             for q in das.query(query):
@@ -159,6 +158,7 @@ class TestNodeDAS:
                 assert isinstance(q, list)
                 assert len(q) > 0
                 count += 1
-        except:
-            pass
+        except Exception as e:
+            print(e)
+
         # assert count == expected

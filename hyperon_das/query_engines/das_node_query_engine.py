@@ -25,23 +25,26 @@ from hyperon_das.type_alias import Query
 class DASNodeQueryEngine(QueryEngine):
     def __init__(self, backend, cache_controller, system_parameters: Dict[str, Any], **kwargs):
         self.next_query_port = randint(60000, 61999)
-        self.timeout = system_parameters.get("timeout", 0)
+        self.timeout = kwargs.get("timeout", 0)
         self.id = "localhost:" + str(self.next_query_port)
-        self.host = system_parameters.get("hostname", "localhost")
-        self.port = system_parameters.get("port", 35700)
+        self.host = kwargs.get("hostname", "localhost")
+        self.port = kwargs.get("port", 35700)
         self.remote_das_node = ":".join([self.host, str(self.port)])
         self.requestor = DASNode(self.id, self.remote_das_node)
 
-    def query(
-        self, query: Query, parameters: dict[str, Any] | None = None
-    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
+
+    def _parse_query(self, query, parameters):
         tokenize = parameters.get("untokenize") if parameters else True
         if tokenize:
             if isinstance(query, list):
                 query = {"and": query}
-                print(query)
-            query = DictQueryTokenizer.tokenize(query).split()
-        print(query)
+            return DictQueryTokenizer.tokenize(query).split()
+        return query
+
+    def query(
+        self, query: Query, parameters: dict[str, Any] | None = None
+    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
+        query = self._parse_query(query, parameters)
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
         start = time.time()
         try:
