@@ -86,22 +86,13 @@ ENV CPLUS_INCLUDE_PATH="/opt/3rd-party/mbedcrypto/include/"
 ENV CC=/usr/bin/gcc
 RUN ln -s ${BAZEL_DIR}/bazelisk /usr/bin/bazel
 WORKDIR ${ATTENTION_BROKER_DIR}
-# RUN rm -rf  bin
 RUN mkdir bin
 WORKDIR ${ATTENTION_BROKER_DIR}/src
 RUN ../scripts/bazel_build.sh
 
-# RUN ${BAZEL_DIR}/bazelisk build --jobs 6 --noenable_bzlmod :query_broker
-# RUN mv bazel-bin/query_broker ../query_broker
-# RUN cp bazel-bin/query_broker ../
-# build --jobs 6 --noenable_bzlmod :query_broker
 ADD https://raw.githubusercontent.com/singnet/das-query-engine/master/proto/attention_broker.proto ${PROTO_DIR}
 ADD https://raw.githubusercontent.com/singnet/das-query-engine/master/proto/common.proto ${PROTO_DIR}
 ADD https://raw.githubusercontent.com/singnet/das-query-engine/master/proto/echo.proto ${PROTO_DIR}
 EXPOSE 35700
 WORKDIR /opt/das-attention-broker
 
-RUN ls -la
-# RUN ls -la bin/
-# RUN ls  /opt/bazel
-# RUN ls  /opt
