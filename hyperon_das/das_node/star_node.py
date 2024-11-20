@@ -28,7 +28,6 @@ class StarNode(AtomSpaceNode):
         self.join_network()
 
     def node_joined_network(self, node_id: str):
-        # print("join", node_id)
         if self.is_server:
             self.add_peer(node_id)
 
