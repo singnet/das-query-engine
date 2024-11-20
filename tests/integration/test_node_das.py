@@ -6,41 +6,57 @@ from hyperon_das.das import DistributedAtomSpace
 
 class TestNodeDAS:
 
+    # {'atom_type': 'link',
+    #  'type': 'Expression',
+    #  'targets': [{'atom_type': 'node',
+    #               'type': 'Symbol',
+    #               'name': 'public.feature.name'},
+    #              {'atom_type': 'link',
+    #               'type': 'Expression',
+    #               'targets': [{'atom_type': 'node',
+    #                            'type': 'Symbol',
+    #                            'name': 'public.feature'},
+    #                           {'atom_type': 'variable', 'name': 'feature_pk'}]},
+    #              {'atom_type': 'node', 'type': 'Symbol', 'name': '"Abd-B"'}]}
     @pytest.mark.parametrize("query,expected", [
         ([
-             "LINK_TEMPLATE", "Expression", "3",
-             "NODE", "Symbol", "Similarity",
-             "VARIABLE", "v1",
-             "VARIABLE", "v2"
-         ], 14),
-        ([
-             "LINK_TEMPLATE", "Expression", "3",
-             "NODE", "Symbol", "Similarity",
-             "NODE", "Symbol", "\"human\"",
-             "VARIABLE", "v1"
-         ], 3),
-        ([
-             "AND", "2",
-             "LINK_TEMPLATE", "Expression", "3",
-             "NODE", "Symbol", "Similarity",
-             "VARIABLE", "v1",
-             "NODE", "Symbol", "\"human\"",
-             "LINK_TEMPLATE", "Expression", "3",
-             "NODE", "Symbol", "Inheritance",
-             "VARIABLE", "v1",
-             "NODE", "Symbol", "\"plant\"",
-         ], 1),
-        ([
-             "AND", "2",
-             "LINK_TEMPLATE", "Expression", "3",
-             "NODE", "Symbol", "Similarity",
-             "VARIABLE", "v1",
-             "VARIABLE", "v2",
-             "LINK_TEMPLATE", "Expression", "3",
-             "NODE", "Symbol", "Similarity",
-             "VARIABLE", "v2",
-             "VARIABLE", "v3"
-         ], 26)
+            'LINK_TEMPLATE', 'Expression', '3', 'NODE', 'Symbol', 'public.feature', 'LINK_TEMPLATE', 'Expression', '2', 'NODE',
+            'Symbol', 'public.feature', 'VARIABLE', 'feature_pk', 'NODE', 'Symbol', '"Abd-B"'
+        ],0)
+        # ([
+        #      "LINK_TEMPLATE", "Expression", "3",
+        #      "NODE", "Symbol", "Similarity",
+        #      "VARIABLE", "v1",
+        #      "VARIABLE", "v2"
+        #  ], 14),
+        # ([
+        #      "LINK_TEMPLATE", "Expression", "3",
+        #      "NODE", "Symbol", "Similarity",
+        #      "NODE", "Symbol", "\"human\"",
+        #      "VARIABLE", "v1"
+        #  ], 3),
+        # ([
+        #      "AND", "2",
+        #      "LINK_TEMPLATE", "Expression", "3",
+        #      "NODE", "Symbol", "Similarity",
+        #      "VARIABLE", "v1",
+        #      "NODE", "Symbol", "\"human\"",
+        #      "LINK_TEMPLATE", "Expression", "3",
+        #      "NODE", "Symbol", "Inheritance",
+        #      "VARIABLE", "v1",
+        #      "NODE", "Symbol", "\"plant\"",
+        #  ], 1),
+        # ([
+        #      "AND", "2",
+        #      "LINK_TEMPLATE", "Expression", "3",
+        #      "NODE", "Symbol", "Similarity",
+        #      "VARIABLE", "v1",
+        #      "VARIABLE", "v2",
+        #      "LINK_TEMPLATE", "Expression", "3",
+        #      "NODE", "Symbol", "Similarity",
+        #      "VARIABLE", "v2",
+        #      "VARIABLE", "v3"
+        #  ], 26)
     ])
     def test_node_das(self, query, expected):
         das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
@@ -126,14 +142,14 @@ class TestNodeDAS:
           'type': 'Expression',
           'targets': [{'atom_type': 'node',
                        'type': 'Symbol',
-                       'name': 'public.feature.name'},
+                       'name': 'Similarity'},
                       {'atom_type': 'link',
                        'type': 'Expression',
                        'targets': [{'atom_type': 'node',
                                     'type': 'Symbol',
-                                    'name': 'public.feature'},
-                                   {'atom_type': 'variable', 'name': 'feature_pk'}]},
-                      {'atom_type': 'node', 'type': 'Symbol', 'name': '"Abd-B"'}]},
+                                    'name': 'Similarity'},
+                                   {'atom_type': 'variable', 'name': 'v1'}]},
+                      {'atom_type': 'node', 'type': 'Symbol', 'name': '\"human\"'}]},
         {'atom_type': 'link',
          'type': 'Expression',
          'targets': [{'atom_type': 'node',

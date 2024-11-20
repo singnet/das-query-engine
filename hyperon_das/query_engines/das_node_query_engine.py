@@ -35,6 +35,7 @@ class DASNodeQueryEngine(QueryEngine):
 
     def _parse_query(self, query, parameters):
         tokenize = parameters.get("untokenize") if parameters else True
+        print(query)
         if tokenize:
             if isinstance(query, list):
                 query = {"and": query}
@@ -45,6 +46,7 @@ class DASNodeQueryEngine(QueryEngine):
         self, query: Query, parameters: dict[str, Any] | None = None
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         query = self._parse_query(query, parameters)
+        print(query)
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
         start = time.time()
         try:

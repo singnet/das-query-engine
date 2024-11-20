@@ -155,7 +155,7 @@ class Link(Element):
     is_template: bool = False
 
     def to_tokens(self) -> list[str]:
-        self.is_template = any(isinstance(target, Variable) for target in self.targets)
+        self.is_template = any(isinstance(target, Variable) or (isinstance(target, Link) and target.is_template == True) for target in self.targets)
         return [
             "LINK_TEMPLATE" if self.is_template else "LINK",
             self.type,
