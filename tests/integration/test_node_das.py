@@ -42,7 +42,6 @@ class TestNodeDAS:
          ], 26)
     ])
     def test_node_das(self, query, expected):
-        # pytest.skip("skip")
         das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
         count = 0
         for q in das.query(query, {"tokenize": False}):
