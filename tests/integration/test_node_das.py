@@ -63,9 +63,62 @@ class TestNodeDAS:
     ])
     def test_node_das_query_og(self, query, expected):
         das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
+        # das2 = DistributedAtomSpace(
+        #     query_engine='local',
+        #     atomdb='redis_mongo',
+        #     mongo_port=27017,
+        #     mongo_username='root',
+        #     mongo_password='root',
+        #     redis_port=6379,
+        #     redis_cluster=False,
+        #     redis_ssl=False,
+        # )
+        # print(das2.query(query))
+        # qqq = das2.query(query)
+        # print(qqq)
+        # cc = 0
+        # for qq in qqq:
+        #     print(qq)
+        #     cc += 1
+        # print(cc)
+
         count = 0
         for q in das.query(query):
             assert isinstance(q, list)
             assert len(q) > 0
             count += 1
         assert count == expected
+
+    #
+    # @pytest.mark.parametrize(
+    #     'nodes,link_type',
+    #     [
+    #         ('v1,v2', "Expression"),
+    #         # ('v1,v2', "Similarity"),
+    #         # ('v1,v2,v3', "TokenSimilarity"),
+    #         # ('v1,v2,v3', "Similarity"),
+    #     ],
+    # )
+    # def test_query_links_nodes_var(self, nodes, link_type):
+    #     das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
+    #     nodes = nodes.split(',')
+    #     queries = []
+    #     for i, node in enumerate(nodes):
+    #         for j in range(i + 1, len(nodes)):
+    #             query = {
+    #                 'atom_type': 'link',
+    #                 'type': link_type,
+    #                 'targets': [
+    #                     {'atom_type': 'variable', 'name': node},
+    #                     {'atom_type': 'variable', 'name': nodes[j]},
+    #                 ],
+    #             }
+    #             queries.append(query)
+    #
+    #     query_answers = das.query(queries)
+    #
+    #     for qq in query_answers:
+    #         print(qq)
+    #         # for nn in n:
+    #         #     d.get_atom(qq.assignment.mapping[nn])
+    #
