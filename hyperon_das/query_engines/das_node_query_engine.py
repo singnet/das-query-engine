@@ -56,13 +56,14 @@ class DASNodeQueryEngine(QueryEngine):
         return query
 
 
+
     @simple_retry
     def query(
         self, query: Query, parameters: dict[str, Any] | None = None
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         query = self._parse_query(query, parameters)
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
-        print(query)
+        print(" ".join(query))
         start = time.time()
         try:
             while not response.finished():

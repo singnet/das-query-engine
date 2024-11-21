@@ -22,7 +22,7 @@ class DASNode(StarNode):
         # TODO: Update this when requestor is set in basic Message
         query_id = self.next_query_id()
         # print(query_id, tokens)
-        args = [query_id] + tokens
+        args = [query_id, context] + tokens
         self.send(DASNode.PATTERN_MATCHING_QUERY, args, self.server_id)
         return RemoteIterator(query_id)
 
