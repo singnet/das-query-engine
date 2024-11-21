@@ -62,6 +62,7 @@ class DASNodeQueryEngine(QueryEngine):
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         query = self._parse_query(query, parameters)
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
+        print(query)
         start = time.time()
         try:
             while not response.finished():

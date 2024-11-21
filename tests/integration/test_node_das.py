@@ -1,10 +1,11 @@
+import time
+
 import pytest
 
 from hyperon_das.das import DistributedAtomSpace
 
 
 class TestNodeDAS:
-
 
     @pytest.fixture
     def remote_das(self):
@@ -18,6 +19,8 @@ class TestNodeDAS:
             redis_cluster=False,
             redis_ssl=False,
         )
+
+
 
     # {'atom_type': 'link',
     #  'type': 'Expression',
@@ -119,10 +122,10 @@ class TestNodeDAS:
     def test_node_das_query_og(self, query, expected, remote_das: DistributedAtomSpace):
         das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700, timeout=5)
         redis_mongo_return = list(remote_das.query(query))
-        rm_list = [[link.handle for link in qa.subgraph] if isinstance(qa.subgraph, list) else [qa.subgraph.handle] for qa in redis_mongo_return]
+        rm_list = [[link.handle for link in qa.subgraph] if isinstance(qa.subgraph, list) else [qa.subgraph.handle] for
+                   qa in redis_mongo_return]
         grpc_return = list(das.query(query, {"retry": 3}))
         assert sorted(rm_list) == sorted(grpc_return)
-
 
     #
     @pytest.mark.parametrize(
@@ -156,19 +159,19 @@ class TestNodeDAS:
             print(qq)
 
     @pytest.mark.parametrize("query", [
-        {'atom_type': 'link',
-         'type': 'Expression',
-         'targets': [{'atom_type': 'node',
-                      'type': 'Symbol',
-                      'name': 'public.feature.name'},
-                     {'atom_type': 'link',
-                      'type': 'Expression',
-                      'targets': [{'atom_type': 'node',
-                                   'type': 'Symbol',
-                                   'name': 'public.feature'},
-                                  {'atom_type': 'variable', 'name': 'feature_pk'}]},
-                     {'atom_type': 'node', 'type': 'Symbol', 'name': '"Abd-B"'}]},
         # {'atom_type': 'link',
+        #  'type': 'Expression',
+        #  'targets': [{'atom_type': 'node',
+        #               'type': 'Symbol',
+        #               'name': 'public.feature.name'},
+        #              {'atom_type': 'link',
+        #               'type': 'Expression',
+        #               'targets': [{'atom_type': 'node',
+        #                            'type': 'Symbol',
+        #                            'name': 'public.feature'},
+        #                           {'atom_type': 'variable', 'name': 'feature_pk'}]},
+        #              {'atom_type': 'node', 'type': 'Symbol', 'name': '"Abd-B"'}]},
+        # [{'atom_type': 'link',
         #  'type': 'Expression',
         #  'targets': [{'atom_type': 'node',
         #               'type': 'Symbol',
@@ -181,18 +184,72 @@ class TestNodeDAS:
         #               'type': 'Symbol',
         #               'name': 'public.feature.name'},
         #              {'atom_type': 'variable', 'name': 'feature_pk'},
-        #              {'atom_type': 'node', 'type': 'Symbol', 'name': '"Abd-B"'}]}
+        #              {'atom_type': 'node', 'type': 'Symbol', 'name': '"Abd-B"'}]}]
+        # [
+        #     {
+        #         "atom_type": "link",
+        #         "type": "Expression",
+        #         "targets": [
+        #             {"atom_type": "node", "type": "Symbol", "name": "public.feature.name"},
+        #             {"atom_type": "variable", "name": "feature_pk"},
+        #             {"atom_type": "node", "type": "Symbol", "name": '"Abd-B"'},
+        #         ],
+        #     },
+        #     {
+        #         "atom_type": "link",
+        #         "type": "Expression",
+        #         "targets": [
+        #             {
+        #                 "atom_type": "node",
+        #                 "type": "Symbol",
+        #                 "name": "public.feature.uniquename",
+        #             },
+        #             {"atom_type": "variable", "name": "feature_pk"},
+        #             {"atom_type": "variable", "name": "feature_uniquename"},
+        #         ],
+        #     },
+        # ],
+        [{'atom_type': 'link',
+          'type': 'Expression',
+          'targets': [{'atom_type': 'node',
+                       'type': 'Symbol',
+                       'name': 'public.feature.name'},
+                      {'atom_type': 'variable', 'name': 'feature_pk'},
+                      {'atom_type': 'node', 'type': 'Symbol', 'name': '"Abd-B"'}]},
+         {'atom_type': 'link',
+          'type': 'Expression',
+          'targets': [{'atom_type': 'node',
+                       'type': 'Symbol',
+                       'name': 'public.feature.uniquename'},
+                      {'atom_type': 'variable', 'name': 'feature_pk'},
+                      {'atom_type': 'variable', 'name': 'feature_uniquename'}]}]
+
     ])
     def test_node_das_query_test(self, query):
-        das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700, timeout=0)
-        count = 0
-        try:
-            for q in das.query(query):
-                print(q)
-                assert isinstance(q, list)
-                assert len(q) > 0
-                count += 1
-        except Exception as e:
-            print(e)
+
+        start = time.time()
+        redis_mongo_return = list(remote_das_bio.query(query))
+        print("redis_mongo_return", "ok", f"Time: {time.time() - start}")
+        rm_list = [[link.handle for link in qa.subgraph] if isinstance(qa.subgraph, list) else [qa.subgraph.handle] for
+                   qa in redis_mongo_return]
+        print(rm_list)
+        print(len(rm_list))
+        # das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700, timeout=1000)
+        # start = time.time()
+        # grpc_return = list(das.query(query, {"retry": 3}))
+        # print("grpc_return", "ok", f"Time: {time.time() - start}")
+        # print(grpc_return)
+
+        # assert sorted(rm_list) == sorted(grpc_return)
+        # das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700, timeout=60)
+        # count = 0
+        # try:
+        #     for q in das.query(query, {"retry": 3}):
+        #         print(q)
+        #         assert isinstance(q, list)
+        #         assert len(q) > 0
+        #         count += 1
+        # except Exception as e:
+        #     print(e)
 
         # assert count == expected
