@@ -34,8 +34,7 @@ class DASNodeQueryEngine(QueryEngine):
 
 
     def _parse_query(self, query, parameters):
-        tokenize = parameters.get("untokenize") if parameters else True
-        print(query)
+        tokenize = parameters.get("tokenize", True) if parameters else True
         if tokenize:
             if isinstance(query, list):
                 query = {"and": query}
@@ -46,7 +45,7 @@ class DASNodeQueryEngine(QueryEngine):
         self, query: Query, parameters: dict[str, Any] | None = None
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         query = self._parse_query(query, parameters)
-        print(query)
+        retry = parameters.get("retry", 0)
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
         start = time.time()
         try:
@@ -61,7 +60,13 @@ class DASNodeQueryEngine(QueryEngine):
                 if qs is not None:
                     yield qs.get_handles()
         except Exception as e:
-            raise e
+            if retry  >  0:
+                parameters.update({"retry": retry - 1, "tokenize": False})
+                print(f"Retring...")
+                for v in self.query(query, parameters):
+                    yield v
+            else:
+                raise e
         finally:
             del response
 
