@@ -22,6 +22,20 @@ from hyperon_das.tokenizers.dict_query_tokenizer import DictQueryTokenizer
 from hyperon_das.type_alias import Query
 
 
+def simple_retry(function):
+    def wrapper(*args, **kwargs):
+        retries = (kwargs.get("parameters", {}) if len(args) < 3 else args[2]).get("retry", 0) + 1
+        for r in range(retries):
+            try:
+                yield from function(*args, **kwargs)
+                break
+            except Exception as e:
+                print(f"Retrying {r + 1}")
+                if r == retries -1:
+                    raise e
+    return wrapper
+
+
 class DASNodeQueryEngine(QueryEngine):
     def __init__(self, backend, cache_controller, system_parameters: Dict[str, Any], **kwargs):
         self.next_query_port = randint(60000, 61999)
@@ -41,32 +55,26 @@ class DASNodeQueryEngine(QueryEngine):
             return DictQueryTokenizer.tokenize(query).split()
         return query
 
+
+    @simple_retry
     def query(
         self, query: Query, parameters: dict[str, Any] | None = None
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         query = self._parse_query(query, parameters)
-        retry = parameters.get("retry", 0)
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
         start = time.time()
         try:
             while not response.finished():
                 while (qs := response.pop()) is None:
                     if 0 < self.timeout < time.time() - start:
-                        raise Exception("Timeout")
+                        raise TimeoutError("Timeout")
                     if response.finished():
                         break
-                    else:
-                        sleep(1)
+                    sleep(1)
                 if qs is not None:
                     yield qs.get_handles()
-        except Exception as e:
-            if retry  >  0:
-                parameters.update({"retry": retry - 1, "tokenize": False})
-                print(f"Retring...")
-                for v in self.query(query, parameters):
-                    yield v
-            else:
-                raise e
+        except TimeoutError as e:
+            raise e
         finally:
             del response
 
