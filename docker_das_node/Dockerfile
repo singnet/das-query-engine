@@ -88,6 +88,7 @@ ENV CPLUS_INCLUDE_PATH="/opt/3rd-party/mbedcrypto/include/"
 ENV CC=/usr/bin/gcc
 RUN ln -s ${BAZEL_DIR}/bazelisk /usr/bin/bazel
 WORKDIR ${ATTENTION_BROKER_DIR}
+RUN git pull
 RUN mkdir bin
 WORKDIR ${ATTENTION_BROKER_DIR}/src
 RUN ../scripts/bazel_build.sh
