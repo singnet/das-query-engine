@@ -4,12 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to tag (e.g., 1.0.0)"
+        description: "Version to tag"
         required: true
-
-      hyperon-das-atomdb-version:
-        description: "Hyperon-das-atomdb version (optional)"
-        required: false
 
 jobs:
   tag:
@@ -42,16 +38,6 @@ jobs:
         run: |
           pip install poetry
           poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-
-      - name: Update hyperon-das-atomdb version
-        if: ${{inputs.hyperon-das-atomdb-version}}
-        run: |-
-          if [[ "${{inputs.hyperon-das-atomdb-version}}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            poetry add hyperon-das-atomdb=${{inputs.hyperon-das-atomdb-version}}
-          else
-            echo "The provided version '${{inputs.hyperon-das-atomdb-version}}' is invalid."
-            exit 1
-          fi
 
       - name: Build and Publishing library version in PyPI
         run: |
