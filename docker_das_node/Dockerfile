@@ -10,7 +10,8 @@ ARG PROTO_DIR="${BASE_DIR}/proto"
 ARG BAZEL_DIR="${BASE_DIR}/bazel"
 ARG THIRDPARTY="${BASE_DIR}/3rd-party"
 # ARG AB_COMMIT="2a25871028268b0b9518d2da2a9d9f29ecfcbb4d"
-ARG AB_COMMIT="senna-agi-meetup-stable"
+# ARG AB_COMMIT="senna-agi-meetup-stable"
+ARG AB_COMMIT="edgar-thread-fix"
 
 RUN mkdir -p ${DATA_DIR}
 RUN mkdir -p ${GRPC_DIR}
@@ -39,6 +40,7 @@ WORKDIR ${BASE_DIR}
 RUN git clone https://github.com/singnet/das-attention-broker.git
 WORKDIR ${ATTENTION_BROKER_DIR}
 RUN git checkout ${AB_COMMIT}
+RUN git pull
 RUN git pull
 
 # RUN sed -i '24i\AtomDBSingleton::init();' src/main/query_engine_main.cc
