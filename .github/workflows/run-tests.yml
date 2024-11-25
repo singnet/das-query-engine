@@ -10,6 +10,10 @@ on:
       - master
 
   workflow_dispatch:
+    inputs:
+      hyperon-das-atomdb-version:
+        description: "Hyperon-das-atomdb version (optional)"
+        required: false
 
 jobs:
   lint:
@@ -67,6 +71,16 @@ jobs:
           poetry lock --no-update
           poetry export --dev -f requirements.txt | pip3 install -r /dev/stdin
 
+      - name: Update hyperon-das-atomdb version
+        if: ${{inputs.hyperon-das-atomdb-version}}
+        run: |-
+          if [[ "${{inputs.hyperon-das-atomdb-version}}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            poetry add hyperon-das-atomdb=${{inputs.hyperon-das-atomdb-version}}
+          else
+            echo "The provided version '${{inputs.hyperon-das-atomdb-version}}' is invalid."
+            exit 1
+          fi
+
       - name: Execute Unit Test Suite
         run: make unit-tests
 
@@ -88,6 +102,16 @@ jobs:
           poetry lock --no-update
           poetry export --dev -f requirements.txt | pip3 install -r /dev/stdin
 
+      - name: Update hyperon-das-atomdb version
+        if: ${{inputs.hyperon-das-atomdb-version}}
+        run: |-
+          if [[ "${{inputs.hyperon-das-atomdb-version}}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            poetry add hyperon-das-atomdb=${{inputs.hyperon-das-atomdb-version}}
+          else
+            echo "The provided version '${{inputs.hyperon-das-atomdb-version}}' is invalid."
+            exit 1
+          fi
+
       - name: Generate Coverage Report
         run: make unit-tests-coverage
 
@@ -108,6 +132,16 @@ jobs:
           pip3 install poetry
           poetry lock --no-update
           poetry export --dev -f requirements.txt | pip3 install -r /dev/stdin
+
+      - name: Update hyperon-das-atomdb version
+        if: ${{inputs.hyperon-das-atomdb-version}}
+        run: |-
+          if [[ "${{inputs.hyperon-das-atomdb-version}}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            poetry add hyperon-das-atomdb=${{inputs.hyperon-das-atomdb-version}}
+          else
+            echo "The provided version '${{inputs.hyperon-das-atomdb-version}}' is invalid."
+            exit 1
+          fi
 
       - name: Perform Integration Testing
         run: make integration-tests
