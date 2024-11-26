@@ -1,6 +1,5 @@
-import time
-
 import pytest
+import time
 
 from hyperon_das.das import DistributedAtomSpace
 
@@ -146,4 +145,39 @@ class TestNodeDAS:
         for qq in query_answers:
             print(qq)
 
+
+
+    @pytest.mark.parametrize("query,expected", [
+        ({
+             "atom_type": "link",
+             "type": "Expression",
+             "targets": [
+                 {"atom_type": "node", "type": "Symbol", "name": "Similarity"},
+                 {"atom_type": "variable", "name": "v1"},
+                 {"atom_type": "variable", "name": "v2"},
+             ],
+         }, 14)
+    ])
+    def test_node_das_query_async(self, query, expected, remote_das: DistributedAtomSpace):
+        das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700, timeout=5)
+        iterator = das.query_engine.query_async(query)
+        while not iterator.finished():
+            while (qs:= next(iterator)) is None:
+                time.sleep(1)
+            if qs:
+                print(qs)
+            break
+        # OR
+        with das.query(query) as iterator:
+            while not iterator.finished():
+                while (qs:= next(iterator)) is None:
+                    time.sleep(1)
+                if qs:
+                    print(qs)
+                break
+        redis_mongo_return = list(remote_das.query(query))
+        rm_list = [[link.handle for link in qa.subgraph] if isinstance(qa.subgraph, list) else [qa.subgraph.handle] for
+                   qa in redis_mongo_return]
+        grpc_return = list(das.query(query, {"retry": 3}))
+        assert sorted(rm_list) == sorted(grpc_return)
 

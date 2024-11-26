@@ -1,7 +1,9 @@
 import time
 from random import randint
 from time import sleep
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
+from collections.abc import Iterator
+
 
 from hyperon_das_atomdb.database import (
     AtomT,
@@ -22,6 +24,35 @@ from hyperon_das.tokenizers.dict_query_tokenizer import DictQueryTokenizer
 from hyperon_das.type_alias import Query
 
 
+class QueryIterator(Iterator):
+
+    def __init__(self, remote_iterator: RemoteIterator):
+        self.remote_iterator = remote_iterator
+
+    def finished(self):
+        return self.remote_iterator.finished()
+
+    def __next__(self):
+        if not self.finished():
+            return self.remote_iterator.pop()
+        else:
+            if hasattr(self, "remote_iterator") and self.remote_iterator:
+                del self.remote_iterator
+            raise StopIteration()
+
+    def __enter__(self):
+        return self
+
+    def __del__(self):
+        if hasattr(self, "remote_iterator") and self.remote_iterator:
+            del self.remote_iterator
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if hasattr(self, "remote_iterator") and self.remote_iterator:
+            del self.remote_iterator
+
+
+
 def simple_retry(function):
     def wrapper(*args, **kwargs):
         retries = (kwargs.get("parameters", {}) if len(args) < 3 else args[2]).get("retry", 0) + 1
@@ -40,8 +71,9 @@ class DASNodeQueryEngine(QueryEngine):
     def __init__(self, backend, cache_controller, system_parameters: Dict[str, Any], **kwargs):
         self.next_query_port = randint(60000, 61999)
         self.timeout = kwargs.get("timeout", 0)
-        self.id = "localhost:" + str(self.next_query_port)
         self.host = kwargs.get("hostname", "localhost")
+        self.requester_ip = kwargs.get("requester_ip", "localhost")
+        self.id = f"{self.requester_ip}:" + str(self.next_query_port)
         self.port = kwargs.get("port", 35700)
         self.remote_das_node = ":".join([self.host, str(self.port)])
         self.requestor = DASNode(self.id, self.remote_das_node)
@@ -62,9 +94,11 @@ class DASNodeQueryEngine(QueryEngine):
         self, query: Query, parameters: dict[str, Any] | None = None
     ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
         query = self._parse_query(query, parameters)
+        max_responses = parameters.get("max_responses", 0) if parameters else 0
         response: RemoteIterator = self.requestor.pattern_matcher_query(query)
         print(" ".join(query))
         start = time.time()
+        count = 0
         try:
             while not response.finished():
                 while (qs := response.pop()) is None:
@@ -74,11 +108,21 @@ class DASNodeQueryEngine(QueryEngine):
                         break
                     sleep(1)
                 if qs is not None:
-                    yield qs.get_handles()
+                    yield qs
+                    if 0 < max_responses < count:
+                        break
         except TimeoutError as e:
             raise e
         finally:
             del response
+
+
+    def query_async(self, query: Query, parameters: dict[str, Any] | None = None
+    ) -> Union[Iterator[QueryAnswer], List[QueryAnswer]]:
+        query = self._parse_query(query, parameters)
+        response: RemoteIterator = self.requestor.pattern_matcher_query(query)
+        print(" ".join(query))
+        return QueryIterator(response)
 
     def get_atom(self, handle: HandleT) -> AtomT:
         pass

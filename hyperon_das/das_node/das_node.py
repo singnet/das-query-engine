@@ -15,14 +15,11 @@ class DASNode(StarNode):
         super().__init__(node_id, server_id)
         self.initialize()
 
-    def pattern_matcher_query(self, tokens: list, context: str = ""):
+    def pattern_matcher_query(self, tokens: list, context: str = "", update_attention_broker: bool=False):
         if self.is_server:
             raise ValueError("pattern_matcher_query() is not available in DASNode server.")
-
-        # TODO: Update this when requestor is set in basic Message
         query_id = self.next_query_id()
-        # print(query_id, tokens)
-        args = [query_id, context] + tokens
+        args = [query_id, context, "true" if update_attention_broker else "false"] + tokens
         self.send(DASNode.PATTERN_MATCHING_QUERY, args, self.server_id)
         return RemoteIterator(query_id)
 
