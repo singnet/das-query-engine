@@ -1,3 +1,5 @@
+from copy import copy
+
 MAX_NUMBER_OF_VARIABLES_IN_QUERY = 100
 MAX_VARIABLE_NAME_SIZE = 100
 HANDLE_HASH_SIZE = 33
@@ -7,64 +9,58 @@ MAX_NUMBER_OF_OPERATION_CLAUSES = 100
 class Assignment:
     def __init__(self):
         self.size = 0
-        self.labels = [None] * MAX_NUMBER_OF_VARIABLES_IN_QUERY
-        self.values = [None] * MAX_NUMBER_OF_VARIABLES_IN_QUERY
+        self.assignments = {}
+        self.labels = []
+        self.values = []
 
     def assign(self, label: str, value: str) -> bool:
-        for i in range(self.size):
-            if label == self.labels[i]:
-                return value == self.values[i]
-
-        self.labels[self.size] = label
-        self.values[self.size] = value
-        self.size += 1
-
-        if self.size == MAX_NUMBER_OF_VARIABLES_IN_QUERY:
-            raise ValueError(
-                f"Assignment size exceeds the maximal number of allowed variables: {MAX_NUMBER_OF_VARIABLES_IN_QUERY}"
-            )
-
+        if self.assignments.get(label):
+            return self.assignments.get(label) == value
+        self.assignments[label] = value
         return True
 
     def get(self, label: str) -> str:
-        for i in range(self.size):
-            if label == self.labels[i]:
-                return self.values[i]
-        return None
+        return self.assignments.get(label)
 
     def is_compatible(self, other) -> bool:
-        for i in range(self.size):
-            for j in range(other.size):
-                if self.labels[i] == other.labels[j] and self.values[i] != other.values[j]:
+        for k in self.assignments.keys():
+            for other_k in other.assignments.keys():
+                if (
+                    k in other
+                    and other_k in self.assignments
+                    and other.get(k) != self.assignments.get(k)
+                ):
                     return False
+        # for i in range(self.size):
+        #     for j in range(other.size):
+        #         if self.labels[i] == other.labels[j] and self.values[i] != other.values[j]:
+        #             return False
         return True
 
     def copy_from(self, other):
-        self.size = other.size
-        self.labels = other.labels[:]
-        self.values = other.values[:]
+        self.assignments = copy(other.assignments)
 
     def add_assignments(self, other):
-        for j in range(other.size):
-            already_contains = False
-            for i in range(self.size):
-                if self.labels[i] == other.labels[j]:
-                    already_contains = True
-                    break
-            if not already_contains:
-                self.labels[self.size] = other.labels[j]
-                self.values[self.size] = other.values[j]
-                self.size += 1
+        for k, v in other.assignments.items():
+            if v in self.assignments:
+                break
+            self.assignments[k] = v
+        # for j in range(other.size):
+        #     already_contains = False
+        #     for i in range(self.size):
+        #         if self.labels[i] == other.labels[j]:
+        #             already_contains = True
+        #             break
+        #     if not already_contains:
+        #         self.labels[self.size] = other.labels[j]
+        #         self.values[self.size] = other.values[j]
+        #         self.size += 1
 
     def variable_count(self) -> int:
-        return self.size
+        return len(self.assignments)
 
     def to_string(self) -> str:
-        return (
-            "{"
-            + ", ".join([f"({self.labels[i]}: {self.values[i]})" for i in range(self.size)])
-            + "}"
-        )
+        return "{" + ", ".join([f"({k}: {v})" for k, v in self.assignments.items()]) + "}"
 
     @staticmethod
     def read_token(token_string: str, cursor: int, token_size: int) -> str:
@@ -79,7 +75,7 @@ class Assignment:
 
 class QueryAnswer:
     def __init__(self, handle: str = None, importance: float = 0.0):
-        self.handles = [None] * MAX_NUMBER_OF_OPERATION_CLAUSES
+        self.handles = []
         self.handles_size = 0
         self.importance = importance
         self.assignment = Assignment()
@@ -151,7 +147,7 @@ class QueryAnswer:
             cursor += 2
 
     def to_string(self) -> str:
-        handles_str = ", ".join(self.handles[: self.handles_size])
+        handles_str = ", ".join(self.handles)
         return f"QueryAnswer<{self.handles_size},{self.assignment.variable_count()}> [{handles_str}] {self.assignment.to_string()}"
 
     def get_handles(self):

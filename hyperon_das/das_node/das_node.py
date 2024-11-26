@@ -15,7 +15,9 @@ class DASNode(StarNode):
         super().__init__(node_id, server_id)
         self.initialize()
 
-    def pattern_matcher_query(self, tokens: list, context: str = "", update_attention_broker: bool=False):
+    def pattern_matcher_query(
+        self, tokens: list, context: str = "", update_attention_broker: bool = False
+    ):
         if self.is_server:
             raise ValueError("pattern_matcher_query() is not available in DASNode server.")
         query_id = self.next_query_id()
