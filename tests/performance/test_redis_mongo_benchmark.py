@@ -13,6 +13,16 @@ from conftest import PERFORMANCE_REPORT
 from hyperon_das import DistributedAtomSpace
 from tests.integration.helpers import _db_down, _db_up
 
+from hyperon_das_atomdb.database import (
+    AtomT,
+    FieldIndexType,
+    HandleListT,
+    IncomingLinksT,
+    LinkT,
+    NodeT,
+)
+
+
 # pylint: disable=attribute-defined-outside-init,disable=too-many-instance-attributes
 # pylint: disable=unused-argument,too-many-arguments,missing-function-docstring,too-many-locals
 
@@ -212,7 +222,7 @@ class TestPerformance:
                 'type': self.node_type,
             }
             if das is not None:
-                das.add_node(node)
+                das.add_node(NodeT(**node))
             node_list.append(node)
             node_names.add(node['name'])
             total_nodes += 1
@@ -295,12 +305,14 @@ class TestPerformance:
             keyword = keyword_gen()
             link = {
                 'type': link_type,
-                'targets': targets,
-                'strength': v / strength_divisor,
-                'keyword': keyword,
-                'indexed_keyword': keyword,
+                'targets': [NodeT(**t) for t in targets],
+                'custom_attributes':{
+                    'strength': v / strength_divisor,
+                    'keyword': keyword,
+                    'indexed_keyword': keyword,
+                }
             }
-            das.add_link(link)
+            das.add_link(LinkT(**link))
         das.commit_changes()
 
     @measure
