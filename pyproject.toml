@@ -21,6 +21,8 @@ requests = "^2.31.0"
 grpcio = "^1.62.2"
 google = "^3.0.0"
 protobuf = "^4.25.3"
+hyperon-das-node = {path="./hyperon_das_node-0.0.1-cp310-abi3-linux_x86_64.whl"}
+
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
