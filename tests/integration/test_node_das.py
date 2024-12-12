@@ -5,7 +5,10 @@ import pytest
 from hyperon_das.das import DistributedAtomSpace
 
 
+@pytest.mark.skip(reason="Add query broker to Dockerfile")
 class TestNodeDAS:
+    timeout = 5
+
     @pytest.fixture
     def remote_das(self):
         yield DistributedAtomSpace(
@@ -112,7 +115,9 @@ class TestNodeDAS:
         ],
     )
     def test_node_das(self, query, expected):
-        das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
+        das = DistributedAtomSpace(
+            query_engine="grpc", host="localhost", port=35700, timeout=self.timeout
+        )
         count = 0
         for q in das.query(query, {"tokenize": False}):
             assert isinstance(q, list)
@@ -197,7 +202,11 @@ class TestNodeDAS:
     )
     def test_node_das_query_og(self, query, expected, remote_das: DistributedAtomSpace):
         das = DistributedAtomSpace(
-            query_engine="grpc", host="localhost", port=35700, timeout=5, remote_das=remote_das
+            query_engine="grpc",
+            host="localhost",
+            port=35700,
+            timeout=self.timeout,
+            remote_das=remote_das,
         )
         redis_mongo_return = list(remote_das.query(query))
         rm_list = [
@@ -226,7 +235,9 @@ class TestNodeDAS:
         ],
     )
     def test_query_links_nodes_var(self, nodes, link_type):
-        das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700)
+        das = DistributedAtomSpace(
+            query_engine="grpc", host="localhost", port=35700, timeout=self.timeout
+        )
         nodes = nodes.split(',')
         queries = []
         for i, node in enumerate(nodes):
@@ -264,7 +275,9 @@ class TestNodeDAS:
         ],
     )
     def test_node_das_query_async(self, query, expected, remote_das: DistributedAtomSpace):
-        das = DistributedAtomSpace(query_engine="grpc", host="localhost", port=35700, timeout=5)
+        das = DistributedAtomSpace(
+            query_engine="grpc", host="localhost", port=35700, timeout=self.timeout
+        )
         iterator = das.query_engine.query_async(query)
         while not iterator.finished():
             while (qs := next(iterator)) is None:

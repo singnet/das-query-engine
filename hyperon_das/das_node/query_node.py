@@ -36,7 +36,6 @@ class QueryNode(AtomSpaceNode):
             return QueryAnswerFlow(command, args)
         elif command == QueryNode.QUERY_ANSWER_TOKENS_FLOW_COMMAND:
             return QueryAnswerTokensFlow(command, args)
-
         elif command == QueryNode.QUERY_ANSWERS_FINISHED_COMMAND:
             return QueryAnswersFinished(command, args)
         return None

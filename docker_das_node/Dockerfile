@@ -11,7 +11,8 @@ ARG BAZEL_DIR="${BASE_DIR}/bazel"
 ARG THIRDPARTY="${BASE_DIR}/3rd-party"
 # ARG AB_COMMIT="2a25871028268b0b9518d2da2a9d9f29ecfcbb4d"
 # ARG AB_COMMIT="senna-agi-meetup-stable"
-ARG AB_COMMIT="senna-agi-meetup-1"
+# ARG AB_COMMIT="senna-agi-meetup-1"
+ARG AB_COMMIT="edgar-agi-meetup-1"
 
 RUN mkdir -p ${DATA_DIR}
 RUN mkdir -p ${GRPC_DIR}

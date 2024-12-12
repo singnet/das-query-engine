@@ -76,7 +76,6 @@ def simple_retry(function):
                 yield from function(*args, **kwargs)
                 break
             except Exception as e:
-                print(f"Retrying {r + 1}")
                 if r == retries - 1:
                     raise e
 
