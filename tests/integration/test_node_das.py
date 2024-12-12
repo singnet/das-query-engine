@@ -5,7 +5,9 @@ import pytest
 from hyperon_das.das import DistributedAtomSpace
 
 
-@pytest.mark.skip(reason="Add query broker to Dockerfile")
+@pytest.mark.skip(
+    reason="Add query broker to Dockerfile, more info https://github.com/singnet/das/issues/162"
+)
 class TestNodeDAS:
     timeout = 5
 
