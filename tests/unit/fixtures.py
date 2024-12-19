@@ -1,7 +1,6 @@
-import hyperon_das_atomdb.adapters
 from pytest import fixture
 from unittest import mock
-from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
+from hyperon_das.das import DistributedAtomSpace
 from tests.unit.mock import MockRedis
 import mongomock
 
@@ -44,4 +43,3 @@ def das_local_redis_mongo_engine():
         return_value=redis_db,
     ):
         yield DistributedAtomSpace(atomdb="redis_mongo", query_engine="local")
-    print("A")
