@@ -1,14 +1,17 @@
-import pytest
-import itertools
 import copy
-from pytest import FixtureRequest
-from hyperon_das.das import DistributedAtomSpace
-from hyperon_das_atomdb.database import NodeT, LinkT, AtomT
-from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
+import itertools
 
+import pytest
+from hyperon_das_atomdb.database import AtomT, LinkT, NodeT
+from pytest import FixtureRequest
+
+from hyperon_das.das import DistributedAtomSpace
 from hyperon_das.link_filters import LinkFilter, LinkFilterType
-from tests.unit.fixtures import das_local_ram_engine, das_remote_ram_engine, das_local_redis_mongo_engine, \
-    das_remote_redis_mongo_engine
+from tests.unit.fixtures import (  # noqa: F811,F401
+    das_local_ram_engine,
+    das_local_redis_mongo_engine,
+    das_remote_ram_engine,
+)
 
 
 def add_atom(atom, das, engine):
@@ -29,14 +32,28 @@ class TestQueryEngine:
     # scenarios = [local_ram_scenario, local_redis_mongo_scenario]
 
     def create_links(self, pair_mtx, link_type="Test", node_type="Test"):
-        return [{"type": link_type, "targets": [{"type": node_type, "name": p[0]}, {"type": node_type, "name": p[1]}]}
-                for p in itertools.product(*pair_mtx) if p[0] != p[1]]
+        return [
+            {
+                "type": link_type,
+                "targets": [{"type": node_type, "name": p[0]}, {"type": node_type, "name": p[1]}],
+            }
+            for p in itertools.product(*pair_mtx)
+            if p[0] != p[1]
+        ]
 
-    @pytest.mark.parametrize("atom,handle", [
-        ({"type": "Test", "name": "A"}, "815212e3d7ac246e70c1744d14a8c402"),
-        ({"type": "Test", "targets": [{"type": "Test", "name": "A"}, {"type": "Test", "name": "B"}]},
-         "d9ea058d9e000a0ffca1cc444a13e771")
-    ])
+    @pytest.mark.parametrize(
+        "atom,handle",
+        [
+            ({"type": "Test", "name": "A"}, "815212e3d7ac246e70c1744d14a8c402"),
+            (
+                {
+                    "type": "Test",
+                    "targets": [{"type": "Test", "name": "A"}, {"type": "Test", "name": "B"}],
+                },
+                "d9ea058d9e000a0ffca1cc444a13e771",
+            ),
+        ],
+    )
     def test_get_atom(self, engine, atom, handle, request: FixtureRequest):
         das: DistributedAtomSpace = request.getfixturevalue(engine)
         print(engine)
@@ -46,13 +63,23 @@ class TestQueryEngine:
         assert isinstance(atom, AtomT)
         assert atom.handle == handle
 
-    @pytest.mark.parametrize("atoms,expected", [
-        ([{"type": "Test", "name": "A"}], 1),
-        ([{"type": "Test", "name": "A"}, {"type": "Test", "name": "B"}], 2),
-        ([
-             {"type": "Test", "name": "A"},
-             {"type": "Test", "targets": [{"type": "Test", "name": "A"}, {"type": "Test", "name": "B"}]}], 2),
-    ])
+    @pytest.mark.parametrize(
+        "atoms,expected",
+        [
+            ([{"type": "Test", "name": "A"}], 1),
+            ([{"type": "Test", "name": "A"}, {"type": "Test", "name": "B"}], 2),
+            (
+                [
+                    {"type": "Test", "name": "A"},
+                    {
+                        "type": "Test",
+                        "targets": [{"type": "Test", "name": "A"}, {"type": "Test", "name": "B"}],
+                    },
+                ],
+                2,
+            ),
+        ],
+    )
     def test_get_atoms(self, engine, atoms, expected, request):
         das: DistributedAtomSpace = request.getfixturevalue(engine)
         handle_list = [add_atom(atom, das, engine).handle for atom in atoms]
@@ -60,14 +87,21 @@ class TestQueryEngine:
         assert len(result_list) == expected
         assert sorted(result_list) == sorted(handle_list)
 
-    @pytest.mark.parametrize("link_filter,expected", [
-        (LinkFilter(
-            filter_type=LinkFilterType.TARGETS,
-            toplevel_only=False,
-            link_type="Test",
-            target_types=["Test"],
-            targets=["*", "*"]), 12),
-    ])
+    @pytest.mark.parametrize(
+        "link_filter,expected",
+        [
+            (
+                LinkFilter(
+                    filter_type=LinkFilterType.TARGETS,
+                    toplevel_only=False,
+                    link_type="Test",
+                    target_types=["Test"],
+                    targets=["*", "*"],
+                ),
+                12,
+            ),
+        ],
+    )
     def test_get_links(self, engine, link_filter, expected, request):
         das: DistributedAtomSpace = request.getfixturevalue(engine)
         links = self.create_links([['A', 'B', 'C', 'D'], ['A', 'B', 'C', 'D']])
@@ -77,14 +111,21 @@ class TestQueryEngine:
         assert len(result_links) == expected
         assert all([isinstance(link, LinkT) for link in result_links])
 
-    @pytest.mark.parametrize("link_filter,expected", [
-        (LinkFilter(
-            filter_type=LinkFilterType.TARGETS,
-            toplevel_only=False,
-            link_type="Test",
-            target_types=["Test"],
-            targets=["*", "*"]), 12),
-    ])
+    @pytest.mark.parametrize(
+        "link_filter,expected",
+        [
+            (
+                LinkFilter(
+                    filter_type=LinkFilterType.TARGETS,
+                    toplevel_only=False,
+                    link_type="Test",
+                    target_types=["Test"],
+                    targets=["*", "*"],
+                ),
+                12,
+            ),
+        ],
+    )
     def test_get_link_handles(self, engine, link_filter, expected, request):
         # def get_link_handles(self, link_filter: LinkFilter) -> HandleSetT:
         das: DistributedAtomSpace = request.getfixturevalue(engine)
@@ -95,12 +136,19 @@ class TestQueryEngine:
         assert len(result_links) == expected
         assert all([isinstance(link, str) for link in result_links])
 
-    @pytest.mark.parametrize("handle,mtx,expected", [
-        ("815212e3d7ac246e70c1744d14a8c402", [['A', 'B', 'C', 'D'], ['A', 'B', 'C', 'D']], 6),  # A
-        ("cc506de53938e1132d6cfb4746c37e13", [['B', 'C', 'D'], ['A', 'C']], 2),  # B
-        ("c78b709c472f5476546e27d88e763fa5", [['A', 'B', 'C', 'D'], ['A', 'B', 'D']], 3),  # C
-        ("481ecdd572fa530f3c06410885c957e5", [['A', 'B', 'C'], ['A', 'B', 'C']], 0),  # D
-    ])
+    @pytest.mark.parametrize(
+        "handle,mtx,expected",
+        [
+            (
+                "815212e3d7ac246e70c1744d14a8c402",
+                [['A', 'B', 'C', 'D'], ['A', 'B', 'C', 'D']],
+                6,
+            ),  # A
+            ("cc506de53938e1132d6cfb4746c37e13", [['B', 'C', 'D'], ['A', 'C']], 2),  # B
+            ("c78b709c472f5476546e27d88e763fa5", [['A', 'B', 'C', 'D'], ['A', 'B', 'D']], 3),  # C
+            ("481ecdd572fa530f3c06410885c957e5", [['A', 'B', 'C'], ['A', 'B', 'C']], 0),  # D
+        ],
+    )
     def test_get_incoming_links(self, engine, handle, mtx, expected, request):
         das: DistributedAtomSpace = request.getfixturevalue(engine)
         links = self.create_links(mtx)
@@ -110,18 +158,33 @@ class TestQueryEngine:
         assert len(result_links) == expected
         assert all([isinstance(link, LinkT) for link in result_links])
 
-    @pytest.mark.parametrize("query,expected", [
-        ({
-             "atom_type": "link", "type": "Test", "targets": [
-                {"atom_type": "variable", "name": "v1"},
-                {"atom_type": "node", "type": "Test", "name": "E"}
-            ]}, 3),
-        ({
-             "atom_type": "link", "type": "Test", "targets": [
-                {"atom_type": "variable", "name": "v1"},
-                {"atom_type": "node", "type": "Test", "name": "E"}
-            ]}, 3)
-    ])
+    @pytest.mark.parametrize(
+        "query,expected",
+        [
+            (
+                {
+                    "atom_type": "link",
+                    "type": "Test",
+                    "targets": [
+                        {"atom_type": "variable", "name": "v1"},
+                        {"atom_type": "node", "type": "Test", "name": "E"},
+                    ],
+                },
+                3,
+            ),
+            (
+                {
+                    "atom_type": "link",
+                    "type": "Test",
+                    "targets": [
+                        {"atom_type": "variable", "name": "v1"},
+                        {"atom_type": "node", "type": "Test", "name": "E"},
+                    ],
+                },
+                3,
+            ),
+        ],
+    )
     def test_query(self, engine, query, expected, request):
         das: DistributedAtomSpace = request.getfixturevalue(engine)
         links = self.create_links([['A', 'B', 'C'], ['D', 'E', 'F']])
@@ -135,32 +198,32 @@ class TestQueryEngine:
         "index_params,query_params,expected",
         [
             (
-                    # index_params
-                    {"atom_type": "node", "fields": ["value"], "named_type": "Test"},
-                    # query_params / custom attributes
-                    {"value": 3},
-                    # expected
-                    "815212e3d7ac246e70c1744d14a8c402",
+                # index_params
+                {"atom_type": "node", "fields": ["value"], "named_type": "Test"},
+                # query_params / custom attributes
+                {"value": 3},
+                # expected
+                "815212e3d7ac246e70c1744d14a8c402",
             ),
             (
-                    {"atom_type": "node", "fields": ["value", "strength"], "named_type": "Test"},
-                    {"value": 3, "strength": 5},
-                    "815212e3d7ac246e70c1744d14a8c402",
+                {"atom_type": "node", "fields": ["value", "strength"], "named_type": "Test"},
+                {"value": 3, "strength": 5},
+                "815212e3d7ac246e70c1744d14a8c402",
             ),
             (
-                    {"atom_type": "link", "fields": ["value"], "named_type": "Test3"},
-                    {"value": 3},
-                    "b3f66ec1535de7702c38e94408fa4a17",
+                {"atom_type": "link", "fields": ["value"], "named_type": "Test3"},
+                {"value": 3},
+                "b3f66ec1535de7702c38e94408fa4a17",
             ),
             (
-                    {"atom_type": "link", "fields": ["value"], "named_type": "Test2"},
-                    {"value": 3, "round": 2},
-                    "c454552d52d55d3ef56408742887362b",
+                {"atom_type": "link", "fields": ["value"], "named_type": "Test2"},
+                {"value": 3, "round": 2},
+                "c454552d52d55d3ef56408742887362b",
             ),
             (
-                    {"atom_type": "link", "fields": ["value", "round"], "named_type": "Test"},
-                    {"value": 3, "round": 2},
-                    "0cbc6611f5540bd0809a388dc95a615b",
+                {"atom_type": "link", "fields": ["value", "round"], "named_type": "Test"},
+                {"value": 3, "round": 2},
+                "0cbc6611f5540bd0809a388dc95a615b",
             ),
         ],
     )
@@ -175,7 +238,11 @@ class TestQueryEngine:
             link.update({"custom_attributes": query_params})
             atom = add_atom(link, das, engine)
         else:
-            node = {"type": index_params["named_type"], "name": "A", "custom_attributes": query_params}
+            node = {
+                "type": index_params["named_type"],
+                "name": "A",
+                "custom_attributes": query_params,
+            }
             atom = add_atom(node, das, engine)
         index_id = das.create_field_index(
             atom_type=index_params.get("atom_type"),
@@ -216,7 +283,6 @@ class TestQueryEngine:
             assert atoms_count["node_count"] == 6
             assert atoms_count["link_count"] == len(links_t)
 
-
     def test_get_traversal_cursor(self, engine, request):
         pass
 
@@ -224,28 +290,31 @@ class TestQueryEngine:
         # def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
         pass
 
-    @pytest.mark.parametrize("index_params,expected", [
-        (
+    @pytest.mark.parametrize(
+        "index_params,expected",
+        [
+            (
                 {"atom_type": "node", "fields": ["value"], "named_type": "Test"},
-                "node_cd369ff5bf310db2a8a384e5ea1a9312"
-        ),
-        (
+                "node_cd369ff5bf310db2a8a384e5ea1a9312",
+            ),
+            (
                 {"atom_type": "node", "fields": ["value", "strength"], "named_type": "Test"},
-                "node_bd9239a91659891e0211c7c83661693a"
-        ),
-        (
+                "node_bd9239a91659891e0211c7c83661693a",
+            ),
+            (
                 {"atom_type": "link", "fields": ["value"], "named_type": "Test3"},
-                "link_ceebe960507ac415a96189c08710e32e"
-        ),
-        (
+                "link_ceebe960507ac415a96189c08710e32e",
+            ),
+            (
                 {"atom_type": "link", "fields": ["value"], "named_type": "Test2"},
-                "link_2402202c9846034470f4a139d2cb73aa"
-        ),
-        (
+                "link_2402202c9846034470f4a139d2cb73aa",
+            ),
+            (
                 {"atom_type": "link", "fields": ["value", "round"], "named_type": "Test"},
-                "link_8985e514f249e287a04918d7790416fc"
-        ),
-    ])
+                "link_8985e514f249e287a04918d7790416fc",
+            ),
+        ],
+    )
     def test_create_field_index(self, engine, index_params, expected, request):
         if engine == "das_local_ram_engine":
             pytest.skip("Not implemented")

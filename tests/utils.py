@@ -1,5 +1,3 @@
-import json
-import os
 from typing import Type
 
 from hyperon_das_atomdb import AtomDB
@@ -63,9 +61,10 @@ class AnimalBaseHandlesCollection:
                 continue
             values = att.split("_")
             if len(values) > 1:
-                yield {"type": values[0].capitalize(), "targets": [
-                    {"type": "Concept", "name": n} for n in values[1:]
-                ]}
+                yield {
+                    "type": values[0].capitalize(),
+                    "targets": [{"type": "Concept", "name": n} for n in values[1:]],
+                }
 
 
 animal_base_handles = AnimalBaseHandlesCollection()
@@ -73,13 +72,11 @@ animal_base_handles = AnimalBaseHandlesCollection()
 
 def load_animals_base(das: DistributedAtomSpace) -> None:
     for node in animal_base_handles._get_nodes():
-        das.add_node(NodeT(**node))
+        das.add_node(NodeT(**node, custom_attributes=node))
 
     for link in animal_base_handles._get_links():
         link["targets"] = [NodeT(**node) for node in link["targets"]]
         das.add_link(LinkT(**link))
-
-
 
 
 # def test_load():

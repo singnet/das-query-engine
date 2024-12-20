@@ -268,5 +268,3 @@ def test_compare_patch_versions(version1, version2, expected):
 )
 def test_compare_major_versions(version1, version2, expected):
     assert compare_major_versions(version1, version2) == expected
-
-

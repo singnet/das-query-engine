@@ -1,15 +1,9 @@
 import json  # noqa: F401
 from unittest.mock import MagicMock, patch
-import inspect
 
 import pytest
-import dataclasses
-from enum import Enum
-from more_itertools.more import side_effect
 from requests import exceptions
-from itertools import  product
-import random
-import string
+
 import hyperon_das.link_filters as link_filter
 from hyperon_das.client import FunctionsClient
 from hyperon_das.exceptions import FunctionsConnectionError, FunctionsTimeoutError, RequestError
@@ -180,37 +174,37 @@ class TestFunctionsClient:
         "query",
         [
             (
-                    {
-                        "query": {
-                            "atom_type": "link",
-                            "targets": [
-                                {'atom_type': 'variable', 'name': 'v1'},
-                                {'atom_type': 'node', 'type': 'Symbol', 'name': '"earthworm"'},
-                                {'atom_type': 'variable', 'name': 'v2'},
-                            ],
-                        },
-                        "parameters": [],
-                    }
+                {
+                    "query": {
+                        "atom_type": "link",
+                        "targets": [
+                            {'atom_type': 'variable', 'name': 'v1'},
+                            {'atom_type': 'node', 'type': 'Symbol', 'name': '"earthworm"'},
+                            {'atom_type': 'variable', 'name': 'v2'},
+                        ],
+                    },
+                    "parameters": [],
+                }
             ),
             (
-                    {
-                        "query": {"atom_type": "link", 'type': 'Expression'},
-                        "parameters": [],
-                    }
+                {
+                    "query": {"atom_type": "link", 'type': 'Expression'},
+                    "parameters": [],
+                }
             ),
             (
-                    {
-                        "query": {
-                            "atom_type": "node",
-                            'type': 'Expression',
-                            "targets": [
-                                {'atom_type': 'variable', 'name': 'v1'},
-                                {'atom_type': 'node', 'type': 'Symbol', 'name': '"earthworm"'},
-                                {'atom_type': 'variable', 'name': 'v2'},
-                            ],
-                        },
-                        "parameters": [],
-                    }
+                {
+                    "query": {
+                        "atom_type": "node",
+                        'type': 'Expression',
+                        "targets": [
+                            {'atom_type': 'variable', 'name': 'v1'},
+                            {'atom_type': 'node', 'type': 'Symbol', 'name': '"earthworm"'},
+                            {'atom_type': 'variable', 'name': 'v2'},
+                        ],
+                    },
+                    "parameters": [],
+                }
             ),
             (),
         ],
@@ -391,7 +385,7 @@ class TestFunctionsClient:
             ('localhost', None, False, ""),
             (None, 8080, False, ""),
             ('localhost', 8080, False, ""),
-        ]
+        ],
     )
     @patch("hyperon_das.client.connect_to_server", MagicMock(return_value=(200, "")))
     def test_validate_host_port(self, host, port, should_raise, expected_message):
@@ -410,5 +404,3 @@ class TestFunctionsClient:
             client._send_request(payload)
 
         assert "Unpickling error" in str(ex.value)
-
-
