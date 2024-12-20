@@ -929,6 +929,7 @@ class DistributedAtomSpace:
                 raise ValueError("'host' and 'port' are mandatory parameters to local DAS")
 
         documents = self.query_engine.fetch(query, host, port, **kwargs)
+        print(documents)
         self.backend.bulk_insert(documents)
         return documents
 

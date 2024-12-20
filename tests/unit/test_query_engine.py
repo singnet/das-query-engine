@@ -1,5 +1,6 @@
 import copy
 import itertools
+from unittest import mock
 
 import pytest
 from hyperon_das_atomdb.database import AtomT, LinkT, NodeT
@@ -12,6 +13,7 @@ from tests.unit.fixtures import (  # noqa: F811,F401
     das_local_redis_mongo_engine,
     das_remote_ram_engine,
 )
+from tests.utils import animal_base_handles
 
 
 def add_atom(atom, das, engine):
@@ -327,34 +329,61 @@ class TestQueryEngine:
         assert index_id
         assert index_id == expected
 
+    @pytest.mark.skip("Not working")
     def test_fetch(self, engine, request):
-        #     def fetch(
-        #         self,
-        #         query: Query,
-        #         host: Optional[str] = None,
-        #         port: Optional[int] = None,
-        #         **kwargs,
-        # ) -> Any:
-        pass
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        # links = [LinkT(**{"type": l["type"], "targets": [NodeT(**n) for n in l["targets"]]}) for l in animal_base_handles._get_links()]
+        # nodes = [NodeT(**n) for n in animal_base_handles._get_nodes()]
+        # atoms = links + nodes
+        links = list(animal_base_handles._get_links())
+        nodes = list(animal_base_handles._get_nodes())
+        atoms = links + nodes
+        with mock.patch('hyperon_das.client.FunctionsClient.fetch', return_value=atoms), mock.patch(
+            'hyperon_das.utils.check_server_connection', return_value=(200, 'OK')
+        ):
+            das.fetch(host="0.0.0.0", port=1)
+            if engine == "das_local_redis_mongo_engine":
+                das.commit_changes()
+        count = das.count_atoms({"precise": True})
+        assert count == {
+            "atoms_count": 40,
+            "node_count": 14,
+            "link_count": 26,
+        }
 
     def test_create_context(self, engine, request):
-        # def create_context(self, name: str, queries: list[Query] | None = None) -> Context:
-        pass
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        context = das.create_context("blah", {})
+        assert context.name == "blah"
 
-    def test_commit(self, engine, request):
-        # def commit(self, **kwargs) -> None:
-        pass
-
-    def test_get_atoms_by_field(self, engine, request):
+    @pytest.mark.parametrize(
+        "query",
+        [
+            {'name': 'animal'},
+            # {'custom_attributes.name': 'human'}
+        ],
+    )
+    def test_get_atoms_by_field(self, engine, query, request):
         # def get_atoms_by_field(self, query: Query) -> HandleListT:
-        pass
+        if engine == "das_local_ram_engine":
+            pytest.skip("Not implemented")
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        add_atom({"type": "Concept", "name": query["name"]}, das, engine)
+        atom_text_field = das.get_atoms_by_field(query)
+        assert atom_text_field
 
     def test_get_atoms_by_text_field(self, engine, request):
-        # def get_atoms_by_text_field(
-        #         self, text_value: str, field: Optional[str] = None, text_index_id: Optional[str] = None
-        # ) -> HandleListT:
-        pass
+        if engine == "das_local_ram_engine":
+            pytest.skip("Not implemented")
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        add_atom({"type": "Concept", "name": "human"}, das, engine)
+        atom_text_field = das.get_atoms_by_text_field(text_value='human', field='name')
+        assert atom_text_field
 
     def test_get_node_by_name_starting_with(self, engine, request):
-        # def get_node_by_name_starting_with(self, node_type: str, startswith: str) -> HandleListT:
-        pass
+        if engine == "das_local_ram_engine":
+            pytest.skip("Not implemented")
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        add_atom({"type": "Concept", "name": "mammal"}, das, engine)
+        atoms = das.get_node_by_name_starting_with('Concept', 'mam')
+        assert atoms

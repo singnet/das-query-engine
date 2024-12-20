@@ -27,21 +27,6 @@ def das_remote_ram_engine():
         yield DistributedAtomSpace(atomdb="ram", query_engine="remote", host="0.0.0.0", port=1)
 
 
-# @fixture
-# def das_remote_redis_mongo_engine():
-#     mongo_db = mongo_mock()
-#     redis_db = redis_mock()
-#     with mock.patch(
-#             "hyperon_das_atomdb.adapters.redis_mongo_db.RedisMongoDB._connection_mongo_db",
-#             return_value=mongo_db,
-#     ), mock.patch(
-#         "hyperon_das_atomdb.adapters.redis_mongo_db.RedisMongoDB._connection_redis",
-#         return_value=redis_db,
-#     ), mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
-#         yield DistributedAtomSpace(atomdb="redis_mongo", query_engine="remote")
-#
-
-
 @fixture
 def das_local_redis_mongo_engine():
     mongo_db = mongo_mock()
