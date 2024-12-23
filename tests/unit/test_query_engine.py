@@ -63,7 +63,6 @@ class TestQueryEngine:
     )
     def test_get_atom(self, engine, atom, handle, request: FixtureRequest):
         das: DistributedAtomSpace = request.getfixturevalue(engine)
-        print(engine)
         node = add_atom(atom, das, engine)
         atom = das.get_atom(node.handle)
         assert atom
