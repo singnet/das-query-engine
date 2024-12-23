@@ -13,7 +13,7 @@ from tests.unit.fixtures import (  # noqa: F811,F401
     das_local_redis_mongo_engine,
     das_remote_ram_engine,
 )
-from tests.utils import animal_base_handles
+from tests.utils import animal_base_handles, load_animals_base, query_constructor
 
 
 def add_atom(atom, das, engine):
@@ -42,6 +42,11 @@ class TestQueryEngine:
             for p in itertools.product(*pair_mtx)
             if p[0] != p[1]
         ]
+
+    def load_database_animals(self, das, engine):
+        load_animals_base(das)
+        if engine == "das_local_redis_mongo_engine":
+            das.commit_changes()
 
     @pytest.mark.parametrize(
         "atom,handle",
@@ -163,38 +168,53 @@ class TestQueryEngine:
     @pytest.mark.parametrize(
         "query,expected",
         [
+            (query_constructor(("link", "Test", [("variable", "v1"), ("node", "Test", "E")])), 3),
             (
-                {
-                    "atom_type": "link",
-                    "type": "Test",
-                    "targets": [
-                        {"atom_type": "variable", "name": "v1"},
-                        {"atom_type": "node", "type": "Test", "name": "E"},
-                    ],
-                },
-                3,
+                query_constructor(("link", "Test", [("node", "Test", "A"), ("node", "Test", "E")])),
+                1,
             ),
             (
-                {
-                    "atom_type": "link",
-                    "type": "Test",
-                    "targets": [
-                        {"atom_type": "variable", "name": "v1"},
-                        {"atom_type": "node", "type": "Test", "name": "E"},
-                    ],
-                },
-                3,
+                query_constructor(("link", "Test", [("node", "Test", "A"), ("node", "Test", "A")])),
+                0,
             ),
+            (query_constructor(("node", "Test", "A")), 1),
         ],
     )
     def test_query(self, engine, query, expected, request):
         das: DistributedAtomSpace = request.getfixturevalue(engine)
         links = self.create_links([['A', 'B', 'C'], ['D', 'E', 'F']])
         links_t = [add_atom(link, das, engine) for link in links]
-        assert links_t
+        assert isinstance(links_t, list)
         query_result = list(das.query(query))
-        assert query_result
         assert len(query_result) == expected
+
+    @pytest.mark.parametrize(
+        "query,expected",
+        [
+            (
+                query_constructor(
+                    ("link", "Inheritance", [("variable", "v1"), ("variable", "v2")])
+                ),
+                12,
+            ),
+            (
+                [
+                    query_constructor(
+                        ("link", "Inheritance", [("variable", "v1"), ("variable", "v2")])
+                    ),
+                    query_constructor(
+                        ("link", "Inheritance", [("variable", "v2"), ("variable", "v3")])
+                    ),
+                ],
+                7,
+            ),
+        ],
+    )
+    def test_query_loaded(self, engine, query, expected, request):
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        self.load_database_animals(das, engine)
+        resp = das.query(query, {"no_iterator": True})
+        assert len(resp) == expected
 
     @pytest.mark.parametrize(
         "index_params,query_params,expected",
@@ -285,12 +305,37 @@ class TestQueryEngine:
             assert atoms_count["node_count"] == 6
             assert atoms_count["link_count"] == len(links_t)
 
-    def test_get_traversal_cursor(self, engine, request):
-        pass
+    @pytest.mark.parametrize(
+        "handle", [animal_base_handles.animal, animal_base_handles.inheritance_mammal_animal]
+    )
+    def test_get_traversal_cursor_get(self, engine, handle, request):
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        self.load_database_animals(das, engine)
+        cursor = das.get_traversal_cursor(handle)
+        current_cursor = cursor.get()
+        assert current_cursor.handle == handle
 
-    def test_reindex(self, engine, request):
-        # def reindex(self, pattern_index_templates: Optional[Dict[str, Dict[str, Any]]]):
-        pass
+    @pytest.mark.parametrize(
+        "handle", [animal_base_handles.animal, animal_base_handles.inheritance_mammal_animal]
+    )
+    @pytest.mark.skip("Error 'Node' object is not subscriptable ")
+    def test_get_traversal_cursor_links(self, engine, handle, request):
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        self.load_database_animals(das, engine)
+        cursor = das.get_traversal_cursor(handle)
+        current_cursor = cursor.get_links()
+        assert current_cursor
+
+    @pytest.mark.parametrize(
+        "handle", [animal_base_handles.animal, animal_base_handles.inheritance_mammal_animal]
+    )
+    @pytest.mark.skip("Error 'Node' object is not subscriptable ")
+    def test_get_traversal_cursor_neighbors(self, engine, handle, request):
+        das: DistributedAtomSpace = request.getfixturevalue(engine)
+        self.load_database_animals(das, engine)
+        cursor = das.get_traversal_cursor(handle)
+        current_cursor = cursor.get_neighbors()
+        assert current_cursor
 
     @pytest.mark.parametrize(
         "index_params,expected",

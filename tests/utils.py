@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Any, Type
 
 from hyperon_das_atomdb import AtomDB
 from hyperon_das_atomdb.database import LinkT, NodeT
@@ -77,6 +77,19 @@ def load_animals_base(das: DistributedAtomSpace) -> None:
     for link in animal_base_handles._get_links():
         link["targets"] = [NodeT(**node) for node in link["targets"]]
         das.add_link(LinkT(**link))
+
+
+def query_constructor(values: tuple[Any]):
+    if values[0] == "variable":
+        return {"atom_type": values[0], "name": values[1]}
+    elif values[0] == "link":
+        return {
+            "atom_type": values[0],
+            "type": values[1],
+            "targets": [query_constructor(q) for q in values[2]],
+        }
+    else:
+        return dict(zip(["atom_type", "type", "name"], values))
 
 
 # def test_load():
