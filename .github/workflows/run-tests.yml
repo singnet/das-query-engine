@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         run: |-
-          pip3 install poetry
+          pip3 install poetry==1.8.4
           poetry lock --no-update
           poetry export --dev -f requirements.txt | pip3 install -r /dev/stdin
 
@@ -67,7 +67,7 @@ jobs:
 
       - name: Install dependencies
         run: |-
-          pip3 install poetry
+          pip3 install poetry==1.8.4
           poetry lock --no-update
           poetry export --dev -f requirements.txt | pip3 install -r /dev/stdin
 
@@ -98,7 +98,7 @@ jobs:
 
       - name: Install dependencies
         run: |-
-          pip3 install poetry
+          pip3 install poetry==1.8.4
           poetry lock --no-update
           poetry export --dev -f requirements.txt | pip3 install -r /dev/stdin
 
@@ -129,7 +129,7 @@ jobs:
 
       - name: Install dependencies
         run: |-
-          pip3 install poetry
+          pip3 install poetry==1.8.4
           poetry lock --no-update
           poetry export --dev -f requirements.txt | pip3 install -r /dev/stdin
 
