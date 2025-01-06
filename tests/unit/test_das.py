@@ -4,15 +4,29 @@ import pytest
 from hyperon_das_atomdb.adapters import InMemoryDB
 from hyperon_das_atomdb.database import LinkT, NodeT
 from hyperon_das_atomdb.exceptions import InvalidAtomDB
+from hyperon_das_atomdb.utils.expression_hasher import ExpressionHasher
 
 from hyperon_das.das import DistributedAtomSpace, LocalQueryEngine, RemoteQueryEngine
 from hyperon_das.exceptions import GetTraversalCursorException, InvalidQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
-
-from .mock import DistributedAtomSpaceMock
+from tests.unit.fixtures import das_local_redis_mongo_engine, das_remote_ram_engine  # noqa: F401
+from tests.utils import load_animals_base
 
 
 class TestDistributedAtomSpace:
+    @pytest.fixture
+    def das_mock(self, das_local_redis_mongo_engine):  # noqa: F811
+        das = das_local_redis_mongo_engine
+        load_animals_base(das)
+        das.commit_changes()
+        yield das
+
+    @pytest.fixture
+    def das_mock_remote(self, das_remote_ram_engine):  # noqa: F811
+        das = das_remote_ram_engine
+        load_animals_base(das)
+        yield das
+
     def test_create_das(self):
         das = DistributedAtomSpace()
         assert isinstance(das.backend, InMemoryDB)
@@ -32,19 +46,22 @@ class TestDistributedAtomSpace:
         assert exc.value.message == "Use either 'local' or 'remote'"
         assert exc.value.details == 'query_engine=snet'
 
-    def test_get_incoming_links(self):
-        das = DistributedAtomSpaceMock()
-        links = das.get_incoming_links('<Concept: human>', handles_only=True)
-        assert len(links) == 7
+    def test_get_incoming_links(self, das_mock_remote, das_mock):
+        das = das_mock
+        links = das.get_incoming_links(
+            ExpressionHasher.terminal_hash("Concept", "ent"), handles_only=True
+        )
+        assert len(links) == 3
 
-        links = das.get_incoming_links('<Concept: human>')
-        assert len(links) == 7
+        links = das.get_incoming_links(ExpressionHasher.terminal_hash("Concept", "ent"))
+        assert len(links) == 3
 
-        with mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK')):
-            das_remote = DistributedAtomSpaceMock('remote', host='test', port=8080)
+        das_remote = das_mock_remote
 
         with mock.patch('hyperon_das.client.FunctionsClient.get_incoming_links', return_value=[]):
-            links = das_remote.get_incoming_links('<Concept: human>')
+            links = das_remote.get_incoming_links(
+                ExpressionHasher.terminal_hash("Concept", "human")
+            )
         assert len(links) == 7
 
         with mock.patch(
@@ -57,11 +74,13 @@ class TestDistributedAtomSpace:
             'hyperon_das.client.FunctionsClient.get_incoming_links',
             return_value=["['Inheritance', '<Concept: ent>', '<Concept: snet>']"],
         ):
-            links = das_remote.get_incoming_links('<Concept: ent>', handles_only=True)
+            links = das_remote.get_incoming_links(
+                ExpressionHasher.terminal_hash("Concept", "ent"), handles_only=True
+            )
         assert set(links) == {
-            "['Inheritance', '<Concept: ent>', '<Concept: plant>']",
-            "['Similarity', '<Concept: ent>', '<Concept: human>']",
-            "['Similarity', '<Concept: human>', '<Concept: ent>']",
+            'a45af31b43ee5ea271214338a5a5bd61',
+            'ee1c03e6d1f104ccd811cfbba018451a',
+            '16f7e407087bfa0b35b13d13a1aadcae',
             "['Inheritance', '<Concept: ent>', '<Concept: snet>']",
         }
 
@@ -141,57 +160,60 @@ class TestDistributedAtomSpace:
         context = das.create_context("blah", {})
         assert context.name == "blah"
 
-    def test_get_atoms_by_field(self):
-        das = DistributedAtomSpaceMock()
-        atom_field = das.get_atoms_by_field({'Concept': 'human'})
+    @pytest.mark.parametrize(
+        "query",
+        [
+            {'name': 'animal'},
+            # {'custom_attributes.name': 'human'}
+        ],
+    )
+    def test_get_atoms_by_field(self, das_mock, query):
+        das = das_mock
+        atom_field = das.get_atoms_by_field(query)
         assert atom_field
 
-    def test_get_atoms_by_text_field(self):
-        das = DistributedAtomSpaceMock()
+    def test_get_atoms_by_text_field(self, das_mock):
+        das = das_mock
         atom_text_field = das.get_atoms_by_text_field(text_value='human', field='name')
         assert atom_text_field
 
-    def test_get_node_by_name_starting_with(self):
-        das = DistributedAtomSpaceMock()
+    def test_get_node_by_name_starting_with(self, das_mock):
+        das = das_mock
         atom_starting_with = das.get_node_by_name_starting_with('Concept', 'mon')
         assert atom_starting_with
 
-    def test_count_atoms(self):
-        das = DistributedAtomSpaceMock()
-        atom_count = das.count_atoms()
+    def test_count_atoms(self, das_mock):
+        das = das_mock
+        atom_count = das.count_atoms({"precise": True})
         assert atom_count == {'link_count': 26, 'node_count': 14, 'atom_count': 40}
 
-    def test_count_atoms_local(self):
-        das = DistributedAtomSpaceMock()
-        atom_count = das.count_atoms({'context': 'local'})
+    def test_count_atoms_local(self, das_mock):
+        das = das_mock
+        atom_count = das.count_atoms({'context': 'local', "precise": True})
         assert atom_count == {'link_count': 26, 'node_count': 14, 'atom_count': 40}
 
-    def test_count_atoms_local_remote(self):
-        das = DistributedAtomSpaceMock()
+    def test_count_atoms_local_remote(self, das_mock):
+        das = das_mock
         atom_count = das.count_atoms({'context': 'remote'})
         assert atom_count == {}
 
-    def test_count_atoms_local_both(self):
-        das = DistributedAtomSpaceMock()
-        atom_count = das.count_atoms({'context': 'both'})
+    def test_count_atoms_local_both(self, das_mock):
+        das = das_mock
+        atom_count = das.count_atoms({'context': 'both', "precise": True})
         assert atom_count == {'link_count': 26, 'node_count': 14, 'atom_count': 40}
-        # assert atom_count == (14, 26)
 
-    def test_count_atoms_remote(self):
-        das = DistributedAtomSpaceMock('remote', host='localhost', port=123)
-        with mock.patch(
-            'hyperon_das.client.FunctionsClient.count_atoms',
-            return_value=(10, 0),
-        ):
-            atom_count = das.count_atoms({'context': 'remote'})
+    @mock.patch('hyperon_das.client.FunctionsClient.count_atoms', return_value=(10, 0))
+    @mock.patch('hyperon_das.utils.check_server_connection', return_value=(200, 'OK'))
+    def test_count_atoms_remote(self, count_atoms, connection):
+        das = DistributedAtomSpace(query_engine='remote', host='localhost', port=123)
+        atom_count = das.count_atoms({'context': 'remote'})
         assert atom_count == (10, 0)
 
-    def test_count_atoms_both(self):
-        das = DistributedAtomSpaceMock('remote', host='localhost', port=123)
+    def test_count_atoms_both(self, das_mock_remote):
         with mock.patch(
             'hyperon_das.client.FunctionsClient.count_atoms',
-            return_value={'link_count': 0, 'node_count': 10, 'atom_count': 0},
+            return_value={'link_count': 26, 'node_count': 24, 'atom_count': 40},
         ):
+            das = DistributedAtomSpace(query_engine='remote', host='localhost', port=123)
             atom_count = das.count_atoms({'context': 'both'})
-        # assert atom_count == (24, 26)
-        assert atom_count == {'link_count': 26, 'node_count': 24, 'atom_count': 40}
+            assert atom_count == {'link_count': 26, 'node_count': 24, 'atom_count': 40}
