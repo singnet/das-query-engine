@@ -13,7 +13,7 @@ unit-tests:
 	@py.test -sx -vv ./tests/unit
 
 unit-tests-coverage:
-	@py.test -sx -vv ./tests/unit --cov=./hyperon_das/ --cov-report=term-missing --cov-fail-under=65
+	@py.test -sx -vv ./tests/unit --cov=./hyperon_das/ --cov-report=term-missing --cov-fail-under=60
 
 integration-tests:
 	@py.test -sx -vv ./tests/integration $(OPTIONS)

@@ -23,6 +23,7 @@ from hyperon_das.exceptions import (
 )
 from hyperon_das.link_filters import LinkFilter
 from hyperon_das.logger import logger
+from hyperon_das.query_engines.das_node_query_engine import DASNodeQueryEngine
 from hyperon_das.query_engines.local_query_engine import LocalQueryEngine
 from hyperon_das.query_engines.remote_query_engine import RemoteQueryEngine
 from hyperon_das.traverse_engines import TraverseEngine
@@ -120,6 +121,9 @@ class DistributedAtomSpace:
             self._start_query_engine(LocalQueryEngine, das_type, **kwargs)
         elif self.query_engine_type == "remote":
             self._start_query_engine(RemoteQueryEngine, DasType.REMOTE, **kwargs)
+
+        elif self.query_engine_type == "grpc":
+            self._start_query_engine(DASNodeQueryEngine, DasType.REMOTE, **kwargs)
         else:
             raise InvalidQueryEngine(
                 message="Use either 'local' or 'remote'",
@@ -128,7 +132,7 @@ class DistributedAtomSpace:
 
     def _start_query_engine(
         self,
-        engine_type: Type[LocalQueryEngine | RemoteQueryEngine],
+        engine_type: Type[LocalQueryEngine | RemoteQueryEngine | DASNodeQueryEngine],
         das_type: str,
         **kwargs,
     ) -> None:
