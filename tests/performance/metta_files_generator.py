@@ -13,10 +13,15 @@ class DasWrapper:
         self.filename = filename
 
     def add_node(self, node):
+        node = node.to_dict()
+        node["type"] = node["named_type"]
         self.types.add(node.get('type'))
         self.buffer.append(node)
 
     def add_link(self, link):
+        link = link.to_dict()
+        link["type"] = link["named_type"]
+        link["targets"] = [{"name": t["name"], "type": t["named_type"]} for t in link["targets_documents"]]
         self.types.add(link.get('type'))
         self.buffer.append(link)
 
@@ -31,6 +36,7 @@ class DasWrapper:
                         f" \"{v['targets'][1]['name']}\")\n"
                     )
                 else:
+                    print(v)
                     f.write(f"(: \"{v['name']}\" {v['type']})\n")
 
         self.buffer = []
