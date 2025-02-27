@@ -36,7 +36,6 @@ class DasWrapper:
                         f" \"{v['targets'][1]['name']}\")\n"
                     )
                 else:
-                    print(v)
                     f.write(f"(: \"{v['name']}\" {v['type']})\n")
 
         self.buffer = []
